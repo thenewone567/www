@@ -68,3 +68,23 @@ If you want to enable barcode generation, you will need to install Composer and 
     ```
 
 This will install the `picqer/php-barcode-generator` library, and the barcode functionality will be enabled.
+
+## Dependencies
+
+### Required
+*   **PHP**: Version 7.4 or higher.
+*   **MySQL**: Version 5.7 or higher, or MariaDB 10.2 or higher.
+*   `php-mysql` extension.
+
+### Optional
+*   **Composer**: For installing PHP packages (only needed for barcode generation).
+
+## Troubleshooting
+
+### CSS or JavaScript not loading
+If the application's styling appears broken or dynamic features are not working, the most likely cause is an incorrect path to the CSS and JavaScript files.
+
+*   The application's stylesheet is located at `public/css/style.css`.
+*   The main JavaScript file is at `public/js/main.js`.
+
+Ensure that the paths to these files in `src/includes/header.php` and `src/includes/footer.php` are correct relative to the `index.php` file. If you have deployed the application in a subdirectory, you may need to adjust the paths accordingly.
