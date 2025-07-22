@@ -12,10 +12,9 @@
         <nav>
             <ul>
                 <li><a href="index.php?page=dashboard">Dashboard</a></li>
-                <li><a href="index.php?page=products">Products</a></li>
+                <li><a href="index.php?page=inventory">Inventory</a></li>
                 <li><a href="index.php?page=sales">Sales</a></li>
                 <li><a href="index.php?page=purchases">Purchases</a></li>
-                <li><a href="index.php?page=stock_movements">Stock Movements</a></li>
                 <li><a href="index.php?page=returns">Returns</a></li>
                 <li><a href="index.php?page=customers">Customers</a></li>
                 <li><a href="index.php?page=suppliers">Suppliers</a></li>

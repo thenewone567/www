@@ -58,8 +58,20 @@ $suppliers = $pdo->query("SELECT * FROM suppliers")->fetchAll(PDO::FETCH_ASSOC);
     <input type="number" name="stock_quantity" id="stock_quantity" value="<?= htmlspecialchars($product['stock_quantity']) ?>">
     <br>
 
+    <label for="aisle">Aisle:</label>
+    <input type="text" name="aisle" id="aisle" value="<?= htmlspecialchars($product['aisle'] ?? '') ?>">
+    <br>
+
+    <label for="rack">Rack:</label>
+    <input type="text" name="rack" id="rack" value="<?= htmlspecialchars($product['rack'] ?? '') ?>">
+    <br>
+
     <label for="product_image">Product Image:</label>
     <input type="file" name="product_image" id="product_image">
+    <br>
+
+    <label for="icon">Icon:</label>
+    <input type="file" name="icon" id="icon">
     <br>
 
     <button type="submit"><?= $is_edit ? 'Update Product' : 'Save Product' ?></button>

@@ -10,11 +10,14 @@ switch ($page) {
     case 'dashboard':
         include 'templates/dashboard.php';
         break;
+    case 'inventory':
+        include 'templates/inventory.php';
+        break;
     case 'products':
         if (isset($_GET['action']) && ($_GET['action'] == 'new' || $_GET['action'] == 'edit')) {
             include 'templates/product_form.php';
         } else {
-            include 'templates/products.php';
+            include 'templates/inventory.php'; // Redirect to inventory
         }
         break;
     case 'sales':
@@ -36,13 +39,6 @@ switch ($page) {
             include 'templates/purchase_form.php';
         } else {
             include 'templates/purchases.php';
-        }
-        break;
-    case 'stock_movements':
-        if (isset($_GET['action']) && $_GET['action'] == 'new') {
-            include 'templates/stock_movement_form.php';
-        } else {
-            include 'templates/stock_movements.php';
         }
         break;
     case 'returns':

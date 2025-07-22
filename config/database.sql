@@ -94,12 +94,16 @@ CREATE TABLE `products` (
   `stock_quantity` int(11) DEFAULT 0,
   `min_stock_alert` int(11) DEFAULT 0,
   `max_stock_alert` int(11) DEFAULT 0,
-  `warehouse_location` varchar(100) DEFAULT NULL,
+  `aisle` varchar(50) DEFAULT NULL,
+  `rack` varchar(50) DEFAULT NULL,
   `batch_number` varchar(50) DEFAULT NULL,
   `expiry_date` date DEFAULT NULL,
   `reorder_level` int(11) DEFAULT 0,
   `supplier_id` int(11) DEFAULT NULL,
-  `product_image` varchar(255) DEFAULT NULL
+  `product_image` varchar(255) DEFAULT NULL,
+  `icon` varchar(255) DEFAULT NULL,
+  `picture_folder` varchar(255) DEFAULT NULL,
+  `last_updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------

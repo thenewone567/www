@@ -8,8 +8,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $category_id = $_POST['category_id'];
     $sku = $_POST['sku'];
     $stock_quantity = $_POST['stock_quantity'];
+    $aisle = $_POST['aisle'];
+    $rack = $_POST['rack'];
 
-    // Handle file upload
+    // Handle file uploads
     $product_image = '';
     if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] == 0) {
         $target_dir = "../../public/uploads/";
@@ -18,19 +20,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         move_uploaded_file($_FILES["product_image"]["tmp_name"], $target_file);
     }
 
+    $icon = '';
+    if (isset($_FILES['icon']) && $_FILES['icon']['error'] == 0) {
+        $target_dir = "../../public/uploads/icons/";
+        if (!file_exists($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
+        $icon = basename($_FILES["icon"]["name"]);
+        $target_file = $target_dir . $icon;
+        move_uploaded_file($_FILES["icon"]["tmp_name"], $target_file);
+    }
+
     if (empty($product_id)) {
         // Insert new product
-        $sql = "INSERT INTO products (product_name, category_id, sku, stock_quantity, product_image) VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO products (product_name, category_id, sku, stock_quantity, aisle, rack, product_image, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$product_name, $category_id, $sku, $stock_quantity, $product_image]);
+        $stmt->execute([$product_name, $category_id, $sku, $stock_quantity, $aisle, $rack, $product_image, $icon]);
     } else {
         // Update existing product
-        $sql = "UPDATE products SET product_name = ?, category_id = ?, sku = ?, stock_quantity = ?";
-        $params = [$product_name, $category_id, $sku, $stock_quantity];
+        $sql = "UPDATE products SET product_name = ?, category_id = ?, sku = ?, stock_quantity = ?, aisle = ?, rack = ?";
+        $params = [$product_name, $category_id, $sku, $stock_quantity, $aisle, $rack];
 
         if ($product_image) {
             $sql .= ", product_image = ?";
             $params[] = $product_image;
+        }
+        if ($icon) {
+            $sql .= ", icon = ?";
+            $params[] = $icon;
         }
 
         $sql .= " WHERE product_id = ?";
@@ -40,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute($params);
     }
 
-    header("Location: ../../index.php?page=products");
+    header("Location: ../../index.php?page=inventory");
     exit();
 }
 ?>
