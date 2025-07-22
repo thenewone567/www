@@ -1,13 +1,6 @@
 <?php
 // Main entry point for the application
-require_once 'config/config.php';
-
-// Check if user is logged in, otherwise redirect to login page
-if (!isset($_SESSION["user_id"]) && basename($_SERVER['PHP_SELF']) != 'login.php') {
-    header("location: templates/login.php");
-    exit;
-}
-
+require_once 'src/includes/check_auth.php';
 require_once 'src/includes/header.php';
 
 // Simple router

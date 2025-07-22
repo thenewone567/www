@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['role_id'] = $user['role_id'];
 
         // Redirect to the dashboard
-        header("Location: ../../index.php?page=dashboard");
+        header("Location: ../../index.php");
         exit();
     } else {
         // Invalid credentials
