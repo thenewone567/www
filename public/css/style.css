@@ -1,0 +1,94 @@
+/* General styles */
+body {
+    font-family: sans-serif;
+    margin: 0;
+}
+
+header {
+    background-color: #333;
+    color: white;
+    padding: 1rem;
+}
+
+nav ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+nav li {
+    display: inline-block;
+    margin-right: 1rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+}
+
+main {
+    padding: 1rem;
+}
+
+footer {
+    background-color: #f4f4f4;
+    padding: 1rem;
+    text-align: center;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Dashboard styles */
+.dashboard-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 2rem;
+}
+
+.stat {
+    background-color: #f4f4f4;
+    padding: 1rem;
+    border-radius: 5px;
+    text-align: center;
+    width: 20%;
+}
+
+.quick-actions a {
+    display: inline-block;
+    background-color: #333;
+    color: white;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-right: 1rem;
+}
+
+/* Dark Mode */
+body.dark-mode {
+    background-color: #333;
+    color: #f4f4f4;
+}
+
+body.dark-mode header {
+    background-color: #222;
+}
+
+body.dark-mode .stat {
+    background-color: #444;
+}
+
+body.dark-mode table {
+    background-color: #444;
+    color: #f4f4f4;
+}
+
+body.dark-mode th, body.dark-mode td {
+    border-color: #555;
+}
+
+.theme-switcher {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
