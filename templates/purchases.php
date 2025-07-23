@@ -1,36 +1,32 @@
-<?php
-require_once 'config/config.php';
-
-// Fetch all purchases
-$stmt = $pdo->query("SELECT p.*, s.supplier_name FROM purchases p LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id ORDER BY p.purchase_id DESC");
-$purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
-?>
-
-<h2>Purchase History</h2>
-
-<a href="index.php?page=purchases&action=new">New Purchase</a>
-
-<table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Supplier</th>
-            <th>Date</th>
-            <th>Total Amount</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($purchases as $purchase): ?>
-            <tr>
-                <td><?= htmlspecialchars($purchase['purchase_id']) ?></td>
-                <td><?= htmlspecialchars($purchase['supplier_name']) ?></td>
-                <td><?= htmlspecialchars($purchase['purchase_date']) ?></td>
-                <td><?= htmlspecialchars($purchase['total_amount']) ?></td>
-                <td>
-                    <a href="index.php?page=purchases&action=view&id=<?= $purchase['purchase_id'] ?>">View</a>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
+<div class="container-fluid">
+    <h1 class="mt-4">Purchases</h1>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">New Purchase</h5>
+                    <p class="card-text">Create a new purchase order.</p>
+                    <a href="index.php?page=purchases&action=new" class="btn btn-primary">Go to New Purchase</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Purchase List</h5>
+                    <p class="card-text">View and manage all purchases.</p>
+                    <a href="index.php?page=purchases" class="btn btn-primary">Go to Purchase List</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Vendor List</h5>
+                    <p class="card-text">View and manage all vendors.</p>
+                    <a href="index.php?page=suppliers" class="btn btn-primary">Go to Vendor List</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

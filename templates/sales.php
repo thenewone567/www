@@ -1,38 +1,32 @@
-<?php
-require_once 'config/config.php';
-
-// Fetch all sales
-$stmt = $pdo->query("SELECT s.*, c.customer_name FROM sales s LEFT JOIN customers c ON s.customer_id = c.customer_id ORDER BY s.sale_id DESC");
-$sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
-?>
-
-<h2>Sales History</h2>
-
-<a href="index.php?page=sales&action=new">New Sale</a>
-
-<table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Customer</th>
-            <th>Date</th>
-            <th>Total Amount</th>
-            <th>Payment Mode</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($sales as $sale): ?>
-            <tr>
-                <td><?= htmlspecialchars($sale['sale_id']) ?></td>
-                <td><?= htmlspecialchars($sale['customer_name']) ?></td>
-                <td><?= htmlspecialchars($sale['sale_date']) ?></td>
-                <td><?= htmlspecialchars($sale['total_amount']) ?></td>
-                <td><?= htmlspecialchars($sale['payment_mode']) ?></td>
-                <td>
-                    <a href="index.php?page=sales&action=view&id=<?= $sale['sale_id'] ?>">View</a>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
+<div class="container-fluid">
+    <h1 class="mt-4">Sales</h1>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">New Sale</h5>
+                    <p class="card-text">Create a new sale transaction.</p>
+                    <a href="index.php?page=sales&action=new" class="btn btn-primary">Go to New Sale</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Sales List</h5>
+                    <p class="card-text">View and manage all sales.</p>
+                    <a href="index.php?page=sales" class="btn btn-primary">Go to Sales List</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Invoices</h5>
+                    <p class="card-text">View and manage all invoices.</p>
+                    <a href="#" class="btn btn-primary">Go to Invoices</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

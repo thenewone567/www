@@ -5,6 +5,7 @@ require_once 'src/includes/header.php';
 
 // Simple router
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
+$action = isset($_GET['action']) ? $_GET['action'] : null;
 
 switch ($page) {
     case 'dashboard':
@@ -14,42 +15,42 @@ switch ($page) {
         include 'templates/inventory.php';
         break;
     case 'products':
-        if (isset($_GET['action']) && ($_GET['action'] == 'new' || $_GET['action'] == 'edit')) {
+        if ($action == 'new' || $action == 'edit') {
             include 'templates/product_form.php';
         } else {
             include 'templates/inventory.php'; // Redirect to inventory
         }
         break;
     case 'sales':
-        if (isset($_GET['action']) && $_GET['action'] == 'new') {
+        if ($action == 'new') {
             include 'templates/pos.php';
         } else {
             include 'templates/sales.php';
         }
         break;
     case 'suppliers':
-        if (isset($_GET['action']) && ($_GET['action'] == 'new' || $_GET['action'] == 'edit')) {
+        if ($action == 'new' || $action == 'edit') {
             include 'templates/supplier_form.php';
         } else {
             include 'templates/suppliers.php';
         }
         break;
     case 'purchases':
-        if (isset($_GET['action']) && $_GET['action'] == 'new') {
+        if ($action == 'new') {
             include 'templates/purchase_form.php';
         } else {
             include 'templates/purchases.php';
         }
         break;
     case 'returns':
-        if (isset($_GET['action']) && $_GET['action'] == 'new') {
+        if ($action == 'new') {
             include 'templates/return_form.php';
         } else {
             include 'templates/returns.php';
         }
         break;
     case 'customers':
-        if (isset($_GET['action']) && ($_GET['action'] == 'new' || $_GET['action'] == 'edit')) {
+        if ($action == 'new' || $action == 'edit') {
             include 'templates/customer_form.php';
         } else {
             include 'templates/customers.php';
@@ -57,6 +58,15 @@ switch ($page) {
         break;
     case 'reports':
         include 'templates/reports.php';
+        break;
+    case 'warehouse':
+        include 'templates/warehouse.php';
+        break;
+    case 'expenses':
+        include 'templates/expenses.php';
+        break;
+    case 'settings':
+        include 'templates/settings.php';
         break;
     // Add other cases as we build more pages
     default:

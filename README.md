@@ -19,4 +19,4 @@ The dashboard is integrated into the existing PHP application and is accessible 
 
 ### Navigation
 
-The main navigation has been updated with a more detailed and organized structure. It includes nested dropdowns for various sections like Sales, Purchases, Inventory, and more, providing a better user experience.
+The main navigation has been updated with a more detailed and organized structure. Each main navigation item now has its own page, which displays the sub-items as cards or sections. This provides a more intuitive and user-friendly navigation experience.
