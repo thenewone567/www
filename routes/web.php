@@ -34,6 +34,9 @@ $routes = [
     'users/edit' => 'UsersController@edit',
     'users/delete' => 'UsersController@delete',
     'users/login-activity' => 'UsersController@showLoginActivity',
+    'reports' => 'ReportsController@index',
+    'reports/generate' => 'ReportsController@generate',
+    'reports/export' => 'ReportsController@export',
 ];
 
 // Match the route
