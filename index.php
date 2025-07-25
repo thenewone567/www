@@ -1,5 +1,9 @@
 <?php
 
+// Start the session
+require_once 'helpers/Session.php';
+Session::start();
+
 // Define the root path
 define('ROOT_PATH', __DIR__ . '/');
 

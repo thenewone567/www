@@ -13,10 +13,31 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
+            <ul class="navbar-nav mr-auto">
                 <li class="nav-item active">
                     <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
                 </li>
+            </ul>
+            <ul class="navbar-nav">
+                <?php
+                $user = Session::get('user');
+                if ($user) {
+                    ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Role: <?php echo $user['role']; ?></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                    <?php
+                } else {
+                    ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    <?php
+                }
+                ?>
             </ul>
         </div>
     </nav>
