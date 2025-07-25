@@ -10,13 +10,16 @@ $routes = [
     'sales/new' => 'SalesController@showNewSaleForm',
     'sales/create' => 'SalesController@createSale',
     'sales/history' => 'SalesController@showSalesHistory',
+    'purchases/new' => 'PurchasesController@showNewPurchaseForm',
+    'purchases/create' => 'PurchasesController@createPurchase',
+    'purchases/history' => 'PurchasesController@showPurchasesHistory',
 ];
 
 // Match the route
 $method = $_SERVER['REQUEST_METHOD'];
 foreach ($routes as $route => $action) {
     if ($requestUri === $route) {
-        if ($method === 'POST' && ($route === 'login/process' || $route === 'sales/create')) {
+        if ($method === 'POST' && ($route === 'login/process' || $route === 'sales/create' || $route === 'purchases/create')) {
             $parts = explode('@', $action);
             $controllerName = $parts[0];
             $methodName = $parts[1];

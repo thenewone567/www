@@ -17,7 +17,8 @@
             <a href="#" class="list-group-item list-group-item-action">Products</a>
             <a href="/sales/new" class="list-group-item list-group-item-action">New Sale</a>
             <a href="/sales/history" class="list-group-item list-group-item-action">Sales History</a>
-            <a href="#" class="list-group-item list-group-item-action">Purchases</a>
+            <a href="/purchases/new" class="list-group-item list-group-item-action">New Purchase</a>
+            <a href="/purchases/history" class="list-group-item list-group-item-action">Purchase History</a>
             <?php
         } elseif ($user['role'] === 'Supervisor') {
             ?>
