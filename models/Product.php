@@ -76,6 +76,19 @@ class Product
         ];
     }
 
+    public function getLowStockProducts($threshold = 5)
+    {
+        // This is a dummy implementation
+        $products = $this->getProducts();
+        $lowStockProducts = [];
+        foreach ($products as $product) {
+            if ($product['Quantity'] <= $threshold) {
+                $lowStockProducts[] = $product;
+            }
+        }
+        return $lowStockProducts;
+    }
+
     public function addProduct($data, $file)
     {
         $photoPath = $this->uploadPhoto($file);

@@ -18,7 +18,11 @@
             </div>
             <div class="form-group">
                 <label for="location">Location</label>
-                <input type="text" name="location" id="location" class="form-control" required>
+                <select name="location" id="location" class="form-control" required>
+                    <!-- In a real application, these options would be populated from the database -->
+                    <option value="1">Location A</option>
+                    <option value="2">Location B</option>
+                </select>
             </div>
             <button type="submit" class="btn btn-primary">Putaway</button>
         </form>

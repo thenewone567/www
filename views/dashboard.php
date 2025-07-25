@@ -40,7 +40,13 @@
                 Low Stock Alerts
             </div>
             <div class="card-body">
-                <p>Placeholder for low stock alerts list.</p>
+                <ul class="list-group">
+                    <?php foreach ($lowStockProducts as $product) : ?>
+                        <li class="list-group-item">
+                            <?php echo $product['ProductName']; ?> - <strong>Quantity: <?php echo $product['Quantity']; ?></strong>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
             </div>
         </div>
         <!-- Shortcuts -->

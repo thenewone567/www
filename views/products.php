@@ -23,6 +23,8 @@
             </div>
             <div class="col-auto">
                 <button class="btn btn-primary" data-toggle="modal" data-target="#addProductModal">Add Product</button>
+                <a href="/products/import-csv" class="btn btn-info">Import CSV</a>
+                <a href="/products/export-csv" class="btn btn-success">Export CSV</a>
             </div>
         </form>
         <table class="table table-bordered" id="productsTable">
@@ -47,6 +49,7 @@
                         <td>
                             <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#editProductModal" data-product='<?php echo json_encode($product); ?>'>Edit</button>
                             <a href="/products/delete?id=<?php echo $product['ProductID']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this product?')">Delete</a>
+                            <a href="/products/qr-code?id=<?php echo $product['ProductID']; ?>" class="btn btn-sm btn-info">QR Code</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>

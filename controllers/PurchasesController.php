@@ -32,4 +32,14 @@ class PurchasesController
 
         require_once ROOT_PATH . 'views/purchases-history.php';
     }
+
+    public function rateSupplier()
+    {
+        require_once ROOT_PATH . 'helpers/Auth.php';
+        Auth::check(['Admin', 'Manager']);
+
+        // In a real application, you would update the supplier's rating in the database
+
+        header('Location: /purchases/history');
+    }
 }

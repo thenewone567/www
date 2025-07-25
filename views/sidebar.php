@@ -12,6 +12,7 @@
             <a href="/products" class="list-group-item list-group-item-action">Products</a>
             <a href="#" class="list-group-item list-group-item-action">Customers</a>
             <a href="/reports" class="list-group-item list-group-item-action">Reports</a>
+            <a href="/audit-log" class="list-group-item list-group-item-action">Audit Log</a>
             <?php
         } elseif ($user['role'] === 'Manager') {
             ?>

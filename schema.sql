@@ -21,7 +21,8 @@ CREATE TABLE Suppliers (
     ContactName VARCHAR(100),
     Phone VARCHAR(20),
     Email VARCHAR(100),
-    Address TEXT
+    Address TEXT,
+    Rating INT DEFAULT 0
 );
 
 -- Create the Products table
@@ -101,13 +102,20 @@ CREATE TABLE Invoices (
 );
 
 -- Create the Inventory table
-CREATE TABLE Inventory (
-    InventoryID INT PRIMARY KEY AUTO_INCREMENT,
+-- Create the Locations table
+CREATE TABLE Locations (
+    LocationID INT PRIMARY KEY AUTO_INCREMENT,
+    LocationName VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- Create the ProductLocations table
+CREATE TABLE ProductLocations (
+    ProductLocationID INT PRIMARY KEY AUTO_INCREMENT,
     ProductID INT,
+    LocationID INT,
     Quantity INT NOT NULL,
-    Location VARCHAR(100),
-    LastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+    FOREIGN KEY (ProductID) REFERENCES Products(ProductID),
+    FOREIGN KEY (LocationID) REFERENCES Locations(LocationID)
 );
 
 -- Create the Returns table
