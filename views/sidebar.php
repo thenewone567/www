@@ -7,7 +7,7 @@
     if ($user) {
         if ($user['role'] === 'Admin') {
             ?>
-            <a href="#" class="list-group-item list-group-item-action">Users</a>
+            <a href="/users" class="list-group-item list-group-item-action">Users</a>
             <a href="#" class="list-group-item list-group-item-action">Suppliers</a>
             <a href="/products" class="list-group-item list-group-item-action">Products</a>
             <a href="#" class="list-group-item list-group-item-action">Customers</a>

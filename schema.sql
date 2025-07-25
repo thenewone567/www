@@ -10,6 +10,7 @@ CREATE TABLE Users (
     Username VARCHAR(50) NOT NULL UNIQUE,
     Password VARCHAR(255) NOT NULL,
     Role ENUM('Admin', 'Manager', 'Supervisor', 'Warehouse Associate') NOT NULL,
+    LastLogin TIMESTAMP,
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

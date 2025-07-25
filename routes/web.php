@@ -29,6 +29,11 @@ $routes = [
     'inventory/cycle-count/process' => 'InventoryController@cycleCount',
     'invoices/show/{id}' => 'InvoicesController@show',
     'invoices/pdf/{id}' => 'InvoicesController@generatePDF',
+    'users' => 'UsersController@index',
+    'users/add' => 'UsersController@add',
+    'users/edit' => 'UsersController@edit',
+    'users/delete' => 'UsersController@delete',
+    'users/login-activity' => 'UsersController@showLoginActivity',
 ];
 
 // Match the route
@@ -36,6 +41,17 @@ $method = $_SERVER['REQUEST_METHOD'];
 foreach ($routes as $route => $action) {
     $pattern = preg_replace('/\{[a-zA-Z0-9_]+\}/', '([a-zA-Z0-9_]+)', $route);
     if (preg_match("#^$pattern$#", $requestUri, $matches)) {
+        if ($method === 'POST') {
+            if ($route === 'login/process' || $route === 'sales/create' || $route === 'purchases/create' || $route === 'register/process' || $route === 'products/add' || $route === 'products/edit' || $route === 'inventory/receive' || $route === 'inventory/restock' || $route === 'inventory/putaway' || $route === 'inventory/cycle-count' || $route === 'users/add' || $route === 'users/edit') {
+                $parts = explode('@', $action);
+                $controllerName = $parts[0];
+                $methodName = $parts[1];
+
+                $controller = new $controllerName();
+                $controller->$methodName();
+                exit;
+            }
+        }
         array_shift($matches);
         $parts = explode('@', $action);
         $controllerName = $parts[0];
