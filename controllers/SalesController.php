@@ -16,9 +16,13 @@ class SalesController
 
         require_once ROOT_PATH . 'models/Sale.php';
         $saleModel = new Sale();
-        $saleModel->createSale($_POST);
+        $saleID = $saleModel->createSale($_POST);
 
-        header('Location: /sales/history');
+        require_once ROOT_PATH . 'models/Invoice.php';
+        $invoiceModel = new Invoice();
+        $invoiceID = $invoiceModel->createInvoice($saleID);
+
+        header('Location: /invoices/show/' . $invoiceID);
     }
 
     public function showSalesHistory()

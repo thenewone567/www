@@ -27,30 +27,22 @@ $routes = [
     'inventory/putaway/process' => 'InventoryController@putaway',
     'inventory/cycle-count' => 'InventoryController@showCycleCountForm',
     'inventory/cycle-count/process' => 'InventoryController@cycleCount',
+    'invoices/show/{id}' => 'InvoicesController@show',
+    'invoices/pdf/{id}' => 'InvoicesController@generatePDF',
 ];
 
 // Match the route
 $method = $_SERVER['REQUEST_METHOD'];
 foreach ($routes as $route => $action) {
-    if ($requestUri === $route) {
-        if ($method === 'POST') {
-            if ($route === 'login/process' || $route === 'sales/create' || $route === 'purchases/create' || $route === 'register/process' || $route === 'products/add' || $route === 'products/edit' || $route === 'inventory/receive' || $route === 'inventory/restock' || $route === 'inventory/putaway' || $route === 'inventory/cycle-count') {
-                $parts = explode('@', $action);
-                $controllerName = $parts[0];
-                $methodName = $parts[1];
+    $pattern = preg_replace('/\{[a-zA-Z0-9_]+\}/', '([a-zA-Z0-9_]+)', $route);
+    if (preg_match("#^$pattern$#", $requestUri, $matches)) {
+        array_shift($matches);
+        $parts = explode('@', $action);
+        $controllerName = $parts[0];
+        $methodName = $parts[1];
 
-                $controller = new $controllerName();
-                $controller->$methodName();
-                exit;
-            }
-        } elseif ($method === 'GET') {
-            $parts = explode('@', $action);
-            $controllerName = $parts[0];
-            $methodName = $parts[1];
-
-            $controller = new $controllerName();
-            $controller->$methodName();
-            exit;
-        }
+        $controller = new $controllerName();
+        call_user_func_array([$controller, $methodName], $matches);
+        exit;
     }
 }
