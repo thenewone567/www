@@ -15,13 +15,17 @@ $routes = [
     'purchases/new' => 'PurchasesController@showNewPurchaseForm',
     'purchases/create' => 'PurchasesController@createPurchase',
     'purchases/history' => 'PurchasesController@showPurchasesHistory',
+    'products' => 'ProductsController@index',
+    'products/add' => 'ProductsController@add',
+    'products/edit' => 'ProductsController@edit',
+    'products/delete' => 'ProductsController@delete',
 ];
 
 // Match the route
 $method = $_SERVER['REQUEST_METHOD'];
 foreach ($routes as $route => $action) {
     if ($requestUri === $route) {
-        if ($method === 'POST' && ($route === 'login/process' || $route === 'sales/create' || $route === 'purchases/create' || $route === 'register/process')) {
+        if ($method === 'POST' && ($route === 'login/process' || $route === 'sales/create' || $route === 'purchases/create' || $route === 'register/process' || $route === 'products/add' || $route === 'products/edit')) {
             $parts = explode('@', $action);
             $controllerName = $parts[0];
             $methodName = $parts[1];

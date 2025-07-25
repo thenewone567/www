@@ -9,12 +9,12 @@
             ?>
             <a href="#" class="list-group-item list-group-item-action">Users</a>
             <a href="#" class="list-group-item list-group-item-action">Suppliers</a>
-            <a href="#" class="list-group-item list-group-item-action">Products</a>
+            <a href="/products" class="list-group-item list-group-item-action">Products</a>
             <a href="#" class="list-group-item list-group-item-action">Customers</a>
             <?php
         } elseif ($user['role'] === 'Manager') {
             ?>
-            <a href="#" class="list-group-item list-group-item-action">Products</a>
+            <a href="/products" class="list-group-item list-group-item-action">Products</a>
             <a href="/sales/new" class="list-group-item list-group-item-action">New Sale</a>
             <a href="/sales/history" class="list-group-item list-group-item-action">Sales History</a>
             <a href="/purchases/new" class="list-group-item list-group-item-action">New Purchase</a>
