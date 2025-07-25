@@ -1,6 +1,6 @@
 # Home Hardware Store Database
 
-This document provides instructions on how to set up the databases for the Home Hardware Store application.
+This document provides instructions on how to set up the database for the Home Hardware Store application.
 
 ## Prerequisites
 
@@ -18,41 +18,38 @@ This document provides instructions on how to set up the databases for the Home 
 
    You will be prompted to enter your root password.
 
-3. **Create the databases by importing the `schema.sql` file:**
+3. **Create the database by importing the `schema.sql` file:**
 
    ```sql
    source /path/to/your/project/schema.sql;
    ```
 
-   Replace `/path/to/your/project/` with the actual path to the `schema.sql` file. This will create four databases: `users_db`, `suppliers_db`, `inventory_db`, and `customers_db`.
+   Replace `/path/to/your/project/` with the actual path to the `schema.sql` file.
 
-4. **Verify that the databases and tables have been created.** You can do this by running `SHOW DATABASES;` and then `USE <database_name>;` and `SHOW TABLES;` for each database.
+4. **Verify that the database and tables have been created:**
+
+   ```sql
+   USE hardware_store;
+   SHOW TABLES;
+   ```
+
+   You should see a list of all the tables created by the script.
 
 ## Database Schema
 
-The database schema is divided into four separate databases:
-
-### `users_db`
+The database schema consists of a single database named `hardware_store` with the following tables:
 
 - `Users`: Stores user information and their roles.
-
-### `suppliers_db`
-
 - `Suppliers`: Stores information about product suppliers.
-- `Purchases`: Records purchases made from suppliers.
-
-### `inventory_db`
-
 - `Products`: Stores information about the products.
 - `Barcodes`: Stores barcodes for each product.
-- `Inventory`: Manages the stock of products in the warehouse.
-- `StockManagement`: Tracks the movement of stock.
-
-### `customers_db`
-
 - `Customers`: Stores customer information.
+- `Purchases`: Records purchases made from suppliers.
+- `PurchaseItems`: A junction table that links products to purchases.
 - `Sales`: Records sales made to customers.
+- `SaleItems`: A junction table that links products to sales.
 - `Invoices`: Stores invoice information related to sales.
+- `Inventory`: Manages the stock of products in the warehouse.
 - `Returns`: Records customer returns.
-
-**Important Note:** The current database design separates tables into different databases. This means that foreign key constraints between tables in different databases (e.g., between `Products` in `inventory_db` and `Suppliers` in `suppliers_db`) are not enforced by the database. The application logic will need to handle these relationships.
+- `ReturnItems`: A junction table that links products to returns.
+- `StockManagement`: Tracks the movement of stock.

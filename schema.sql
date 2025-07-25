@@ -1,11 +1,8 @@
--- Create the databases
-CREATE DATABASE IF NOT EXISTS users_db;
-CREATE DATABASE IF NOT EXISTS suppliers_db;
-CREATE DATABASE IF NOT EXISTS inventory_db;
-CREATE DATABASE IF NOT EXISTS customers_db;
+-- Create the database
+CREATE DATABASE IF NOT EXISTS hardware_store;
 
--- Use the users_db
-USE users_db;
+-- Use the database
+USE hardware_store;
 
 -- Create the Users table
 CREATE TABLE Users (
@@ -15,9 +12,6 @@ CREATE TABLE Users (
     Role ENUM('Admin', 'Manager', 'Supervisor', 'Warehouse Associate') NOT NULL,
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Use the suppliers_db
-USE suppliers_db;
 
 -- Create the Suppliers table
 CREATE TABLE Suppliers (
@@ -29,25 +23,79 @@ CREATE TABLE Suppliers (
     Address TEXT
 );
 
--- Create the Purchases table
-CREATE TABLE Purchases (
-    PurchaseID INT PRIMARY KEY AUTO_INCREMENT,
-    SupplierID INT,
-    PurchaseDate DATE NOT NULL,
-    TotalAmount DECIMAL(10, 2) NOT NULL,
-    FOREIGN KEY (SupplierID) REFERENCES Suppliers(SupplierID)
-);
-
--- Use the inventory_db
-USE inventory_db;
-
 -- Create the Products table
 CREATE TABLE Products (
     ProductID INT PRIMARY KEY AUTO_INCREMENT,
     ProductName VARCHAR(100) NOT NULL,
     Description TEXT,
     Price DECIMAL(10, 2) NOT NULL,
-    SupplierID INT
+    SupplierID INT,
+    FOREIGN KEY (SupplierID) REFERENCES Suppliers(SupplierID)
+);
+
+-- Create the Barcodes table
+CREATE TABLE Barcodes (
+    BarcodeID INT PRIMARY KEY AUTO_INCREMENT,
+    ProductID INT,
+    Barcode VARCHAR(255) NOT NULL UNIQUE,
+    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+);
+
+-- Create the Customers table
+CREATE TABLE Customers (
+    CustomerID INT PRIMARY KEY AUTO_INCREMENT,
+    FirstName VARCHAR(50) NOT NULL,
+    LastName VARCHAR(50) NOT NULL,
+    Email VARCHAR(100) UNIQUE,
+    Phone VARCHAR(20)
+);
+
+-- Create the Purchases table
+CREATE TABLE Purchases (
+    PurchaseID INT PRIMARY KEY AUTO_INCREMENT,
+    SupplierID INT,
+    PurchaseDate DATE NOT NULL,
+    FOREIGN KEY (SupplierID) REFERENCES Suppliers(SupplierID)
+);
+
+-- Create the PurchaseItems table
+CREATE TABLE PurchaseItems (
+    PurchaseItemID INT PRIMARY KEY AUTO_INCREMENT,
+    PurchaseID INT,
+    ProductID INT,
+    Quantity INT NOT NULL,
+    Cost DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (PurchaseID) REFERENCES Purchases(PurchaseID),
+    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+);
+
+-- Create the Sales table
+CREATE TABLE Sales (
+    SaleID INT PRIMARY KEY AUTO_INCREMENT,
+    CustomerID INT,
+    SaleDate DATE NOT NULL,
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
+);
+
+-- Create the SaleItems table
+CREATE TABLE SaleItems (
+    SaleItemID INT PRIMARY KEY AUTO_INCREMENT,
+    SaleID INT,
+    ProductID INT,
+    Quantity INT NOT NULL,
+    Discount DECIMAL(10, 2) DEFAULT 0.00,
+    FOREIGN KEY (SaleID) REFERENCES Sales(SaleID),
+    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+);
+
+-- Create the Invoices table
+CREATE TABLE Invoices (
+    InvoiceID INT PRIMARY KEY AUTO_INCREMENT,
+    SaleID INT,
+    InvoiceDate DATE NOT NULL,
+    DueDate DATE,
+    Status ENUM('Paid', 'Unpaid', 'Overdue') NOT NULL,
+    FOREIGN KEY (SaleID) REFERENCES Sales(SaleID)
 );
 
 -- Create the Inventory table
@@ -60,11 +108,22 @@ CREATE TABLE Inventory (
     FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
 );
 
--- Create the Barcodes table
-CREATE TABLE Barcodes (
-    BarcodeID INT PRIMARY KEY AUTO_INCREMENT,
+-- Create the Returns table
+CREATE TABLE Returns (
+    ReturnID INT PRIMARY KEY AUTO_INCREMENT,
+    SaleID INT,
+    ReturnDate DATE NOT NULL,
+    Reason TEXT,
+    FOREIGN KEY (SaleID) REFERENCES Sales(SaleID)
+);
+
+-- Create the ReturnItems table
+CREATE TABLE ReturnItems (
+    ReturnItemID INT PRIMARY KEY AUTO_INCREMENT,
+    ReturnID INT,
     ProductID INT,
-    Barcode VARCHAR(255) NOT NULL UNIQUE,
+    Quantity INT NOT NULL,
+    FOREIGN KEY (ReturnID) REFERENCES Returns(ReturnID),
     FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
 );
 
@@ -76,46 +135,6 @@ CREATE TABLE StockManagement (
     MovementType ENUM('IN', 'OUT') NOT NULL,
     Quantity INT NOT NULL,
     MovementDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
-);
-
--- Use the customers_db
-USE customers_db;
-
--- Create the Customers table
-CREATE TABLE Customers (
-    CustomerID INT PRIMARY KEY AUTO_INCREMENT,
-    FirstName VARCHAR(50) NOT NULL,
-    LastName VARCHAR(50) NOT NULL,
-    Email VARCHAR(100) UNIQUE,
-    Phone VARCHAR(20)
-);
-
--- Create the Sales table
-CREATE TABLE Sales (
-    SaleID INT PRIMARY KEY AUTO_INCREMENT,
-    CustomerID INT,
-    SaleDate DATE NOT NULL,
-    TotalAmount DECIMAL(10, 2) NOT NULL,
-    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
-);
-
--- Create the Invoices table
-CREATE TABLE Invoices (
-    InvoiceID INT PRIMARY KEY AUTO_INCREMENT,
-    SaleID INT,
-    InvoiceDate DATE NOT NULL,
-    DueDate DATE,
-    TotalAmount DECIMAL(10, 2) NOT NULL,
-    Status ENUM('Paid', 'Unpaid', 'Overdue') NOT NULL,
-    FOREIGN KEY (SaleID) REFERENCES Sales(SaleID)
-);
-
--- Create the Returns table
-CREATE TABLE Returns (
-    ReturnID INT PRIMARY KEY AUTO_INCREMENT,
-    SaleID INT,
-    ReturnDate DATE NOT NULL,
-    Reason TEXT,
-    FOREIGN KEY (SaleID) REFERENCES Sales(SaleID)
+    FOREIGN KEY (ProductID) REFERENCES Products(ProductID),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
 );
