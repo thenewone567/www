@@ -34,11 +34,20 @@
                     </li>
                     <?php
                 } else {
-                    ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/login">Login</a>
-                    </li>
-                    <?php
+                    $requestUri = isset($_GET['url']) ? $_GET['url'] : '';
+                    if ($requestUri === 'login') {
+                        ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/register">Signup</a>
+                        </li>
+                        <?php
+                    } else {
+                        ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">Login</a>
+                        </li>
+                        <?php
+                    }
                 }
                 ?>
             </ul>

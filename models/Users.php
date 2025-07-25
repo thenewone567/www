@@ -24,4 +24,11 @@ class Users
         }
         return null;
     }
+
+    public function createUser($data)
+    {
+        // This is a dummy implementation
+        // In a real application, you would insert the user into the database
+        return true;
+    }
 }
