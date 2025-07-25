@@ -15,7 +15,8 @@
         } elseif ($user['role'] === 'Manager') {
             ?>
             <a href="#" class="list-group-item list-group-item-action">Products</a>
-            <a href="#" class="list-group-item list-group-item-action">Sales</a>
+            <a href="/sales/new" class="list-group-item list-group-item-action">New Sale</a>
+            <a href="/sales/history" class="list-group-item list-group-item-action">Sales History</a>
             <a href="#" class="list-group-item list-group-item-action">Purchases</a>
             <?php
         } elseif ($user['role'] === 'Supervisor') {
