@@ -50,14 +50,6 @@ CREATE TABLE Products (
     SupplierID INT
 );
 
--- Create the Barcodes table
-CREATE TABLE Barcodes (
-    BarcodeID INT PRIMARY KEY AUTO_INCREMENT,
-    ProductID INT,
-    Barcode VARCHAR(255) NOT NULL UNIQUE,
-    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
-);
-
 -- Create the Inventory table
 CREATE TABLE Inventory (
     InventoryID INT PRIMARY KEY AUTO_INCREMENT,
@@ -65,6 +57,14 @@ CREATE TABLE Inventory (
     Quantity INT NOT NULL,
     Location VARCHAR(100),
     LastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+);
+
+-- Create the Barcodes table
+CREATE TABLE Barcodes (
+    BarcodeID INT PRIMARY KEY AUTO_INCREMENT,
+    ProductID INT,
+    Barcode VARCHAR(255) NOT NULL UNIQUE,
     FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
 );
 
