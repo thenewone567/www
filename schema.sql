@@ -28,6 +28,7 @@ CREATE TABLE Suppliers (
 CREATE TABLE Products (
     ProductID INT PRIMARY KEY AUTO_INCREMENT,
     ProductName VARCHAR(100) NOT NULL,
+    SKU VARCHAR(50) UNIQUE,
     Description TEXT,
     Price DECIMAL(10, 2) NOT NULL,
     SupplierID INT,

@@ -7,14 +7,24 @@
     <div class="col-md-9">
         <h1>Products</h1>
         <hr>
-        <div class="row mb-3">
+        <form action="/products" method="GET" class="row mb-3">
             <div class="col">
-                <input type="text" id="searchInput" class="form-control" placeholder="Search for products...">
+                <input type="text" name="searchTerm" class="form-control" placeholder="Search for products..." value="<?php echo isset($_GET['searchTerm']) ? htmlspecialchars($_GET['searchTerm']) : ''; ?>">
+            </div>
+            <div class="col">
+                <select name="searchType" class="form-control">
+                    <option value="ProductName" <?php echo (isset($_GET['searchType']) && $_GET['searchType'] === 'ProductName') ? 'selected' : ''; ?>>Name</option>
+                    <option value="SKU" <?php echo (isset($_GET['searchType']) && $_GET['searchType'] === 'SKU') ? 'selected' : ''; ?>>SKU</option>
+                    <option value="Barcode" <?php echo (isset($_GET['searchType']) && $_GET['searchType'] === 'Barcode') ? 'selected' : ''; ?>>Barcode</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Search</button>
             </div>
             <div class="col-auto">
                 <button class="btn btn-primary" data-toggle="modal" data-target="#addProductModal">Add Product</button>
             </div>
-        </div>
+        </form>
         <table class="table table-bordered" id="productsTable">
             <thead>
                 <tr>
@@ -125,27 +135,6 @@
 </div>
 
 <script>
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        let filter = this.value.toLowerCase();
-        let table = document.getElementById('productsTable');
-        let rows = table.getElementsByTagName('tr');
-        for (let i = 1; i < rows.length; i++) {
-            let cells = rows[i].getElementsByTagName('td');
-            let found = false;
-            for (let j = 0; j < cells.length; j++) {
-                if (cells[j].innerText.toLowerCase().indexOf(filter) > -1) {
-                    found = true;
-                    break;
-                }
-            }
-            if (found) {
-                rows[i].style.display = '';
-            } else {
-                rows[i].style.display = 'none';
-            }
-        }
-    });
-
     $('#editProductModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);
         var product = button.data('product');
@@ -155,6 +144,25 @@
         modal.find('#editDescription').val(product.Description);
         modal.find('#editPrice').val(product.Price);
         modal.find('#editQuantity').val(product.Quantity);
+    });
+
+    // Barcode scanning simulation
+    let barcode = '';
+    let reading = false;
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            if (barcode.length > 0) {
+                document.querySelector('input[name="searchTerm"]').value = barcode;
+                document.querySelector('select[name="searchType"]').value = 'Barcode';
+                document.querySelector('form').submit();
+            }
+            barcode = '';
+            return;
+        }
+        if (e.key !== 'Shift' && e.key !== 'Control' && e.key !== 'Alt') {
+            barcode += e.key;
+        }
     });
 </script>
 

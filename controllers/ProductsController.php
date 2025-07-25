@@ -9,7 +9,11 @@ class ProductsController
 
         require_once ROOT_PATH . 'models/Product.php';
         $productModel = new Product();
-        $products = $productModel->getProducts();
+
+        $searchTerm = isset($_GET['searchTerm']) ? $_GET['searchTerm'] : null;
+        $searchType = isset($_GET['searchType']) ? $_GET['searchType'] : null;
+
+        $products = $productModel->getProducts($searchTerm, $searchType);
 
         require_once ROOT_PATH . 'views/products.php';
     }

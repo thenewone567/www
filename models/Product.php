@@ -11,13 +11,14 @@ class Product
         // $this->conn = connect();
     }
 
-    public function getProducts()
+    public function getProducts($searchTerm = null, $searchType = null)
     {
         // This is a dummy implementation
-        return [
+        $products = [
             [
                 'ProductID' => 1,
                 'ProductName' => 'Product A',
+                'SKU' => 'PA001',
                 'Description' => 'Description for Product A',
                 'Price' => 10.00,
                 'Quantity' => 10,
@@ -26,6 +27,7 @@ class Product
             [
                 'ProductID' => 2,
                 'ProductName' => 'Product B',
+                'SKU' => 'PB002',
                 'Description' => 'Description for Product B',
                 'Price' => 20.00,
                 'Quantity' => 5,
@@ -34,9 +36,41 @@ class Product
             [
                 'ProductID' => 3,
                 'ProductName' => 'Product C',
+                'SKU' => 'PC003',
                 'Description' => 'Description for Product C',
                 'Price' => 30.00,
                 'Quantity' => 0,
+                'Photo' => 'https://via.placeholder.com/150'
+            ]
+        ];
+
+        if ($searchTerm && $searchType) {
+            $results = [];
+            foreach ($products as $product) {
+                if (stripos($product[$searchType], $searchTerm) !== false) {
+                    $results[] = $product;
+                }
+            }
+            return $results;
+        }
+
+        return $products;
+    }
+
+    public function getAlternativeProducts($productID)
+    {
+        // This is a dummy implementation
+        return [
+            [
+                'ProductID' => 4,
+                'ProductName' => 'Alternative Product D',
+                'Price' => 12.00,
+                'Photo' => 'https://via.placeholder.com/150'
+            ],
+            [
+                'ProductID' => 5,
+                'ProductName' => 'Alternative Product E',
+                'Price' => 22.00,
                 'Photo' => 'https://via.placeholder.com/150'
             ]
         ];
