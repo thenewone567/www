@@ -3,6 +3,7 @@
 // Routes
 $routes = [
     '' => 'HomeController@index',
+    'dashboard' => 'DashboardController@index',
     'login' => 'LoginController@showLoginForm',
     'login/process' => 'LoginController@login',
     'logout' => 'LoginController@logout',
