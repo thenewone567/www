@@ -132,8 +132,9 @@ CREATE TABLE StockManagement (
     StockMovementID INT PRIMARY KEY AUTO_INCREMENT,
     ProductID INT,
     UserID INT,
-    MovementType ENUM('IN', 'OUT') NOT NULL,
+    MovementType ENUM('IN', 'OUT', 'CYCLE_COUNT') NOT NULL,
     Quantity INT NOT NULL,
+    Location VARCHAR(100),
     MovementDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ProductID) REFERENCES Products(ProductID),
     FOREIGN KEY (UserID) REFERENCES Users(UserID)

@@ -22,12 +22,15 @@
             <?php
         } elseif ($user['role'] === 'Supervisor') {
             ?>
-            <a href="#" class="list-group-item list-group-item-action">Inventory</a>
-            <a href="#" class="list-group-item list-group-item-action">Stock Management</a>
+            <a href="/inventory/receiving" class="list-group-item list-group-item-action">Receiving</a>
+            <a href="/inventory/restock" class="list-group-item list-group-item-action">Restock</a>
+            <a href="/inventory/putaway" class="list-group-item list-group-item-action">Putaway</a>
+            <a href="/inventory/cycle-count" class="list-group-item list-group-item-action">Cycle Count</a>
             <?php
         } elseif ($user['role'] === 'Warehouse Associate') {
             ?>
-            <a href="#" class="list-group-item list-group-item-action">Inventory</a>
+            <a href="/inventory/receiving" class="list-group-item list-group-item-action">Receiving</a>
+            <a href="/inventory/putaway" class="list-group-item list-group-item-action">Putaway</a>
             <?php
         }
     }
