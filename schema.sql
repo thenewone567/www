@@ -1,8 +1,11 @@
--- Create the database
-CREATE DATABASE IF NOT EXISTS hardware_store;
+-- Create the databases
+CREATE DATABASE IF NOT EXISTS users_db;
+CREATE DATABASE IF NOT EXISTS suppliers_db;
+CREATE DATABASE IF NOT EXISTS inventory_db;
+CREATE DATABASE IF NOT EXISTS customers_db;
 
--- Use the database
-USE hardware_store;
+-- Use the users_db
+USE users_db;
 
 -- Create the Users table
 CREATE TABLE Users (
@@ -12,6 +15,9 @@ CREATE TABLE Users (
     Role ENUM('Admin', 'Manager', 'Supervisor', 'Warehouse Associate') NOT NULL,
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Use the suppliers_db
+USE suppliers_db;
 
 -- Create the Suppliers table
 CREATE TABLE Suppliers (
@@ -23,14 +29,25 @@ CREATE TABLE Suppliers (
     Address TEXT
 );
 
+-- Create the Purchases table
+CREATE TABLE Purchases (
+    PurchaseID INT PRIMARY KEY AUTO_INCREMENT,
+    SupplierID INT,
+    PurchaseDate DATE NOT NULL,
+    TotalAmount DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (SupplierID) REFERENCES Suppliers(SupplierID)
+);
+
+-- Use the inventory_db
+USE inventory_db;
+
 -- Create the Products table
 CREATE TABLE Products (
     ProductID INT PRIMARY KEY AUTO_INCREMENT,
     ProductName VARCHAR(100) NOT NULL,
     Description TEXT,
     Price DECIMAL(10, 2) NOT NULL,
-    SupplierID INT,
-    FOREIGN KEY (SupplierID) REFERENCES Suppliers(SupplierID)
+    SupplierID INT
 );
 
 -- Create the Barcodes table
@@ -41,6 +58,30 @@ CREATE TABLE Barcodes (
     FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
 );
 
+-- Create the Inventory table
+CREATE TABLE Inventory (
+    InventoryID INT PRIMARY KEY AUTO_INCREMENT,
+    ProductID INT,
+    Quantity INT NOT NULL,
+    Location VARCHAR(100),
+    LastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+);
+
+-- Create the StockManagement table
+CREATE TABLE StockManagement (
+    StockMovementID INT PRIMARY KEY AUTO_INCREMENT,
+    ProductID INT,
+    UserID INT,
+    MovementType ENUM('IN', 'OUT') NOT NULL,
+    Quantity INT NOT NULL,
+    MovementDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+);
+
+-- Use the customers_db
+USE customers_db;
+
 -- Create the Customers table
 CREATE TABLE Customers (
     CustomerID INT PRIMARY KEY AUTO_INCREMENT,
@@ -48,15 +89,6 @@ CREATE TABLE Customers (
     LastName VARCHAR(50) NOT NULL,
     Email VARCHAR(100) UNIQUE,
     Phone VARCHAR(20)
-);
-
--- Create the Purchases table
-CREATE TABLE Purchases (
-    PurchaseID INT PRIMARY KEY AUTO_INCREMENT,
-    SupplierID INT,
-    PurchaseDate DATE NOT NULL,
-    TotalAmount DECIMAL(10, 2) NOT NULL,
-    FOREIGN KEY (SupplierID) REFERENCES Suppliers(SupplierID)
 );
 
 -- Create the Sales table
@@ -79,16 +111,6 @@ CREATE TABLE Invoices (
     FOREIGN KEY (SaleID) REFERENCES Sales(SaleID)
 );
 
--- Create the Inventory table
-CREATE TABLE Inventory (
-    InventoryID INT PRIMARY KEY AUTO_INCREMENT,
-    ProductID INT,
-    Quantity INT NOT NULL,
-    Location VARCHAR(100),
-    LastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
-);
-
 -- Create the Returns table
 CREATE TABLE Returns (
     ReturnID INT PRIMARY KEY AUTO_INCREMENT,
@@ -96,16 +118,4 @@ CREATE TABLE Returns (
     ReturnDate DATE NOT NULL,
     Reason TEXT,
     FOREIGN KEY (SaleID) REFERENCES Sales(SaleID)
-);
-
--- Create the StockManagement table
-CREATE TABLE StockManagement (
-    StockMovementID INT PRIMARY KEY AUTO_INCREMENT,
-    ProductID INT,
-    UserID INT,
-    MovementType ENUM('IN', 'OUT') NOT NULL,
-    Quantity INT NOT NULL,
-    MovementDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ProductID) REFERENCES Products(ProductID),
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
 );
