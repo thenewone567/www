@@ -17,6 +17,12 @@ spl_autoload_register(function ($className) {
     }
 });
 
+// TCPDF Autoloader
+require_once(ROOT_PATH . 'vendor/tcpdf/tcpdf.php');
+
+// PHP QR Code Autoloader
+require_once(ROOT_PATH . 'vendor/phpqrcode/qrlib.php');
+
 // Get the requested URI from the `url` parameter
 $requestUri = isset($_GET['url']) ? $_GET['url'] : '';
 
