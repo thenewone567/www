@@ -6,9 +6,8 @@ class User
 
     public function __construct()
     {
-        // For now, we will not connect to the database
-        // require_once ROOT_PATH . 'config/database.php';
-        // $this->conn = connect();
+        require_once ROOT_PATH . 'config/database.php';
+        $this->conn = connect();
     }
 
     public function getUsers()
@@ -32,9 +31,15 @@ class User
 
     public function addUser($data)
     {
-        // This is a dummy implementation
-        // In a real application, you would insert the user into the database
-        return true;
+        $username = $data['username'];
+        $password = password_hash($data['password'], PASSWORD_DEFAULT);
+        $role = $data['role'];
+
+        $sql = "INSERT INTO Users (Username, Password, Role) VALUES (?, ?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("sss", $username, $password, $role);
+
+        return $stmt->execute();
     }
 
     public function updateUser($data)
@@ -66,5 +71,15 @@ class User
                 'IPAddress' => '127.0.0.1'
             ]
         ];
+    }
+
+    public function getUserByUsername($username)
+    {
+        $sql = "SELECT * FROM Users WHERE Username = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
     }
 }

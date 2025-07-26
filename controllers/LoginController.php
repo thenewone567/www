@@ -12,8 +12,8 @@ class LoginController
         $username = $_POST['username'];
         $password = $_POST['password'];
 
-        require_once ROOT_PATH . 'models/Users.php';
-        $userModel = new Users();
+        require_once ROOT_PATH . 'models/User.php';
+        $userModel = new User();
         $user = $userModel->getUserByUsername($username);
 
         require_once ROOT_PATH . 'helpers/Session.php';
