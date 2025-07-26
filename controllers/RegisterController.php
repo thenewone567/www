@@ -9,8 +9,8 @@ class RegisterController
 
     public function register()
     {
-        require_once ROOT_PATH . 'models/Users.php';
-        $userModel = new Users();
+        require_once ROOT_PATH . 'models/User.php';
+        $userModel = new User();
         $userModel->createUser($_POST);
 
         header('Location: /login');

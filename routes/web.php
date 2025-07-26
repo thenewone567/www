@@ -50,24 +50,23 @@ $method = $_SERVER['REQUEST_METHOD'];
 foreach ($routes as $route => $action) {
     $pattern = preg_replace('/\{[a-zA-Z0-9_]+\}/', '([a-zA-Z0-9_]+)', $route);
     if (preg_match("#^$pattern$#", $requestUri, $matches)) {
-        if ($method === 'POST') {
-            if ($route === 'login/process' || $route === 'sales/create' || $route === 'purchases/create' || $route === 'register/process' || $route === 'products/add' || $route === 'products/edit' || $route === 'inventory/receive' || $route === 'inventory/restock' || $route === 'inventory/putaway' || $route === 'inventory/cycle-count' || $route === 'users/add' || $route === 'users/edit' || $route === 'products/import-csv/process' || $route === 'purchases/rate-supplier') {
-                $parts = explode('@', $action);
-                $controllerName = $parts[0];
-                $methodName = $parts[1];
-
-                $controller = new $controllerName();
-                $controller->$methodName();
-                exit;
-            }
+        if ($method === 'POST' && ($route === 'login/process' || $route === 'sales/create' || $route === 'purchases/create' || $route === 'register/process' || $route === 'products/add' || $route === 'products/edit' || $route === 'inventory/receive' || $route === 'inventory/restock' || $route === 'inventory/putaway' || $route === 'inventory/cycle-count' || $route === 'users/add' || $route === 'users/edit' || $route === 'products/import-csv/process' || $route === 'purchases/rate-supplier')) {
+            $parts = explode('@', $action);
+            $controllerName = $parts[0];
+            $methodName = $parts[1];
+            $controller = new $controllerName();
+            $controller->$methodName();
+            exit;
         }
-        array_shift($matches);
-        $parts = explode('@', $action);
-        $controllerName = $parts[0];
-        $methodName = $parts[1];
 
-        $controller = new $controllerName();
-        call_user_func_array([$controller, $methodName], $matches);
-        exit;
+        if ($method === 'GET') {
+            array_shift($matches);
+            $parts = explode('@', $action);
+            $controllerName = $parts[0];
+            $methodName = $parts[1];
+            $controller = new $controllerName();
+            call_user_func_array([$controller, $methodName], $matches);
+            exit;
+        }
     }
 }
