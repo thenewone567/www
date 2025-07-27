@@ -3,15 +3,15 @@
   session_start();
 
   // Require libraries from folder libraries
-  require_once '../app/config.php';
-  require_once '../app/Database.php';
-  require_once '../app/helpers.php';
+  require_once 'app/config.php';
+  require_once 'app/Database.php';
+  require_once 'app/helpers.php';
 
   // Autoload Core Libraries
-  require_once '../app/controllers/Controller.php';
+  require_once 'app/controllers/Controller.php';
   spl_autoload_register(function($className){
-      if (file_exists('../app/controllers/' . $className . '.php')) {
-          require_once '../app/controllers/' . $className . '.php';
+      if (file_exists('app/controllers/' . $className . '.php')) {
+          require_once 'app/controllers/' . $className . '.php';
       }
   });
 
@@ -26,7 +26,7 @@ $methodName = isset($urlParts[1]) ? $urlParts[1] : 'index';
 $params = array_slice($urlParts, 2);
 
 // Check if the controller file exists
-$controllerFile = __DIR__ . '/../app/controllers/' . $controllerName . '.php';
+$controllerFile = __DIR__ . '/app/controllers/' . $controllerName . '.php';
 if (file_exists($controllerFile)) {
     require_once $controllerFile;
 

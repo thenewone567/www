@@ -8,7 +8,7 @@
   // App Root
   define('APPROOT', dirname(dirname(__FILE__)));
   // URL Root
-  define('URLROOT', 'http://localhost/hardware-shop');
+  define('URLROOT', 'http://localhost');
   // Site Name
   define('SITENAME', 'Master Hardware');
   // App Version
