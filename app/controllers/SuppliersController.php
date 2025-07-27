@@ -1,5 +1,7 @@
 <?php
 class SuppliersController extends Controller {
+public $supplierModel;
+
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

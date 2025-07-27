@@ -1,5 +1,7 @@
 <?php
 class CustomersController extends Controller {
+public $customerModel;
+
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

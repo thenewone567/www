@@ -1,5 +1,7 @@
 <?php
 class ProductsController extends Controller {
+public $productModel;
+
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

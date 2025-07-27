@@ -1,5 +1,7 @@
 <?php
 class ReportsController extends Controller {
+public $reportModel;
+
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

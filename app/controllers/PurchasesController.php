@@ -1,5 +1,8 @@
 <?php
 class PurchasesController extends Controller {
+public $productModel;
+    public $purchaseModel;
+
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

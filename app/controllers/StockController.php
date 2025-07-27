@@ -1,5 +1,7 @@
 <?php
 class StockController extends Controller {
+public $stockModel;
+
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

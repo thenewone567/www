@@ -1,5 +1,8 @@
 <?php
 class SalesController extends Controller {
+public $productModel;
+    public $saleModel;
+
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

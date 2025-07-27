@@ -1,5 +1,7 @@
 <?php
 class ReturnsController extends Controller {
+public $returnModel;
+
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

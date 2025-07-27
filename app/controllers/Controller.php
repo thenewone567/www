@@ -4,6 +4,8 @@
    * Loads the models and views
    */
   class Controller {
+public $notificationModel;
+
     public $notificationModel;
 
     public function __construct() {

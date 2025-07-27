@@ -1,5 +1,10 @@
 <?php
 class InvoicesController extends Controller {
+public $customerModel;
+    public $invoiceModel;
+    public $saleModel;
+    public $settingModel;
+
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

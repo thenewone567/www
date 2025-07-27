@@ -1,5 +1,7 @@
 <?php
 class NotificationsController extends Controller {
+public $notificationModel;
+
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');
