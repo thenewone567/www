@@ -8,6 +8,7 @@
   require_once '../app/helpers.php';
 
   // Autoload Core Libraries
+  require_once '../app/controllers/Controller.php';
   spl_autoload_register(function($className){
       if (file_exists('../app/controllers/' . $className . '.php')) {
           require_once '../app/controllers/' . $className . '.php';
