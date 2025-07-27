@@ -40,6 +40,7 @@ if (file_exists($controllerFile)) {
     }
 } else {
     // Handle 404 - controller not found
-    echo "404 - Page Not Found (Invalid controller)";
+    echo "404 - Page Not Found (Invalid controller)<br>";
+    echo "Attempted to load controller at: " . $controllerFile;
 }
 ?>
