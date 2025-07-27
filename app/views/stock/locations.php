@@ -1,4 +1,4 @@
-<?php require APPROOT . DS . 'app' . DS . '' . ''views/layout/header.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . views/layout/header.php'; ?>
     <div class="row">
         <div class="col-md-6">
             <h1>Warehouse Locations</h1>
@@ -29,4 +29,4 @@
     <?php endforeach; ?>
         </tbody>
     </table>
-<?php require APPROOT . DS . 'app' . DS . '' . ''views/layout/footer.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . views/layout/footer.php'; ?>

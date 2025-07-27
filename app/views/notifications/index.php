@@ -1,4 +1,4 @@
-<?php require APPROOT . DS . 'app' . DS . '' . ''views/layout/header.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . views/layout/header.php'; ?>
     <h1>Notifications</h1>
     <ul class="list-group">
     <?php foreach($data['notifications'] as $notification) : ?>
@@ -8,4 +8,4 @@
         </li>
     <?php endforeach; ?>
     </ul>
-<?php require APPROOT . DS . 'app' . DS . '' . ''views/layout/footer.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . views/layout/footer.php'; ?>

@@ -1,4 +1,4 @@
-<?php require APPROOT . DS . 'app' . DS . '' . ''views/layout/header.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . views/layout/header.php'; ?>
     <div class="row">
         <div class="col-md-12">
             <div class="pull-right">
@@ -94,4 +94,4 @@
             </div>
         </div>
     </div>
-<?php require APPROOT . DS . 'app' . DS . '' . ''views/layout/footer.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . views/layout/footer.php'; ?>

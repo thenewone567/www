@@ -11,7 +11,7 @@
 </head>
 <body>
     <div class="d-flex" id="wrapper">
-        <?php require APPROOT . DS . 'app' . DS . '' . ''views/layout/sidebar.php'; ?>
+        <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'sidebar.php'; ?>
         <div id="page-content-wrapper">
-            <?php require APPROOT . DS . 'app' . DS . '' . ''views/layout/navbar.php'; ?>
+            <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'navbar.php'; ?>
             <div class="container-fluid">

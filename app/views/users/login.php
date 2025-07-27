@@ -1,4 +1,4 @@
-<?php require APPROOT . DS . 'app' . DS . '' . '' . 'views/layout/header.php'; ?>
+<?php require APPROOT . DS . 'app' . DS .  . 'views/layout/header.php'; ?>
 <div class="row">
     <div class="col-md-6 mx-auto">
         <div class="card card-body bg-light mt-5">
@@ -28,4 +28,4 @@
         </div>
     </div>
 </div>
-<?php require APPROOT . DS . 'app' . DS . '' . '' . 'views/layout/footer.php'; ?>
+<?php require APPROOT . DS . 'app' . DS .  . 'views/layout/footer.php'; ?>
