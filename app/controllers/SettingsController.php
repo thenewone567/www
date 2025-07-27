@@ -1,5 +1,5 @@
 <?php
-class Settings extends Controller {
+class SettingsController extends Controller {
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

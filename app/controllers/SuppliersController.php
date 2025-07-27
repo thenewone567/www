@@ -1,5 +1,5 @@
 <?php
-class Suppliers extends Controller {
+class SuppliersController extends Controller {
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

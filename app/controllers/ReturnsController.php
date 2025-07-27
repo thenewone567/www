@@ -1,5 +1,5 @@
 <?php
-class Returns extends Controller {
+class ReturnsController extends Controller {
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

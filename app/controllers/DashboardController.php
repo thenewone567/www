@@ -1,5 +1,5 @@
 <?php
-class Dashboard extends Controller {
+class DashboardController extends Controller {
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

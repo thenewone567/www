@@ -1,5 +1,5 @@
 <?php
-class Purchases extends Controller {
+class PurchasesController extends Controller {
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

@@ -1,7 +1,7 @@
 <?php
 require_once 'vendor/autoload.php';
 
-class Barcodes extends Controller {
+class BarcodesController extends Controller {
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');

@@ -1,5 +1,5 @@
 <?php
-class Invoices extends Controller {
+class InvoicesController extends Controller {
     public function __construct(){
         if(!isLoggedIn()){
             redirect('users/login');
