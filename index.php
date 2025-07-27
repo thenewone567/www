@@ -2,6 +2,9 @@
   // Start session
   session_start();
 
+  // Define DS
+  define('DS', DIRECTORY_SEPARATOR);
+
   // Require libraries from folder libraries
   require_once 'app' . DS . 'config.php';
   require_once 'app' . DS . 'Database.php';
