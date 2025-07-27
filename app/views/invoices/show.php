@@ -12,23 +12,19 @@
                 <div class="col-sm-6">
                     <h6 class="mb-3">From:</h6>
                     <div>
-                        <strong><?php echo SITENAME; ?></strong>
+                        <strong><?php echo $data['settings']['company_name']; ?></strong>
                     </div>
-                    <div>123 Street</div>
-                    <div>City, State, Zip</div>
-                    <div>Email: info@masterhardware.com</div>
-                    <div>Phone: +1 234 567 890</div>
+                    <div><?php echo $data['settings']['company_address']; ?></div>
+                    <div>Email: <?php echo $data['settings']['company_email']; ?></div>
+                    <div>Phone: <?php echo $data['settings']['company_phone']; ?></div>
                 </div>
 
                 <div class="col-sm-6">
                     <h6 class="mb-3">To:</h6>
                     <div>
-                        <strong>Customer Name</strong>
+                        <strong><?php echo $data['customer']->customer_name; ?></strong>
                     </div>
-                    <div>Address</div>
-                    <div>City, State, Zip</div>
-                    <div>Email: customer@example.com</div>
-                    <div>Phone: +1 234 567 890</div>
+                    <div><?php echo $data['customer']->contact_info; ?></div>
                 </div>
             </div>
 

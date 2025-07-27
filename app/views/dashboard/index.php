@@ -80,7 +80,11 @@
                 <h6 class="m-0 font-weight-bold text-primary">Top Selling Products</h6>
             </div>
             <div class="card-body">
-                <p>Placeholder for top selling products.</p>
+                <ul class="list-group">
+                    <?php foreach($data['top_selling'] as $product) : ?>
+                        <li class="list-group-item"><?php echo $product->product_name; ?> - <?php echo $product->total_quantity; ?> sold</li>
+                    <?php endforeach; ?>
+                </ul>
             </div>
         </div>
     </div>
@@ -90,7 +94,11 @@
                 <h6 class="m-0 font-weight-bold text-primary">Low Stock Alerts</h6>
             </div>
             <div class="card-body">
-                <p>Placeholder for low stock alerts.</p>
+                <ul class="list-group">
+                    <?php foreach($data['low_stock'] as $product) : ?>
+                        <li class="list-group-item"><?php echo $product->product_name; ?> - <?php echo $product->min_stock_level; ?> remaining</li>
+                    <?php endforeach; ?>
+                </ul>
             </div>
         </div>
     </div>

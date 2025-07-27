@@ -14,7 +14,10 @@ class Settings extends Controller {
                 'company_name' => trim($_POST['company_name']),
                 'company_logo' => trim($_POST['company_logo']),
                 'company_gst' => trim($_POST['company_gst']),
-                'currency' => trim($_POST['currency'])
+                'currency' => trim($_POST['currency']),
+                'company_address' => trim($_POST['company_address']),
+                'company_email' => trim($_POST['company_email']),
+                'company_phone' => trim($_POST['company_phone'])
             ];
 
             if($this->settingModel->updateSettings($data)){
@@ -29,7 +32,10 @@ class Settings extends Controller {
                 'company_name' => $settings['company_name'] ?? '',
                 'company_logo' => $settings['company_logo'] ?? '',
                 'company_gst' => $settings['company_gst'] ?? '',
-                'currency' => $settings['currency'] ?? ''
+                'currency' => $settings['currency'] ?? '',
+                'company_address' => $settings['company_address'] ?? '',
+                'company_email' => $settings['company_email'] ?? '',
+                'company_phone' => $settings['company_phone'] ?? ''
             ];
             $this->view('settings/index', $data);
         }

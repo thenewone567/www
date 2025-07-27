@@ -18,6 +18,18 @@
             <label for="currency">Currency:</label>
             <input type="text" name="currency" class="form-control" value="<?php echo $data['currency']; ?>">
         </div>
+        <div class="form-group">
+            <label for="company_address">Company Address:</label>
+            <textarea name="company_address" class="form-control"><?php echo $data['company_address']; ?></textarea>
+        </div>
+        <div class="form-group">
+            <label for="company_email">Company Email:</label>
+            <input type="email" name="company_email" class="form-control" value="<?php echo $data['company_email']; ?>">
+        </div>
+        <div class="form-group">
+            <label for="company_phone">Company Phone:</label>
+            <input type="text" name="company_phone" class="form-control" value="<?php echo $data['company_phone']; ?>">
+        </div>
         <button type="submit" class="btn btn-primary">Save Settings</button>
     </form>
 <?php require APPROOT . '/views/layout/footer.php'; ?>

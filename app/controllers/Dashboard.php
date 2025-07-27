@@ -4,16 +4,23 @@ class Dashboard extends Controller {
         if(!isLoggedIn()){
             redirect('users/login');
         }
+        $this->dashboardModel = $this->model('Dashboard_model');
     }
 
     public function index(){
+        $salesToday = $this->dashboardModel->getSalesToday();
+        $salesWeek = $this->dashboardModel->getSalesWeek();
+        $salesMonth = $this->dashboardModel->getSalesMonth();
+        $topSelling = $this->dashboardModel->getTopSellingProducts();
+        $lowStock = $this->dashboardModel->getLowStockProducts();
+
         $data = [
             'title' => 'Dashboard',
-            'sales_today' => '0',
-            'sales_week' => '0',
-            'sales_month' => '0',
-            'top_selling' => [],
-            'low_stock' => []
+            'sales_today' => $salesToday,
+            'sales_week' => $salesWeek,
+            'sales_month' => $salesMonth,
+            'top_selling' => $topSelling,
+            'low_stock' => $lowStock
         ];
         $this->view('dashboard/index', $data);
     }

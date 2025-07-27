@@ -6,6 +6,8 @@ class Invoices extends Controller {
         }
         $this->invoiceModel = $this->model('Invoice');
         $this->saleModel = $this->model('Sale');
+        $this->customerModel = $this->model('Customer');
+        $this->settingModel = $this->model('Setting');
     }
 
     public function index(){
@@ -20,10 +22,14 @@ class Invoices extends Controller {
         $invoice = $this->invoiceModel->getInvoiceById($id);
         $sale = $this->saleModel->getSaleById($invoice->sale_id);
         $saleItems = $this->saleModel->getSaleItemsBySaleId($invoice->sale_id);
+        $customer = $this->customerModel->getCustomerById($sale->customer_id);
+        $settings = $this->settingModel->getSettings();
         $data = [
             'invoice' => $invoice,
             'sale' => $sale,
-            'saleItems' => $saleItems
+            'saleItems' => $saleItems,
+            'customer' => $customer,
+            'settings' => $settings
         ];
         $this->view('invoices/show', $data);
     }
