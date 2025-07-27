@@ -1,10 +1,12 @@
 <?php
 // app/controllers/HomeController.php
 
-class HomeController {
+class HomeController extends Controller {
     public function index() {
-        // For now, just a simple message
-        echo "<h1>Welcome to Master Hardware</h1>";
-        echo "<p>Under construction...</p>";
+        if(isLoggedIn()){
+            redirect('dashboard');
+        } else {
+            redirect('users/login');
+        }
     }
 }
