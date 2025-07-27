@@ -1,5 +1,5 @@
 <?php
-require_once 'vendor/autoload.php';
+require_once APPROOT . DS . 'vendor' . DS . 'autoload.php';
 
 class BarcodesController extends Controller {
 public $barcodeModel;
