@@ -1,4 +1,4 @@
-<?php require APPROOT . DS . 'views/layout/header.php'; ?>
+<?php require APPROOT . '/'views/layout/header.php'; ?>
     <h1>Sale Returns Report</h1>
     <form action="<?php echo URLROOT; ?>/reports/salereturns" method="post">
         <div class="form-row">
@@ -38,4 +38,4 @@
         </tbody>
     </table>
     <?php endif; ?>
-<?php require APPROOT . DS . 'views/layout/footer.php'; ?>
+<?php require APPROOT . '/'views/layout/footer.php'; ?>
