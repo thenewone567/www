@@ -26,7 +26,7 @@ $methodName = isset($urlParts[1]) ? $urlParts[1] : 'index';
 $params = array_slice($urlParts, 2);
 
 // Check if the controller file exists
-$controllerFile = __DIR__ . '/app/controllers/' . $controllerName . '.php';
+$controllerFile = __DIR__ . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR . $controllerName . '.php';
 if (file_exists($controllerFile)) {
     require_once $controllerFile;
 
