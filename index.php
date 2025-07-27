@@ -10,8 +10,8 @@
   // Autoload Core Libraries
   require_once 'app/controllers/Controller.php';
   spl_autoload_register(function($className){
-      if (file_exists('app/controllers/' . $className . '.php')) {
-          require_once 'app/controllers/' . $className . '.php';
+      if (file_exists('app/models/' . $className . '.php')) {
+          require_once 'app/models/' . $className . '.php';
       }
   });
 
