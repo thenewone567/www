@@ -1,4 +1,4 @@
-<?php require APPROOT . '/views/layout/header.php'; ?>
+<?php require APPROOT . DS . 'views/layout/header.php'; ?>
     <a href="<?php echo URLROOT; ?>/returns" class="btn btn-light"><i class="fa fa-backward"></i> Back</a>
     <div class="card card-body bg-light mt-5">
         <h2>Add Sale Return</h2>
@@ -25,4 +25,4 @@
             <input type="submit" class="btn btn-success" value="Submit">
         </form>
     </div>
-<?php require APPROOT . '/views/layout/footer.php'; ?>
+<?php require APPROOT . DS . 'views/layout/footer.php'; ?>

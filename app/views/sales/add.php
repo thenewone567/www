@@ -1,4 +1,4 @@
-<?php require APPROOT . '/views/layout/header.php'; ?>
+<?php require APPROOT . DS . 'views/layout/header.php'; ?>
 <div class="row">
     <div class="col-md-7">
         <div class="card">
@@ -131,4 +131,4 @@
         });
     }
 </script>
-<?php require APPROOT . '/views/layout/footer.php'; ?>
+<?php require APPROOT . DS . 'views/layout/footer.php'; ?>

@@ -3,15 +3,15 @@
   session_start();
 
   // Require libraries from folder libraries
-  require_once 'app/config.php';
-  require_once 'app/Database.php';
-  require_once 'app/helpers.php';
+  require_once 'app' . DS . 'config.php';
+  require_once 'app' . DS . 'Database.php';
+  require_once 'app' . DS . 'helpers.php';
 
   // Autoload Core Libraries
-  require_once 'app/controllers/Controller.php';
+  require_once 'app' . DS . 'controllers' . DS . 'Controller.php';
   spl_autoload_register(function($className){
-      if (file_exists('app/models/' . $className . '.php')) {
-          require_once 'app/models/' . $className . '.php';
+      if (file_exists('app' . DS . 'models' . DS . $className . '.php')) {
+          require_once 'app' . DS . 'models' . DS . $className . '.php';
       }
   });
 

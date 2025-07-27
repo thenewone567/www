@@ -15,7 +15,7 @@
     // Load model
     public function model($model){
       // Require model file
-      require_once 'app/models/' . $model . '.php';
+      require_once 'app' . DS . 'models' . DS . $model . '.php';
 
       // Instatiate model
       return new $model();
@@ -27,8 +27,8 @@
             $data['notifications'] = $this->notificationModel->getNotifications($_SESSION['user_id']);
         }
       // Check for view file
-      if(file_exists('app/views/' . $view . '.php')){
-        require_once 'app/views/' . $view . '.php';
+      if(file_exists('app' . DS . 'views' . DS . $view . '.php')){
+        require_once 'app' . DS . 'views' . DS . $view . '.php';
       } else {
         // View does not exist
         die('View does not exist');
