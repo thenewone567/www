@@ -51,41 +51,5 @@
         return false;
       }
     }
-
-    /**
-     * Register user
-     */
-    public function register($data) {
-        $this->db->query('INSERT INTO users (username, password_hash, role_id) VALUES (:username, :password, :role_id)');
-        // Bind values
-        $this->db->bind(':username', $data['username']);
-        $this->db->bind(':password', $data['password']);
-        $this->db->bind(':role_id', $data['role_id']);
-
-        // Execute
-        if ($this->db->execute()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Login user
-     */
-    public function login($username, $password) {
-        $row = $this->findUserByUsername($username);
-
-        if ($row == false) {
-            return false;
-        }
-
-        $hashed_password = $row->password_hash;
-        if (password_verify($password, $hashed_password)) {
-            return $row;
-        } else {
-            return false;
-        }
-    }
 }
 ?>
