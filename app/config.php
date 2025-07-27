@@ -1,0 +1,15 @@
+<?php
+  // DB Params
+  define('DB_HOST', 'localhost');
+  define('DB_USER', 'root');
+  define('DB_PASS', '');
+  define('DB_NAME', 'hardware_shop');
+
+  // App Root
+  define('APPROOT', dirname(dirname(__FILE__)));
+  // URL Root
+  define('URLROOT', 'http://localhost/hardware-shop');
+  // Site Name
+  define('SITENAME', 'Master Hardware');
+  // App Version
+  define('APPVERSION', '1.0.0');
