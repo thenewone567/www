@@ -1,4 +1,4 @@
-<?php require APPROOT . '/' . ''views/layout/header.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . '' . ''views/layout/header.php'; ?>
     <h1>Settings</h1>
     <?php flash('setting_message'); ?>
     <form action="<?php echo URLROOT; ?>/settings" method="post">
@@ -32,4 +32,4 @@
         </div>
         <button type="submit" class="btn btn-primary">Save Settings</button>
     </form>
-<?php require APPROOT . '/' . ''views/layout/footer.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . '' . ''views/layout/footer.php'; ?>

@@ -7,6 +7,7 @@
 
   // App Root
   define('APPROOT', dirname(dirname(__FILE__)));
+  define('DS', DIRECTORY_SEPARATOR);
   // URL Root
   define('URLROOT', 'http://localhost');
   // Site Name
