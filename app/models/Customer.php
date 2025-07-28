@@ -1,17 +1,22 @@
 <?php
-class Customer {
+class Customer
+{
     private $db;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->db = new Database;
     }
 
-    public function getCustomers(){
+    public function getCustomers()
+    {
         $this->db->query("SELECT * FROM customers");
-        return $this->db->resultSet();
+        $result = $this->db->resultSet();
+        return $result ? $result : [];
     }
 
-    public function addCustomer($data){
+    public function addCustomer($data)
+    {
         $this->db->query("INSERT INTO customers (customer_name, contact_info, credit_limit) VALUES (:customer_name, :contact_info, :credit_limit)");
         // Bind values
         $this->db->bind(':customer_name', $data['customer_name']);
@@ -19,20 +24,19 @@ class Customer {
         $this->db->bind(':credit_limit', $data['credit_limit']);
 
         // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 
-    public function getCustomerById($id){
+    public function getCustomerById($id)
+    {
         $this->db->query("SELECT * FROM customers WHERE customer_id = :id");
         $this->db->bind(':id', $id);
-        return $this->db->single();
+        $result = $this->db->single();
+        return $result ? $result : null;
     }
 
-    public function updateCustomer($data){
+    public function updateCustomer($data)
+    {
         $this->db->query("UPDATE customers SET customer_name = :customer_name, contact_info = :contact_info, credit_limit = :credit_limit WHERE customer_id = :id");
         // Bind values
         $this->db->bind(':id', $data['id']);
@@ -41,23 +45,16 @@ class Customer {
         $this->db->bind(':credit_limit', $data['credit_limit']);
 
         // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 
-    public function deleteCustomer($id){
+    public function deleteCustomer($id)
+    {
         $this->db->query("DELETE FROM customers WHERE customer_id = :id");
         // Bind values
         $this->db->bind(':id', $id);
 
         // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 }

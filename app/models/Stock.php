@@ -1,27 +1,36 @@
 <?php
-class Stock {
+class Stock
+{
     private $db;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->db = new Database;
     }
 
-    public function getStock(){
+    public function getStock()
+    {
         $this->db->query("SELECT * FROM stock");
-        return $this->db->resultSet();
+        $result = $this->db->resultSet();
+        return $result ? $result : [];
     }
 
-    public function getStockMovements(){
+    public function getStockMovements()
+    {
         $this->db->query("SELECT * FROM stock_movements");
-        return $this->db->resultSet();
+        $result = $this->db->resultSet();
+        return $result ? $result : [];
     }
 
-    public function getWarehouseLocations(){
+    public function getWarehouseLocations()
+    {
         $this->db->query("SELECT * FROM warehouse_locations");
-        return $this->db->resultSet();
+        $result = $this->db->resultSet();
+        return $result ? $result : [];
     }
 
-    public function addStock($data){
+    public function addStock($data)
+    {
         $this->db->query("INSERT INTO stock (product_id, batch_number, expiry_date, quantity, location_id) VALUES (:product_id, :batch_number, :expiry_date, :quantity, :location_id)");
         // Bind values
         $this->db->bind(':product_id', $data['product_id']);
@@ -31,14 +40,11 @@ class Stock {
         $this->db->bind(':location_id', $data['location_id']);
 
         // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 
-    public function addStockMovement($data){
+    public function addStockMovement($data)
+    {
         $this->db->query("INSERT INTO stock_movements (product_id, from_location_id, to_location_id, quantity) VALUES (:product_id, :from_location_id, :to_location_id, :quantity)");
         // Bind values
         $this->db->bind(':product_id', $data['product_id']);
@@ -47,14 +53,11 @@ class Stock {
         $this->db->bind(':quantity', $data['quantity']);
 
         // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 
-    public function addWarehouseLocation($data){
+    public function addWarehouseLocation($data)
+    {
         $this->db->query("INSERT INTO warehouse_locations (location_name, rack, shelf) VALUES (:location_name, :rack, :shelf)");
         // Bind values
         $this->db->bind(':location_name', $data['location_name']);
@@ -62,10 +65,6 @@ class Stock {
         $this->db->bind(':shelf', $data['shelf']);
 
         // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 }

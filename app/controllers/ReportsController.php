@@ -1,24 +1,32 @@
 <?php
-class ReportsController extends Controller {
-public $reportModel;
+class ReportsController extends Controller
+{
+    public $reportModel;
 
-    public function __construct(){
-        if(!isLoggedIn()){
+    public function __construct()
+    {
+        if (!isLoggedIn()) {
             redirect('users/login');
         }
         $this->reportModel = $this->model('Report');
     }
 
-    public function index(){
+    public function index()
+    {
         $this->view('reports/index');
     }
 
-    public function sales(){
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
+    public function sales()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-            $from_date = trim($_POST['from_date']);
-            $to_date = trim($_POST['to_date']);
+            $from_date = isset($_POST['from_date']) ? trim($_POST['from_date']) : '';
+            $to_date = isset($_POST['to_date']) ? trim($_POST['to_date']) : '';
             $sales = $this->reportModel->getSalesReports($from_date, $to_date);
+            if (!$sales) {
+                $sales = [];
+                flash('report_message', 'No sales found for selected dates');
+            }
             $data = [
                 'sales' => $sales,
                 'from_date' => $from_date,
@@ -30,12 +38,17 @@ public $reportModel;
         }
     }
 
-    public function purchases(){
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
+    public function purchases()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-            $from_date = trim($_POST['from_date']);
-            $to_date = trim($_POST['to_date']);
+            $from_date = isset($_POST['from_date']) ? trim($_POST['from_date']) : '';
+            $to_date = isset($_POST['to_date']) ? trim($_POST['to_date']) : '';
             $purchases = $this->reportModel->getPurchaseReports($from_date, $to_date);
+            if (!$purchases) {
+                $purchases = [];
+                flash('report_message', 'No purchases found for selected dates');
+            }
             $data = [
                 'purchases' => $purchases,
                 'from_date' => $from_date,
@@ -47,12 +60,17 @@ public $reportModel;
         }
     }
 
-    public function salereturns(){
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
+    public function salereturns()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-            $from_date = trim($_POST['from_date']);
-            $to_date = trim($_POST['to_date']);
+            $from_date = isset($_POST['from_date']) ? trim($_POST['from_date']) : '';
+            $to_date = isset($_POST['to_date']) ? trim($_POST['to_date']) : '';
             $salereturns = $this->reportModel->getSaleReturnReports($from_date, $to_date);
+            if (!$salereturns) {
+                $salereturns = [];
+                flash('report_message', 'No sale returns found for selected dates');
+            }
             $data = [
                 'salereturns' => $salereturns,
                 'from_date' => $from_date,
@@ -64,12 +82,17 @@ public $reportModel;
         }
     }
 
-    public function purchasereturns(){
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
+    public function purchasereturns()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-            $from_date = trim($_POST['from_date']);
-            $to_date = trim($_POST['to_date']);
+            $from_date = isset($_POST['from_date']) ? trim($_POST['from_date']) : '';
+            $to_date = isset($_POST['to_date']) ? trim($_POST['to_date']) : '';
             $purchasereturns = $this->reportModel->getPurchaseReturnReports($from_date, $to_date);
+            if (!$purchasereturns) {
+                $purchasereturns = [];
+                flash('report_message', 'No purchase returns found for selected dates');
+            }
             $data = [
                 'purchasereturns' => $purchasereturns,
                 'from_date' => $from_date,

@@ -19,9 +19,16 @@ class BarcodesController extends Controller
         $barcodes = $this->barcodeModel->getBarcodes();
         $generator = new Picqer\Barcode\BarcodeGeneratorPNG();
         foreach ($barcodes as $barcode) {
-            // Ensure type is set, default to 'C128'
-            $type = isset($barcode->type) ? $barcode->type : 'C128';
-            $barcode->image = base64_encode($generator->getBarcode($barcode->barcode_value, $type));
+            // Ensure barcode_value is set
+            if (!empty($barcode->barcode_value)) {
+                // Ensure type is set, default to TYPE_CODE_128
+                $type = isset($barcode->type) && strtoupper($barcode->type) === 'C128'
+                    ? $generator::TYPE_CODE_128
+                    : $generator::TYPE_CODE_128; // Add more types if needed
+                $barcode->image = base64_encode($generator->getBarcode($barcode->barcode_value, $type));
+            } else {
+                $barcode->image = '';
+            }
         }
         $data = [
             'barcodes' => $barcodes

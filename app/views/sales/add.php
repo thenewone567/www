@@ -7,16 +7,18 @@
             </div>
             <div class="card-body" id="product-list">
                 <div class="row">
-                <?php foreach($data['products'] as $product) : ?>
-                    <div class="col-md-4">
-                        <div class="card product-card" data-id="<?php echo $product->product_id; ?>" data-name="<?php echo $product->product_name; ?>" data-price="<?php echo $product->unit_price; ?>">
-                            <div class="card-body">
-                                <h5 class="card-title"><?php echo $product->product_name; ?></h5>
-                                <p class="card-text">$<?php echo $product->unit_price; ?></p>
+                    <?php foreach ($data['products'] as $product): ?>
+                        <div class="col-md-4">
+                            <div class="card product-card" data-id="<?php echo $product->product_id; ?>"
+                                data-name="<?php echo $product->product_name; ?>"
+                                data-price="<?php echo $product->unit_price; ?>">
+                                <div class="card-body">
+                                    <h5 class="card-title"><?php echo $product->product_name; ?></h5>
+                                    <p class="card-text">$<?php echo $product->unit_price; ?></p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>
@@ -78,7 +80,7 @@
 
             const existingProduct = cart.find(item => item.id === productId);
 
-            if(existingProduct){
+            if (existingProduct) {
                 existingProduct.quantity++;
             } else {
                 cart.push({
@@ -93,7 +95,7 @@
         });
     });
 
-    function updateCart(){
+    function updateCart() {
         cartTableBody.innerHTML = '';
         let total = 0;
         cart.forEach((item, index) => {
@@ -105,7 +107,7 @@
                     <td><input type="number" class="form-control quantity-input" data-index="${index}" value="${item.quantity}" min="1"></td>
                     <td>${item.price.toFixed(2)}</td>
                     <td>${itemTotal.toFixed(2)}</td>
-                    <td><button class="btn btn-danger btn-sm remove-item" data-index="${index}">X</button></td>
+                    <td><button type="button" class="btn btn-danger btn-sm remove-item" data-index="${index}">X</button></td>
                 </tr>
             `;
             cartTableBody.innerHTML += row;
@@ -117,7 +119,12 @@
             input.addEventListener('change', (e) => {
                 const index = e.target.dataset.index;
                 const newQuantity = parseInt(e.target.value);
-                cart[index].quantity = newQuantity;
+                if (newQuantity > 0) {
+                    cart[index].quantity = newQuantity;
+                } else {
+                    cart[index].quantity = 1;
+                    e.target.value = 1;
+                }
                 updateCart();
             });
         });

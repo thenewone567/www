@@ -2,7 +2,7 @@
 
 <div class="row">
     <div class="col-lg-12">
-        <h1 class="mt-4"><?php echo $data['title']; ?></h1>
+        <h1 class="mt-4"><?php echo isset($data['title']) ? $data['title'] : ''; ?></h1>
         <hr>
     </div>
 </div>
@@ -14,10 +14,11 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Sales (Today)</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">$<?php echo $data['sales_today']; ?></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            $<?php echo isset($data['sales_today']) ? $data['sales_today'] : '0'; ?></div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        <i class="fa-solid fa-calendar fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -30,10 +31,11 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Sales (This Week)</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">$<?php echo $data['sales_week']; ?></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            $<?php echo isset($data['sales_week']) ? $data['sales_week'] : '0'; ?></div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        <i class="fa-solid fa-dollar-sign fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -46,10 +48,11 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Sales (This Month)</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">$<?php echo $data['sales_month']; ?></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            $<?php echo isset($data['sales_month']) ? $data['sales_month'] : '0'; ?></div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        <i class="fa-solid fa-clipboard-list fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -65,7 +68,7 @@
                         <div class="h5 mb-0 font-weight-bold text-gray-800">18</div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-comments fa-2x text-gray-300"></i>
+                        <i class="fa-solid fa-comments fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -81,9 +84,15 @@
             </div>
             <div class="card-body">
                 <ul class="list-group">
-                    <?php foreach($data['top_selling'] as $product) : ?>
-                        <li class="list-group-item"><?php echo $product->product_name; ?> - <?php echo $product->total_quantity; ?> sold</li>
-                    <?php endforeach; ?>
+                    <?php if (isset($data['top_selling']) && is_array($data['top_selling']) && count($data['top_selling']) > 0): ?>
+                        <?php foreach ($data['top_selling'] as $product): ?>
+                            <li class="list-group-item"><?php echo $product->product_name; ?> -
+                                <?php echo $product->total_quantity; ?> sold
+                            </li>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <li class="list-group-item text-muted">No top selling products</li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>
@@ -95,9 +104,15 @@
             </div>
             <div class="card-body">
                 <ul class="list-group">
-                    <?php foreach($data['low_stock'] as $product) : ?>
-                        <li class="list-group-item"><?php echo $product->product_name; ?> - <?php echo $product->min_stock_level; ?> remaining</li>
-                    <?php endforeach; ?>
+                    <?php if (isset($data['low_stock']) && is_array($data['low_stock']) && count($data['low_stock']) > 0): ?>
+                        <?php foreach ($data['low_stock'] as $product): ?>
+                            <li class="list-group-item"><?php echo $product->product_name; ?> -
+                                <?php echo $product->min_stock_level; ?> remaining
+                            </li>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <li class="list-group-item text-muted">No low stock alerts</li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>

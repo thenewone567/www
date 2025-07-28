@@ -1,17 +1,22 @@
 <?php
-class Purchase {
+class Purchase
+{
     private $db;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->db = new Database;
     }
 
-    public function getPurchases(){
+    public function getPurchases()
+    {
         $this->db->query("SELECT * FROM purchases");
-        return $this->db->resultSet();
+        $result = $this->db->resultSet();
+        return $result ? $result : [];
     }
 
-    public function addPurchase($data){
+    public function addPurchase($data)
+    {
         $this->db->query("INSERT INTO purchases (supplier_id, total_amount, invoice_attachment) VALUES (:supplier_id, :total_amount, :invoice_attachment)");
         // Bind values
         $this->db->bind(':supplier_id', $data['supplier_id']);
@@ -19,14 +24,15 @@ class Purchase {
         $this->db->bind(':invoice_attachment', $data['invoice_attachment']);
 
         // Execute
-        if($this->db->execute()){
+        if ($this->db->execute()) {
             return $this->db->lastInsertId();
         } else {
             return false;
         }
     }
 
-    public function addPurchaseItem($data){
+    public function addPurchaseItem($data)
+    {
         $this->db->query("INSERT INTO purchase_items (purchase_id, product_id, quantity, unit_price) VALUES (:purchase_id, :product_id, :quantity, :unit_price)");
         // Bind values
         $this->db->bind(':purchase_id', $data['purchase_id']);
@@ -35,10 +41,6 @@ class Purchase {
         $this->db->bind(':unit_price', $data['unit_price']);
 
         // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 }
