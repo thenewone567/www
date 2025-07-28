@@ -1,15 +1,18 @@
 <?php
-class CustomersController extends Controller {
-public $customerModel;
+class CustomersController extends Controller
+{
+    public $customerModel;
 
-    public function __construct(){
-        if(!isLoggedIn()){
+    public function __construct()
+    {
+        if (!isLoggedIn()) {
             redirect('users/login');
         }
         $this->customerModel = $this->model('Customer');
     }
 
-    public function index(){
+    public function index()
+    {
         $customers = $this->customerModel->getCustomers();
         $data = [
             'customers' => $customers
@@ -17,9 +20,10 @@ public $customerModel;
         $this->view('customers/index', $data);
     }
 
-    public function add(){
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+    public function add()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_UNSAFE_RAW);
             $data = [
                 'customer_name' => trim($_POST['customer_name']),
                 'contact_info' => trim($_POST['contact_info']),
@@ -28,12 +32,12 @@ public $customerModel;
             ];
 
             // Validate customer name
-            if(empty($data['customer_name'])){
+            if (empty($data['customer_name'])) {
                 $data['customer_name_err'] = 'Please enter customer name';
             }
 
-            if(empty($data['customer_name_err'])){
-                if($this->customerModel->addCustomer($data)){
+            if (empty($data['customer_name_err'])) {
+                if ($this->customerModel->addCustomer($data)) {
                     flash('customer_message', 'Customer Added');
                     redirect('customers');
                 } else {
@@ -52,9 +56,10 @@ public $customerModel;
         }
     }
 
-    public function edit($id){
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+    public function edit($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_UNSAFE_RAW);
             $data = [
                 'id' => $id,
                 'customer_name' => trim($_POST['customer_name']),
@@ -64,12 +69,12 @@ public $customerModel;
             ];
 
             // Validate customer name
-            if(empty($data['customer_name'])){
+            if (empty($data['customer_name'])) {
                 $data['customer_name_err'] = 'Please enter customer name';
             }
 
-            if(empty($data['customer_name_err'])){
-                if($this->customerModel->updateCustomer($data)){
+            if (empty($data['customer_name_err'])) {
+                if ($this->customerModel->updateCustomer($data)) {
                     flash('customer_message', 'Customer Updated');
                     redirect('customers');
                 } else {
@@ -90,9 +95,10 @@ public $customerModel;
         }
     }
 
-    public function delete($id){
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
-            if($this->customerModel->deleteCustomer($id)){
+    public function delete($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->customerModel->deleteCustomer($id)) {
                 flash('customer_message', 'Customer Removed');
                 redirect('customers');
             } else {

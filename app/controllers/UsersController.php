@@ -1,14 +1,18 @@
 <?php
-class UsersController extends Controller {
+class UsersController extends Controller
+{
     public $userModel;
 
-    public function __construct(){
+    public function __construct()
+    {
+        parent::__construct(); // Add if parent has a constructor
         $this->userModel = $this->model('User');
     }
 
-    public function register(){
+    public function register()
+    {
         // Check for POST
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Process form
 
             // Sanitize POST data
@@ -25,40 +29,40 @@ class UsersController extends Controller {
             ];
 
             // Validate username
-            if(empty($data['username'])){
+            if (empty($data['username'])) {
                 $data['username_err'] = 'Please enter username';
             } else {
                 // Check username
-                if($this->userModel->findUserByUsername($data['username'])){
+                if ($this->userModel->findUserByUsername($data['username'])) {
                     $data['username_err'] = 'Username is already taken';
                 }
             }
 
             // Validate Password
-            if(empty($data['password'])){
+            if (empty($data['password'])) {
                 $data['password_err'] = 'Please enter password';
-            } elseif(strlen($data['password']) < 6){
+            } elseif (strlen($data['password']) < 6) {
                 $data['password_err'] = 'Password must be at least 6 characters';
             }
 
             // Validate Confirm Password
-            if(empty($data['confirm_password'])){
+            if (empty($data['confirm_password'])) {
                 $data['confirm_password_err'] = 'Please confirm password';
             } else {
-                if($data['password'] != $data['confirm_password']){
+                if ($data['password'] != $data['confirm_password']) {
                     $data['confirm_password_err'] = 'Passwords do not match';
                 }
             }
 
             // Make sure errors are empty
-            if(empty($data['username_err']) && empty($data['password_err']) && empty($data['confirm_password_err'])){
+            if (empty($data['username_err']) && empty($data['password_err']) && empty($data['confirm_password_err'])) {
                 // Validated
 
                 // Hash Password
                 $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
                 // Register User
-                if($this->userModel->register($data)){
+                if ($this->userModel->register($data)) {
                     flash('register_success', 'You are registered and can log in');
                     redirect('users/login');
                 } else {
@@ -87,9 +91,10 @@ class UsersController extends Controller {
         }
     }
 
-    public function login(){
+    public function login()
+    {
         // Check for POST
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Process form
             // Sanitize POST data
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
@@ -102,17 +107,17 @@ class UsersController extends Controller {
             ];
 
             // Validate username
-            if(empty($data['username'])){
+            if (empty($data['username'])) {
                 $data['username_err'] = 'Please enter username';
             }
 
             // Validate Password
-            if(empty($data['password'])){
+            if (empty($data['password'])) {
                 $data['password_err'] = 'Please enter password';
             }
 
             // Check for user/username
-            if($this->userModel->findUserByUsername($data['username'])){
+            if ($this->userModel->findUserByUsername($data['username'])) {
                 // User found
             } else {
                 // User not found
@@ -120,12 +125,12 @@ class UsersController extends Controller {
             }
 
             // Make sure errors are empty
-            if(empty($data['username_err']) && empty($data['password_err'])){
+            if (empty($data['username_err']) && empty($data['password_err'])) {
                 // Validated
                 // Check and set logged in user
                 $loggedInUser = $this->userModel->login($data['username'], $data['password']);
 
-                if($loggedInUser){
+                if ($loggedInUser) {
                     // Create Session
                     $this->createUserSession($loggedInUser);
                 } else {
@@ -153,14 +158,16 @@ class UsersController extends Controller {
         }
     }
 
-    public function createUserSession($user){
-        $_SESSION['user_id'] = $user->id;
+    public function createUserSession($user)
+    {
+        $_SESSION['user_id'] = $user->user_id;
         $_SESSION['user_username'] = $user->username;
-        $_SESSION['user_name'] = $user->name;
+        $_SESSION['user_name'] = $user->username;
         redirect('pages/index');
     }
 
-    public function logout(){
+    public function logout()
+    {
         unset($_SESSION['user_id']);
         unset($_SESSION['user_username']);
         unset($_SESSION['user_name']);

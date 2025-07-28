@@ -1,15 +1,18 @@
 <?php
-class DashboardController extends Controller {
-public $dashboardModel;
+class DashboardController extends Controller
+{
+    public $dashboardModel;
 
-    public function __construct(){
-        if(!isLoggedIn()){
+    public function __construct()
+    {
+        if (!isLoggedIn()) {
             redirect('users/login');
         }
-        $this->dashboardModel = $this->model('Dashboard_model');
+        $this->dashboardModel = $this->model('Dashboard');
     }
 
-    public function index(){
+    public function index()
+    {
         $salesToday = $this->dashboardModel->getSalesToday();
         $salesWeek = $this->dashboardModel->getSalesWeek();
         $salesMonth = $this->dashboardModel->getSalesMonth();
