@@ -1,20 +1,22 @@
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'header.php'; ?>
-    <h1>Purchases Report</h1>
-    <form action="<?php echo URLROOT; ?>/reports/purchases" method="post">
-        <div class="form-row">
-            <div class="col">
-                <input type="date" name="from_date" class="form-control" placeholder="From Date" value="<?php echo isset($data['from_date']) ? $data['from_date'] : ''; ?>">
-            </div>
-            <div class="col">
-                <input type="date" name="to_date" class="form-control" placeholder="To Date" value="<?php echo isset($data['to_date']) ? $data['to_date'] : ''; ?>">
-            </div>
-            <div class="col">
-                <button type="submit" class="btn btn-primary">Generate</button>
-            </div>
+<h1>Purchases Report</h1>
+<form action="<?php echo URLROOT; ?>/reports/purchases" method="post">
+    <div class="form-row">
+        <div class="col">
+            <input type="date" name="from_date" class="form-control" placeholder="From Date"
+                value="<?php echo isset($data['from_date']) ? $data['from_date'] : ''; ?>">
         </div>
-    </form>
+        <div class="col">
+            <input type="date" name="to_date" class="form-control" placeholder="To Date"
+                value="<?php echo isset($data['to_date']) ? $data['to_date'] : ''; ?>">
+        </div>
+        <div class="col">
+            <button type="submit" class="btn btn-primary">Generate</button>
+        </div>
+    </div>
+</form>
 
-    <?php if(isset($data['purchases'])) : ?>
+<?php if (isset($data['purchases']) && is_array($data['purchases']) && count($data['purchases']) > 0): ?>
     <table class="table table-striped mt-3">
         <thead>
             <tr>
@@ -25,15 +27,17 @@
             </tr>
         </thead>
         <tbody>
-        <?php foreach($data['purchases'] as $purchase) : ?>
-            <tr>
-                <td><?php echo $purchase->purchase_id; ?></td>
-                <td><?php echo $purchase->supplier_id; ?></td>
-                <td><?php echo $purchase->purchase_date; ?></td>
-                <td><?php echo $purchase->total_amount; ?></td>
-            </tr>
-        <?php endforeach; ?>
+            <?php foreach ($data['purchases'] as $purchase): ?>
+                <tr>
+                    <td><?php echo $purchase->purchase_id; ?></td>
+                    <td><?php echo $purchase->supplier_id; ?></td>
+                    <td><?php echo $purchase->purchase_date ?? '-'; ?></td>
+                    <td><?php echo $purchase->total_amount; ?></td>
+                </tr>
+            <?php endforeach; ?>
         </tbody>
     </table>
-    <?php endif; ?>
+<?php elseif (isset($data['purchases'])): ?>
+    <div class="mt-3 text-muted">No purchases found for selected dates.</div>
+<?php endif; ?>
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'footer.php'; ?>

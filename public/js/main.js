@@ -4,6 +4,8 @@ $("#menu-toggle").click(function(e) {
 });
 
 const darkSwitch = document.getElementById('darkSwitch');
-darkSwitch.addEventListener('change', () => {
-    document.body.classList.toggle('dark-mode');
-});
+if (darkSwitch) {
+    darkSwitch.addEventListener('change', () => {
+        document.body.classList.toggle('dark-mode');
+    });
+}

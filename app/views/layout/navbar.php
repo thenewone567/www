@@ -17,12 +17,12 @@
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownNotifications" role="button"
                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fa-solid fa-bell"></i>
-                    <?php if (isset($data['notifications']) && count($data['notifications']) > 0): ?>
+                    <?php if (isset($data) && isset($data['notifications']) && is_array($data['notifications']) && count($data['notifications']) > 0): ?>
                         <span class="badge badge-danger"><?php echo count($data['notifications']); ?></span>
                     <?php endif; ?>
                 </a>
                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownNotifications">
-                    <?php if (isset($data['notifications']) && count($data['notifications']) > 0): ?>
+                    <?php if (isset($data) && isset($data['notifications']) && is_array($data['notifications']) && count($data['notifications']) > 0): ?>
                         <?php foreach ($data['notifications'] as $notification): ?>
                             <a class="dropdown-item" href="#"><?php echo $notification->message; ?></a>
                         <?php endforeach; ?>

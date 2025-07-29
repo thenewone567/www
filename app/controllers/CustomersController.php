@@ -14,6 +14,10 @@ class CustomersController extends Controller
     public function index()
     {
         $customers = $this->customerModel->getCustomers();
+        if (!$customers) {
+            $customers = [];
+            flash('customer_message', 'No customers found');
+        }
         $data = [
             'customers' => $customers
         ];
@@ -25,18 +29,23 @@ class CustomersController extends Controller
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_UNSAFE_RAW);
             $data = [
-                'customer_name' => trim($_POST['customer_name']),
-                'contact_info' => trim($_POST['contact_info']),
-                'credit_limit' => trim($_POST['credit_limit']),
-                'customer_name_err' => ''
+                'customer_name' => isset($_POST['customer_name']) ? trim($_POST['customer_name']) : '',
+                'contact_info' => isset($_POST['contact_info']) ? trim($_POST['contact_info']) : '',
+                'credit_limit' => isset($_POST['credit_limit']) ? trim($_POST['credit_limit']) : '',
+                'customer_name_err' => '',
+                'credit_limit_err' => ''
             ];
 
             // Validate customer name
             if (empty($data['customer_name'])) {
                 $data['customer_name_err'] = 'Please enter customer name';
             }
+            // Validate credit limit (optional, but recommended)
+            if (!empty($data['credit_limit']) && !is_numeric($data['credit_limit'])) {
+                $data['credit_limit_err'] = 'Credit limit must be a number';
+            }
 
-            if (empty($data['customer_name_err'])) {
+            if (empty($data['customer_name_err']) && empty($data['credit_limit_err'])) {
                 if ($this->customerModel->addCustomer($data)) {
                     flash('customer_message', 'Customer Added');
                     redirect('customers');
@@ -50,7 +59,9 @@ class CustomersController extends Controller
             $data = [
                 'customer_name' => '',
                 'contact_info' => '',
-                'credit_limit' => ''
+                'credit_limit' => '',
+                'customer_name_err' => '',
+                'credit_limit_err' => ''
             ];
             $this->view('customers/add', $data);
         }
@@ -62,18 +73,23 @@ class CustomersController extends Controller
             $_POST = filter_input_array(INPUT_POST, FILTER_UNSAFE_RAW);
             $data = [
                 'id' => $id,
-                'customer_name' => trim($_POST['customer_name']),
-                'contact_info' => trim($_POST['contact_info']),
-                'credit_limit' => trim($_POST['credit_limit']),
-                'customer_name_err' => ''
+                'customer_name' => isset($_POST['customer_name']) ? trim($_POST['customer_name']) : '',
+                'contact_info' => isset($_POST['contact_info']) ? trim($_POST['contact_info']) : '',
+                'credit_limit' => isset($_POST['credit_limit']) ? trim($_POST['credit_limit']) : '',
+                'customer_name_err' => '',
+                'credit_limit_err' => ''
             ];
 
             // Validate customer name
             if (empty($data['customer_name'])) {
                 $data['customer_name_err'] = 'Please enter customer name';
             }
+            // Validate credit limit
+            if (!empty($data['credit_limit']) && !is_numeric($data['credit_limit'])) {
+                $data['credit_limit_err'] = 'Credit limit must be a number';
+            }
 
-            if (empty($data['customer_name_err'])) {
+            if (empty($data['customer_name_err']) && empty($data['credit_limit_err'])) {
                 if ($this->customerModel->updateCustomer($data)) {
                     flash('customer_message', 'Customer Updated');
                     redirect('customers');
@@ -85,12 +101,26 @@ class CustomersController extends Controller
             }
         } else {
             $customer = $this->customerModel->getCustomerById($id);
-            $data = [
-                'id' => $id,
-                'customer_name' => $customer->customer_name,
-                'contact_info' => $customer->contact_info,
-                'credit_limit' => $customer->credit_limit
-            ];
+            if ($customer) {
+                $data = [
+                    'id' => $id,
+                    'customer_name' => $customer->customer_name,
+                    'contact_info' => $customer->contact_info,
+                    'credit_limit' => $customer->credit_limit,
+                    'customer_name_err' => '',
+                    'credit_limit_err' => ''
+                ];
+            } else {
+                $data = [
+                    'id' => $id,
+                    'customer_name' => '',
+                    'contact_info' => '',
+                    'credit_limit' => '',
+                    'customer_name_err' => '',
+                    'credit_limit_err' => ''
+                ];
+                flash('customer_message', 'Customer not found');
+            }
             $this->view('customers/edit', $data);
         }
     }

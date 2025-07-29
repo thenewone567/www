@@ -1,17 +1,22 @@
 <?php
-class Product {
+class Product
+{
     private $db;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->db = new Database;
     }
 
-    public function getProducts(){
+    public function getProducts()
+    {
         $this->db->query("SELECT * FROM products");
-        return $this->db->resultSet();
+        $result = $this->db->resultSet();
+        return $result ? $result : [];
     }
 
-    public function addProduct($data){
+    public function addProduct($data)
+    {
         $this->db->query("INSERT INTO products (product_name, sku, category_id, brand_id, unit_id, min_stock_level, max_stock_level, reorder_level, image_path) VALUES (:product_name, :sku, :category_id, :brand_id, :unit_id, :min_stock_level, :max_stock_level, :reorder_level, :image_path)");
         // Bind values
         $this->db->bind(':product_name', $data['product_name']);
@@ -25,20 +30,19 @@ class Product {
         $this->db->bind(':image_path', $data['image_path']);
 
         // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 
-    public function getProductById($id){
+    public function getProductById($id)
+    {
         $this->db->query("SELECT * FROM products WHERE product_id = :id");
         $this->db->bind(':id', $id);
-        return $this->db->single();
+        $result = $this->db->single();
+        return $result ? $result : null;
     }
 
-    public function updateProduct($data){
+    public function updateProduct($data)
+    {
         $this->db->query("UPDATE products SET product_name = :product_name, sku = :sku, category_id = :category_id, brand_id = :brand_id, unit_id = :unit_id, min_stock_level = :min_stock_level, max_stock_level = :max_stock_level, reorder_level = :reorder_level, image_path = :image_path WHERE product_id = :id");
         // Bind values
         $this->db->bind(':id', $data['id']);
@@ -53,23 +57,13 @@ class Product {
         $this->db->bind(':image_path', $data['image_path']);
 
         // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 
-    public function deleteProduct($id){
+    public function deleteProduct($id)
+    {
         $this->db->query("DELETE FROM products WHERE product_id = :id");
-        // Bind values
         $this->db->bind(':id', $id);
-
-        // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 }

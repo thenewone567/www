@@ -19,10 +19,10 @@ class UsersController extends Controller
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
             $data = [
-                'username' => trim($_POST['username']),
-                'password' => trim($_POST['password']),
-                'confirm_password' => trim($_POST['confirm_password']),
-                'role_id' => trim($_POST['role_id']),
+                'username' => isset($_POST['username']) ? trim($_POST['username']) : '',
+                'password' => isset($_POST['password']) ? trim($_POST['password']) : '',
+                'confirm_password' => isset($_POST['confirm_password']) ? trim($_POST['confirm_password']) : '',
+                'role_id' => isset($_POST['role_id']) ? trim($_POST['role_id']) : '',
                 'username_err' => '',
                 'password_err' => '',
                 'confirm_password_err' => ''
@@ -100,8 +100,8 @@ class UsersController extends Controller
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
             $data = [
-                'username' => trim($_POST['username']),
-                'password' => trim($_POST['password']),
+                'username' => isset($_POST['username']) ? trim($_POST['username']) : '',
+                'password' => isset($_POST['password']) ? trim($_POST['password']) : '',
                 'username_err' => '',
                 'password_err' => '',
             ];
@@ -160,10 +160,15 @@ class UsersController extends Controller
 
     public function createUserSession($user)
     {
-        $_SESSION['user_id'] = $user->user_id;
-        $_SESSION['user_username'] = $user->username;
-        $_SESSION['user_name'] = $user->username;
-        redirect('pages/index');
+        if (isset($user->user_id) && isset($user->username)) {
+            $_SESSION['user_id'] = $user->user_id;
+            $_SESSION['user_username'] = $user->username;
+            $_SESSION['user_name'] = $user->username;
+            redirect('pages/index');
+        } else {
+            flash('login_error', 'Invalid user session data');
+            redirect('users/login');
+        }
     }
 
     public function logout()

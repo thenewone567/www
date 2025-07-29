@@ -11,7 +11,8 @@ class Sale
     public function getSales()
     {
         $this->db->query("SELECT * FROM sales");
-        return $this->db->resultSet();
+        $result = $this->db->resultSet();
+        return $result ? $result : [];
     }
 
     public function addSale($data)
@@ -52,14 +53,16 @@ class Sale
     {
         $this->db->query("SELECT * FROM sales WHERE sale_id = :id");
         $this->db->bind(':id', $id);
-        return $this->db->single();
+        $result = $this->db->single();
+        return $result ? $result : null;
     }
 
     public function getSaleItemsBySaleId($sale_id)
     {
         $this->db->query("SELECT * FROM sale_items WHERE sale_id = :sale_id");
         $this->db->bind(':sale_id', $sale_id);
-        return $this->db->resultSet();
+        $result = $this->db->resultSet();
+        return $result ? $result : [];
     }
 
 }

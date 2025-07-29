@@ -88,15 +88,4 @@ class Database
   {
     return $this->stmt->rowCount();
   }
-
-  /**
-   * Summary of lastInsertId
-   * @return bool|string
-   */
-  public function lastInsertId()
-  {
-    return $this->dbh->lastInsertId(); // For PDO
-    // or
-    // return $this->dbh->insert_id; // For MySQLi
-  }
 }

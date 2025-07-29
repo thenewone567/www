@@ -1,17 +1,22 @@
 <?php
-class Supplier {
+class Supplier
+{
     private $db;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->db = new Database;
     }
 
-    public function getSuppliers(){
+    public function getSuppliers()
+    {
         $this->db->query("SELECT * FROM suppliers");
-        return $this->db->resultSet();
+        $result = $this->db->resultSet();
+        return $result ? $result : [];
     }
 
-    public function addSupplier($data){
+    public function addSupplier($data)
+    {
         $this->db->query("INSERT INTO suppliers (supplier_name, contact_info, gst_info, due_amount) VALUES (:supplier_name, :contact_info, :gst_info, :due_amount)");
         // Bind values
         $this->db->bind(':supplier_name', $data['supplier_name']);
@@ -20,20 +25,19 @@ class Supplier {
         $this->db->bind(':due_amount', $data['due_amount']);
 
         // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 
-    public function getSupplierById($id){
+    public function getSupplierById($id)
+    {
         $this->db->query("SELECT * FROM suppliers WHERE supplier_id = :id");
         $this->db->bind(':id', $id);
-        return $this->db->single();
+        $result = $this->db->single();
+        return $result ? $result : null;
     }
 
-    public function updateSupplier($data){
+    public function updateSupplier($data)
+    {
         $this->db->query("UPDATE suppliers SET supplier_name = :supplier_name, contact_info = :contact_info, gst_info = :gst_info, due_amount = :due_amount WHERE supplier_id = :id");
         // Bind values
         $this->db->bind(':id', $data['id']);
@@ -43,23 +47,13 @@ class Supplier {
         $this->db->bind(':due_amount', $data['due_amount']);
 
         // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 
-    public function deleteSupplier($id){
+    public function deleteSupplier($id)
+    {
         $this->db->query("DELETE FROM suppliers WHERE supplier_id = :id");
-        // Bind values
         $this->db->bind(':id', $id);
-
-        // Execute
-        if($this->db->execute()){
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 }

@@ -1,28 +1,31 @@
 <?php
-class SettingsController extends Controller {
-public $settingModel;
+class SettingsController extends Controller
+{
+    public $settingModel;
 
-    public function __construct(){
-        if(!isLoggedIn()){
+    public function __construct()
+    {
+        if (!isLoggedIn()) {
             redirect('users/login');
         }
         $this->settingModel = $this->model('Setting');
     }
 
-    public function index(){
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
+    public function index()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
             $data = [
-                'company_name' => trim($_POST['company_name']),
-                'company_logo' => trim($_POST['company_logo']),
-                'company_gst' => trim($_POST['company_gst']),
-                'currency' => trim($_POST['currency']),
-                'company_address' => trim($_POST['company_address']),
-                'company_email' => trim($_POST['company_email']),
-                'company_phone' => trim($_POST['company_phone'])
+                'company_name' => isset($_POST['company_name']) ? trim($_POST['company_name']) : '',
+                'company_logo' => isset($_POST['company_logo']) ? trim($_POST['company_logo']) : '',
+                'company_gst' => isset($_POST['company_gst']) ? trim($_POST['company_gst']) : '',
+                'currency' => isset($_POST['currency']) ? trim($_POST['currency']) : '',
+                'company_address' => isset($_POST['company_address']) ? trim($_POST['company_address']) : '',
+                'company_email' => isset($_POST['company_email']) ? trim($_POST['company_email']) : '',
+                'company_phone' => isset($_POST['company_phone']) ? trim($_POST['company_phone']) : ''
             ];
 
-            if($this->settingModel->updateSettings($data)){
+            if ($this->settingModel->updateSettings($data)) {
                 flash('setting_message', 'Settings Updated');
                 redirect('settings');
             } else {
@@ -30,6 +33,10 @@ public $settingModel;
             }
         } else {
             $settings = $this->settingModel->getSettings();
+            if (!$settings || !is_array($settings)) {
+                $settings = [];
+                flash('setting_message', 'No settings found');
+            }
             $data = [
                 'company_name' => $settings['company_name'] ?? '',
                 'company_logo' => $settings['company_logo'] ?? '',

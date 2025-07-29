@@ -1,20 +1,22 @@
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'header.php'; ?>
-    <h1>Purchase Returns Report</h1>
-    <form action="<?php echo URLROOT; ?>/reports/purchasereturns" method="post">
-        <div class="form-row">
-            <div class="col">
-                <input type="date" name="from_date" class="form-control" placeholder="From Date" value="<?php echo isset($data['from_date']) ? $data['from_date'] : ''; ?>">
-            </div>
-            <div class="col">
-                <input type="date" name="to_date" class="form-control" placeholder="To Date" value="<?php echo isset($data['to_date']) ? $data['to_date'] : ''; ?>">
-            </div>
-            <div class="col">
-                <button type="submit" class="btn btn-primary">Generate</button>
-            </div>
+<h1>Purchase Returns Report</h1>
+<form action="<?php echo URLROOT; ?>/reports/purchasereturns" method="post">
+    <div class="form-row">
+        <div class="col">
+            <input type="date" name="from_date" class="form-control" placeholder="From Date"
+                value="<?php echo isset($data['from_date']) ? $data['from_date'] : ''; ?>">
         </div>
-    </form>
+        <div class="col">
+            <input type="date" name="to_date" class="form-control" placeholder="To Date"
+                value="<?php echo isset($data['to_date']) ? $data['to_date'] : ''; ?>">
+        </div>
+        <div class="col">
+            <button type="submit" class="btn btn-primary">Generate</button>
+        </div>
+    </div>
+</form>
 
-    <?php if(isset($data['purchasereturns'])) : ?>
+<?php if (isset($data['purchasereturns']) && is_array($data['purchasereturns']) && count($data['purchasereturns']) > 0): ?>
     <table class="table table-striped mt-3">
         <thead>
             <tr>
@@ -25,15 +27,17 @@
             </tr>
         </thead>
         <tbody>
-        <?php foreach($data['purchasereturns'] as $return) : ?>
-            <tr>
-                <td><?php echo $return->purchase_return_id; ?></td>
-                <td><?php echo $return->purchase_id; ?></td>
-                <td><?php echo $return->return_date; ?></td>
-                <td><?php echo $return->reason; ?></td>
-            </tr>
-        <?php endforeach; ?>
+            <?php foreach ($data['purchasereturns'] as $return): ?>
+                <tr>
+                    <td><?php echo $return->purchase_return_id; ?></td>
+                    <td><?php echo $return->purchase_id; ?></td>
+                    <td><?php echo $return->return_date; ?></td>
+                    <td><?php echo $return->reason; ?></td>
+                </tr>
+            <?php endforeach; ?>
         </tbody>
     </table>
-    <?php endif; ?>
+<?php elseif (isset($data['purchasereturns'])): ?>
+    <div class="mt-3 text-muted">No purchase returns found for selected dates.</div>
+<?php endif; ?>
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'footer.php'; ?>

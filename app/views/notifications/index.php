@@ -1,11 +1,16 @@
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'header.php'; ?>
-    <h1>Notifications</h1>
-    <ul class="list-group">
-    <?php foreach($data['notifications'] as $notification) : ?>
-        <li class="list-group-item">
-            <?php echo $notification->message; ?>
-            <a href="<?php echo URLROOT; ?>/notifications/markAsRead/<?php echo $notification->notification_id; ?>" class="btn btn-sm btn-primary float-right">Mark as read</a>
-        </li>
-    <?php endforeach; ?>
-    </ul>
+<h1>Notifications</h1>
+<ul class="list-group">
+    <?php if (!empty($data['notifications'])): ?>
+        <?php foreach ($data['notifications'] as $notification): ?>
+            <li class="list-group-item">
+                <?php echo $notification->message; ?>
+                <a href="<?php echo URLROOT; ?>/notifications/markAsRead/<?php echo $notification->notification_id; ?>"
+                    class="btn btn-sm btn-primary float-right">Mark as read</a>
+            </li>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <li class="list-group-item text-muted">No notifications found</li>
+    <?php endif; ?>
+</ul>
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'footer.php'; ?>

@@ -19,13 +19,14 @@ class DashboardController extends Controller
         $topSelling = $this->dashboardModel->getTopSellingProducts();
         $lowStock = $this->dashboardModel->getLowStockProducts();
 
+        // Defensive checks for null/false returns
         $data = [
             'title' => 'Dashboard',
-            'sales_today' => $salesToday,
-            'sales_week' => $salesWeek,
-            'sales_month' => $salesMonth,
-            'top_selling' => $topSelling,
-            'low_stock' => $lowStock
+            'sales_today' => $salesToday !== null ? $salesToday : 0,
+            'sales_week' => $salesWeek !== null ? $salesWeek : 0,
+            'sales_month' => $salesMonth !== null ? $salesMonth : 0,
+            'top_selling' => is_array($topSelling) ? $topSelling : [],
+            'low_stock' => is_array($lowStock) ? $lowStock : []
         ];
         $this->view('dashboard/index', $data);
     }
