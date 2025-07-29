@@ -13,8 +13,8 @@
 </head>
 
 <body>
-    <div class="d-flex" id="wrapper">
+    <div class="d-flex w-100 h-100" id="wrapper">
         <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'sidebar.php'; ?>
-        <div id="page-content-wrapper">
+        <div id="page-content-wrapper" class="w-100 h-100">
             <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'navbar.php'; ?>
-            <div class="container-fluid">
+            <div class="container-fluid pt-3">
