@@ -1,38 +1,62 @@
-<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'header.php'; ?>
-<div class="login-top-area container-fluid mt-0 pt-3">
-    <div class="row justify-content-center align-items-start min-vh-100">
-        <div class="col-12 col-sm-10 col-md-8 col-lg-6">
-            <div class="card card-body bg-light mt-3 mb-3 shadow-sm">
-                <?php flash('register_success'); ?>
-                <h2 class="mb-3 text-center">Login</h2>
-                <p class="text-center">Please fill in your credentials to log in</p>
-                <form action="<?php echo URLROOT; ?>/users/login" method="post">
-                    <div class="form-group">
-                        <label for="username">Username: <sup>*</sup></label>
-                        <input type="text" name="username"
-                            class="form-control form-control-lg <?php echo (!empty($data['username_err'])) ? 'is-invalid' : ''; ?>"
-                            value="<?php echo isset($data['username']) ? $data['username'] : ''; ?>">
+<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'login_header.php'; ?>
+<div class="facebook-container">
+    <div class="facebook-left">
+        <div class="facebook-logo">
+            <?php echo SITENAME; ?>
+        </div>
+        <div class="facebook-tagline">
+            Connect with your team and manage your hardware store efficiently.
+        </div>
+    </div>
+
+    <div class="facebook-right">
+        <div class="login-card">
+            <?php
+            // Display flash message only if it exists
+            if (isset($_SESSION['register_success'])) {
+                flash('register_success');
+            }
+            ?>
+            <form action="<?php echo URLROOT; ?>/users/login" method="post">
+                <div class="form-group">
+                    <input type="text" name="username" id="username"
+                        class="form-control <?php echo (!empty($data['username_err'])) ? 'is-invalid' : ''; ?>"
+                        value="<?php echo isset($data['username']) ? $data['username'] : ''; ?>" placeholder="Username">
+                    <?php if (!empty($data['username_err'])): ?>
                         <span class="invalid-feedback"><?php echo $data['username_err']; ?></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password: <sup>*</sup></label>
-                        <input type="password" name="password"
-                            class="form-control form-control-lg <?php echo (!empty($data['password_err'])) ? 'is-invalid' : ''; ?>"
-                            value="<?php echo isset($data['password']) ? $data['password'] : ''; ?>">
+                    <?php endif; ?>
+                </div>
+
+                <div class="form-group">
+                    <input type="password" name="password" id="password"
+                        class="form-control <?php echo (!empty($data['password_err'])) ? 'is-invalid' : ''; ?>"
+                        placeholder="Password">
+                    <?php if (!empty($data['password_err'])): ?>
                         <span class="invalid-feedback"><?php echo $data['password_err']; ?></span>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-12 col-md-6 mb-2 mb-md-0">
-                            <input type="submit" value="Login" class="btn btn-success btn-block w-100">
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <a href="<?php echo URLROOT; ?>/users/register" class="btn btn-light btn-block w-100">No
-                                account? Register</a>
-                        </div>
-                    </div>
-                </form>
+                    <?php endif; ?>
+                </div>
+
+                <button type="submit" class="btn btn-facebook">
+                    Log In
+                </button>
+            </form>
+
+            <div class="forgot-password">
+                <a href="#">Forgotten password?</a>
             </div>
+
+            <div class="divider"></div>
+
+            <div class="text-center">
+                <a href="<?php echo URLROOT; ?>/users/register" class="btn btn-create">
+                    Create New Account
+                </a>
+            </div>
+        </div>
+
+        <div class="create-page-text">
+            <strong>Create a Page</strong> for your business.
         </div>
     </div>
 </div>
-<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'footer.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'login_footer.php'; ?>

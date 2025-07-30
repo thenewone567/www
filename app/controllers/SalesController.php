@@ -15,6 +15,17 @@ class SalesController extends Controller
 
     public function index()
     {
+        // This now serves as the Sales Hub page
+        $data = [
+            'title' => 'Sales Management Hub'
+        ];
+
+        $this->view('sales/index', $data);
+    }
+
+    public function list()
+    {
+        // Original index functionality moved here
         $sales = $this->saleModel->getSales();
         if (!$sales) {
             $sales = [];
@@ -23,13 +34,13 @@ class SalesController extends Controller
         $data = [
             'sales' => $sales
         ];
-        $this->view('sales/index', $data);
+        $this->view('sales/list', $data);
     }
 
     public function add()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $_POST = sanitizePost();
             $data = [
                 'customer_id' => isset($_POST['customer_id']) ? trim($_POST['customer_id']) : '',
                 'total_amount' => isset($_POST['total_amount']) ? trim($_POST['total_amount']) : '',

@@ -1,5 +1,5 @@
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'header.php'; ?>
-<a href="<?php echo URLROOT; ?>/stock/locations" class="btn btn-light"><i class="fa fa-arrow-left"></i> Back</a>
+<a href="<?php echo URLROOT; ?>/stocks/locations" class="btn btn-light"><i class="fa fa-arrow-left"></i> Back</a>
 <div class="card card-body bg-light mt-5">
     <h2>Add Warehouse Location</h2>
     <p>Create a new warehouse location with this form</p>

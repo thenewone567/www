@@ -16,7 +16,7 @@ class UsersController extends Controller
             // Process form
 
             // Sanitize POST data
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $_POST = sanitizePost();
 
             $data = [
                 'username' => isset($_POST['username']) ? trim($_POST['username']) : '',

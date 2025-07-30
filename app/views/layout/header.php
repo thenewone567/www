@@ -17,4 +17,4 @@
         <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'sidebar.php'; ?>
         <div id="page-content-wrapper" class="w-100 h-100">
             <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'navbar.php'; ?>
-            <div class="container-fluid pt-3">
+            <div class="container-fluid pt-3 fade-in">

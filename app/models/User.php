@@ -52,9 +52,3 @@ class User
     return $row ? true : false;
   }
 }
-?>
-return false;
-}
-}
-}
-?>

@@ -20,7 +20,17 @@ $url = isset($_GET['url']) ? rtrim($_GET['url'], '/') : 'home';
 $url = filter_var($url, FILTER_SANITIZE_URL);
 $urlParts = explode('/', $url);
 
-$controllerName = !empty($urlParts[0]) ? ucfirst($urlParts[0]) . 'Controller' : 'HomeController';
+// Convert hyphenated URLs to CamelCase controller names
+$controllerPart = !empty($urlParts[0]) ? $urlParts[0] : 'home';
+
+// Handle specific URL mappings
+if ($controllerPart === 'cycle-counts') {
+    $controllerName = 'CycleCountsController';
+} else {
+    // Convert other hyphenated URLs to CamelCase
+    $controllerName = str_replace('-', '', ucwords($controllerPart, '-')) . 'Controller';
+}
+
 $methodName = isset($urlParts[1]) ? $urlParts[1] : 'index';
 $params = array_slice($urlParts, 2);
 

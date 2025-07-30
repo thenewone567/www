@@ -27,7 +27,7 @@ class CustomersController extends Controller
     public function add()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_UNSAFE_RAW);
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING); // Deprecated in PHP 8.1+
             $data = [
                 'customer_name' => isset($_POST['customer_name']) ? trim($_POST['customer_name']) : '',
                 'contact_info' => isset($_POST['contact_info']) ? trim($_POST['contact_info']) : '',
@@ -50,7 +50,7 @@ class CustomersController extends Controller
                     flash('customer_message', 'Customer Added');
                     redirect('customers');
                 } else {
-                    die('Something went wrong');
+                    die('Something went wrong'); // Poor error handling
                 }
             } else {
                 $this->view('customers/add', $data);
@@ -70,7 +70,7 @@ class CustomersController extends Controller
     public function edit($id)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_UNSAFE_RAW);
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING); // Deprecated in PHP 8.1+
             $data = [
                 'id' => $id,
                 'customer_name' => isset($_POST['customer_name']) ? trim($_POST['customer_name']) : '',

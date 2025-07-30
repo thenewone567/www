@@ -7,11 +7,6 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
             <li class="nav-item">
-                <div class="custom-control custom-switch">
-                    <input type="checkbox" class="custom-control-input" id="darkSwitch">
-                    <label class="custom-control-label" for="darkSwitch">Dark Mode</label>
-                </div>
-            </li>
             <!-- Notifications Dropdown -->
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownNotifications" role="button"

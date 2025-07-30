@@ -3,6 +3,7 @@ class PurchasesController extends Controller
 {
     public $productModel;
     public $purchaseModel;
+    public $purchaseOrderModel;
 
     public function __construct()
     {
@@ -11,6 +12,7 @@ class PurchasesController extends Controller
         }
         $this->purchaseModel = $this->model('Purchase');
         $this->productModel = $this->model('Product');
+        $this->purchaseOrderModel = $this->model('PurchaseOrder');
     }
 
     public function index()
@@ -85,5 +87,69 @@ class PurchasesController extends Controller
             ];
             $this->view('purchases/add', $data);
         }
+    }
+
+    public function receive()
+    {
+        // Get pending purchase orders that can be received
+        $pendingOrders = $this->purchaseOrderModel->getPurchaseOrders('sent');
+        
+        $data = [
+            'title' => 'Receive Shipments',
+            'purchase_orders' => $pendingOrders
+        ];
+        
+        $this->view('purchases/receive', $data);
+    }
+
+    public function receiveShipment($poId = null)
+    {
+        if (!$poId) {
+            flash('purchase_message', 'Purchase order ID is required', 'alert alert-danger');
+            redirect('purchases/receive');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+            
+            $result = $this->purchaseOrderModel->receivePurchaseOrder($poId, $_POST);
+            
+            if ($result) {
+                flash('purchase_message', 'Shipment received successfully', 'alert alert-success');
+                redirect('purchases/receive');
+            } else {
+                flash('purchase_message', 'Failed to receive shipment', 'alert alert-danger');
+            }
+        }
+
+        // Get purchase order details for receiving
+        $purchaseOrder = $this->purchaseOrderModel->getPurchaseOrderById($poId);
+        $orderItems = $this->purchaseOrderModel->getPurchaseOrderItems($poId);
+        
+        if (!$purchaseOrder) {
+            flash('purchase_message', 'Purchase order not found', 'alert alert-danger');
+            redirect('purchases/receive');
+        }
+
+        $data = [
+            'title' => 'Receive Shipment - PO #' . $purchaseOrder->po_number,
+            'purchase_order' => $purchaseOrder,
+            'order_items' => $orderItems
+        ];
+        
+        $this->view('purchases/receive_shipment', $data);
+    }
+
+    public function received()
+    {
+        // Get received purchase orders
+        $receivedOrders = $this->purchaseOrderModel->getPurchaseOrders('received');
+        
+        $data = [
+            'title' => 'Received Shipments',
+            'purchase_orders' => $receivedOrders
+        ];
+        
+        $this->view('purchases/received', $data);
     }
 }
