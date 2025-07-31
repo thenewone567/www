@@ -39,7 +39,7 @@ class StockController extends Controller
     public function add()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
             $data = [
                 'product_id' => isset($_POST['product_id']) ? trim($_POST['product_id']) : '',
                 'batch_number' => isset($_POST['batch_number']) ? trim($_POST['batch_number']) : '',
@@ -86,7 +86,7 @@ class StockController extends Controller
     public function move()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
             $data = [
                 'product_id' => isset($_POST['product_id']) ? trim($_POST['product_id']) : '',
                 'from_location_id' => isset($_POST['from_location_id']) ? trim($_POST['from_location_id']) : '',
@@ -144,7 +144,7 @@ class StockController extends Controller
     public function addlocation()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
             $data = [
                 'location_name' => isset($_POST['location_name']) ? trim($_POST['location_name']) : '',
                 'rack' => isset($_POST['rack']) ? trim($_POST['rack']) : '',

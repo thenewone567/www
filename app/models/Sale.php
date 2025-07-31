@@ -10,7 +10,25 @@ class Sale
 
     public function getSales()
     {
-        $this->db->query("SELECT * FROM sales");
+        $this->db->query("
+            SELECT s.*, c.name as customer_name 
+            FROM sales s 
+            LEFT JOIN customers c ON s.customer_id = c.customer_id 
+            ORDER BY s.sale_date DESC
+        ");
+        $result = $this->db->resultSet();
+        return $result ? $result : [];
+    }
+
+    public function getTodaysSales()
+    {
+        $this->db->query("
+            SELECT s.*, c.name as customer_name 
+            FROM sales s 
+            LEFT JOIN customers c ON s.customer_id = c.customer_id 
+            WHERE DATE(s.sale_date) = CURDATE() 
+            ORDER BY s.sale_date DESC
+        ");
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }

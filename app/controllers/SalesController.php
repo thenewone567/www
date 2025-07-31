@@ -3,6 +3,7 @@ class SalesController extends Controller
 {
     public $productModel;
     public $saleModel;
+    public $customerModel;
 
     public function __construct()
     {
@@ -11,6 +12,7 @@ class SalesController extends Controller
         }
         $this->saleModel = $this->model('Sale');
         $this->productModel = $this->model('Product');
+        $this->customerModel = $this->model('Customer');
     }
 
     public function index()
@@ -37,6 +39,38 @@ class SalesController extends Controller
         $this->view('sales/list', $data);
     }
 
+    public function today()
+    {
+        // Get today's sales
+        $sales = $this->saleModel->getTodaysSales();
+        if (!$sales) {
+            $sales = [];
+            flash('sale_message', 'No sales found for today');
+        }
+        $data = [
+            'sales' => $sales,
+            'title' => "Today's Sales"
+        ];
+        $this->view('sales/today', $data);
+    }
+
+    public function details($id)
+    {
+        $sale = $this->saleModel->getSaleById($id);
+        if (!$sale) {
+            flash('sale_message', 'Sale not found', 'alert alert-danger');
+            redirect('sales/list');
+        }
+
+        $saleItems = $this->saleModel->getSaleItemsBySaleId($id);
+
+        $data = [
+            'sale' => $sale,
+            'saleItems' => $saleItems
+        ];
+        $this->view('sales/details', $data);
+    }
+
     public function add()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -50,10 +84,6 @@ class SalesController extends Controller
                 'total_amount_err' => ''
             ];
 
-            // Validate customer id
-            if (empty($data['customer_id'])) {
-                $data['customer_id_err'] = 'Please enter customer id';
-            }
             // Validate total amount
             if (empty($data['total_amount'])) {
                 $data['total_amount_err'] = 'Please enter total amount';
@@ -82,6 +112,17 @@ class SalesController extends Controller
                     die('Something went wrong');
                 }
             } else {
+                // Load products and customers for the form
+                $products = $this->productModel->getProducts();
+                if (!$products) {
+                    $products = [];
+                }
+                $customers = $this->customerModel->getCustomers();
+                if (!$customers) {
+                    $customers = [];
+                }
+                $data['products'] = $products;
+                $data['customers'] = $customers;
                 $this->view('sales/add', $data);
             }
         } else {
@@ -90,11 +131,17 @@ class SalesController extends Controller
                 $products = [];
                 flash('sale_message', 'No products found');
             }
+            $customers = $this->customerModel->getCustomers();
+            if (!$customers) {
+                $customers = [];
+                flash('sale_message', 'No customers found');
+            }
             $data = [
                 'customer_id' => '',
                 'total_amount' => '',
                 'payment_mode' => '',
-                'products' => $products
+                'products' => $products,
+                'customers' => $customers
             ];
             $this->view('sales/add', $data);
         }

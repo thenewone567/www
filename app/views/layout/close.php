@@ -1,7 +1,8 @@
-</div>
-</div>
-</div>
+</div> <!-- Close container-fluid -->
+</div> <!-- Close page-content-wrapper -->
+</div> <!-- Close wrapper -->
 
+<!-- JavaScript Libraries -->
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
     integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
     crossorigin="anonymous"></script>
@@ -12,7 +13,6 @@
     integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
     crossorigin="anonymous"></script>
 <script src="<?php echo URLROOT; ?>/js/main.js"></script>
-<script src="<?php echo URLROOT; ?>/js/debug-theme.js"></script>
 </body>
 
 </html>

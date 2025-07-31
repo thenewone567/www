@@ -1,19 +1,11 @@
 <?php
-// Start session
-session_start();
+/**
+ * Hardware Store Management System Entry Point
+ * Updated to use new bootstrap system
+ */
 
-// Require libraries from folder libraries
-require_once 'app/config.php';
-require_once 'app/Database.php';
-require_once 'app/helpers.php';
-
-// Autoload Core Libraries
-require_once 'app/controllers/Controller.php';
-spl_autoload_register(function ($className) {
-    if (file_exists('app/models/' . $className . '.php')) {
-        require_once 'app/models/' . $className . '.php';
-    }
-});
+// Load application bootstrap
+require_once __DIR__ . '/bootstrap.php';
 
 // Basic routing
 $url = isset($_GET['url']) ? rtrim($_GET['url'], '/') : 'home';

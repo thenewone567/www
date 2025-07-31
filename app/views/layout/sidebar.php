@@ -28,6 +28,14 @@
         <a href="<?php echo URLROOT; ?>/settings" class="list-group-item list-group-item-action bg-dark text-light">
             <i class="fa-solid fa-cog"></i> Settings
         </a>
+        <?php
+        // Show Admin Panel only for admin users
+        if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+            <a href="<?php echo URLROOT; ?>/admin"
+                class="list-group-item list-group-item-action bg-dark text-light admin-link">
+                <i class="fa-solid fa-shield-alt"></i> Admin Panel
+            </a>
+        <?php endif; ?>
         <a href="<?php echo URLROOT; ?>/users/logout" class="list-group-item list-group-item-action bg-dark text-light">
             <i class="fa-solid fa-right-from-bracket"></i> Logout
         </a>

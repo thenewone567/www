@@ -181,9 +181,17 @@
                             
                             <!-- Customer and Payment Info -->
                             <div class="form-group">
-                                <label for="customer_id">Customer ID:</label>
-                                <input type="text" name="customer_id" class="form-control" 
-                                       placeholder="Enter Customer ID (optional)">
+                                <label for="customer_id">Customer:</label>
+                                <select name="customer_id" class="form-control">
+                                    <option value="">Select Customer (Optional)</option>
+                                    <?php foreach ($data['customers'] as $customer): ?>
+                                        <option value="<?php echo $customer->customer_id; ?>"
+                                            <?php echo ($data['customer_id'] == $customer->customer_id) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($customer->customer_name); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <span class="invalid-feedback"><?php echo $data['customer_id_err']; ?></span>
                             </div>
                             <div class="form-group">
                                 <label for="payment_mode">Payment Mode:</label>
@@ -485,4 +493,15 @@
     // Initialize cart display
     updateCart();
 </script>
-<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'footer.php'; ?>
+
+            </div> <!-- End container-fluid -->
+        </div> <!-- End page-content-wrapper -->
+    </div> <!-- End wrapper -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+    <script src="<?php echo URLROOT; ?>/js/main.js"></script>
+</body>
+</html>
