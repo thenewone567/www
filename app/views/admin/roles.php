@@ -1,6 +1,6 @@
 <?php
 $pageTitle = 'Roles & Permissions - Admin Panel';
-require_once '../app/views/layout/header.php';
+require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php';
 ?>
 
 <style>
@@ -111,27 +111,27 @@ require_once '../app/views/layout/header.php';
     <div class="admin-nav">
         <ul class="nav nav-pills">
             <li class="nav-item">
-                <a class="nav-link" href="<?= URLROOT ?>/admin">
+                <a class="nav-link" href="<?php echo URLROOT; ?>/admin">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="<?= URLROOT ?>/admin/users">
+                <a class="nav-link" href="<?php echo URLROOT; ?>/admin/users">
                     <i class="fas fa-users"></i> Users
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link active" href="<?= URLROOT ?>/admin/roles">
+                <a class="nav-link active" href="<?php echo URLROOT; ?>/admin/roles">
                     <i class="fas fa-user-tag"></i> Roles & Permissions
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="<?= URLROOT ?>/admin/activityLogs">
+                <a class="nav-link" href="<?php echo URLROOT; ?>/admin/activityLogs">
                     <i class="fas fa-history"></i> Activity Logs
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="<?= URLROOT ?>/admin/settings">
+                <a class="nav-link" href="<?php echo URLROOT; ?>/admin/settings">
                     <i class="fas fa-cog"></i> Settings
                 </a>
             </li>
@@ -572,14 +572,15 @@ require_once '../app/views/layout/header.php';
 </script>
 
 
-            </div> <!-- End container-fluid -->
-        </div> <!-- End page-content-wrapper -->
-    </div> <!-- End wrapper -->
+</div> <!-- End container-fluid -->
+</div> <!-- End page-content-wrapper -->
+</div> <!-- End wrapper -->
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
-    <script src="<?php echo URLROOT; ?>/js/main.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+<script src="<?php echo URLROOT; ?>/js/main.js"></script>
 </body>
+
 </html>

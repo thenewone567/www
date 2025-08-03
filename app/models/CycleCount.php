@@ -47,7 +47,7 @@ class CycleCount
     /**
      * Get cycle count by ID
      * @param int $id
-     * @return object|false
+     * @return object|false|null
      */
     public function getCycleCountById($id)
     {
@@ -57,7 +57,8 @@ class CycleCount
                              LEFT JOIN users u ON cc.created_by = u.user_id
                              WHERE cc.id = :id");
             $this->db->bind(':id', $id);
-            return $this->db->single();
+            $result = $this->db->single();
+            return $result ?: false;
         } catch (Exception $e) {
             error_log("Error in getCycleCountById: " . $e->getMessage());
             return false;

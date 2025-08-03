@@ -17,10 +17,10 @@ if (file_exists(__DIR__ . "/vendor/autoload.php")) {
 spl_autoload_register(function ($className) {
     $directories = [
         __DIR__ . "/app/controllers/",
-        __DIR__ . "/app/models/", 
+        __DIR__ . "/app/models/",
         __DIR__ . "/app/",
     ];
-    
+
     foreach ($directories as $directory) {
         $file = $directory . $className . ".php";
         if (file_exists($file)) {
@@ -32,6 +32,7 @@ spl_autoload_register(function ($className) {
 
 // Helper functions
 require_once __DIR__ . "/app/helpers.php";
+require_once __DIR__ . "/app/helpers/permissions.php";
 
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
@@ -39,28 +40,29 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Error logging function
-function logError($message, $context = []) {
+function logError($message, $context = [])
+{
     $timestamp = date("Y-m-d H:i:s");
     $contextStr = !empty($context) ? " Context: " . json_encode($context) : "";
     $logMessage = "[$timestamp] ERROR: $message$contextStr" . PHP_EOL;
-    
+
     if (defined("LOG_FILE")) {
         file_put_contents(LOG_FILE, $logMessage, FILE_APPEND | LOCK_EX);
     }
 }
 
 // Set error handler
-set_error_handler(function($severity, $message, $file, $line) {
+set_error_handler(function ($severity, $message, $file, $line) {
     if (!(error_reporting() & $severity)) {
         return false;
     }
-    
+
     logError("$message in $file on line $line", [
         "severity" => $severity,
         "file" => $file,
         "line" => $line
     ]);
-    
+
     if (APP_ENV === "development") {
         echo "<div style=\"background: #fee; border: 1px solid #fcc; padding: 10px; margin: 5px;\">";
         echo "<strong>Error:</strong> $message<br>";
@@ -68,18 +70,18 @@ set_error_handler(function($severity, $message, $file, $line) {
         echo "<strong>Line:</strong> $line<br>";
         echo "</div>";
     }
-    
+
     return true;
 });
 
 // Set exception handler  
-set_exception_handler(function($exception) {
+set_exception_handler(function ($exception) {
     logError($exception->getMessage(), [
         "file" => $exception->getFile(),
         "line" => $exception->getLine(),
         "trace" => $exception->getTraceAsString()
     ]);
-    
+
     if (APP_ENV === "development") {
         echo "<div style=\"background: #fee; border: 1px solid #fcc; padding: 10px; margin: 5px;\">";
         echo "<strong>Uncaught Exception:</strong> " . $exception->getMessage() . "<br>";

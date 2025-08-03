@@ -1,4 +1,4 @@
-<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'header.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
 
 <div class="container-fluid mt-0 pt-3">
     <!-- Header -->

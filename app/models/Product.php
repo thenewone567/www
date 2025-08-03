@@ -463,4 +463,86 @@ class Product
         $this->db->query("SELECT * FROM categories WHERE is_active = 1 ORDER BY category_name");
         return $this->db->resultSet() ?: [];
     }
+
+    public function getProductBySku($sku)
+    {
+        $this->db->query("SELECT * FROM products WHERE sku = :sku LIMIT 1");
+        $this->db->bind(':sku', $sku);
+        $this->db->execute();
+        return $this->db->single();
+    }
+
+    public function addSimpleProduct($data)
+    {
+        try {
+            $this->db->query("
+                INSERT INTO products (
+                    product_name, sku, category_id, brand_id, unit_id, 
+                    min_stock_level, max_stock_level, reorder_level, image_path, is_active
+                ) VALUES (
+                    :product_name, :sku, :category_id, :brand_id, :unit_id, 
+                    :min_stock_level, :max_stock_level, :reorder_level, :image_path, :is_active
+                )
+            ");
+
+            // Bind values
+            $this->db->bind(':product_name', $data['product_name']);
+            $this->db->bind(':sku', $data['sku']);
+            $this->db->bind(':category_id', $data['category_id']);
+            $this->db->bind(':brand_id', $data['brand_id']);
+            $this->db->bind(':unit_id', $data['unit_id']);
+            $this->db->bind(':min_stock_level', $data['min_stock_level']);
+            $this->db->bind(':max_stock_level', $data['max_stock_level']);
+            $this->db->bind(':reorder_level', $data['reorder_level']);
+            $this->db->bind(':image_path', $data['image_path']);
+            $this->db->bind(':is_active', $data['is_active']);
+
+            if ($this->db->execute()) {
+                return $this->db->lastInsertId();
+            } else {
+                return false;
+            }
+        } catch (Exception $e) {
+            error_log('Simple Product Insert Error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function updateSimpleProduct($id, $data)
+    {
+        try {
+            $this->db->query("
+                UPDATE products SET 
+                    product_name = :product_name,
+                    sku = :sku,
+                    category_id = :category_id,
+                    brand_id = :brand_id,
+                    unit_id = :unit_id,
+                    min_stock_level = :min_stock_level,
+                    max_stock_level = :max_stock_level,
+                    reorder_level = :reorder_level,
+                    image_path = :image_path,
+                    is_active = :is_active
+                WHERE product_id = :product_id
+            ");
+
+            // Bind values
+            $this->db->bind(':product_id', $id);
+            $this->db->bind(':product_name', $data['product_name']);
+            $this->db->bind(':sku', $data['sku']);
+            $this->db->bind(':category_id', $data['category_id']);
+            $this->db->bind(':brand_id', $data['brand_id']);
+            $this->db->bind(':unit_id', $data['unit_id']);
+            $this->db->bind(':min_stock_level', $data['min_stock_level']);
+            $this->db->bind(':max_stock_level', $data['max_stock_level']);
+            $this->db->bind(':reorder_level', $data['reorder_level']);
+            $this->db->bind(':image_path', $data['image_path']);
+            $this->db->bind(':is_active', $data['is_active']);
+
+            return $this->db->execute();
+        } catch (Exception $e) {
+            error_log('Simple Product Update Error: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

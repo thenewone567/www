@@ -1,404 +1,303 @@
-<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'header.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
 
-<!-- Add Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<div class="container-fluid mt-0 pt-3">
-    <!-- Header Section -->
-    <div class="row align-items-center mb-4">
-        <div class="col-12 col-md-6">
-            <h1 class="mb-1 font-weight-bold">Hardware Store Dashboard</h1>
-            <small class="text-muted">Real-time Analytics & Performance</small>
-        </div>
-        <div class="col-12 col-md-6 text-md-right">
-            <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
-                <div class="admin-panel-button d-inline-block mr-3">
-                    <a href="<?php echo URLROOT; ?>/admin" class="btn btn-success">
+<div class="container-fluid theme-container theme-unified">
+    <!-- Page Header -->
+    <div class="theme-header">
+        <div class="row align-items-center mb-4">
+            <div class="col-12 col-lg-8">
+                <h1 class="mb-0">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Hardware Store Dashboard
+                </h1>
+                <p class="description">Real-time analytics and performance insights</p>
+            </div>
+            <div class="col-12 col-lg-4 text-lg-right mt-3 mt-lg-0">
+                <?php if (isAdmin()): ?>
+                    <a href="<?php echo URLROOT; ?>/admin" class="btn btn-light btn-sm mr-2">
                         <i class="fas fa-cog"></i> Admin Panel
                     </a>
+                <?php endif; ?>
+                <div class="btn-group">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-calendar"></i> Last 30 Days
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item" href="#" onclick="updateDashboard('7')">Last 7 Days</a>
+                        <a class="dropdown-item active" href="#" onclick="updateDashboard('30')">Last 30 Days</a>
+                        <a class="dropdown-item" href="#" onclick="updateDashboard('90')">Last 3 Months</a>
+                    </div>
                 </div>
-            <?php endif; ?>
-
-            <div class="dropdown d-inline-block">
-                <button class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
-                    <i class="fa fa-calendar"></i> Last 30 Days
+                <button class="btn btn-outline-light btn-sm ml-2" onclick="refreshDashboard()">
+                    <i class="fa fa-sync"></i> Refresh
                 </button>
-                <div class="dropdown-menu dropdown-menu-right">
-                    <a class="dropdown-item" href="#" onclick="updateDashboard('7')">Last 7 Days</a>
-                    <a class="dropdown-item active" href="#" onclick="updateDashboard('30')">Last 30 Days</a>
-                    <a class="dropdown-item" href="#" onclick="updateDashboard('90')">Last 3 Months</a>
-                </div>
             </div>
-            <button class="btn btn-primary ml-2" onclick="refreshDashboard()">
-                <i class="fa fa-sync"></i> Refresh
-            </button>
         </div>
     </div>
-
     <!-- Key Performance Indicators -->
     <div class="row mb-4">
-        <!-- Sales Performance KPIs -->
-        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <div class="theme-card">
+                <div class="card-header bg-primary-theme text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Total Sales</h5>
+                </div>
                 <div class="card-body text-center">
-                    <div class="mb-2">
-                        <i class="fa fa-chart-line fa-2x text-primary"></i>
-                    </div>
-                    <h6 class="text-muted mb-1">Total Sales</h6>
-                    <h4 class="mb-1 font-weight-bold text-primary">
-                        $<?php echo number_format($data['total_sales'] ?? 0, 0); ?>
-                    </h4>
-                    <small class="text-success">
-                        <i class="fa fa-arrow-up"></i>
-                        <?php echo $data['sales_growth'] ?? '0'; ?>%
-                    </small>
+                    <h4 class="text-primary">$<?php echo number_format($data['total_sales'] ?? 0, 0); ?></h4>
+                    <small class="text-success"><i class="fas fa-arrow-up"></i>
+                        <?php echo $data['sales_growth'] ?? '0'; ?>%</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <div class="theme-card">
+                <div class="card-header bg-success-theme text-white">
+                    <h5 class="mb-0"><i class="fas fa-receipt"></i> Avg Transaction</h5>
+                </div>
                 <div class="card-body text-center">
-                    <div class="mb-2">
-                        <i class="fa fa-receipt fa-2x text-success"></i>
-                    </div>
-                    <h6 class="text-muted mb-1">Avg Transaction</h6>
-                    <h4 class="mb-1 font-weight-bold text-success">
-                        $<?php echo number_format($data['avg_transaction'] ?? 0, 2); ?>
-                    </h4>
-                    <small class="text-info">
-                        <?php echo $data['total_transactions'] ?? 0; ?> transactions
-                    </small>
+                    <h4 class="text-success">$<?php echo number_format($data['avg_transaction'] ?? 0, 2); ?></h4>
+                    <small class="text-muted"><?php echo $data['total_transactions'] ?? 0; ?> transactions</small>
                 </div>
             </div>
         </div>
 
-        <!-- Inventory KPIs -->
-        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <div class="theme-card">
+                <div class="card-header bg-info-theme text-white">
+                    <h5 class="mb-0"><i class="fas fa-boxes"></i> Inventory Value</h5>
+                </div>
                 <div class="card-body text-center">
-                    <div class="mb-2">
-                        <i class="fa fa-boxes fa-2x text-info"></i>
-                    </div>
-                    <h6 class="text-muted mb-1">Inventory Value</h6>
-                    <h4 class="mb-1 font-weight-bold text-info">
-                        $<?php echo number_format($data['inventory_value'] ?? 0, 0); ?>
-                    </h4>
-                    <small class="text-muted">
-                        <?php echo $data['total_products'] ?? 0; ?> products
-                    </small>
+                    <h4 class="text-info">$<?php echo number_format($data['inventory_value'] ?? 0, 0); ?></h4>
+                    <small class="text-muted"><?php echo $data['total_products'] ?? 0; ?> products</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <div class="theme-card">
+                <div class="card-header bg-warning-theme text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Low Stock</h5>
+                </div>
                 <div class="card-body text-center">
-                    <div class="mb-2">
-                        <i class="fa fa-exclamation-triangle fa-2x text-warning"></i>
-                    </div>
-                    <h6 class="text-muted mb-1">Low Stock Items</h6>
-                    <h4 class="mb-1 font-weight-bold text-warning">
-                        <?php echo $data['low_stock_count'] ?? 0; ?>
-                    </h4>
-                    <small class="text-danger">
-                        <?php echo $data['out_of_stock_count'] ?? 0; ?> out of stock
-                    </small>
+                    <h4 class="text-warning"><?php echo $data['low_stock_count'] ?? 0; ?></h4>
+                    <small class="text-danger"><?php echo $data['out_of_stock_count'] ?? 0; ?> out of stock</small>
                 </div>
             </div>
         </div>
 
-        <!-- Financial KPIs -->
-        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <div class="theme-card">
+                <div class="card-header bg-success-theme text-white">
+                    <h5 class="mb-0"><i class="fas fa-percentage"></i> Gross Margin</h5>
+                </div>
                 <div class="card-body text-center">
-                    <div class="mb-2">
-                        <i class="fa fa-percentage fa-2x text-success"></i>
-                    </div>
-                    <h6 class="text-muted mb-1">Gross Margin</h6>
-                    <h4 class="mb-1 font-weight-bold text-success">
-                        <?php echo number_format($data['gross_margin'] ?? 0, 1); ?>%
-                    </h4>
-                    <small class="text-muted">
-                        Target: 25%
-                    </small>
+                    <h4 class="text-success"><?php echo number_format($data['gross_margin'] ?? 0, 1); ?>%</h4>
+                    <small class="text-muted">Target: 25%</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <div class="theme-card">
+                <div class="card-header bg-primary-theme text-white">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> New Customers</h5>
+                </div>
                 <div class="card-body text-center">
-                    <div class="mb-2">
-                        <i class="fa fa-users fa-2x text-primary"></i>
-                    </div>
-                    <h6 class="text-muted mb-1">Customers</h6>
-                    <h4 class="mb-1 font-weight-bold text-primary">
-                        <?php echo $data['new_customers'] ?? 0; ?>
-                    </h4>
-                    <small class="text-success">
-                        New this month
-                    </small>
+                    <h4 class="text-primary"><?php echo $data['new_customers'] ?? 0; ?></h4>
+                    <small class="text-muted">This month</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Charts and Analytics Section -->
-    <div class="row mb-4">
-        <!-- Sales Trend Chart -->
-        <div class="col-lg-8 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pb-0">
+    <!-- Main Content Section -->
+    <div class="row">
+        <!-- Main Analytics Column -->
+        <div class="col-lg-8">
+            <!-- Sales Trend Chart -->
+            <div class="theme-card">
+                <div class="card-header bg-primary-theme text-white">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 font-weight-bold">Sales Performance</h5>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-outline-secondary active"
-                                onclick="changeSalesView('daily')">Daily</button>
-                            <button type="button" class="btn btn-outline-secondary"
-                                onclick="changeSalesView('weekly')">Weekly</button>
-                            <button type="button" class="btn btn-outline-secondary"
-                                onclick="changeSalesView('monthly')">Monthly</button>
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line"></i>
+                            Monthly Sales Trend
+                        </h5>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-light" onclick="updateChart('sales')">Sales</button>
+                            <button class="btn btn-outline-light" onclick="updateChart('profit')">Profit</button>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
                     <div style="height: 300px;">
-                        <canvas id="salesTrendChart"></canvas>
+                        <canvas id="monthlyChart"></canvas>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Inventory Status Gauges -->
-        <div class="col-lg-4 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pb-0">
-                    <h5 class="mb-0 font-weight-bold">Inventory Health</h5>
-                </div>
-                <div class="card-body">
-                    <!-- Out of Stock Gauge -->
-                    <div class="text-center mb-4">
-                        <h6 class="text-muted mb-2">Out of Stock Items</h6>
-                        <div style="height: 120px;">
-                            <canvas id="outOfStockGauge"></canvas>
+            <!-- Analytics Row -->
+            <div class="row">
+                <!-- Sales by Category -->
+                <div class="col-lg-6 mb-3">
+                    <div class="theme-card">
+                        <div class="card-header bg-success-theme text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-pie"></i>
+                                Sales by Category
+                            </h5>
                         </div>
-                        <div class="mt-2">
-                            <span class="badge badge-danger px-3 py-2">
-                                <?php echo $data['out_of_stock_percentage'] ?? 0; ?>% Out of Stock
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Gross Margin Gauge -->
-                    <div class="text-center">
-                        <h6 class="text-muted mb-2">Gross Profit Margin</h6>
-                        <div style="height: 120px;">
-                            <canvas id="marginGauge"></canvas>
-                        </div>
-                        <div class="mt-2">
-                            <span class="badge badge-success px-3 py-2">
-                                <?php echo number_format($data['gross_margin'] ?? 0, 1); ?>% Margin
-                            </span>
+                        <div class="card-body">
+                            <div style="height: 300px;">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Detailed Analytics Section -->
-    <div class="row mb-4">
-        <!-- Sales by Category -->
-        <div class="col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pb-0">
-                    <h5 class="mb-0 font-weight-bold">Sales by Category</h5>
-                </div>
-                <div class="card-body">
-                    <div style="height: 300px;">
-                        <canvas id="categoryChart"></canvas>
+                <!-- Customer Analytics -->
+                <div class="col-lg-6 mb-3">
+                    <div class="theme-card">
+                        <div class="card-header bg-info-theme text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-users"></i>
+                                Customer Insights
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 300px;">
+                                <canvas id="customerChart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Customer Analytics -->
-        <div class="col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pb-0">
-                    <h5 class="mb-0 font-weight-bold">Customer Insights</h5>
-                </div>
-                <div class="card-body">
-                    <div style="height: 300px;">
-                        <canvas id="customerChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Performance Tables Section -->
-    <div class="row mb-4">
-        <!-- Top Selling Products -->
-        <div class="col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pb-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 font-weight-bold">Top 5 Selling Products</h5>
-                    <a href="<?php echo URLROOT; ?>/reports/products" class="btn btn-sm btn-outline-primary">
-                        View All <i class="fa fa-arrow-right"></i>
-                    </a>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th class="border-0">Product</th>
-                                    <th class="border-0 text-right">Units Sold</th>
-                                    <th class="border-0 text-right">Revenue</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (!empty($data['top_selling'])): ?>
-                                    <?php foreach ($data['top_selling'] as $index => $product): ?>
-                                        <tr>
-                                            <td class="align-middle">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="badge badge-primary rounded-circle mr-3"
-                                                        style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">
-                                                        <?php echo $index + 1; ?>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="mb-0"><?php echo $product->product_name; ?></h6>
-                                                        <small
-                                                            class="text-muted"><?php echo $product->category_name ?? 'Uncategorized'; ?></small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="align-middle text-right">
-                                                <span class="font-weight-bold"><?php echo $product->total_quantity; ?></span>
-                                            </td>
-                                            <td class="align-middle text-right">
-                                                <span class="font-weight-bold text-success">
-                                                    $<?php echo number_format($product->total_revenue ?? 0, 0); ?>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="3" class="text-center py-4 text-muted">
-                                            <i class="fa fa-chart-bar fa-2x mb-2"></i>
-                                            <p>No sales data available</p>
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Low Stock Items by Category -->
-        <div class="col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pb-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 font-weight-bold">Low Stock Alerts</h5>
-                    <a href="<?php echo URLROOT; ?>/products/index?filter=low_stock"
-                        class="btn btn-sm btn-outline-warning">
-                        Manage Stock <i class="fa fa-arrow-right"></i>
-                    </a>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th class="border-0">Product</th>
-                                    <th class="border-0 text-center">Status</th>
-                                    <th class="border-0 text-right">Current Stock</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (!empty($data['low_stock'])): ?>
-                                    <?php foreach (array_slice($data['low_stock'], 0, 5) as $product): ?>
-                                        <tr>
-                                            <td class="align-middle">
-                                                <div>
-                                                    <h6 class="mb-0"><?php echo $product->product_name; ?></h6>
-                                                    <small class="text-muted">SKU: <?php echo $product->sku ?? 'N/A'; ?></small>
-                                                </div>
-                                            </td>
-                                            <td class="align-middle text-center">
-                                                <?php if ($product->current_stock <= 0): ?>
-                                                    <span class="badge badge-danger">Out of Stock</span>
-                                                <?php elseif ($product->current_stock <= $product->reorder_level): ?>
-                                                    <span class="badge badge-warning">Reorder Now</span>
-                                                <?php else: ?>
-                                                    <span class="badge badge-info">Low Stock</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td class="align-middle text-right">
-                                                <span
-                                                    class="font-weight-bold <?php echo $product->current_stock <= 0 ? 'text-danger' : 'text-warning'; ?>">
-                                                    <?php echo $product->current_stock; ?>
-                                                </span>
-                                                <small class="text-muted d-block">
-                                                    Min: <?php echo $product->min_stock_level; ?>
-                                                </small>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="3" class="text-center py-4 text-muted">
-                                            <i class="fa fa-check-circle fa-2x mb-2 text-success"></i>
-                                            <p>All products are well stocked!</p>
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 pb-0">
-                    <h5 class="mb-0 font-weight-bold">Quick Actions</h5>
+        <!-- Sidebar Widgets -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="theme-card">
+                <div class="card-header bg-warning-theme text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt"></i>
+                        Quick Actions
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <a href="<?php echo URLROOT; ?>/sales/add" class="btn btn-outline-primary btn-block">
-                                <i class="fa fa-plus mb-2"></i><br>
-                                New Sale
+                        <div class="col-6 mb-2">
+                            <a href="<?php echo URLROOT; ?>/sales/add" class="btn btn-success btn-block">
+                                <i class="fas fa-plus"></i>
+                                <div>New Sale</div>
                             </a>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="<?php echo URLROOT; ?>/purchases/add" class="btn btn-outline-success btn-block">
-                                <i class="fa fa-shopping-cart mb-2"></i><br>
-                                New Purchase
+                        <div class="col-6 mb-2">
+                            <a href="<?php echo URLROOT; ?>/products/add" class="btn btn-primary btn-block">
+                                <i class="fas fa-box"></i>
+                                <div>Add Product</div>
                             </a>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="<?php echo URLROOT; ?>/products/add" class="btn btn-outline-info btn-block">
-                                <i class="fa fa-box mb-2"></i><br>
-                                Add Product
+                        <div class="col-6 mb-2">
+                            <a href="<?php echo URLROOT; ?>/purchases/add" class="btn btn-info btn-block">
+                                <i class="fas fa-shopping-cart"></i>
+                                <div>New Purchase</div>
                             </a>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="<?php echo URLROOT; ?>/reports/index" class="btn btn-outline-warning btn-block">
-                                <i class="fa fa-chart-bar mb-2"></i><br>
-                                View Reports
+                        <div class="col-6 mb-2">
+                            <a href="<?php echo URLROOT; ?>/customers" class="btn btn-secondary btn-block">
+                                <i class="fas fa-users"></i>
+                                <div>Customers</div>
                             </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="theme-card">
+                <div class="card-header bg-info-theme text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-clock"></i>
+                            Recent Activity
+                        </h5>
+                        <a href="#" class="btn btn-sm btn-outline-light">View All</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex align-items-center">
+                            <div class="bg-primary text-white rounded-circle p-2 me-3"
+                                style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                                <i class="fas fa-chart-line fa-sm"></i>
+                            </div>
+                            <div>
+                                <div class="font-weight-medium">Sale Completed</div>
+                                <div class="text-muted small">New sale of $245.50</div>
+                                <div class="text-muted small">2 hours ago</div>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-center">
+                            <div class="bg-success text-white rounded-circle p-2 me-3"
+                                style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                                <i class="fas fa-box fa-sm"></i>
+                            </div>
+                            <div>
+                                <div class="font-weight-medium">Product Added</div>
+                                <div class="text-muted small">New hammer added to inventory</div>
+                                <div class="text-muted small">4 hours ago</div>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-center">
+                            <div class="bg-warning text-white rounded-circle p-2 me-3"
+                                style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                                <i class="fas fa-exclamation-triangle fa-sm"></i>
+                            </div>
+                            <div>
+                                <div class="font-weight-medium">Low Stock Alert</div>
+                                <div class="text-muted small">Screws below minimum level</div>
+                                <div class="text-muted small">6 hours ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Summary -->
+            <div class="theme-card">
+                <div class="card-header bg-secondary-theme text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trophy"></i>
+                        Performance Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="font-weight-medium">Daily Sales Target</span>
+                            <span class="text-success font-weight-bold">85%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: 85%"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="font-weight-medium">Inventory Turnover</span>
+                            <span class="text-info font-weight-bold">Good</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-info" style="width: 72%"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="font-weight-medium">Customer Satisfaction</span>
+                            <span class="text-warning font-weight-bold">92%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-warning" style="width: 92%"></div>
                         </div>
                     </div>
                 </div>
@@ -407,73 +306,58 @@
     </div>
 </div>
 
+<!-- Add Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
     // Global variables for charts
-    let salesTrendChart, categoryChart, customerChart, outOfStockGauge, marginGauge;
+    let monthlyChart, categoryChart, customerChart;
 
-    // Sample data - In production, this would come from PHP/AJAX
+    // Real data from PHP
     const dashboardData = {
-        sales_trend: {
-            daily: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                current: [1200, 1900, 3000, 2500, 2200, 3000, 2800],
-                previous: [1000, 1600, 2400, 2000, 1800, 2400, 2200]
-            },
-            weekly: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                current: [12000, 19000, 15000, 22000],
-                previous: [10000, 16000, 13000, 18000]
-            },
-            monthly: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                current: [45000, 52000, 48000, 61000, 55000, 67000],
-                previous: [38000, 45000, 42000, 53000, 48000, 58000]
-            }
+        monthly: {
+            labels: <?php echo json_encode($data['monthly_labels'] ?? []); ?>,
+            data: <?php echo json_encode($data['monthly_sales'] ?? []); ?>
         },
         categories: {
-            labels: ['Tools', 'Hardware', 'Electrical', 'Plumbing', 'Garden'],
-            sales: [25000, 19000, 15000, 12000, 8000],
+            labels: <?php echo json_encode($data['category_labels'] ?? []); ?>,
+            data: <?php echo json_encode($data['category_sales'] ?? []); ?>,
             colors: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1']
         },
         customers: {
-            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-            new_customers: [12, 19, 15, 22],
-            returning_customers: [25, 35, 28, 42]
+            labels: <?php echo json_encode($data['customer_labels'] ?? []); ?>,
+            new_customers: <?php echo json_encode($data['new_customers_data'] ?? []); ?>,
+            returning_customers: <?php echo json_encode($data['returning_customers_data'] ?? []); ?>
         }
     };
 
     // Initialize Dashboard
     document.addEventListener('DOMContentLoaded', function () {
-        initializeSalesTrendChart();
+        initializeMonthlyChart();
         initializeCategoryChart();
         initializeCustomerChart();
-        initializeGauges();
     });
 
-    // Sales Trend Chart
-    function initializeSalesTrendChart() {
-        const ctx = document.getElementById('salesTrendChart').getContext('2d');
+    // Monthly Chart
+    function initializeMonthlyChart() {
+        const ctx = document.getElementById('monthlyChart');
+        if (!ctx) return;
 
-        salesTrendChart = new Chart(ctx, {
+        if (!dashboardData.monthly.labels.length || !dashboardData.monthly.data.length) {
+            ctx.parentNode.innerHTML = '<div class="text-center text-muted py-5">No sales data available for chart.</div>';
+            return;
+        }
+        monthlyChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: dashboardData.sales_trend.daily.labels,
+                labels: dashboardData.monthly.labels,
                 datasets: [{
-                    label: 'Current Period',
-                    data: dashboardData.sales_trend.daily.current,
+                    label: 'Monthly Sales',
+                    data: dashboardData.monthly.data,
                     borderColor: '#007bff',
                     backgroundColor: 'rgba(0, 123, 255, 0.1)',
                     borderWidth: 3,
                     fill: true,
-                    tension: 0.4
-                }, {
-                    label: 'Previous Period',
-                    data: dashboardData.sales_trend.daily.previous,
-                    borderColor: '#6c757d',
-                    backgroundColor: 'rgba(108, 117, 125, 0.1)',
-                    borderWidth: 2,
-                    borderDash: [5, 5],
-                    fill: false,
                     tension: 0.4
                 }]
             },
@@ -483,41 +367,17 @@
                 plugins: {
                     legend: {
                         position: 'top',
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            label: function (context) {
-                                return context.dataset.label + ': $' + context.parsed.y.toLocaleString();
-                            }
-                        }
                     }
                 },
                 scales: {
-                    x: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Time Period'
-                        }
-                    },
                     y: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Sales ($)'
-                        },
+                        beginAtZero: true,
                         ticks: {
                             callback: function (value) {
                                 return '$' + value.toLocaleString();
                             }
                         }
                     }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
                 }
             }
         });
@@ -525,18 +385,21 @@
 
     // Category Sales Chart
     function initializeCategoryChart() {
-        const ctx = document.getElementById('categoryChart').getContext('2d');
+        const ctx = document.getElementById('categoryChart');
+        if (!ctx) return;
 
+        if (!dashboardData.categories.labels.length || !dashboardData.categories.data.length) {
+            ctx.parentNode.innerHTML = '<div class="text-center text-muted py-5">No category sales data available for chart.</div>';
+            return;
+        }
         categoryChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: dashboardData.categories.labels,
                 datasets: [{
-                    data: dashboardData.categories.sales,
+                    data: dashboardData.categories.data,
                     backgroundColor: dashboardData.categories.colors,
-                    borderWidth: 0,
-                    hoverBorderWidth: 3,
-                    hoverBorderColor: '#fff'
+                    borderWidth: 0
                 }]
             },
             options: {
@@ -544,20 +407,7 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                return context.label + ': $' + context.parsed.toLocaleString() + ' (' + percentage + '%)';
-                            }
-                        }
+                        position: 'bottom'
                     }
                 },
                 cutout: '60%'
@@ -567,7 +417,8 @@
 
     // Customer Analytics Chart
     function initializeCustomerChart() {
-        const ctx = document.getElementById('customerChart').getContext('2d');
+        const ctx = document.getElementById('customerChart');
+        if (!ctx) return;
 
         customerChart = new Chart(ctx, {
             type: 'bar',
@@ -576,13 +427,11 @@
                 datasets: [{
                     label: 'New Customers',
                     data: dashboardData.customers.new_customers,
-                    backgroundColor: '#28a745',
-                    borderRadius: 4
+                    backgroundColor: '#28a745'
                 }, {
                     label: 'Returning Customers',
                     data: dashboardData.customers.returning_customers,
-                    backgroundColor: '#007bff',
-                    borderRadius: 4
+                    backgroundColor: '#007bff'
                 }]
             },
             options: {
@@ -591,26 +440,10 @@
                 plugins: {
                     legend: {
                         position: 'top'
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false
                     }
                 },
                 scales: {
-                    x: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Time Period'
-                        }
-                    },
                     y: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Number of Customers'
-                        },
                         beginAtZero: true
                     }
                 }
@@ -618,194 +451,18 @@
         });
     }
 
-    // Gauge Charts
-    function initializeGauges() {
-        // Out of Stock Gauge
-        const outOfStockCtx = document.getElementById('outOfStockGauge').getContext('2d');
-        const outOfStockPercentage = <?php echo $data['out_of_stock_percentage'] ?? 5; ?>;
-
-        outOfStockGauge = new Chart(outOfStockCtx, {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: [outOfStockPercentage, 100 - outOfStockPercentage],
-                    backgroundColor: ['#dc3545', '#e9ecef'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                circumference: 180,
-                rotation: 270,
-                cutout: '80%',
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        enabled: false
-                    }
-                }
-            }
-        });
-
-        // Gross Margin Gauge
-        const marginCtx = document.getElementById('marginGauge').getContext('2d');
-        const marginPercentage = <?php echo $data['gross_margin'] ?? 22; ?>;
-
-        marginGauge = new Chart(marginCtx, {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: [marginPercentage, 100 - marginPercentage],
-                    backgroundColor: ['#28a745', '#e9ecef'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                circumference: 180,
-                rotation: 270,
-                cutout: '80%',
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        enabled: false
-                    }
-                }
-            }
-        });
-    }
-
-    // Chart Interaction Functions
-    function changeSalesView(period) {
-        // Update active button
-        document.querySelectorAll('.btn-group .btn').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-
-        // Update chart data
-        const newData = dashboardData.sales_trend[period];
-        salesTrendChart.data.labels = newData.labels;
-        salesTrendChart.data.datasets[0].data = newData.current;
-        salesTrendChart.data.datasets[1].data = newData.previous;
-        salesTrendChart.update();
-    }
-
+    // Dashboard interaction functions
     function updateDashboard(days) {
-        // In production, this would make an AJAX call to fetch new data
         console.log('Updating dashboard for last', days, 'days');
-
-        // Update dropdown text
-        const dropdown = document.querySelector('.dropdown-toggle');
-        dropdown.innerHTML = `<i class="fa fa-calendar"></i> Last ${days} Days`;
-
-        // Simulate data refresh
-        refreshDashboard();
     }
 
     function refreshDashboard() {
-        // Add loading state
-        const refreshBtn = document.querySelector('button[onclick="refreshDashboard()"]');
-        const originalContent = refreshBtn.innerHTML;
-        refreshBtn.innerHTML = '<i class="fa fa-sync fa-spin"></i> Refreshing...';
-        refreshBtn.disabled = true;
-
-        // Simulate API call delay
-        setTimeout(() => {
-            // Reset button
-            refreshBtn.innerHTML = originalContent;
-            refreshBtn.disabled = false;
-
-            // Show success message
-            showNotification('Dashboard data refreshed successfully!', 'success');
-        }, 1500);
+        location.reload();
     }
 
-    function showNotification(message, type = 'info') {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-        notification.innerHTML = `
-        ${message}
-        <button type="button" class="close" data-dismiss="alert">
-            <span>&times;</span>
-        </button>
-    `;
-
-        document.body.appendChild(notification);
-
-        // Auto remove after 3 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 3000);
+    function updateChart(type) {
+        console.log('Updating chart type:', type);
     }
-
-    // Add custom CSS for modern dashboard styling
-    const style = document.createElement('style');
-    style.textContent = `
-    .card {
-        border-radius: 12px !important;
-        transition: all 0.2s ease;
-    }
-    .card:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
-    }
-    .btn {
-        border-radius: 8px;
-    }
-    .badge {
-        border-radius: 20px;
-        font-weight: 500;
-    }
-    .table th {
-        font-weight: 600;
-        border-bottom: 2px solid #dee2e6;
-    }
-    .progress {
-        border-radius: 10px;
-    }
-    .btn-group .btn {
-        border-radius: 6px;
-    }
-    .btn-group .btn:not(:last-child) {
-        margin-right: 2px;
-    }
-    .alert {
-        border-radius: 8px;
-        border: none;
-    }
-    /* Chart container styling */
-    .chart-container {
-        position: relative;
-        height: 300px;
-        width: 100%;
-    }
-    canvas {
-        max-height: 100% !important;
-        max-width: 100% !important;
-    }
-`;
-    document.head.appendChild(style);
 </script>
 
-
-</div> <!-- End container-fluid -->
-</div> <!-- End page-content-wrapper -->
-</div> <!-- End wrapper -->
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-    crossorigin="anonymous"></script>
-<script src="<?php echo URLROOT; ?>/js/main.js"></script>
-</body>
-
-</html>
+<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'footer.php'; ?>

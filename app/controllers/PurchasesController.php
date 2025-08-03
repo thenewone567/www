@@ -33,7 +33,7 @@ class PurchasesController extends Controller
     public function add()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
             $data = [
                 'supplier_id' => isset($_POST['supplier_id']) ? trim($_POST['supplier_id']) : '',
                 'total_amount' => isset($_POST['total_amount']) ? trim($_POST['total_amount']) : '',

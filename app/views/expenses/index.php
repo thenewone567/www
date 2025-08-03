@@ -1,4 +1,4 @@
-<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'header.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
 
 <div class="content-wrapper">
     <div class="content-header">
@@ -9,7 +9,7 @@
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="/">Home</a></li>
+                        <li class="breadcrumb-item"><a href="<?php echo URLROOT; ?>/">Home</a></li>
                         <li class="breadcrumb-item active">Expenses</li>
                     </ol>
                 </div>
@@ -24,7 +24,7 @@
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-primary">
                         <div class="inner">
-                            <h3><?= count($expenses) ?></h3>
+                            <h3><?= isset($expenses) && is_array($expenses) ? count($expenses) : 0 ?></h3>
                             <p>Total Expenses</p>
                         </div>
                         <div class="icon">
@@ -57,7 +57,7 @@
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-warning">
                         <div class="inner">
-                            <h3><?= count($categories) ?></h3>
+                            <h3><?= isset($categories) && is_array($categories) ? count($categories) : 0 ?></h3>
                             <p>Categories</p>
                         </div>
                         <div class="icon">
@@ -71,10 +71,10 @@
             <div class="row mb-3">
                 <div class="col-12">
                     <div class="btn-group" role="group">
-                        <a href="/expenses/add" class="btn btn-success">
+                        <a href="<?php echo URLROOT; ?>/expenses/add" class="btn btn-success">
                             <i class="fas fa-plus"></i> Add Expense
                         </a>
-                        <a href="/expenses/categories" class="btn btn-info">
+                        <a href="<?php echo URLROOT; ?>/expenses/categories" class="btn btn-info">
                             <i class="fas fa-tags"></i> Manage Categories
                         </a>
                         <button class="btn btn-primary" onclick="exportExpenses()">
@@ -90,7 +90,7 @@
                     <h3 class="card-title">Filter Expenses</h3>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action="/expenses">
+                    <form method="GET" action="<?php echo URLROOT; ?>/expenses">
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
@@ -124,7 +124,7 @@
                                     <label>&nbsp;</label>
                                     <div>
                                         <button type="submit" class="btn btn-primary">Filter</button>
-                                        <a href="/expenses" class="btn btn-secondary">Reset</a>
+                                        <a href="<?php echo URLROOT; ?>/expenses" class="btn btn-secondary">Reset</a>
                                     </div>
                                 </div>
                             </div>
@@ -163,7 +163,7 @@
                                             <td><?= htmlspecialchars($expense->reference_number ?? '') ?></td>
                                             <td><?= htmlspecialchars($expense->created_by_name ?? 'N/A') ?></td>
                                             <td>
-                                                <a href="/expenses/edit/<?= $expense->expense_id ?>"
+                                                <a href="<?php echo URLROOT; ?>/expenses/edit/<?php echo $expense->expense_id; ?>"
                                                     class="btn btn-sm btn-primary">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
@@ -210,14 +210,15 @@
 </script>
 
 
-            </div> <!-- End container-fluid -->
-        </div> <!-- End page-content-wrapper -->
-    </div> <!-- End wrapper -->
+</div> <!-- End container-fluid -->
+</div> <!-- End page-content-wrapper -->
+</div> <!-- End wrapper -->
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
-    <script src="<?php echo URLROOT; ?>/js/main.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+<script src="<?php echo URLROOT; ?>/js/main.js"></script>
 </body>
+
 </html>

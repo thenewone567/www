@@ -210,7 +210,7 @@ class Inventory
 
             // Get low stock count
             $lowStockItems = $this->getLowStockItems();
-            $summary->low_stock_items = count($lowStockItems);
+            $summary->low_stock_items = is_array($lowStockItems) ? count($lowStockItems) : 0;
 
             return $summary;
         } catch (Exception $e) {

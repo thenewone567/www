@@ -235,7 +235,7 @@ class ReportsController extends Controller
     public function purchases()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
             $from_date = isset($_POST['from_date']) ? trim($_POST['from_date']) : '';
             $to_date = isset($_POST['to_date']) ? trim($_POST['to_date']) : '';
             $purchases = $this->reportModel->getPurchaseReports($from_date, $to_date);
@@ -257,7 +257,7 @@ class ReportsController extends Controller
     public function salereturns()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
             $from_date = isset($_POST['from_date']) ? trim($_POST['from_date']) : '';
             $to_date = isset($_POST['to_date']) ? trim($_POST['to_date']) : '';
             $salereturns = $this->reportModel->getSaleReturnReports($from_date, $to_date);
@@ -279,7 +279,7 @@ class ReportsController extends Controller
     public function purchasereturns()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
             $from_date = isset($_POST['from_date']) ? trim($_POST['from_date']) : '';
             $to_date = isset($_POST['to_date']) ? trim($_POST['to_date']) : '';
             $purchasereturns = $this->reportModel->getPurchaseReturnReports($from_date, $to_date);

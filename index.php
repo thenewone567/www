@@ -15,8 +15,15 @@ $urlParts = explode('/', $url);
 // Convert hyphenated URLs to CamelCase controller names
 $controllerPart = !empty($urlParts[0]) ? $urlParts[0] : 'home';
 
+
+// Special case: support /api/export/csv and /products/exportcsv as aliases for /products/exportCSV
+if (strtolower($url) === 'api/export/csv' || strtolower($url) === 'products/exportcsv') {
+    header('Location: ' . $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . '/products/exportCSV');
+    exit;
+}
+
 // Handle specific URL mappings
-if ($controllerPart === 'cycle-counts') {
+if ($controllerPart === 'cycle-counts' || $controllerPart === 'cycle_counts') {
     $controllerName = 'CycleCountsController';
 } else {
     // Convert other hyphenated URLs to CamelCase

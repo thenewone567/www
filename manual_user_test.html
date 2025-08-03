@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin User Registration Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Manual Admin User Registration Test</h2>
+    
+    <form id="testAddUserForm">
+        <div>
+            <label>Name:</label>
+            <input type="text" name="name" value="Manual Test User" required>
+        </div>
+        <div>
+            <label>Username:</label>
+            <input type="text" name="username" value="manualtest<?= time() ?>" required>
+        </div>
+        <div>
+            <label>Email:</label>
+            <input type="email" name="email" value="manualtest<?= time() ?>@example.com" required>
+        </div>
+        <div>
+            <label>Password:</label>
+            <input type="password" name="password" value="password123" required>
+        </div>
+        <div>
+            <label>Role:</label>
+            <select name="role_id" required>
+                <option value="">Select Role</option>
+                <?php
+                require_once __DIR__ . '/bootstrap.php';
+                try {
+                    $roleModel = new Role();
+                    $roles = $roleModel->getAllRoles();
+                    foreach ($roles as $role) {
+                        $roleId = $role->role_id ?? $role->id;
+                        echo "<option value='{$roleId}'>" . ucfirst($role->role_name ?? $role->name) . "</option>";
+                    }
+                } catch (Exception $e) {
+                    echo "<option value='1'>Admin (fallback)</option>";
+                }
+                ?>
+            </select>
+        </div>
+        <div>
+            <label>Status:</label>
+            <select name="status">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+        <button type="submit">Create User</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <script>
+    $('#testAddUserForm').submit(function(e) {
+        e.preventDefault();
+        
+        console.log('Form submission started');
+        console.log('Form data:', $(this).serialize());
+        
+        $('#result').html('Submitting...');
+        
+        $.ajax({
+            url: '/admin/addUser',
+            method: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(response) {
+                console.log('Success response:', response);
+                if (response.success) {
+                    $('#result').html('<p style="color: green;">✓ User created successfully!</p>');
+                } else {
+                    $('#result').html('<p style="color: red;">✗ Error: ' + response.message + '</p>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Error response:', xhr.responseText);
+                console.log('Status:', status);
+                console.log('Error:', error);
+                $('#result').html('<p style="color: red;">✗ AJAX Error: ' + error + '</p><p>Response: ' + xhr.responseText + '</p>');
+            }
+        });
+    });
+    </script>
+</body>
+</html>

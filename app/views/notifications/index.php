@@ -1,4 +1,4 @@
-<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'header.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
 
 <div class="row">
     <div class="col-md-8 mx-auto">

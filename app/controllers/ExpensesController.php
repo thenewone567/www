@@ -44,7 +44,7 @@ class ExpensesController extends Controller
     public function add()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
 
             $data = [
                 'expense_category_id' => trim($_POST['expense_category_id']),
@@ -118,7 +118,7 @@ class ExpensesController extends Controller
     public function edit($id)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
 
             $data = [
                 'expense_id' => $id,
@@ -213,7 +213,7 @@ class ExpensesController extends Controller
     public function categories()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
 
             $data = [
                 'category_name' => trim($_POST['category_name']),

@@ -14,7 +14,7 @@ class SettingsController extends Controller
     public function index()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
             $data = [
                 'company_name' => isset($_POST['company_name']) ? trim($_POST['company_name']) : '',
                 'company_logo' => isset($_POST['company_logo']) ? trim($_POST['company_logo']) : '',

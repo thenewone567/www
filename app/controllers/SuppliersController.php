@@ -27,7 +27,7 @@ class SuppliersController extends Controller
     public function add()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
             $data = [
                 'supplier_name' => isset($_POST['supplier_name']) ? trim($_POST['supplier_name']) : '',
                 'contact_info' => isset($_POST['contact_info']) ? trim($_POST['contact_info']) : '',
@@ -72,7 +72,7 @@ class SuppliersController extends Controller
     public function edit($id)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
             $data = [
                 'id' => $id,
                 'supplier_name' => isset($_POST['supplier_name']) ? trim($_POST['supplier_name']) : '',

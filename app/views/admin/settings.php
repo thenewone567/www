@@ -1,159 +1,56 @@
 <?php
 $pageTitle = 'System Settings - Admin Panel';
-require_once '../app/views/layout/header.php';
+require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php';
 ?>
 
-<style>
-    .admin-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 1.5rem 0;
-        margin-bottom: 2rem;
-    }
-
-    .admin-nav {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .admin-nav .nav-link {
-        color: #495057;
-        font-weight: 500;
-        padding: 0.75rem 1.5rem;
-        margin: 0 0.25rem;
-        border-radius: 5px;
-        transition: all 0.2s;
-    }
-
-    .admin-nav .nav-link:hover {
-        background: #e9ecef;
-        color: #007bff;
-    }
-
-    .admin-nav .nav-link.active {
-        background: #007bff;
-        color: white;
-    }
-
-    .settings-group {
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-        overflow: hidden;
-    }
-
-    .settings-group-header {
-        background: #f8f9fa;
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid #dee2e6;
-        font-weight: 600;
-        color: #495057;
-    }
-
-    .settings-group-body {
-        padding: 1.5rem;
-    }
-
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-
-    .form-label {
-        font-weight: 500;
-        color: #495057;
-        margin-bottom: 0.5rem;
-    }
-
-    .form-text {
-        color: #6c757d;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-
-    .backup-status {
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
-        font-size: 0.875rem;
-        margin-top: 0.5rem;
-    }
-
-    .backup-status.success {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-
-    .backup-status.warning {
-        background: #fff3cd;
-        color: #856404;
-        border: 1px solid #ffeaa7;
-    }
-</style>
-
-<div class="admin-header">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="h2 mb-0">
-                    <i class="fas fa-cog"></i> System Settings
-                </h1>
-                <p class="mb-0 mt-2 opacity-75">Configure system-wide settings and preferences</p>
+<div class="container-fluid page-top-area mb-4">
+    <div class="row align-items-center">
+        <div class="col-12 col-md-6">
+            <h1 class="mb-1 font-weight-bold">
+                <i class="fas fa-cog mr-2"></i>System Settings
+            </h1>
+            <small class="text-muted">Configure system-wide settings and preferences</small>
+        </div>
+        <div class="col-12 col-md-6 text-md-right mt-3 mt-md-0">
+            <div class="btn-group" role="group">
+                <a href="<?= URLROOT ?>/admin" class="btn btn-outline-info">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="<?= URLROOT ?>/admin/users" class="btn btn-outline-secondary">
+                    <i class="fas fa-users"></i> Users
+                </a>
+                <a href="<?= URLROOT ?>/admin/roles" class="btn btn-outline-warning">
+                    <i class="fas fa-user-tag"></i> Roles
+                </a>
+                <a href="<?= URLROOT ?>/admin/activityLogs" class="btn btn-outline-primary">
+                    <i class="fas fa-history"></i> Logs
+                </a>
             </div>
-            <div class="col-md-4 text-md-right">
-                <button type="button" class="btn btn-light" onclick="resetToDefaults()">
-                    <i class="fas fa-undo"></i> Reset to Defaults
-                </button>
-            </div>
+            <button type="button" class="btn btn-secondary ml-2" onclick="resetToDefaults()">
+                <i class="fas fa-undo"></i> Reset to Defaults
+            </button>
+            <?php if (isAdmin()): ?>
+                <a href="<?php echo URLROOT; ?>/admin/userPermissions" class="btn btn-warning ml-2">
+                    <i class="fas fa-user-shield"></i> Admin Settings
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 
 <div class="container-fluid">
-    <!-- Admin Navigation -->
-    <div class="admin-nav">
-        <ul class="nav nav-pills">
-            <li class="nav-item">
-                <a class="nav-link" href="<?= URLROOT ?>/admin">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="<?= URLROOT ?>/admin/users">
-                    <i class="fas fa-users"></i> Users
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="<?= URLROOT ?>/admin/roles">
-                    <i class="fas fa-user-tag"></i> Roles & Permissions
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="<?= URLROOT ?>/admin/activityLogs">
-                    <i class="fas fa-history"></i> Activity Logs
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="<?= URLROOT ?>/admin/settings">
-                    <i class="fas fa-cog"></i> Settings
-                </a>
-            </li>
-        </ul>
-    </div>
 
     <?php flash('admin_message'); ?>
 
-    <form action="<?= URLROOT ?>/admin/settings" method="POST" id="settingsForm">
+    <form action="<?php echo URLROOT; ?>/admin/settings" method="POST" id="settingsForm">
         <div class="row">
             <div class="col-lg-8">
                 <!-- General Settings -->
-                <div class="settings-group">
-                    <div class="settings-group-header">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
                         <i class="fas fa-cogs"></i> General Settings
                     </div>
-                    <div class="settings-group-body">
+                    <div class="card-body">
                         <div class="form-group">
                             <label for="site_name" class="form-label">Site Name</label>
                             <input type="text" class="form-control" id="site_name" name="site_name"
@@ -188,16 +85,17 @@ require_once '../app/views/layout/header.php';
                 </div>
 
                 <!-- Business Settings -->
-                <div class="settings-group">
-                    <div class="settings-group-header">
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
                         <i class="fas fa-store"></i> Business Settings
                     </div>
-                    <div class="settings-group-body">
+                    <div class="card-body">
                         <div class="form-group">
                             <label for="auto_approve_threshold" class="form-label">Auto-Approve Threshold ($)</label>
                             <input type="number" class="form-control" id="auto_approve_threshold"
                                 name="auto_approve_threshold" step="0.01" min="0"
-                                value="<?= $data['settings']['auto_approve_threshold'] ?? 1000 ?>">
+                                value="<?= $data['settings']['auto_approve_threshold'] ?? 1000 ?>"
+                                class="form-control inr-format">
                             <div class="form-text">Purchase orders below this amount will be automatically approved.
                             </div>
                         </div>
@@ -206,7 +104,8 @@ require_once '../app/views/layout/header.php';
                             <label for="low_stock_threshold" class="form-label">Low Stock Threshold</label>
                             <input type="number" class="form-control" id="low_stock_threshold"
                                 name="low_stock_threshold" min="1"
-                                value="<?= $data['settings']['low_stock_threshold'] ?? 10 ?>">
+                                value="<?= $data['settings']['low_stock_threshold'] ?? 10 ?>"
+                                class="form-control inr-format">
                             <div class="form-text">Alert when product quantity falls below this number.</div>
                         </div>
 
@@ -217,6 +116,7 @@ require_once '../app/views/layout/header.php';
                                 <option value="EUR" <?= ($data['settings']['currency'] ?? 'USD') === 'EUR' ? 'selected' : '' ?>>EUR (€)</option>
                                 <option value="GBP" <?= ($data['settings']['currency'] ?? 'USD') === 'GBP' ? 'selected' : '' ?>>GBP (£)</option>
                                 <option value="CAD" <?= ($data['settings']['currency'] ?? 'USD') === 'CAD' ? 'selected' : '' ?>>CAD ($)</option>
+                                <option value="INR" <?= ($data['settings']['currency'] ?? 'USD') === 'INR' ? 'selected' : '' ?>>INR (₹)</option>
                             </select>
                             <div class="form-text">Default currency for pricing and financial calculations.</div>
                         </div>
@@ -224,18 +124,19 @@ require_once '../app/views/layout/header.php';
                         <div class="form-group">
                             <label for="tax_rate" class="form-label">Default Tax Rate (%)</label>
                             <input type="number" class="form-control" id="tax_rate" name="tax_rate" step="0.01" min="0"
-                                max="100" value="<?= $data['settings']['tax_rate'] ?? 8.25 ?>">
+                                max="100" value="<?= $data['settings']['tax_rate'] ?? 8.25 ?>"
+                                class="form-control inr-format">
                             <div class="form-text">Default tax rate applied to sales and purchases.</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Security Settings -->
-                <div class="settings-group">
-                    <div class="settings-group-header">
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
                         <i class="fas fa-shield-alt"></i> Security Settings
                     </div>
-                    <div class="settings-group-body">
+                    <div class="card-body">
                         <div class="form-group">
                             <label for="session_timeout" class="form-label">Session Timeout (minutes)</label>
                             <select class="form-control" id="session_timeout" name="session_timeout">
@@ -274,11 +175,11 @@ require_once '../app/views/layout/header.php';
 
             <div class="col-lg-4">
                 <!-- Backup Settings -->
-                <div class="settings-group">
-                    <div class="settings-group-header">
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
                         <i class="fas fa-database"></i> Backup Settings
                     </div>
-                    <div class="settings-group-body">
+                    <div class="card-body">
                         <div class="form-group">
                             <label for="backup_frequency" class="form-label">Backup Frequency</label>
                             <select class="form-control" id="backup_frequency" name="backup_frequency">
@@ -312,11 +213,11 @@ require_once '../app/views/layout/header.php';
                 </div>
 
                 <!-- Notification Settings -->
-                <div class="settings-group">
-                    <div class="settings-group-header">
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
                         <i class="fas fa-bell"></i> Notifications
                     </div>
-                    <div class="settings-group-body">
+                    <div class="card-body">
                         <div class="form-group">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="email_notifications"
@@ -365,6 +266,46 @@ require_once '../app/views/layout/header.php';
 </div>
 
 <script>
+    // Format number in Indian numbering system
+    function formatINR(num) {
+        num = num.toString().replace(/[^0-9.]/g, '');
+        let [integer, decimal] = num.split('.');
+        let lastThree = integer.substring(integer.length - 3);
+        let otherNumbers = integer.substring(0, integer.length - 3);
+        if (otherNumbers !== '')
+            lastThree = ',' + lastThree;
+        let formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+        if (decimal) formatted += '.' + decimal;
+        return formatted;
+    }
+
+    function applyINRFormatting() {
+        const currency = document.getElementById('currency').value;
+        const inrFields = document.querySelectorAll('.inr-format');
+        if (currency === 'INR') {
+            inrFields.forEach(function (input) {
+                input.value = formatINR(input.value);
+            });
+        } else {
+            inrFields.forEach(function (input) {
+                input.value = input.value.replace(/,/g, '');
+            });
+        }
+    }
+
+    document.getElementById('currency').addEventListener('change', function () {
+        applyINRFormatting();
+    });
+
+    document.querySelectorAll('.inr-format').forEach(function (input) {
+        input.addEventListener('blur', function () {
+            if (document.getElementById('currency').value === 'INR') {
+                input.value = formatINR(input.value);
+            } else {
+                input.value = input.value.replace(/,/g, '');
+            }
+        });
+    });
     function resetToDefaults() {
         if (confirm('Are you sure you want to reset all settings to their default values?')) {
             // Reset form to defaults
@@ -416,9 +357,9 @@ require_once '../app/views/layout/header.php';
 
     // Form validation
     document.getElementById('settingsForm').addEventListener('submit', function (e) {
-        const autoApprove = parseFloat(document.getElementById('auto_approve_threshold').value);
-        const lowStock = parseInt(document.getElementById('low_stock_threshold').value);
-        const taxRate = parseFloat(document.getElementById('tax_rate').value);
+        const autoApprove = parseFloat(document.getElementById('auto_approve_threshold').value.replace(/,/g, ''));
+        const lowStock = parseInt(document.getElementById('low_stock_threshold').value.replace(/,/g, ''));
+        const taxRate = parseFloat(document.getElementById('tax_rate').value.replace(/,/g, ''));
 
         if (autoApprove < 0) {
             alert('Auto-approve threshold must be a positive number.');
@@ -441,14 +382,15 @@ require_once '../app/views/layout/header.php';
 </script>
 
 
-            </div> <!-- End container-fluid -->
-        </div> <!-- End page-content-wrapper -->
-    </div> <!-- End wrapper -->
+</div> <!-- End container-fluid -->
+</div> <!-- End page-content-wrapper -->
+</div> <!-- End wrapper -->
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
-    <script src="<?php echo URLROOT; ?>/js/main.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+<script src="<?php echo URLROOT; ?>/js/main.js"></script>
 </body>
+
 </html>

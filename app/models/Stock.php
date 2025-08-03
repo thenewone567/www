@@ -56,6 +56,21 @@ class Stock
         return $this->db->execute();
     }
 
+    public function getLowStockProducts($threshold = 10)
+    {
+        $this->db->query("
+            SELECT p.*, SUM(s.quantity) as total_stock 
+            FROM products p 
+            LEFT JOIN stock s ON p.id = s.product_id 
+            GROUP BY p.id 
+            HAVING total_stock < :threshold OR total_stock IS NULL
+            ORDER BY total_stock ASC
+        ");
+        $this->db->bind(':threshold', $threshold);
+        $result = $this->db->resultSet();
+        return $result ? $result : [];
+    }
+
     public function addWarehouseLocation($data)
     {
         $this->db->query("INSERT INTO warehouse_locations (location_name, rack, shelf) VALUES (:location_name, :rack, :shelf)");

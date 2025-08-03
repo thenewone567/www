@@ -6,6 +6,11 @@ class AdminController extends Controller
 
     public function __construct()
     {
+        // Start session if not already started
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
         if (!isLoggedIn()) {
             redirect('users/login');
         }
@@ -30,7 +35,13 @@ class AdminController extends Controller
         }
 
         $user = $this->model('User')->getUserWithRole($_SESSION['user_id']);
-        return $user && ($user->role_name === 'admin' || $user->role_name === 'super_admin');
+        if (!$user) {
+            return false;
+        }
+
+        // Case-insensitive check for admin roles
+        $role = strtolower($user->role_name ?? '');
+        return in_array($role, ['admin', 'super admin', 'administrator']);
     }
 
     /**
@@ -75,60 +86,100 @@ class AdminController extends Controller
      */
     public function addUser()
     {
+        // Set JSON content type for AJAX responses
+        header('Content-Type: application/json');
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-
-            $data = [
-                'name' => trim($_POST['name']),
-                'email' => trim($_POST['email']),
-                'password' => trim($_POST['password']),
-                'role_id' => intval($_POST['role_id']),
-                'status' => $_POST['status'] ?? 'active'
-            ];
-
-            // Validation
-            $errors = [];
-            if (empty($data['name'])) {
-                $errors[] = 'Name is required';
-            }
-            if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-                $errors[] = 'Valid email is required';
-            }
-            if (empty($data['password']) || strlen($data['password']) < 6) {
-                $errors[] = 'Password must be at least 6 characters';
-            }
-            if (empty($data['role_id'])) {
-                $errors[] = 'Role is required';
-            }
-
-            // Check if email already exists
-            if ($this->userModel->findUserByEmail($data['email'])) {
-                $errors[] = 'Email already exists';
-            }
-
-            if (empty($errors)) {
-                $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-
-                if ($this->userModel->addUser($data)) {
-                    $this->userModel->logActivity(
-                        $_SESSION['user_id'],
-                        'user_created',
-                        "Created user: {$data['name']} ({$data['email']})"
-                    );
-
-                    echo json_encode(['success' => true, 'message' => 'User created successfully']);
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'Failed to create user']);
+            try {
+                // Check if POST data exists
+                if (empty($_POST)) {
+                    throw new Exception('No form data received');
                 }
-            } else {
-                echo json_encode(['success' => false, 'message' => implode(', ', $errors)]);
+
+                $_POST = sanitizePost($_POST);
+
+                $data = [
+                    'name' => trim($_POST['name'] ?? ''),
+                    'username' => trim($_POST['username'] ?? ''),
+                    'email' => trim($_POST['email'] ?? ''),
+                    'password' => trim($_POST['password'] ?? ''),
+                    'role_id' => intval($_POST['role_id'] ?? 0),
+                    'status' => $_POST['status'] ?? 'active'
+                ];
+
+                // Enhanced validation
+                $errors = [];
+                if (empty($data['name'])) {
+                    $errors[] = 'Name is required';
+                }
+                if (empty($data['username'])) {
+                    $errors[] = 'Username is required';
+                } elseif (strlen($data['username']) < 3) {
+                    $errors[] = 'Username must be at least 3 characters';
+                }
+                if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                    $errors[] = 'Valid email is required';
+                }
+                if (empty($data['password']) || strlen($data['password']) < 6) {
+                    $errors[] = 'Password must be at least 6 characters';
+                }
+                if (empty($data['role_id'])) {
+                    $errors[] = 'Role is required';
+                }
+
+                // Check for duplicates
+                if (!empty($data['email']) && $this->userModel->findUserByEmail($data['email'])) {
+                    $errors[] = 'Email already exists';
+                }
+                if (!empty($data['username']) && $this->userModel->findUserByUsername($data['username'])) {
+                    $errors[] = 'Username already exists';
+                }
+
+                if (empty($errors)) {
+                    // Hash password
+                    $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+
+                    if ($this->userModel->addUser($data)) {
+                        // Log activity if method exists
+                        if (method_exists($this->userModel, 'logActivity')) {
+                            $this->userModel->logActivity(
+                                $_SESSION['user_id'],
+                                'user_created',
+                                "Created user: {$data['name']} ({$data['email']})"
+                            );
+                        }
+
+                        echo json_encode([
+                            'success' => true,
+                            'message' => 'User created successfully',
+                            'user' => [
+                                'name' => $data['name'],
+                                'username' => $data['username'],
+                                'email' => $data['email']
+                            ]
+                        ]);
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'Failed to create user - database error']);
+                    }
+                } else {
+                    echo json_encode(['success' => false, 'message' => implode(', ', $errors)]);
+                }
+            } catch (Exception $e) {
+                error_log("AddUser exception: " . $e->getMessage());
+                echo json_encode(['success' => false, 'message' => 'Server error occurred']);
             }
             return;
         }
 
-        $roles = $this->roleModel->getAllRoles();
-        $data = ['roles' => $roles];
-        $this->view('admin/add_user', $data);
+        // GET request - show add user form
+        try {
+            $roles = $this->roleModel->getAllRoles();
+            $data = ['roles' => $roles];
+            $this->view('admin/add_user', $data);
+        } catch (Exception $e) {
+            flash('error_message', 'Error loading roles: ' . $e->getMessage(), 'alert alert-danger');
+            redirect('admin/users');
+        }
     }
 
     /**
@@ -142,7 +193,7 @@ class AdminController extends Controller
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
 
             $data = [
                 'user_id' => $userId,
@@ -217,7 +268,7 @@ class AdminController extends Controller
     public function addRole()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
 
             $data = [
                 'role_name' => trim($_POST['role_name']),
@@ -266,7 +317,7 @@ class AdminController extends Controller
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
 
             $data = [
                 'role_id' => $roleId,
@@ -336,7 +387,7 @@ class AdminController extends Controller
     public function settings()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
 
             // Handle settings update
             $settings = [
@@ -480,5 +531,110 @@ class AdminController extends Controller
         // This would typically update database settings table
         // For now, return true (placeholder)
         return true;
+    }
+
+    /**
+     * User Permissions Management
+     */
+    public function userPermissions()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = sanitizePost($_POST);
+
+            $userId = intval($_POST['user_id']);
+            $permissions = $_POST['permissions'] ?? [];
+
+            if ($this->updateUserPermissions($userId, $permissions)) {
+                echo json_encode(['success' => true, 'message' => 'Permissions updated successfully']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to update permissions']);
+            }
+            return;
+        }
+
+        // Get all users and their current permissions
+        $users = $this->userModel->getAllUsersWithPermissions();
+        $availablePages = $this->getAvailablePages();
+
+        $data = [
+            'title' => 'User Permissions Management',
+            'users' => $users,
+            'available_pages' => $availablePages
+        ];
+
+        $this->view('admin/user_permissions', $data);
+    }
+
+    /**
+     * Get available pages/modules for permission assignment
+     */
+    private function getAvailablePages()
+    {
+        return [
+            'dashboard' => [
+                'label' => 'Dashboard',
+                'description' => 'Main dashboard access'
+            ],
+            'sales' => [
+                'label' => 'Sales Management',
+                'description' => 'Manage sales, invoices, and transactions'
+            ],
+            'purchases' => [
+                'label' => 'Purchase Management',
+                'description' => 'Manage purchases and suppliers'
+            ],
+            'inventory' => [
+                'label' => 'Inventory Management',
+                'description' => 'Manage stock, products, and inventory'
+            ],
+            'customers' => [
+                'label' => 'Customer Management',
+                'description' => 'Manage customer information'
+            ],
+            'suppliers' => [
+                'label' => 'Supplier Management',
+                'description' => 'Manage supplier information'
+            ],
+            'products' => [
+                'label' => 'Product Management',
+                'description' => 'Manage product catalog'
+            ],
+            'reports' => [
+                'label' => 'Reports',
+                'description' => 'Access to various reports'
+            ],
+            'settings' => [
+                'label' => 'System Settings',
+                'description' => 'System configuration and settings'
+            ],
+            'users' => [
+                'label' => 'User Management',
+                'description' => 'Manage user accounts (Admin only)'
+            ],
+            'cycle_counts' => [
+                'label' => 'Cycle Counts',
+                'description' => 'Inventory cycle counting'
+            ],
+            'returns' => [
+                'label' => 'Returns Management',
+                'description' => 'Handle product returns'
+            ],
+            'expenses' => [
+                'label' => 'Expense Management',
+                'description' => 'Track business expenses'
+            ],
+            'notifications' => [
+                'label' => 'Notifications',
+                'description' => 'System notifications'
+            ]
+        ];
+    }
+
+    /**
+     * Update user permissions
+     */
+    private function updateUserPermissions($userId, $permissions)
+    {
+        return $this->userModel->updateUserPermissions($userId, $permissions);
     }
 }

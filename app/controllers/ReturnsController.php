@@ -33,7 +33,7 @@ class ReturnsController extends Controller
     public function addsale()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
             $data = [
                 'sale_id' => isset($_POST['sale_id']) ? trim($_POST['sale_id']) : '',
                 'return_date' => isset($_POST['return_date']) ? trim($_POST['return_date']) : '',
@@ -76,7 +76,7 @@ class ReturnsController extends Controller
     public function addpurchase()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
             $data = [
                 'purchase_id' => isset($_POST['purchase_id']) ? trim($_POST['purchase_id']) : '',
                 'return_date' => isset($_POST['return_date']) ? trim($_POST['return_date']) : '',

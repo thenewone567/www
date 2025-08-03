@@ -1,4 +1,4 @@
-<?php require APPROOT . '/app/views/layout/header.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
 
 <div class="row">
     <div class="col-md-6 mx-auto">
@@ -50,7 +50,7 @@
                 <a href="<?php echo URLROOT; ?>/pages/index" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                 </a>
-                <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                <?php if (isAdmin()): ?>
                     <a href="<?php echo URLROOT; ?>/admin" class="btn btn-primary">
                         <i class="fas fa-cog"></i> Admin Panel
                     </a>

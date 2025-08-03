@@ -1,4 +1,4 @@
-<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layout' . DS . 'header.php'; ?>
+<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
 <div class="add-product-top container-fluid mt-0 pt-3">
     <div class="row align-items-center">
         <div class="col-12 col-md-6 mb-2 mb-md-0">
@@ -41,7 +41,7 @@
             </div>
             <div class="col-md-3 col-6 mb-3">
                 <label for="category_id">Category: <sup>*</sup></label>
-                <select name="category_id"
+                <select name="category_id" id="categorySelect"
                     class="form-control form-control-lg <?php echo (!empty($data['category_id_err'])) ? 'is-invalid' : ''; ?>"
                     required>
                     <option value="">Select Category</option>
@@ -52,12 +52,13 @@
                             </option>
                         <?php endforeach; ?>
                     <?php endif; ?>
+                    <option value="add_new_category">+ Add Category</option>
                 </select>
                 <span class="invalid-feedback"><?php echo $data['category_id_err']; ?></span>
             </div>
             <div class="col-md-3 col-6 mb-3">
                 <label for="brand_id">Brand: <sup>*</sup></label>
-                <select name="brand_id"
+                <select name="brand_id" id="brandSelect"
                     class="form-control form-control-lg <?php echo (!empty($data['brand_id_err'])) ? 'is-invalid' : ''; ?>"
                     required>
                     <option value="">Select Brand</option>
@@ -68,6 +69,7 @@
                             </option>
                         <?php endforeach; ?>
                     <?php endif; ?>
+                    <option value="add_new_brand">+ Add Brand</option>
                 </select>
                 <span class="invalid-feedback"><?php echo $data['brand_id_err']; ?></span>
             </div>
@@ -274,44 +276,19 @@
     // Initialize calculations on page load
     document.addEventListener('DOMContentLoaded', function () {
         calculateMargin();
+        // Add Category logic: open add page in new tab
+        document.getElementById('categorySelect').addEventListener('change', function () {
+            if (this.value === 'add_new_category') {
+                window.open('<?php echo URLROOT; ?>/categories/add', '_blank');
+                this.value = '';
+            }
+        });
+        // Add Brand logic: open add page in new tab
+        document.getElementById('brandSelect').addEventListener('change', function () {
+            if (this.value === 'add_new_brand') {
+                window.open('<?php echo URLROOT; ?>/brands/add', '_blank');
+                this.value = '';
+            }
+        });
     });
 </script>
-value="<?php echo $data['min_stock_level']; ?>" required>
-</div>
-<div class="col-md-3 col-6 mb-3">
-    <label for="max_stock_level">Max Stock Level: <sup>*</sup></label>
-    <input type="number" name="max_stock_level" class="form-control form-control-lg"
-        value="<?php echo $data['max_stock_level']; ?>" required>
-</div>
-<div class="col-md-3 col-6 mb-3">
-    <label for="reorder_level">Reorder Level: <sup>*</sup></label>
-    <input type="number" name="reorder_level" class="form-control form-control-lg"
-        value="<?php echo $data['reorder_level']; ?>" required>
-</div>
-<div class="col-md-12 mb-3">
-    <label for="image_path">Product Image:</label>
-    <input type="file" name="image_path" class="form-control-file">
-</div>
-</div>
-<input type="submit" class="btn btn-success" value="Submit">
-</form>
-</div>
-<script>
-    document.getElementById('addProductForm').addEventListener('submit', function (e) {
-        if (!confirm('Are you sure you want to save this product?')) {
-            e.preventDefault();
-        }
-    });
-</script>
-
-            </div> <!-- End container-fluid -->
-        </div> <!-- End page-content-wrapper -->
-    </div> <!-- End wrapper -->
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
-    <script src="<?php echo URLROOT; ?>/js/main.js"></script>
-</body>
-</html>

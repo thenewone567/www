@@ -1,6 +1,6 @@
 <?php
 $pageTitle = 'User Management';
-require_once '../app/views/layout/header.php';
+require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php';
 ?>
 
 <div class="container-fluid">
@@ -280,7 +280,7 @@ require_once '../app/views/layout/header.php';
         $('#addUserForm').submit(function (e) {
             e.preventDefault();
             $.ajax({
-                url: '<?= URLROOT ?>/users/add',
+                url: '<?php echo URLROOT; ?>/users/add',
                 method: 'POST',
                 data: $(this).serialize(),
                 success: function (response) {
@@ -298,7 +298,7 @@ require_once '../app/views/layout/header.php';
         $('#editUserForm').submit(function (e) {
             e.preventDefault();
             $.ajax({
-                url: '<?= URLROOT ?>/users/update',
+                url: '<?php echo URLROOT; ?>/users/update',
                 method: 'POST',
                 data: $(this).serialize(),
                 success: function (response) {
@@ -315,7 +315,7 @@ require_once '../app/views/layout/header.php';
 
     function editUser(userId) {
         $.ajax({
-            url: '<?= URLROOT ?>/users/getUser/' + userId,
+            url: '<?php echo URLROOT; ?>/users/getUser/' + userId,
             method: 'GET',
             success: function (user) {
                 $('#editUserId').val(user.user_id);
@@ -333,7 +333,7 @@ require_once '../app/views/layout/header.php';
 
         if (confirm(`Are you sure you want to ${action} this user?`)) {
             $.ajax({
-                url: '<?= URLROOT ?>/users/toggleStatus',
+                url: '<?php echo URLROOT; ?>/users/toggleStatus',
                 method: 'POST',
                 data: {
                     user_id: userId,
@@ -353,7 +353,7 @@ require_once '../app/views/layout/header.php';
     function resetPassword(userId) {
         if (confirm('Are you sure you want to reset this user\'s password? A new temporary password will be generated.')) {
             $.ajax({
-                url: '<?= URLROOT ?>/users/resetPassword',
+                url: '<?php echo URLROOT; ?>/users/resetPassword',
                 method: 'POST',
                 data: { user_id: userId },
                 success: function (response) {
@@ -370,7 +370,7 @@ require_once '../app/views/layout/header.php';
     function viewActivity(userId) {
         $('#activityModal').modal('show');
         $.ajax({
-            url: '<?= URLROOT ?>/users/activity/' + userId,
+            url: '<?php echo URLROOT; ?>/users/activity/' + userId,
             method: 'GET',
             success: function (data) {
                 let html = '<div class="table-responsive"><table class="table table-sm">';
@@ -396,14 +396,15 @@ require_once '../app/views/layout/header.php';
 </script>
 
 
-            </div> <!-- End container-fluid -->
-        </div> <!-- End page-content-wrapper -->
-    </div> <!-- End wrapper -->
+</div> <!-- End container-fluid -->
+</div> <!-- End page-content-wrapper -->
+</div> <!-- End wrapper -->
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
-    <script src="<?php echo URLROOT; ?>/js/main.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+<script src="<?php echo URLROOT; ?>/js/main.js"></script>
 </body>
+
 </html>

@@ -13,6 +13,7 @@ class Dashboard
     {
         $this->db->query("SELECT SUM(total_amount) as total FROM sales WHERE sale_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)");
         $this->db->bind(':days', $days);
+        $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total !== null ? $result->total : 0;
     }
@@ -22,6 +23,7 @@ class Dashboard
         // Current period
         $this->db->query("SELECT SUM(total_amount) as total FROM sales WHERE sale_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)");
         $this->db->bind(':days', $days);
+        $this->db->execute();
         $current = $this->db->single();
         $currentTotal = $current && $current->total !== null ? $current->total : 0;
 
@@ -29,6 +31,7 @@ class Dashboard
         $this->db->query("SELECT SUM(total_amount) as total FROM sales WHERE sale_date >= DATE_SUB(CURDATE(), INTERVAL :days2 DAY) AND sale_date < DATE_SUB(CURDATE(), INTERVAL :days DAY)");
         $this->db->bind(':days', $days);
         $this->db->bind(':days2', $days * 2);
+        $this->db->execute();
         $previous = $this->db->single();
         $previousTotal = $previous && $previous->total !== null ? $previous->total : 0;
 
@@ -41,6 +44,7 @@ class Dashboard
     {
         $this->db->query("SELECT AVG(total_amount) as avg_value FROM sales WHERE sale_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)");
         $this->db->bind(':days', $days);
+        $this->db->execute();
         $result = $this->db->single();
         return $result && $result->avg_value !== null ? $result->avg_value : 0;
     }
@@ -49,6 +53,7 @@ class Dashboard
     {
         $this->db->query("SELECT COUNT(*) as total FROM sales WHERE sale_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)");
         $this->db->bind(':days', $days);
+        $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total !== null ? $result->total : 0;
     }
@@ -67,6 +72,7 @@ class Dashboard
             LIMIT 10
         ");
         $this->db->bind(':days', $days);
+        $this->db->execute();
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }
@@ -87,6 +93,7 @@ class Dashboard
         ");
         $this->db->bind(':limit', $limit);
         $this->db->bind(':days', $days);
+        $this->db->execute();
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }
@@ -100,6 +107,7 @@ class Dashboard
             LEFT JOIN stock s ON p.product_id = s.product_id
             WHERE p.is_active = 1 AND COALESCE(s.quantity, 0) > 0
         ");
+        $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total_value !== null ? $result->total_value : 0;
     }
@@ -107,6 +115,7 @@ class Dashboard
     public function getTotalProducts()
     {
         $this->db->query("SELECT COUNT(*) as total FROM products WHERE is_active = 1");
+        $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total !== null ? $result->total : 0;
     }
@@ -127,6 +136,7 @@ class Dashboard
             LIMIT :limit
         ");
         $this->db->bind(':limit', $limit);
+        $this->db->execute();
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }
@@ -140,6 +150,7 @@ class Dashboard
             WHERE p.is_active = 1
             AND COALESCE((SELECT SUM(quantity) FROM stock WHERE product_id = p.product_id), 0) <= p.reorder_level
         ");
+        $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total !== null ? $result->total : 0;
     }
@@ -153,6 +164,7 @@ class Dashboard
             WHERE p.is_active = 1
             AND COALESCE((SELECT SUM(quantity) FROM stock WHERE product_id = p.product_id), 0) <= 0
         ");
+        $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total !== null ? $result->total : 0;
     }
@@ -176,6 +188,7 @@ class Dashboard
             GROUP BY c.category_id, c.category_name
             ORDER BY low_stock_count DESC
         ");
+        $this->db->execute();
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }
@@ -185,6 +198,7 @@ class Dashboard
     {
         $this->db->query("SELECT COUNT(*) as total FROM customers WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL :days DAY)");
         $this->db->bind(':days', $days);
+        $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total !== null ? $result->total : 0;
     }
@@ -200,6 +214,7 @@ class Dashboard
             ORDER BY sale_date ASC
         ");
         $this->db->bind(':days', $days);
+        $this->db->execute();
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }
@@ -217,6 +232,7 @@ class Dashboard
             WHERE s.sale_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)
         ");
         $this->db->bind(':days', $days);
+        $this->db->execute();
         $result = $this->db->single();
 
         if (!$result || $result->total_revenue == 0)
@@ -236,6 +252,7 @@ class Dashboard
             ORDER BY sale_date ASC
         ");
         $this->db->bind(':days', $days);
+        $this->db->execute();
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }
@@ -244,6 +261,7 @@ class Dashboard
     public function getSalesToday()
     {
         $this->db->query("SELECT SUM(total_amount) as total FROM sales WHERE DATE(sale_date) = CURDATE()");
+        $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total !== null ? $result->total : 0;
     }
@@ -251,6 +269,7 @@ class Dashboard
     public function getSalesWeek()
     {
         $this->db->query("SELECT SUM(total_amount) as total FROM sales WHERE YEARWEEK(sale_date, 1) = YEARWEEK(CURDATE(), 1)");
+        $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total !== null ? $result->total : 0;
     }
@@ -258,6 +277,7 @@ class Dashboard
     public function getSalesMonth()
     {
         $this->db->query("SELECT SUM(total_amount) as total FROM sales WHERE MONTH(sale_date) = MONTH(CURDATE()) AND YEAR(sale_date) = YEAR(CURDATE())");
+        $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total !== null ? $result->total : 0;
     }

@@ -1,4 +1,24 @@
 RewriteEngine On
+
+# Main rewrite rule for MVC routing
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/phpmyadmin/
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options SAMEORIGIN
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Prevent access to sensitive files
+<FilesMatch "\.(env|log|ini|conf|sql|md)$">
+    Require all denied
+</FilesMatch>
+
+# Prevent direct access to app directories
+RedirectMatch 403 ^/app/
+RedirectMatch 403 ^/config/
+RedirectMatch 403 ^/vendor/

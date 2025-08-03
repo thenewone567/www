@@ -1,6 +1,6 @@
 <?php
 $pageTitle = 'User Management - Admin Panel';
-require_once '../app/views/layout/header.php';
+require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php';
 ?>
 
 <style>
@@ -159,7 +159,8 @@ require_once '../app/views/layout/header.php';
                                                     </div>
                                                     <div>
                                                         <div class="font-weight-bold"><?= htmlspecialchars($user->name) ?></div>
-                                                        <small class="text-muted">ID: <?= $user->user_id ?></small>
+                                                        <small
+                                                            class="text-muted">@<?= htmlspecialchars($user->username ?? $user->user_name ?? 'N/A') ?></small>
                                                     </div>
                                                 </div>
                                             </td>
@@ -251,18 +252,17 @@ require_once '../app/views/layout/header.php';
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="userEmail">Email Address *</label>
-                                <input type="email" class="form-control" id="userEmail" name="email" required>
+                                <label for="userUsername">Username *</label>
+                                <input type="text" class="form-control" id="userUsername" name="username" required>
+                                <small class="form-text text-muted">Unique username for login</small>
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="userPassword">Password *</label>
-                                <input type="password" class="form-control" id="userPassword" name="password" required
-                                    minlength="6">
-                                <small class="form-text text-muted">Minimum 6 characters</small>
+                                <label for="userEmail">Email Address *</label>
+                                <input type="email" class="form-control" id="userEmail" name="email" required>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -279,12 +279,24 @@ require_once '../app/views/layout/header.php';
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="userStatus">Status</label>
-                        <select class="form-control" id="userStatus" name="status">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="userPassword">Password *</label>
+                                <input type="password" class="form-control" id="userPassword" name="password" required
+                                    minlength="6">
+                                <small class="form-text text-muted">Minimum 6 characters</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="userStatus">Status</label>
+                                <select class="form-control" id="userStatus" name="status">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -322,12 +334,19 @@ require_once '../app/views/layout/header.php';
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="editUserEmail">Email Address *</label>
-                                <input type="email" class="form-control" id="editUserEmail" name="email" required>
+                                <label for="editUserUsername">Username *</label>
+                                <input type="text" class="form-control" id="editUserUsername" name="username" required>
+                                <small class="form-text text-muted">Unique username for login</small>
                             </div>
                         </div>
                     </div>
                     <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editUserEmail">Email Address *</label>
+                                <input type="email" class="form-control" id="editUserEmail" name="email" required>
+                            </div>
+                        </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editUserRole">Role *</label>
@@ -340,6 +359,8 @@ require_once '../app/views/layout/header.php';
                                 </select>
                             </div>
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editUserStatus">Status</label>
@@ -433,24 +454,55 @@ require_once '../app/views/layout/header.php';
             ]
         });
 
-        // Add user form
+        // Add user form with improved error handling
         $('#addUserForm').submit(function (e) {
             e.preventDefault();
+
+            // Show loading state
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Creating...').prop('disabled', true);
+
             $.ajax({
                 url: '<?= URLROOT ?>/admin/addUser',
                 method: 'POST',
                 data: $(this).serialize(),
                 dataType: 'json',
+                timeout: 30000, // 30 seconds timeout
                 success: function (response) {
+                    console.log('Server response:', response);
                     if (response.success) {
                         alert('User created successfully!');
+                        $('#addUserModal').modal('hide');
                         location.reload();
                     } else {
-                        alert('Error: ' + response.message);
+                        alert('Error: ' + (response.message || 'Unknown error occurred'));
                     }
                 },
-                error: function () {
-                    alert('An error occurred. Please try again.');
+                error: function (xhr, status, error) {
+                    console.error('AJAX Error:', {
+                        status: status,
+                        error: error,
+                        responseText: xhr.responseText,
+                        statusCode: xhr.status
+                    });
+
+                    let errorMessage = 'An error occurred. ';
+                    if (xhr.status === 0) {
+                        errorMessage += 'Network connection failed.';
+                    } else if (xhr.status === 404) {
+                        errorMessage += 'Admin endpoint not found.';
+                    } else if (xhr.status === 500) {
+                        errorMessage += 'Server error occurred.';
+                    } else {
+                        errorMessage += 'Status: ' + xhr.status;
+                    }
+
+                    alert(errorMessage + '\n\nCheck browser console for details.');
+                },
+                complete: function () {
+                    // Restore button state
+                    submitBtn.html(originalText).prop('disabled', false);
                 }
             });
         });
@@ -504,6 +556,7 @@ require_once '../app/views/layout/header.php';
             success: function (user) {
                 $('#editUserId').val(user.user_id);
                 $('#editUserName').val(user.name);
+                $('#editUserUsername').val(user.username);
                 $('#editUserEmail').val(user.email);
                 $('#editUserRole').val(user.role_id);
                 $('#editUserStatus').val(user.status);
@@ -635,14 +688,15 @@ require_once '../app/views/layout/header.php';
 </script>
 
 
-            </div> <!-- End container-fluid -->
-        </div> <!-- End page-content-wrapper -->
-    </div> <!-- End wrapper -->
+</div> <!-- End container-fluid -->
+</div> <!-- End page-content-wrapper -->
+</div> <!-- End wrapper -->
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
-    <script src="<?php echo URLROOT; ?>/js/main.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+<script src="<?php echo URLROOT; ?>/js/main.js"></script>
 </body>
+
 </html>

@@ -44,7 +44,7 @@ class CycleCountsController extends Controller
     public function create()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
 
             $data = [
                 'count_name' => trim($_POST['count_name']),
@@ -182,7 +182,7 @@ class CycleCountsController extends Controller
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
 
             $counts = $_POST['counts'] ?? [];
             $notes = $_POST['notes'] ?? [];

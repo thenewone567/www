@@ -1,5 +1,5 @@
 <?php
-class UsersController extends Controller
+class UsersController extends BaseController
 {
     public $userModel;
 
@@ -16,7 +16,7 @@ class UsersController extends Controller
             // Process form
 
             // Sanitize POST data
-            $_POST = sanitizePost();
+            $_POST = sanitizePost($_POST);
 
             $data = [
                 'username' => isset($_POST['username']) ? trim($_POST['username']) : '',
@@ -32,9 +32,10 @@ class UsersController extends Controller
             if (empty($data['username'])) {
                 $data['username_err'] = 'Please enter username';
             } else {
-                // Check username
-                if ($this->userModel->findUserByUsername($data['username'])) {
-                    $data['username_err'] = 'Username is already taken';
+                // Use comprehensive username validation
+                $usernameErrors = $this->userModel->validateUsername($data['username']);
+                if (!empty($usernameErrors)) {
+                    $data['username_err'] = implode('. ', $usernameErrors);
                 }
             }
 
@@ -75,7 +76,7 @@ class UsersController extends Controller
 
             } else {
                 // Load view with errors
-                $this->view('users/register', $data);
+                $this->renderLayout('users/register', $data);
             }
 
         } else {
@@ -91,7 +92,7 @@ class UsersController extends Controller
             ];
 
             // Load view
-            $this->view('users/register', $data);
+            $this->renderLayout('users/register', $data);
         }
     }
 
@@ -101,55 +102,71 @@ class UsersController extends Controller
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Process form
             // Sanitize POST data
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
 
             $data = [
                 'username' => isset($_POST['username']) ? trim($_POST['username']) : '',
                 'password' => isset($_POST['password']) ? trim($_POST['password']) : '',
+                'remember_me' => isset($_POST['remember_me']) ? true : false,
                 'username_err' => '',
                 'password_err' => '',
             ];
 
             // Validate username
             if (empty($data['username'])) {
-                $data['username_err'] = 'Please enter username';
+                $data['username_err'] = 'Please enter your username';
+            } elseif (strlen($data['username']) < 3) {
+                $data['username_err'] = 'Username must be at least 3 characters';
             }
 
             // Validate Password
             if (empty($data['password'])) {
-                $data['password_err'] = 'Please enter password';
+                $data['password_err'] = 'Please enter your password';
+            } elseif (strlen($data['password']) < 6) {
+                $data['password_err'] = 'Password must be at least 6 characters';
             }
 
-            // Check for user/username
-            if ($this->userModel->findUserByUsername($data['username'])) {
-                // User found
-            } else {
-                // User not found
-                $data['username_err'] = 'No user found';
+            // Check for user/username only if no validation errors
+            if (empty($data['username_err'])) {
+                if (!$this->userModel->findUserByUsername($data['username'])) {
+                    $data['username_err'] = 'Username not found. Please check your username or register for an account.';
+                }
             }
 
             // Make sure errors are empty
             if (empty($data['username_err']) && empty($data['password_err'])) {
-                // Validated
-                // Check and set logged in user
+                // Validated - attempt login
                 $loggedInUser = $this->userModel->login($data['username'], $data['password']);
 
                 if ($loggedInUser) {
+                    // Handle remember me functionality
+                    if ($data['remember_me']) {
+                        $this->setRememberMeCookie($loggedInUser->user_id);
+                    }
+
                     // Create Session
                     $this->createUserSession($loggedInUser);
                 } else {
-                    $data['password_err'] = 'Password incorrect';
-
-                    $this->view('users/login', $data);
+                    $data['password_err'] = 'Password is incorrect. Please try again.';
+                    $this->renderLayout('users/login', $data);
                 }
             } else {
                 // Load view with errors
-                $this->view('users/login', $data);
+                $this->renderLayout('users/login', $data);
             }
 
-
         } else {
-            // Init data
+            // Check for remember me cookie
+            if (isset($_COOKIE['remember_user']) && !isLoggedIn()) {
+                $userId = $_COOKIE['remember_user'];
+                $user = $this->userModel->findUserById($userId);
+                if ($user) {
+                    $this->createUserSession($user);
+                    return;
+                }
+            }
+
+            // Init data for GET request
             $data = [
                 'username' => '',
                 'password' => '',
@@ -158,37 +175,91 @@ class UsersController extends Controller
             ];
 
             // Load view
-            $this->view('users/login', $data);
+            $this->renderLayout('users/login', $data);
         }
     }
 
     public function createUserSession($user)
     {
         if (isset($user->user_id) && isset($user->username)) {
-            // Get user role information
+            // Get user with role information
             $userWithRole = $this->userModel->getUserWithRole($user->user_id);
 
             $_SESSION['user_id'] = $user->user_id;
             $_SESSION['user_username'] = $user->username;
             $_SESSION['user_name'] = $user->username;
-            $_SESSION['user_role'] = $userWithRole->role_name ?? 'employee'; // Default to employee if no role found
-            $_SESSION['role_id'] = $userWithRole->role_id ?? 3; // Default to employee role_id
+            $_SESSION['display_name'] = $userWithRole->display_name ?? ucfirst($user->username);
+            $_SESSION['user_role'] = $userWithRole->role_name ?? 'Associate';
+            $_SESSION['role_id'] = $userWithRole->role_id ?? 4;
+            $_SESSION['login_time'] = time();
 
+            // Log successful login
+            if (defined('LOG_FILE')) {
+                $timestamp = date("Y-m-d H:i:s");
+                $logMessage = "[$timestamp] LOGIN: User '{$user->username}' (ID: {$user->user_id}) logged in successfully" . PHP_EOL;
+                file_put_contents(LOG_FILE, $logMessage, FILE_APPEND | LOCK_EX);
+            }
+
+            // Flash success message
+            flash('login_success', 'Welcome back, ' . $_SESSION['display_name'] . '!', 'alert alert-success');
+
+            // Redirect to dashboard/home
             redirect('pages/index');
         } else {
-            flash('login_error', 'Invalid user session data');
+            flash('login_error', 'Invalid user session data', 'alert alert-danger');
             redirect('users/login');
         }
     }
 
+    /**
+     * Set remember me cookie
+     */
+    private function setRememberMeCookie($userId)
+    {
+        // Set cookie for 30 days
+        $cookieValue = $userId;
+        $expiration = time() + (30 * 24 * 60 * 60); // 30 days
+
+        setcookie('remember_user', $cookieValue, $expiration, '/', '', false, true); // httpOnly for security
+    }
+
+    /**
+     * Clear remember me cookie
+     */
+    private function clearRememberMeCookie()
+    {
+        setcookie('remember_user', '', time() - 3600, '/', '', false, true);
+        unset($_COOKIE['remember_user']);
+    }
+
     public function logout()
     {
+        // Log logout
+        if (isset($_SESSION['user_username']) && defined('LOG_FILE')) {
+            $timestamp = date("Y-m-d H:i:s");
+            $logMessage = "[$timestamp] LOGOUT: User '{$_SESSION['user_username']}' logged out" . PHP_EOL;
+            file_put_contents(LOG_FILE, $logMessage, FILE_APPEND | LOCK_EX);
+        }
+
+        // Clear all session variables
         unset($_SESSION['user_id']);
         unset($_SESSION['user_username']);
         unset($_SESSION['user_name']);
+        unset($_SESSION['display_name']);
         unset($_SESSION['user_role']);
         unset($_SESSION['role_id']);
+        unset($_SESSION['login_time']);
+
+        // Clear remember me cookie
+        $this->clearRememberMeCookie();
+
+        // Destroy session
         session_destroy();
+
+        // Flash logout message
+        session_start(); // Restart session to show flash message
+        flash('logout_success', 'You have been logged out successfully', 'alert alert-info');
+
         redirect('users/login');
     }
 
@@ -211,7 +282,7 @@ class UsersController extends Controller
             'user' => $user
         ];
 
-        $this->view('users/profile', $data);
+        $this->renderLayout('users/profile', $data);
     }
 
     public function changePassword()
@@ -277,7 +348,7 @@ class UsersController extends Controller
                 }
             } else {
                 // Load view with errors
-                $this->view('users/changePassword', $data);
+                $this->renderLayout('users/changePassword', $data);
             }
         } else {
             // Init data
@@ -290,7 +361,7 @@ class UsersController extends Controller
                 'confirm_password_err' => ''
             ];
 
-            $this->view('users/changePassword', $data);
+            $this->renderLayout('users/changePassword', $data);
         }
     }
 }

@@ -27,7 +27,7 @@ class CustomersController extends Controller
     public function add()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS); // Deprecated in PHP 8.1+
+            $_POST = sanitizePost($_POST); // Using custom sanitization function
             $data = [
                 'customer_name' => isset($_POST['customer_name']) ? trim($_POST['customer_name']) : '',
                 'contact_info' => isset($_POST['contact_info']) ? trim($_POST['contact_info']) : '',
@@ -70,7 +70,7 @@ class CustomersController extends Controller
     public function edit($id)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS); // Deprecated in PHP 8.1+
+            $_POST = sanitizePost($_POST); // Using custom sanitization function
             $data = [
                 'id' => $id,
                 'customer_name' => isset($_POST['customer_name']) ? trim($_POST['customer_name']) : '',

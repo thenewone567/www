@@ -7,6 +7,7 @@ class InventoryController extends Controller
 {
     public $inventoryModel;
     public $productModel;
+    public $categoryModel;
 
     public function __construct()
     {
@@ -15,44 +16,42 @@ class InventoryController extends Controller
         }
         $this->inventoryModel = $this->model('Inventory');
         $this->productModel = $this->model('Product');
+        $this->categoryModel = $this->model('Category');
     }
 
     /**
-     * Inventory overview page
+     * Enhanced inventory overview page
      */
     public function index()
     {
+        // Get all products with inventory data
+        $products = $this->productModel->getProducts();
+
+        // Get categories for filtering
+        $categories = [];
+        try {
+            $categories = $this->categoryModel->getCategories();
+        } catch (Exception $e) {
+            // If category model fails, continue with empty categories
+            $categories = [];
+        }
+
         // Get inventory summary
         $summary = $this->inventoryModel->getInventorySummary();
         if (!$summary) {
-            $summary = (object) ['total_products' => 0, 'total_stock_quantity' => 0, 'total_stock_value' => 0, 'low_stock_items' => 0];
-        }
-
-        // Get stock data
-        $stock = $this->inventoryModel->getAllStock();
-        if (!$stock) {
-            $stock = [];
-            flash('inventory_message', 'No stock found');
-        }
-
-        // Get low stock items
-        $lowStock = $this->inventoryModel->getLowStockItems();
-        if (!$lowStock) {
-            $lowStock = [];
-        }
-
-        // Get recent stock movements
-        $recentMovements = $this->inventoryModel->getStockMovements(10);
-        if (!$recentMovements) {
-            $recentMovements = [];
+            $summary = (object) [
+                'total_products' => count($products),
+                'total_stock_quantity' => 0,
+                'total_stock_value' => 0,
+                'low_stock_items' => 0
+            ];
         }
 
         $data = [
-            'title' => 'Inventory Management',
-            'summary' => $summary,
-            'stock' => $stock,
-            'low_stock' => $lowStock,
-            'recent_movements' => $recentMovements
+            'title' => 'Enhanced Inventory Management',
+            'products' => $products,
+            'categories' => $categories,
+            'summary' => $summary
         ];
 
         $this->view('inventory/index', $data);
@@ -64,7 +63,7 @@ class InventoryController extends Controller
     public function adjustments()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = sanitizePost($_POST);
 
             $data = [
                 'product_id' => trim($_POST['product_id']),

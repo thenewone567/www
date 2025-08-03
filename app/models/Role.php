@@ -117,6 +117,17 @@ class Role
     }
 
     /**
+     * Get total number of roles
+     * @return int
+     */
+    public function getTotalRoles()
+    {
+        $this->db->query('SELECT COUNT(*) as count FROM roles');
+        $result = $this->db->single();
+        return $result ? (int) $result->count : 0;
+    }
+
+    /**
      * Get default roles for system initialization
      * @return array
      */
