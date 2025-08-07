@@ -1,0 +1,2127 @@
+/* ==============================================
+   LOGIN PAGE SPECIFIC STYLES
+   ============================================== */
+
+/* Login body styling */
+body.login-page {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+}
+
+.login-card {
+    background: var(--card-bg);
+    padding: 48px 40px;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px var(--card-shadow);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(10px);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.login-logo {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.login-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+
+.login-card .form-group {
+    margin-bottom: 24px;
+}
+
+.login-card .form-label {
+    display: block;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.login-card .form-control {
+    width: 100%;
+    padding: 16px 20px;
+    border: 2px solid var(--input-border);
+    border-radius: 12px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+
+.login-card .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--input-bg);
+    box-shadow: 0 0 0 3px rgba(var(--primary), 0.1);
+}
+
+.login-card .form-control.is-invalid {
+    border-color: var(--danger);
+    background: var(--input-bg);
+}
+
+.login-card .input-group {
+    position: relative;
+}
+
+.login-card .input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    z-index: 2;
+}
+
+.login-card .form-control.has-icon {
+    padding-left: 48px;
+}
+
+.login-card .password-toggle {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    cursor: pointer;
+    z-index: 2;
+    transition: color 0.3s ease;
+}
+
+.login-card .password-toggle:hover {
+    color: var(--primary);
+}
+
+.login-card .invalid-feedback {
+    color: var(--danger);
+    font-size: 0.875rem;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.login-card .form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 32px;
+}
+
+.login-card .form-check-input {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--input-border);
+    border-radius: 4px;
+    background: var(--input-bg);
+}
+
+.login-card .form-check-label {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 24px;
+}
+
+.btn-login:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(var(--primary), 0.3);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+}
+
+.login-card .divider {
+    text-align: center;
+    margin: 32px 0;
+    position: relative;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.login-card .divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--card-border);
+}
+
+.login-card .divider span {
+    background: var(--card-bg);
+    padding: 0 16px;
+    position: relative;
+}
+
+.login-card .btn-secondary {
+    width: 100%;
+    padding: 14px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 2px solid var(--card-border);
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.login-card .btn-secondary:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.login-card .forgot-password {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.login-card .forgot-password a {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.login-card .forgot-password a:hover {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.login-card .login-footer {
+    text-align: center;
+    margin-top: 32px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.login-card .dev-tools {
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+}
+
+.login-card .dev-tools small {
+    color: var(--text-muted);
+}
+
+.login-card .btn-dev {
+    width: 100%;
+    padding: 8px 12px;
+    margin: 4px 0;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.login-card .btn-dev:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--primary);
+}
+
+.login-card .alert {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+}
+
+.login-card .alert-danger {
+    background: var(--danger);
+    border: 1px solid var(--danger);
+    color: #ffffff;
+}
+
+.login-card .alert-success {
+    background: var(--success);
+    border: 1px solid var(--success);
+    color: #ffffff;
+}
+
+@media (max-width: 480px) {
+    .login-container {
+        padding: 16px;
+    }
+
+    .login-card {
+        padding: 32px 24px;
+    }
+
+    .login-logo {
+        font-size: 1.75rem;
+    }
+}
+
+/* ==============================================
+   ROBUST THEME SWITCHING SYSTEM
+   ============================================== */
+
+/* Prevent flash of white content during page load */
+html {
+    background-color: #181818 !important;
+    color: #e0e0e0 !important;
+}
+
+body {
+    background-color: #181818 !important;
+    color: #e0e0e0 !important;
+    transition: none !important;
+    /* Disable transitions during page load */
+}
+
+/* Root Theme Variables */
+:root {
+    /* Light Theme (Bright and Comfortable Palette) */
+    --bg-primary: #F8FAFC;
+    --bg-secondary: #E2E8F0;
+    --bg-tertiary: #CBD5E1;
+    --text-primary: #334155;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+
+    /* Card & Components */
+    --card-bg: #ffffff;
+    --card-border: #E2E8F0;
+    --card-shadow: rgba(51, 65, 85, 0.1);
+
+    /* Navigation */
+    --navbar-bg: #ffffff;
+    --navbar-text: #334155;
+    --sidebar-bg: #F8FAFC;
+    --sidebar-text: #334155;
+    --sidebar-hover: #E2E8F0;
+
+    /* Theme Colors */
+    --primary: #3bc1f6;
+    --secondary: #5cf6ae;
+    --success: #106db9;
+    --info: #06B6D4;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --light: #F8FAFC;
+    --dark: #77a2e9;
+
+    /* Chart Colors */
+    --chart-grid: #9DB2BF;
+    --chart-text: #526D82;
+
+    /* Form Elements */
+    --input-bg: #ffffff;
+    --input-border: #9DB2BF;
+    --input-focus: #526D82;
+
+    /* Buttons */
+    --btn-primary-bg: #526D82;
+    --btn-primary-text: #ffffff;
+
+    /* Sidebar Shadow Effects */
+    --sidebar-shadow: 0 1px 3px rgba(51, 65, 85, 0.06);
+    --sidebar-shadow-hover: 0 4px 12px rgba(51, 65, 85, 0.12), 0 2px 6px rgba(51, 65, 85, 0.08);
+
+    /* Transitions */
+    --theme-transition: all 0.3s ease;
+}
+
+/* Dark Theme Variables */
+[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #3d3d3d;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --text-muted: #888888;
+
+    /* Card & Components */
+    --card-bg: #2d2d2d;
+    --card-border: #404040;
+    --card-shadow: rgba(0, 0, 0, 0.3);
+
+    /* Navigation */
+    --navbar-bg: #2d2d2d;
+    --navbar-text: #e0e0e0;
+    --sidebar-bg: #121212;
+    --sidebar-text: #ffffff;
+    --sidebar-hover: #333333;
+
+    /* Theme Colors (Adjusted for dark) */
+    --primary: #4dabf7;
+    --secondary: #868e96;
+    --success: #51cf66;
+    --info: #22b8cf;
+    --warning: #998129;
+    --danger: #ff6b6b;
+    --light: #4dbfc7;
+    --dark: #6f95bb;
+
+    /* Chart Colors */
+    --chart-grid: #404040;
+    --chart-text: #b0b0b0;
+
+    /* Form Elements */
+    --input-bg: #3d3d3d;
+    --input-border: #555555;
+    --input-focus: #4dabf7;
+
+    /* Buttons */
+    --btn-primary-bg: #4dabf7;
+    --btn-primary-text: #ffffff;
+
+    /* Sidebar Shadow Effects */
+    --sidebar-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --sidebar-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.4), 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* ==============================================
+   APPLY THEME VARIABLES TO ELEMENTS
+   ============================================== */
+
+/* Base Elements */
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    transition: var(--theme-transition);
+}
+
+/* Ensure all text inherits theme colors */
+* {
+    color: inherit;
+}
+
+/* Force theme colors on common elements */
+p,
+span,
+div,
+a,
+label {
+    color: var(--text-primary);
+}
+
+/* Links */
+a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+/* Container & Layout */
+.container-fluid,
+.container,
+#wrapper,
+#page-content-wrapper {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Enhanced Light Theme Comfort */
+:root {
+    /* Soft light shadows and styling */
+    --soft-shadow: 0 1px 3px rgba(51, 65, 85, 0.08), 0 1px 2px rgba(51, 65, 85, 0.16);
+    --medium-shadow: 0 4px 6px rgba(51, 65, 85, 0.08), 0 2px 4px rgba(51, 65, 85, 0.06);
+}
+
+/* Light theme specific enhancements */
+[data-theme="light"] .theme-card,
+[data-theme="light"] .card,
+:root .theme-card,
+:root .card {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--card-border) !important;
+    box-shadow: var(--soft-shadow) !important;
+    border-radius: 8px !important;
+}
+
+/* Better navbar for light theme */
+[data-theme="light"] .navbar,
+:root .navbar {
+    background-color: var(--navbar-bg) !important;
+    border-bottom: 1px solid var(--card-border) !important;
+    box-shadow: 0 1px 3px rgba(51, 65, 85, 0.06) !important;
+}
+
+/* Cards */
+.card,
+.theme-card {
+    background-color: var(--card-bg) !important;
+    border-color: var(--card-border) !important;
+    box-shadow: 0 2px 4px var(--card-shadow) !important;
+    color: var(--text-primary) !important;
+    transition: var(--theme-transition);
+}
+
+.card-body {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Light background cards for stats/metrics */
+.theme-card-light {
+    background-color: var(--light) !important;
+    border: 1px solid var(--card-border) !important;
+    transition: var(--theme-transition);
+}
+
+[data-theme="dark"] .theme-card-light {
+    background-color: var(--dark-card-bg) !important;
+    border-color: var(--dark-card-border) !important;
+}
+
+/* Profile Components */
+.profile-header {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    margin-bottom: 0;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    border: 5px solid rgba(255, 255, 255, 0.2);
+    display: block;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.profile-body {
+    padding: 30px;
+}
+
+.info-row {
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.info-value {
+    color: var(--text-muted);
+}
+
+.profile-actions {
+    background: var(--secondary-bg);
+    padding: 20px 30px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Additional theme components */
+.theme-card-header {
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+.theme-input-group-text {
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+.change-password-body {
+    padding: 30px;
+}
+
+.theme-card-footer {
+    background: var(--secondary-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+.theme-code-block {
+    background: var(--secondary-bg) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color);
+}
+
+/* Sidebar theming */
+.theme-sidebar {
+    background: var(--sidebar-bg) !important;
+    color: var(--sidebar-text) !important;
+}
+
+.theme-sidebar-item {
+    background: var(--sidebar-bg) !important;
+    color: var(--sidebar-text) !important;
+    border: none !important;
+    transition: all 0.3s ease !important;
+    box-shadow: var(--sidebar-shadow) !important;
+    border-radius: 4px !important;
+    margin: 2px 8px !important;
+}
+
+.theme-sidebar-item:hover {
+    background: var(--sidebar-hover) !important;
+    color: var(--sidebar-text) !important;
+    box-shadow: var(--sidebar-shadow-hover) !important;
+    transform: translateY(-1px) !important;
+    border-radius: 6px !important;
+}
+
+/* Navbar theming */
+.theme-navbar {
+    background: var(--navbar-bg) !important;
+    color: var(--navbar-text) !important;
+}
+
+.theme-navbar .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%280, 0, 0, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+[data-theme="dark"] .theme-navbar .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+/* Theme-aware striped rows */
+.theme-row-striped:nth-child(even) {
+    background: var(--secondary-bg) !important;
+}
+
+/* Navigation */
+.navbar {
+    background-color: var(--navbar-bg) !important;
+    border-color: var(--card-border) !important;
+    transition: var(--theme-transition);
+}
+
+.navbar .navbar-text,
+.navbar .nav-link {
+    color: var(--navbar-text) !important;
+}
+
+/* BOOTSTRAP OVERRIDE SECTION - High Specificity Sidebar Controls */
+/* This section uses high specificity to override Bootstrap flex utilities */
+
+/* Base sidebar - Override Bootstrap .d-flex and .w-100 */
+.d-flex.w-100 #sidebar-wrapper,
+.d-flex #sidebar-wrapper.theme-sidebar,
+#wrapper.d-flex #sidebar-wrapper,
+body #wrapper.d-flex #sidebar-wrapper {
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 300px !important;
+    flex: 0 0 250px !important;
+    flex-basis: 250px !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+/* Narrow sidebar overrides */
+body.sidebar-narrow .d-flex #sidebar-wrapper,
+body.sidebar-narrow #wrapper.d-flex #sidebar-wrapper,
+.sidebar-narrow .d-flex.w-100 #sidebar-wrapper {
+    width: 200px !important;
+    min-width: 200px !important;
+    flex: 0 0 200px !important;
+    flex-basis: 200px !important;
+}
+
+/* Wide sidebar overrides */
+body.sidebar-wide .d-flex #sidebar-wrapper,
+body.sidebar-wide #wrapper.d-flex #sidebar-wrapper,
+.sidebar-wide .d-flex.w-100 #sidebar-wrapper {
+    width: 300px !important;
+    min-width: 300px !important;
+    flex: 0 0 300px !important;
+    flex-basis: 300px !important;
+}
+
+/* Collapsed sidebar overrides */
+body.sidebar-collapsed .d-flex #sidebar-wrapper,
+body.sidebar-collapsed #wrapper.d-flex #sidebar-wrapper,
+.sidebar-collapsed .d-flex.w-100 #sidebar-wrapper {
+    width: 60px !important;
+    min-width: 60px !important;
+    flex: 0 0 60px !important;
+    flex-basis: 60px !important;
+    overflow: hidden !important;
+}
+
+/* Ensure page content doesn't interfere */
+.d-flex.w-100 #page-content-wrapper,
+#wrapper.d-flex #page-content-wrapper {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+}
+
+/* Sidebar */
+#sidebar-wrapper {
+    background: var(--sidebar-bg) !important;
+    color: var(--sidebar-text) !important;
+    transition: var(--theme-transition);
+    border-right: 1px solid var(--card-border) !important;
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 300px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    flex-basis: 250px !important;
+}
+
+/* Override Bootstrap flex utilities for sidebar */
+.d-flex #sidebar-wrapper {
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 300px !important;
+    flex: 0 0 250px !important;
+}
+
+/* Ensure page content wrapper doesn't override sidebar */
+#wrapper {
+    display: flex !important;
+}
+
+#page-content-wrapper {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+}
+
+/* Enhanced sidebar for light theme */
+[data-theme="light"] #sidebar-wrapper,
+:root #sidebar-wrapper {
+    background: linear-gradient(180deg, #F8FAFC 0%, #E2E8F0 100%) !important;
+    border-right: 1px solid #E2E8F0 !important;
+    box-shadow: 2px 0 8px rgba(51, 65, 85, 0.06) !important;
+}
+
+[data-theme="light"] #sidebar-wrapper .sidebar-heading,
+:root #sidebar-wrapper .sidebar-heading {
+    background-color: #F8FAFC !important;
+    color: #334155 !important;
+    border-color: #E2E8F0 !important;
+    font-weight: 600 !important;
+}
+
+[data-theme="light"] #sidebar-wrapper .list-group-item,
+[data-theme="light"] #sidebar-wrapper .list-group-item-action,
+:root #sidebar-wrapper .list-group-item,
+:root #sidebar-wrapper .list-group-item-action {
+    background-color: transparent !important;
+    color: #334155 !important;
+    border-color: transparent !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 1px 3px rgba(51, 65, 85, 0.06) !important;
+    border-radius: 4px !important;
+    margin: 2px 8px !important;
+}
+
+[data-theme="light"] #sidebar-wrapper .list-group-item:hover,
+[data-theme="light"] #sidebar-wrapper .list-group-item-action:hover,
+:root #sidebar-wrapper .list-group-item:hover,
+:root #sidebar-wrapper .list-group-item-action:hover {
+    background-color: #E2E8F0 !important;
+    color: #334155 !important;
+    border-radius: 6px !important;
+    margin: 2px 8px !important;
+    box-shadow: 0 4px 12px rgba(51, 65, 85, 0.12), 0 2px 6px rgba(51, 65, 85, 0.08) !important;
+    transform: translateY(-1px) !important;
+}
+
+[data-theme="light"] #sidebar-wrapper .list-group-item i,
+[data-theme="light"] #sidebar-wrapper .list-group-item-action i,
+:root #sidebar-wrapper .list-group-item i,
+:root #sidebar-wrapper .list-group-item-action i {
+    color: #334155 !important;
+}
+
+/* Enhanced sidebar for dark theme */
+[data-theme="dark"] #sidebar-wrapper {
+    background: linear-gradient(180deg, #121212 0%, #1a1a1a 100%) !important;
+    border-right: 1px solid #333333 !important;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] #sidebar-wrapper .sidebar-heading {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+    font-weight: 600 !important;
+}
+
+[data-theme="dark"] #sidebar-wrapper .list-group-item,
+[data-theme="dark"] #sidebar-wrapper .list-group-item-action {
+    background-color: transparent !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    border-radius: 4px !important;
+    margin: 2px 8px !important;
+}
+
+[data-theme="dark"] #sidebar-wrapper .list-group-item:hover,
+[data-theme="dark"] #sidebar-wrapper .list-group-item-action:hover {
+    background-color: #333333 !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    margin: 2px 8px !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 3px 10px rgba(0, 0, 0, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+[data-theme="dark"] #sidebar-wrapper .list-group-item i,
+[data-theme="dark"] #sidebar-wrapper .list-group-item-action i {
+    color: #ffffff !important;
+}
+
+#sidebar-wrapper .sidebar-heading {
+    background-color: var(--sidebar-bg) !important;
+    color: var(--sidebar-text) !important;
+    border-color: var(--card-border) !important;
+    font-weight: 600 !important;
+}
+
+#sidebar-wrapper .list-group-item,
+#sidebar-wrapper .list-group-item-action {
+    background-color: transparent !important;
+    color: var(--sidebar-text) !important;
+    border-color: transparent !important;
+    transition: all 0.3s ease !important;
+    box-shadow: var(--sidebar-shadow) !important;
+    border-radius: 4px !important;
+    margin: 2px 8px !important;
+}
+
+#sidebar-wrapper .list-group-item:hover,
+#sidebar-wrapper .list-group-item-action:hover {
+    background-color: var(--sidebar-hover) !important;
+    color: var(--sidebar-text) !important;
+    border-radius: 6px !important;
+    margin: 2px 8px !important;
+    box-shadow: var(--sidebar-shadow-hover) !important;
+    transform: translateY(-1px) !important;
+}
+
+#sidebar-wrapper .list-group-item i,
+#sidebar-wrapper .list-group-item-action i {
+    color: var(--sidebar-text) !important;
+}
+
+/* Sidebar Width Controls */
+.sidebar-narrow #sidebar-wrapper {
+    width: 200px !important;
+    min-width: 200px !important;
+    flex-basis: 200px !important;
+}
+
+.sidebar-narrow .d-flex #sidebar-wrapper {
+    flex: 0 0 200px !important;
+}
+
+.sidebar-wide #sidebar-wrapper {
+    width: 300px !important;
+    min-width: 300px !important;
+    flex-basis: 300px !important;
+}
+
+.sidebar-wide .d-flex #sidebar-wrapper {
+    flex: 0 0 300px !important;
+}
+
+.sidebar-collapsed #sidebar-wrapper {
+    width: 60px !important;
+    min-width: 60px !important;
+    flex-basis: 60px !important;
+    overflow: hidden !important;
+}
+
+.sidebar-collapsed .d-flex #sidebar-wrapper {
+    flex: 0 0 60px !important;
+}
+
+.sidebar-collapsed #sidebar-wrapper .sidebar-heading {
+    display: none !important;
+}
+
+.sidebar-collapsed #sidebar-wrapper .list-group-item {
+    text-align: center !important;
+    padding: 12px 8px !important;
+}
+
+.sidebar-collapsed #sidebar-wrapper .list-group-item span {
+    display: none !important;
+}
+
+.sidebar-collapsed #sidebar-wrapper .list-group-item i {
+    margin: 0 !important;
+    font-size: 1.2rem !important;
+}
+
+/* Responsive Sidebar Width */
+@media (max-width: 1200px) {
+    #sidebar-wrapper {
+        width: 220px !important;
+        min-width: 220px !important;
+        flex-basis: 220px !important;
+    }
+
+    .d-flex #sidebar-wrapper {
+        flex: 0 0 220px !important;
+    }
+}
+
+@media (max-width: 992px) {
+    #sidebar-wrapper {
+        width: 200px !important;
+        min-width: 200px !important;
+        flex-basis: 200px !important;
+    }
+
+    .d-flex #sidebar-wrapper {
+        flex: 0 0 200px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #sidebar-wrapper {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        position: fixed !important;
+        z-index: 1000 !important;
+        height: 100vh !important;
+        top: 0 !important;
+        left: -100% !important;
+        transition: left 0.3s ease !important;
+    }
+
+    #sidebar-wrapper.show {
+        left: 0 !important;
+    }
+
+    /* Mobile sidebar overlay */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        display: none;
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+    }
+}
+
+/* Form Elements */
+.form-control {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-primary) !important;
+    transition: var(--theme-transition);
+}
+
+.form-control:focus {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-focus) !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 0 0 0.2rem rgba(var(--input-focus), 0.25) !important;
+}
+
+/* Tables */
+.table {
+    color: var(--text-primary) !important;
+    background-color: var(--card-bg) !important;
+}
+
+.table th,
+.table td {
+    border-color: var(--card-border) !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--bg-tertiary) !important;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--btn-primary-bg) !important;
+    border-color: var(--btn-primary-bg) !important;
+    color: var(--btn-primary-text) !important;
+}
+
+/* Text Colors */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+/* Header Text Colors */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--text-primary) !important;
+}
+
+/* Theme Header Styling */
+.theme-header {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%) !important;
+    border-radius: 8px !important;
+    padding: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    border: 1px solid var(--card-border) !important;
+    box-shadow: var(--soft-shadow) !important;
+}
+
+.theme-header h1,
+.theme-header .description {
+    color: var(--text-primary) !important;
+}
+
+.theme-header h1 {
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+}
+
+.theme-header h1 i {
+    color: var(--primary) !important;
+}
+
+.theme-header .description {
+    color: var(--text-secondary) !important;
+    opacity: 0.9 !important;
+}
+
+/* Button Text Colors */
+.btn-outline-light {
+    color: var(--text-primary) !important;
+    border-color: var(--primary) !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-light:hover {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+    border-color: var(--primary) !important;
+}
+
+.btn-light {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--primary) !important;
+}
+
+.btn-light:hover {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+    border-color: var(--primary) !important;
+}
+
+/* Header Button Specific Styling */
+.theme-header .btn-outline-light {
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    font-weight: 500 !important;
+}
+
+.theme-header .btn-outline-light:hover {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(51, 65, 85, 0.15) !important;
+}
+
+/* Light theme specific button styling */
+[data-theme="light"] .theme-header .btn-outline-light,
+:root .theme-header .btn-outline-light {
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 600 !important;
+}
+
+[data-theme="light"] .theme-header .btn-outline-light:hover,
+:root .theme-header .btn-outline-light:hover {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+    border-color: var(--primary) !important;
+}
+
+.theme-header .btn-light {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+    border-color: var(--primary) !important;
+    font-weight: 500 !important;
+}
+
+.theme-header .btn-light:hover {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(51, 65, 85, 0.15) !important;
+}
+
+/* Dropdowns */
+.dropdown-menu {
+    background-color: var(--card-bg) !important;
+    border-color: var(--card-border) !important;
+}
+
+.dropdown-item {
+    color: var(--text-primary) !important;
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+.dropdown-toggle::after {
+    border-top-color: var(--text-primary) !important;
+}
+
+/* Button Groups */
+.btn-group .btn {
+    color: var(--text-primary) !important;
+}
+
+/* Small Text */
+small,
+.small {
+    color: var(--text-secondary) !important;
+}
+
+/* List Group Items */
+.list-group-item {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--card-border) !important;
+}
+
+.list-group-flush .list-group-item {
+    border-color: var(--card-border) !important;
+}
+
+/* Font Weight Classes */
+.font-weight-medium,
+.font-weight-bold {
+    color: var(--text-primary) !important;
+}
+
+/* Modal */
+.modal-content {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+.modal-header {
+    border-color: var(--card-border) !important;
+}
+
+.modal-footer {
+    border-color: var(--card-border) !important;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--card-bg);
+    border: 2px solid var(--card-border);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--theme-transition);
+    box-shadow: 0 2px 8px var(--card-shadow);
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+    background: var(--bg-tertiary);
+}
+
+.theme-toggle i {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    transition: var(--theme-transition);
+}
+
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--card-bg);
+    border: 2px solid var(--card-border);
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--theme-transition);
+    box-shadow: 0 2px 8px var(--card-shadow);
+}
+
+.sidebar-toggle:hover {
+    transform: scale(1.05);
+    background: var(--bg-tertiary);
+}
+
+.sidebar-toggle i {
+    font-size: 1rem;
+    color: var(--text-primary);
+    transition: var(--theme-transition);
+}
+
+/* Mobile sidebar toggle */
+@media (max-width: 768px) {
+    .sidebar-toggle {
+        top: 10px;
+        left: 10px;
+        bottom: auto;
+        right: auto;
+        background: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .sidebar-toggle i {
+        color: #ffffff;
+    }
+}
+
+/* Sidebar Width Control Buttons */
+.sidebar-width-controls {
+    position: fixed;
+    bottom: 130px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.sidebar-width-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    width: 35px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--theme-transition);
+    box-shadow: 0 1px 3px var(--card-shadow);
+    font-size: 0.75rem;
+    color: var(--text-primary);
+}
+
+.sidebar-width-btn:hover {
+    background: var(--bg-tertiary);
+    transform: scale(1.05);
+}
+
+.sidebar-width-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+}
+
+@media (max-width: 768px) {
+    .sidebar-width-controls {
+        display: none;
+    }
+}
+
+/* Chart.js Dark Theme Support */
+[data-theme="dark"] canvas {
+    filter: brightness(0.9) contrast(1.1);
+}
+
+/* Print Media */
+@media print {
+    :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #ffffff;
+        --text-primary: #000000;
+        --card-bg: #ffffff;
+    }
+}
+
+/* Override Unified Theme CSS for Theme Support */
+.theme-header h1 {
+    color: var(--text-primary) !important;
+}
+
+.theme-header h1 i {
+    color: var(--primary) !important;
+}
+
+.theme-header .description {
+    color: var(--text-secondary) !important;
+}
+
+/* Card Header Theme Classes */
+.card-header.bg-primary-theme {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+}
+
+.card-header.bg-success-theme {
+    background-color: var(--success) !important;
+    color: #ffffff !important;
+}
+
+.card-header.bg-info-theme {
+    background-color: var(--info) !important;
+    color: #ffffff !important;
+}
+
+.card-header.bg-warning-theme {
+    background-color: var(--warning) !important;
+    color: #000000 !important;
+}
+
+.card-header.bg-secondary-theme {
+    background-color: var(--secondary) !important;
+    color: #ffffff !important;
+}
+
+/* Progress Bars */
+.progress {
+    background-color: var(--bg-tertiary) !important;
+}
+
+.progress-bar {
+    background-color: var(--primary) !important;
+}
+
+.progress-bar.bg-success {
+    background-color: var(--success) !important;
+}
+
+.progress-bar.bg-info {
+    background-color: var(--info) !important;
+}
+
+.progress-bar.bg-warning {
+    background-color: var(--warning) !important;
+}
+
+/* Text Color Utilities */
+.text-primary {
+    color: var(--primary) !important;
+}
+
+.text-success {
+    color: var(--success) !important;
+}
+
+.text-info {
+    color: var(--info) !important;
+}
+
+.text-warning {
+    color: var(--warning) !important;
+}
+
+.text-danger {
+    color: var(--danger) !important;
+}
+
+/* Animation for theme transition */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dashboard Layout Improvements */
+.theme-container {
+    max-width: none;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Better spacing for dashboard content */
+.theme-card {
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+
+    .col-lg-9,
+    .col-lg-3 {
+        margin-bottom: 2rem;
+    }
+}
+
+/* Chart containers */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+}
+
+/* Ensure charts fill their containers properly */
+canvas {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* Theme Preview Styles */
+.theme-preview-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.theme-preview {
+    width: 80px;
+    height: 60px;
+    border: 2px solid var(--card-border);
+    border-radius: 6px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-preview:hover {
+    transform: scale(1.05);
+    border-color: var(--primary);
+}
+
+.light-preview {
+    background: #ffffff;
+}
+
+.light-preview .preview-header {
+    height: 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.light-preview .preview-content {
+    padding: 5px;
+}
+
+.light-preview .preview-text {
+    height: 3px;
+    background: #212529;
+    margin: 2px 0;
+    border-radius: 1px;
+}
+
+.light-preview .preview-text.short {
+    width: 60%;
+}
+
+.dark-preview {
+    background: #2d2d2d;
+}
+
+.dark-preview .preview-header {
+    height: 15px;
+    background: #1e1e1e;
+    border-bottom: 1px solid #404040;
+}
+
+.dark-preview .preview-content {
+    padding: 5px;
+}
+
+.dark-preview .preview-text {
+    height: 3px;
+    background: #e0e0e0;
+    margin: 2px 0;
+    border-radius: 1px;
+}
+
+.dark-preview .preview-text.short {
+    width: 60%;
+}
+
+/* ==============================================
+   SELECT2 DROPDOWN STYLES
+   ============================================== */
+
+/* Make Select2 work with Bootstrap validation states */
+.select2-container--bootstrap4 .select2-selection--single.is-invalid,
+.select2-container--bootstrap4 .select2-selection--multiple.is-invalid {
+    border-color: #dc3545;
+}
+
+.select2-container--bootstrap4 .select2-selection--single.is-valid,
+.select2-container--bootstrap4 .select2-selection--multiple.is-valid {
+    border-color: #28a745;
+}
+
+/* Ensure Select2 takes full width */
+.select2-container {
+    width: 100% !important;
+}
+
+/* Better height for large form controls */
+.select2-container--bootstrap4 .select2-selection--single {
+    height: calc(1.5em + 1rem + 2px) !important;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* Center the placeholder text */
+.select2-container--bootstrap4 .select2-selection__rendered {
+    line-height: calc(1.5em + 1rem) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Fix Select2 container overflow and positioning */
+.select2-container {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.select2-container .select2-selection {
+    overflow: hidden !important;
+    border-radius: 0.375rem !important;
+    box-sizing: border-box !important;
+}
+
+.select2-container .select2-selection span {
+    overflow: hidden !important;
+    border-radius: inherit !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+}
+
+/* Ensure all Select2 containers have proper containment */
+[id^="select2-"][id$="-container"] {
+    border-radius: 0.375rem !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+[id^="select2-"][id$="-container"]>span {
+    border-radius: inherit !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+}
+
+/* Better styling for the search input */
+.select2-container--bootstrap4 .select2-search--inline .select2-search__field {
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-primary);
+}
+
+/* Search input in dropdown */
+.select2-container--bootstrap4 .select2-search--dropdown .select2-search__field {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-primary);
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+}
+
+/* Focus states for search inputs */
+.select2-container--bootstrap4 .select2-search--inline .select2-search__field:focus,
+.select2-container--bootstrap4 .select2-search--dropdown .select2-search__field:focus {
+    background: var(--input-bg);
+    border-color: var(--input-focus);
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(82, 109, 130, 0.25);
+}
+
+/* Placeholder styling for search inputs */
+.select2-container--bootstrap4 .select2-search--inline .select2-search__field::placeholder,
+.select2-container--bootstrap4 .select2-search--dropdown .select2-search__field::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+}
+
+/* Highlight on focus */
+.select2-container--bootstrap4.select2-container--focus .select2-selection {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Results styling */
+.select2-container--bootstrap4 .select2-results__option {
+    padding: 0.5rem 0.75rem;
+}
+
+.select2-container--bootstrap4 .select2-results__option--highlighted {
+    background-color: #007bff;
+    color: #fff;
+}
+
+/* Add icons for special options */
+.select2-container--bootstrap4 .select2-results__option[data-select2-id*="add_new"] {
+    background-color: #e9ecef;
+    font-weight: bold;
+    color: #007bff;
+    border-top: 1px solid #dee2e6;
+}
+
+.select2-container--bootstrap4 .select2-results__option[data-select2-id*="add_new"]:before {
+    content: "+ ";
+    font-weight: bold;
+}
+
+/* Styling for "Add New" options */
+.select2-results__option[id*="add_new"] {
+    background-color: #f8f9fa !important;
+    border-top: 1px solid #dee2e6 !important;
+    color: #007bff !important;
+    font-weight: 600 !important;
+    position: relative !important;
+}
+
+.select2-results__option[id*="add_new"]:before {
+    content: "+ " !important;
+    font-weight: bold !important;
+    color: #28a745 !important;
+}
+
+.select2-results__option[id*="add_new"]:hover,
+.select2-results__option[id*="add_new"].select2-results__option--highlighted {
+    background-color: #007bff !important;
+    color: #fff !important;
+}
+
+.select2-results__option[id*="add_new"]:hover:before,
+.select2-results__option[id*="add_new"].select2-results__option--highlighted:before {
+    color: #fff !important;
+}
+
+/* Separator line before "Add New" options */
+.select2-results__option[id*="add_new"]:first-of-type {
+    margin-top: 5px !important;
+}
+
+/* Dark theme support */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection__rendered {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .select2-dropdown {
+    background-color: var(--card-bg);
+    border-color: var(--input-border);
+    box-shadow: 0 4px 8px var(--card-shadow);
+}
+
+[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option--highlighted {
+    background-color: var(--primary);
+    color: #ffffff;
+}
+
+[data-theme="dark"] .select2-search--dropdown .select2-search__field {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}
+
+/* Dark theme inline search */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-search--inline .select2-search__field {
+    background: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}
+
+/* Dark theme focus states for search inputs */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-search--inline .select2-search__field:focus,
+[data-theme="dark"] .select2-container--bootstrap4 .select2-search--dropdown .select2-search__field:focus {
+    background: var(--input-bg);
+    border-color: var(--input-focus);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.2rem rgba(77, 171, 247, 0.25);
+}
+
+/* Dark theme placeholder styling */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-search--inline .select2-search__field::placeholder,
+[data-theme="dark"] .select2-container--bootstrap4 .select2-search--dropdown .select2-search__field::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+}
+
+/* Dark theme - Main selection box */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection--single {
+    background: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}
+
+/* Dark theme - Selection text */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection__rendered {
+    color: var(--text-primary);
+}
+
+/* Dark theme - Dropdown container */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-dropdown {
+    background: var(--card-bg);
+    border-color: var(--input-border);
+    box-shadow: 0 4px 8px var(--card-shadow);
+}
+
+/* Dark theme - Results container */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-results__options {
+    background: var(--card-bg);
+}
+
+/* Dark theme - Individual result options */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option {
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+/* Dark theme - Highlighted option */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option--highlighted {
+    background-color: var(--primary);
+    color: #ffffff;
+}
+
+/* Dark theme - Selected option */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option[aria-selected="true"] {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+/* Dark theme - Focus state for selection */
+[data-theme="dark"] .select2-container--bootstrap4.select2-container--focus .select2-selection {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 0.2rem rgba(77, 171, 247, 0.25);
+}
+
+/* Dark theme - Arrow icon */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection__arrow {
+    color: var(--text-secondary);
+}
+
+/* Dark theme - Placeholder text */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection__placeholder {
+    color: var(--text-muted);
+}
+
+/* Dark theme - "Add New" options */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option[data-select2-id*="add_new"] {
+    background-color: var(--bg-tertiary);
+    color: var(--primary);
+    border-top-color: var(--input-border);
+}
+
+[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option[data-select2-id*="add_new"]:before {
+    color: var(--success);
+}
+
+[data-theme="dark"] .select2-results__option[id*="add_new"] {
+    background-color: var(--bg-tertiary) !important;
+    border-top-color: var(--input-border) !important;
+    color: var(--primary) !important;
+}
+
+[data-theme="dark"] .select2-results__option[id*="add_new"]:before {
+    color: var(--success) !important;
+}
+
+[data-theme="dark"] .select2-results__option[id*="add_new"]:hover,
+[data-theme="dark"] .select2-results__option[id*="add_new"].select2-results__option--highlighted {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .select2-results__option[id*="add_new"]:hover:before,
+[data-theme="dark"] .select2-results__option[id*="add_new"].select2-results__option--highlighted:before {
+    color: #ffffff !important;
+}
+
+/* Dark theme - Disabled options */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option[aria-disabled="true"] {
+    background-color: var(--card-bg);
+    color: var(--text-muted);
+}
+
+/* Dark theme - Multiple selection */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection--multiple {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+}
+
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice {
+    background-color: var(--bg-tertiary);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice__remove {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice__remove:hover {
+    color: var(--danger);
+}
+
+/* Dark theme - Ensure proper transitions */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection,
+[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option {
+    transition: all 0.3s ease;
+}
+
+/* Dark theme - No results message */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-results__message {
+    color: var(--text-muted);
+    background-color: var(--card-bg);
+}
+
+/* Dark theme - Loading message */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option--loading {
+    color: var(--text-muted);
+    background-color: var(--card-bg);
+}
+
+/* Dark theme - Auto-generated Select2 containers */
+[data-theme="dark"] [id^="select2-"][id$="-container"] {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] [id^="select2-"][id$="-container"] .select2-selection__rendered {
+    background-color: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] [id^="select2-"][id$="-container"] .select2-selection__arrow {
+    color: var(--text-secondary) !important;
+}
+
+/* Dark theme - Specific container patterns */
+[data-theme="dark"] #select2-categorySelect-container,
+[data-theme="dark"] #select2-supplierSelect-container,
+[data-theme="dark"] #select2-brandSelect-container,
+[data-theme="dark"] #select2-unitSelect-container {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Selection rendered text for specific containers */
+[data-theme="dark"] #select2-categorySelect-container .select2-selection__rendered,
+[data-theme="dark"] #select2-supplierSelect-container .select2-selection__rendered,
+[data-theme="dark"] #select2-brandSelect-container .select2-selection__rendered,
+[data-theme="dark"] #select2-unitSelect-container .select2-selection__rendered {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - All Select2 selection rendered elements */
+[data-theme="dark"] .select2-selection__rendered,
+[data-theme="dark"] .select2-selection__rendered span {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Force background for any select2 selection */
+[data-theme="dark"] .select2-selection {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Force styling on all auto-generated containers with important */
+[data-theme="dark"] span[id^="select2-"] {
+    background-color: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Ultra-specific targeting for container divs */
+[data-theme="dark"] .select2-container .select2-selection {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .select2-container .select2-selection .select2-selection__rendered {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Target by attribute selector for dynamic IDs */
+[data-theme="dark"] span[class*="select2-selection__rendered"] {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .select2-container--bootstrap4 {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .select2-container--bootstrap4 * {
+    color: inherit !important;
+}
+
+/* Dark theme - Target inner spans specifically */
+[data-theme="dark"] [id^="select2-"][id$="-container"]>span {
+    background-color: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] [id^="select2-"][id$="-container"]>span>span {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Specific targeting for categorySelect spans */
+[data-theme="dark"] #select2-categorySelect-container>span,
+[data-theme="dark"] #select2-supplierSelect-container>span,
+[data-theme="dark"] #select2-brandSelect-container>span,
+[data-theme="dark"] #select2-unitSelect-container>span {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Nested spans inside containers */
+[data-theme="dark"] #select2-categorySelect-container span span,
+[data-theme="dark"] #select2-supplierSelect-container span span,
+[data-theme="dark"] #select2-brandSelect-container span span,
+[data-theme="dark"] #select2-unitSelect-container span span {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Force all spans in Select2 containers */
+[data-theme="dark"] .select2-container span {
+    background-color: inherit !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Select2 selection span (the actual text container) */
+[data-theme="dark"] .select2-selection__rendered {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .select2-selection__rendered span {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Ultra-aggressive span targeting for Select2 */
+[data-theme="dark"] span.select2-selection {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] span.select2-selection span {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Target the exact Select2 structure */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection.select2-selection--single {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection.select2-selection--single span.select2-selection__rendered {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Any span with select2 in the class name */
+[data-theme="dark"] span[class*="select2"] {
+    background-color: inherit !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Placeholder span specifically */
+[data-theme="dark"] .select2-selection__placeholder {
+    background-color: transparent !important;
+    color: var(--text-muted) !important;
+}
+
+/* Dark theme - Clear/reset any inline styles on Select2 spans */
+[data-theme="dark"] .select2-container * {
+    background-color: inherit !important;
+}
+
+[data-theme="dark"] .select2-container .select2-selection {
+    background-color: var(--input-bg) !important;
+}
+
+[data-theme="dark"] .select2-container .select2-selection * {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark theme - Fix Select2 span overflow and corner issues */
+[data-theme="dark"] .select2-container .select2-selection {
+    overflow: hidden !important;
+    border-radius: 0.375rem !important;
+}
+
+[data-theme="dark"] .select2-container .select2-selection span {
+    overflow: hidden !important;
+    border-radius: inherit !important;
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Dark theme - Ensure proper containment for all Select2 elements */
+[data-theme="dark"] .select2-container span span {
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    max-width: 100% !important;
+}
+
+/* Dark theme - Fix specific container span positioning */
+[data-theme="dark"] [id^="select2-"][id$="-container"] {
+    border-radius: 0.375rem !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+[data-theme="dark"] [id^="select2-"][id$="-container"]>span {
+    border-radius: inherit !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Dark theme - Ensure nested spans don't overflow */
+[data-theme="dark"] .select2-selection__rendered {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Dark theme - Fix bootstrap4 selection border issues */
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection--single {
+    border-radius: 0.375rem !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+}
+
+[data-theme="dark"] .select2-container--bootstrap4 .select2-selection--single span {
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    max-width: calc(100% - 20px) !important;
+}
+
+/* Dark theme - Prevent corner bleeding on focus */
+[data-theme="dark"] .select2-container--bootstrap4.select2-container--focus .select2-selection {
+    border-radius: 0.375rem !important;
+    overflow: hidden !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .select2-container--bootstrap4 .select2-selection--single {
+        height: calc(1.5em + 0.75rem + 2px) !important;
+        padding: 0.375rem 0.75rem;
+    }
+
+    .select2-container--bootstrap4 .select2-selection__rendered {
+        line-height: calc(1.5em + 0.75rem) !important;
+    }
+}

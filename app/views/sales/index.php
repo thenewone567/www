@@ -1,6 +1,6 @@
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
 
-<div class="container-fluid mt-0 pt-3">
+<div class="container-fluid theme-container theme-unified mt-0 pt-3">
     <div class="row align-items-center mb-4">
         <div class="col-12">
             <h1 class="mb-0"><i class="fa-solid fa-chart-line"></i> Sales Management</h1>
@@ -11,8 +11,8 @@
     <div class="row">
         <!-- New Sale Section -->
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-success text-white">
+            <div class="theme-card h-100">
+                <div class="card-header bg-success-theme text-white">
                     <h5 class="mb-0"><i class="fa-solid fa-plus-circle"></i> New Sale</h5>
                 </div>
                 <div class="card-body">
@@ -31,8 +31,8 @@
 
         <!-- Sales History Section -->
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-primary text-white">
+            <div class="theme-card h-100">
+                <div class="card-header bg-primary-theme text-white">
                     <h5 class="mb-0"><i class="fa-solid fa-list"></i> Sales History</h5>
                 </div>
                 <div class="card-body">
@@ -51,8 +51,8 @@
 
         <!-- Customers Section -->
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-info text-white">
+            <div class="theme-card h-100">
+                <div class="card-header bg-info-theme text-white">
                     <h5 class="mb-0"><i class="fa-solid fa-users"></i> Customers</h5>
                 </div>
                 <div class="card-body">
@@ -71,8 +71,8 @@
 
         <!-- Invoices Section -->
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-warning text-white">
+            <div class="theme-card h-100">
+                <div class="card-header bg-warning-theme text-white">
                     <h5 class="mb-0"><i class="fa-solid fa-file-invoice"></i> Invoices</h5>
                 </div>
                 <div class="card-body">
@@ -91,8 +91,8 @@
 
         <!-- Point of Sale Section -->
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-dark text-white">
+            <div class="theme-card h-100">
+                <div class="card-header bg-dark-theme text-white">
                     <h5 class="mb-0"><i class="fa-solid fa-cash-register"></i> Point of Sale</h5>
                 </div>
                 <div class="card-body">
@@ -111,8 +111,8 @@
 
         <!-- Sales Reports Section -->
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-secondary text-white">
+            <div class="theme-card h-100">
+                <div class="card-header bg-secondary-theme text-white">
                     <h5 class="mb-0"><i class="fa-solid fa-chart-bar"></i> Sales Reports</h5>
                 </div>
                 <div class="card-body">
@@ -133,32 +133,32 @@
     <!-- Quick Stats Row -->
     <div class="row mt-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
+            <div class="theme-card">
+                <div class="card-header bg-primary-theme text-white">
                     <h5 class="mb-0"><i class="fa-solid fa-chart-bar"></i> Today's Sales Summary</h5>
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
                         <div class="col-md-3 col-6 mb-3">
-                            <div class="p-3 bg-light rounded">
+                            <div class="p-3 theme-card-light rounded">
                                 <h4 class="text-success mb-1">$--</h4>
                                 <small class="text-muted">Today's Revenue</small>
                             </div>
                         </div>
                         <div class="col-md-3 col-6 mb-3">
-                            <div class="p-3 bg-light rounded">
+                            <div class="p-3 theme-card-light rounded">
                                 <h4 class="text-primary mb-1">--</h4>
                                 <small class="text-muted">Transactions</small>
                             </div>
                         </div>
                         <div class="col-md-3 col-6 mb-3">
-                            <div class="p-3 bg-light rounded">
+                            <div class="p-3 theme-card-light rounded">
                                 <h4 class="text-info mb-1">$--</h4>
                                 <small class="text-muted">Average Sale</small>
                             </div>
                         </div>
                         <div class="col-md-3 col-6 mb-3">
-                            <div class="p-3 bg-light rounded">
+                            <div class="p-3 theme-card-light rounded">
                                 <h4 class="text-warning mb-1">--</h4>
                                 <small class="text-muted">Items Sold</small>
                             </div>

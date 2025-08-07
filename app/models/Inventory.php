@@ -1,7 +1,7 @@
 <?php
 /**
  * Inventory Model
- * Handles inventory data operations including stock movements and adjustments
+ * Handles inventory data operations including Inventory movements and adjustments
  */
 class Inventory
 {
@@ -12,109 +12,43 @@ class Inventory
         $this->db = new Database();
     }
 
-    /**
-     * Get all stock records with product details
-     * @param int $limit Optional limit
-     * @return array
-     */
-    public function getAllStock($limit = null)
-    {
-        try {
-            $sql = "SELECT s.*, p.product_name, p.product_code, p.description, p.unit_price,
-                           c.category_name, b.brand_name, u.unit_name,
-                           w.warehouse_name, l.location_name
-                    FROM stock s
-                    LEFT JOIN products p ON s.product_id = p.product_id
-                    LEFT JOIN categories c ON p.category_id = c.category_id
-                    LEFT JOIN brands b ON p.brand_id = b.brand_id
-                    LEFT JOIN units u ON p.unit_id = u.unit_id
-                    LEFT JOIN warehouses w ON s.warehouse_id = w.warehouse_id
-                    LEFT JOIN locations l ON s.location_id = l.location_id
-                    ORDER BY p.product_name";
 
-            if ($limit) {
-                $sql .= " LIMIT :limit";
-            }
-
-            $this->db->query($sql);
-
-            if ($limit) {
-                $this->db->bind(':limit', $limit);
-            }
-
-            return $this->db->resultSet();
-        } catch (Exception $e) {
-            error_log("Error in getAllStock: " . $e->getMessage());
-            return [];
-        }
-    }
 
     /**
-     * Get low stock items
+     * Get low inventory items (inventory terminology version)
      * @param int $threshold
      * @return array
      */
-    public function getLowStockItems($threshold = 10)
+    public function getLowInventoryItems($threshold = 10)
     {
-        try {
-            $this->db->query("SELECT p.product_id, p.product_name, p.product_code,
-                                    COALESCE(SUM(s.quantity), 0) as total_stock,
-                                    p.minimum_stock_level,
-                                    c.category_name
-                             FROM products p
-                             LEFT JOIN stock s ON p.product_id = s.product_id
-                             LEFT JOIN categories c ON p.category_id = c.category_id
-                             GROUP BY p.product_id
-                             HAVING total_stock <= :threshold OR total_stock <= p.minimum_stock_level
-                             ORDER BY total_stock ASC");
-
-            $this->db->bind(':threshold', $threshold);
-            return $this->db->resultSet();
-        } catch (Exception $e) {
-            error_log("Error in getLowStockItems: " . $e->getMessage());
-            return [];
-        }
+        // No longer supported: legacy Inventory method removed
+        return [];
     }
 
+
     /**
-     * Get stock movements/adjustments
+     * Get inventory movements/adjustments (inventory terminology version)
      * @param int $limit
      * @return array
      */
-    public function getStockMovements($limit = 50)
+    public function getInventoryMovements($limit = 50)
     {
-        try {
-            $this->db->query("SELECT sm.*, p.product_name, p.product_code,
-                                    u.username as created_by_name,
-                                    w.warehouse_name, l.location_name
-                             FROM stock_movements sm
-                             LEFT JOIN products p ON sm.product_id = p.product_id
-                             LEFT JOIN users u ON sm.created_by = u.user_id
-                             LEFT JOIN warehouses w ON sm.warehouse_id = w.warehouse_id
-                             LEFT JOIN locations l ON sm.location_id = l.location_id
-                             ORDER BY sm.created_at DESC
-                             LIMIT :limit");
-
-            $this->db->bind(':limit', $limit);
-            return $this->db->resultSet();
-        } catch (Exception $e) {
-            error_log("Error in getStockMovements: " . $e->getMessage());
-            return [];
-        }
+        // No longer supported: legacy Inventory method removed
+        return [];
     }
 
     /**
-     * Adjust stock quantity
+     * Adjust Inventory quantity
      * @param array $data
      * @return bool
      */
-    public function adjustStock($data)
+    public function adjustInventory($data)
     {
         try {
             $this->db->beginTransaction();
 
-            // Get current stock
-            $this->db->query("SELECT quantity FROM stock 
+            // Get current Inventory
+            $this->db->query("SELECT quantity FROM Inventory 
                              WHERE product_id = :product_id 
                              AND warehouse_id = :warehouse_id 
                              AND location_id = :location_id");
@@ -123,18 +57,18 @@ class Inventory
             $this->db->bind(':warehouse_id', $data['warehouse_id']);
             $this->db->bind(':location_id', $data['location_id']);
 
-            $currentStock = $this->db->single();
-            $oldQuantity = $currentStock ? $currentStock->quantity : 0;
+            $currentInventory = $this->db->single();
+            $oldQuantity = $currentInventory ? $currentInventory->quantity : 0;
 
-            // Update or insert stock record
-            if ($currentStock) {
-                $this->db->query("UPDATE stock 
+            // Update or insert Inventory record
+            if ($currentInventory) {
+                $this->db->query("UPDATE Inventory 
                                  SET quantity = :new_quantity, updated_at = NOW()
                                  WHERE product_id = :product_id 
                                  AND warehouse_id = :warehouse_id 
                                  AND location_id = :location_id");
             } else {
-                $this->db->query("INSERT INTO stock 
+                $this->db->query("INSERT INTO Inventory 
                                  (product_id, warehouse_id, location_id, quantity) 
                                  VALUES (:product_id, :warehouse_id, :location_id, :new_quantity)");
             }
@@ -145,11 +79,11 @@ class Inventory
             $this->db->bind(':new_quantity', $data['new_quantity']);
 
             if (!$this->db->execute()) {
-                throw new Exception("Failed to update stock");
+                throw new Exception("Failed to update Inventory");
             }
 
-            // Record stock movement
-            $this->db->query("INSERT INTO stock_movements 
+            // Record Inventory movement
+            $this->db->query("INSERT INTO Inventory_movements 
                              (product_id, warehouse_id, location_id, movement_type, quantity_before, 
                               quantity_after, quantity_change, reason, notes, created_by)
                              VALUES (:product_id, :warehouse_id, :location_id, 'adjustment', 
@@ -169,14 +103,14 @@ class Inventory
             $this->db->bind(':created_by', $data['created_by']);
 
             if (!$this->db->execute()) {
-                throw new Exception("Failed to record stock movement");
+                throw new Exception("Failed to record Inventory movement");
             }
 
             $this->db->commit();
             return true;
         } catch (Exception $e) {
             $this->db->rollback();
-            error_log("Error in adjustStock: " . $e->getMessage());
+            error_log("Error in adjustInventory: " . $e->getMessage());
             return false;
         }
     }
@@ -191,10 +125,10 @@ class Inventory
             $this->db->query("SELECT 
                                 COUNT(DISTINCT p.product_id) as total_products,
                                 COUNT(DISTINCT s.warehouse_id) as total_warehouses,
-                                COALESCE(SUM(s.quantity), 0) as total_stock_quantity,
-                                COALESCE(SUM(s.quantity * p.unit_price), 0) as total_stock_value
+                                COALESCE(SUM(s.quantity), 0) as total_Inventory_quantity,
+                                COALESCE(SUM(s.quantity * p.unit_price), 0) as total_Inventory_value
                              FROM products p
-                             LEFT JOIN stock s ON p.product_id = s.product_id");
+                             LEFT JOIN Inventory s ON p.product_id = s.product_id");
 
             $summary = $this->db->single();
 
@@ -203,14 +137,13 @@ class Inventory
                 $summary = (object) [
                     'total_products' => 0,
                     'total_warehouses' => 0,
-                    'total_stock_quantity' => 0,
-                    'total_stock_value' => 0
+                    'total_Inventory_quantity' => 0,
+                    'total_Inventory_value' => 0
                 ];
             }
 
-            // Get low stock count
-            $lowStockItems = $this->getLowStockItems();
-            $summary->low_stock_items = is_array($lowStockItems) ? count($lowStockItems) : 0;
+            // Get low Inventory count
+            $summary->low_Inventory_items = 0;
 
             return $summary;
         } catch (Exception $e) {
@@ -218,48 +151,26 @@ class Inventory
             return (object) [
                 'total_products' => 0,
                 'total_warehouses' => 0,
-                'total_stock_quantity' => 0,
-                'total_stock_value' => 0,
-                'low_stock_items' => 0
+                'total_Inventory_quantity' => 0,
+                'total_Inventory_value' => 0,
+                'low_Inventory_items' => 0
             ];
         }
     }
 
-    /**
-     * Get stock by product ID
-     * @param int $productId
-     * @return array
-     */
-    public function getStockByProduct($productId)
-    {
-        try {
-            $this->db->query("SELECT s.*, w.warehouse_name, l.location_name
-                             FROM stock s
-                             LEFT JOIN warehouses w ON s.warehouse_id = w.warehouse_id
-                             LEFT JOIN locations l ON s.location_id = l.location_id
-                             WHERE s.product_id = :product_id
-                             ORDER BY w.warehouse_name, l.location_name");
-
-            $this->db->bind(':product_id', $productId);
-            return $this->db->resultSet();
-        } catch (Exception $e) {
-            error_log("Error in getStockByProduct: " . $e->getMessage());
-            return [];
-        }
-    }
 
     /**
-     * Transfer stock between locations
+     * Transfer Inventory between locations
      * @param array $data
      * @return bool
      */
-    public function transferStock($data)
+    public function transferInventory($data)
     {
         try {
             $this->db->beginTransaction();
 
-            // Check source stock availability
-            $this->db->query("SELECT quantity FROM stock 
+            // Check source Inventory availability
+            $this->db->query("SELECT quantity FROM Inventory 
                              WHERE product_id = :product_id 
                              AND warehouse_id = :from_warehouse_id 
                              AND location_id = :from_location_id");
@@ -268,15 +179,15 @@ class Inventory
             $this->db->bind(':from_warehouse_id', $data['from_warehouse_id']);
             $this->db->bind(':from_location_id', $data['from_location_id']);
 
-            $sourceStock = $this->db->single();
+            $sourceInventory = $this->db->single();
 
-            if (!$sourceStock || $sourceStock->quantity < $data['quantity']) {
-                throw new Exception("Insufficient stock for transfer");
+            if (!$sourceInventory || $sourceInventory->quantity < $data['quantity']) {
+                throw new Exception("Insufficient Inventory for transfer");
             }
 
-            // Reduce source stock
-            $newSourceQuantity = $sourceStock->quantity - $data['quantity'];
-            $this->db->query("UPDATE stock 
+            // Reduce source Inventory
+            $newSourceQuantity = $sourceInventory->quantity - $data['quantity'];
+            $this->db->query("UPDATE Inventory 
                              SET quantity = :quantity, updated_at = NOW()
                              WHERE product_id = :product_id 
                              AND warehouse_id = :warehouse_id 
@@ -288,8 +199,8 @@ class Inventory
             $this->db->bind(':location_id', $data['from_location_id']);
             $this->db->execute();
 
-            // Add to destination stock
-            $this->db->query("SELECT quantity FROM stock 
+            // Add to destination Inventory
+            $this->db->query("SELECT quantity FROM Inventory 
                              WHERE product_id = :product_id 
                              AND warehouse_id = :to_warehouse_id 
                              AND location_id = :to_location_id");
@@ -298,11 +209,11 @@ class Inventory
             $this->db->bind(':to_warehouse_id', $data['to_warehouse_id']);
             $this->db->bind(':to_location_id', $data['to_location_id']);
 
-            $destStock = $this->db->single();
+            $destInventory = $this->db->single();
 
-            if ($destStock) {
-                $newDestQuantity = $destStock->quantity + $data['quantity'];
-                $this->db->query("UPDATE stock 
+            if ($destInventory) {
+                $newDestQuantity = $destInventory->quantity + $data['quantity'];
+                $this->db->query("UPDATE Inventory 
                                  SET quantity = :quantity, updated_at = NOW()
                                  WHERE product_id = :product_id 
                                  AND warehouse_id = :warehouse_id 
@@ -314,7 +225,7 @@ class Inventory
                 $this->db->bind(':location_id', $data['to_location_id']);
                 $this->db->execute();
             } else {
-                $this->db->query("INSERT INTO stock 
+                $this->db->query("INSERT INTO Inventory 
                                  (product_id, warehouse_id, location_id, quantity) 
                                  VALUES (:product_id, :warehouse_id, :location_id, :quantity)");
 
@@ -333,7 +244,7 @@ class Inventory
             return true;
         } catch (Exception $e) {
             $this->db->rollback();
-            error_log("Error in transferStock: " . $e->getMessage());
+            error_log("Error in transferInventory: " . $e->getMessage());
             return false;
         }
     }
@@ -347,7 +258,7 @@ class Inventory
      */
     private function recordTransferMovement($data, $type, $warehouseId, $locationId)
     {
-        $this->db->query("INSERT INTO stock_movements 
+        $this->db->query("INSERT INTO Inventory_movements 
                          (product_id, warehouse_id, location_id, movement_type, quantity_change, 
                           reason, notes, created_by)
                          VALUES (:product_id, :warehouse_id, :location_id, :movement_type, 
@@ -360,7 +271,7 @@ class Inventory
         $this->db->bind(':location_id', $locationId);
         $this->db->bind(':movement_type', $type);
         $this->db->bind(':quantity_change', $quantityChange);
-        $this->db->bind(':reason', 'Stock transfer');
+        $this->db->bind(':reason', 'Inventory transfer');
         $this->db->bind(':notes', $data['notes'] ?? '');
         $this->db->bind(':created_by', $data['created_by']);
 
@@ -377,7 +288,7 @@ class Inventory
         try {
             $sql = "SELECT s.*, p.product_name, p.product_code, p.unit_price, p.barcode,
                            c.category_name, b.brand_name
-                    FROM stock s
+                    FROM Inventory s
                     LEFT JOIN products p ON s.product_id = p.product_id
                     LEFT JOIN categories c ON p.category_id = c.category_id
                     LEFT JOIN brands b ON p.brand_id = b.brand_id
@@ -394,21 +305,253 @@ class Inventory
     }
 
     /**
-     * Update minimum stock level for a product
+     * Update minimum Inventory level for a product
      * @param int $productId
-     * @param int $minimumStock
+     * @param int $minimumInventory
      * @return bool
      */
-    public function updateMinimumStock($productId, $minimumStock)
+    public function updateMinimumInventory($productId, $minimumInventory)
     {
         try {
-            $sql = "UPDATE products SET minimum_stock_level = :minimum_stock WHERE product_id = :product_id";
+            $sql = "UPDATE products SET minimum_Inventory_level = :minimum_Inventory WHERE product_id = :product_id";
             $this->db->query($sql);
-            $this->db->bind(':minimum_stock', $minimumStock);
+            $this->db->bind(':minimum_Inventory', $minimumInventory);
             $this->db->bind(':product_id', $productId);
             return $this->db->execute();
         } catch (Exception $e) {
-            error_log("Error updating minimum stock: " . $e->getMessage());
+            error_log("Error updating minimum Inventory: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Get Inventory items in bulk locations (B-*)
+     */
+    public function getBulkLocationInventory()
+    {
+        try {
+            $this->db->query("
+                SELECT s.Inventory_id, s.product_id, s.quantity, s.batch_number,
+                       p.product_name, p.sku, 
+                       wl.location_name, wl.rack, wl.shelf
+                FROM Inventory s
+                LEFT JOIN products p ON s.product_id = p.product_id
+                LEFT JOIN warehouse_locations wl ON s.location_id = wl.location_id
+                WHERE wl.location_name LIKE 'B-%' 
+                AND s.quantity > 0
+                ORDER BY wl.location_name, p.product_name
+            ");
+
+            $result = $this->db->resultSet();
+            return $result ? $result : [];
+        } catch (Exception $e) {
+            error_log("Error in getBulkLocationInventory: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get regular (non-bulk) warehouse locations
+     */
+    public function getRegularLocations()
+    {
+        try {
+            $this->db->query("
+                SELECT location_id, location_name, rack, shelf
+                FROM warehouse_locations 
+                WHERE location_name NOT LIKE 'B-%'
+                ORDER BY location_name
+            ");
+
+            $result = $this->db->resultSet();
+            return $result ? $result : [];
+        } catch (Exception $e) {
+            error_log("Error in getRegularLocations: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Transfer items from bulk location to regular location
+     */
+    public function transferFromBulkLocation($InventoryId, $quantity, $toLocationId)
+    {
+        try {
+            $this->db->beginTransaction();
+
+            // Get source Inventory details
+            $this->db->query("
+                SELECT s.*, wl.location_name as from_location_name
+                FROM Inventory s
+                LEFT JOIN warehouse_locations wl ON s.location_id = wl.location_id
+                WHERE s.Inventory_id = :Inventory_id
+            ");
+            $this->db->bind(':Inventory_id', $InventoryId);
+            $sourceInventory = $this->db->single();
+
+            if (!$sourceInventory || $sourceInventory->quantity < $quantity) {
+                throw new Exception("Insufficient Inventory for transfer");
+            }
+
+            // Update source Inventory
+            $newSourceQuantity = $sourceInventory->quantity - $quantity;
+            $this->db->query("
+                UPDATE Inventory 
+                SET quantity = :quantity 
+                WHERE Inventory_id = :Inventory_id
+            ");
+            $this->db->bind(':quantity', $newSourceQuantity);
+            $this->db->bind(':Inventory_id', $InventoryId);
+            $this->db->execute();
+
+            // Add to destination location
+            $this->db->query("
+                SELECT Inventory_id, quantity 
+                FROM Inventory 
+                WHERE product_id = :product_id 
+                AND location_id = :location_id
+            ");
+            $this->db->bind(':product_id', $sourceInventory->product_id);
+            $this->db->bind(':location_id', $toLocationId);
+            $destInventory = $this->db->single();
+
+            if ($destInventory) {
+                // Update existing Inventory entry
+                $newDestQuantity = $destInventory->quantity + $quantity;
+                $this->db->query("
+                    UPDATE Inventory 
+                    SET quantity = :quantity 
+                    WHERE Inventory_id = :Inventory_id
+                ");
+                $this->db->bind(':quantity', $newDestQuantity);
+                $this->db->bind(':Inventory_id', $destInventory->Inventory_id);
+                $this->db->execute();
+            } else {
+                // Create new Inventory entry
+                $this->db->query("
+                    INSERT INTO Inventory (product_id, quantity, location_id, batch_number) 
+                    VALUES (:product_id, :quantity, :location_id, :batch_number)
+                ");
+                $this->db->bind(':product_id', $sourceInventory->product_id);
+                $this->db->bind(':quantity', $quantity);
+                $this->db->bind(':location_id', $toLocationId);
+                $this->db->bind(':batch_number', $sourceInventory->batch_number);
+                $this->db->execute();
+            }
+
+            // Log the movement
+            $this->db->query("
+                INSERT INTO Inventory_movements (product_id, from_location_id, to_location_id, quantity, movement_date) 
+                VALUES (:product_id, :from_location_id, :to_location_id, :quantity, NOW())
+            ");
+            $this->db->bind(':product_id', $sourceInventory->product_id);
+            $this->db->bind(':from_location_id', $sourceInventory->location_id);
+            $this->db->bind(':to_location_id', $toLocationId);
+            $this->db->bind(':quantity', $quantity);
+            $this->db->execute();
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollback();
+            error_log("Error in transferFromBulkLocation: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Simple Inventory adjustment based on quantity change
+     * @param array $data
+     * @return bool
+     */
+    public function adjustInventorySimple($data)
+    {
+        try {
+            $this->db->beginTransaction();
+
+            // Get current Inventory for this product
+            $this->db->query("
+                SELECT COALESCE(SUM(quantity), 0) as current_Inventory 
+                FROM Inventory 
+                WHERE product_id = :product_id
+            ");
+            $this->db->bind(':product_id', $data['product_id']);
+            $InventoryResult = $this->db->single();
+            $currentInventory = $InventoryResult ? $InventoryResult->current_Inventory : 0;
+
+            // Calculate new Inventory
+            $quantityChange = (int) $data['quantity_change'];
+            $newInventory = $currentInventory + $quantityChange;
+
+            if ($newInventory < 0) {
+                throw new Exception("Insufficient Inventory. Current: {$currentInventory}, Change: {$quantityChange}");
+            }
+
+            // Check if there's an existing Inventory record for this product
+            $this->db->query("
+                SELECT Inventory_id, quantity 
+                FROM Inventory 
+                WHERE product_id = :product_id 
+                ORDER BY Inventory_id DESC 
+                LIMIT 1
+            ");
+            $this->db->bind(':product_id', $data['product_id']);
+            $existingInventory = $this->db->single();
+
+            if ($existingInventory && $quantityChange != 0) {
+                // Update existing record
+                $newQuantity = $existingInventory->quantity + $quantityChange;
+                if ($newQuantity < 0) {
+                    throw new Exception("Cannot reduce Inventory below zero");
+                }
+
+                if ($newQuantity == 0) {
+                    // Delete the Inventory record if quantity becomes 0
+                    $this->db->query("DELETE FROM Inventory WHERE Inventory_id = :Inventory_id");
+                    $this->db->bind(':Inventory_id', $existingInventory->Inventory_id);
+                } else {
+                    // Update the Inventory record
+                    $this->db->query("UPDATE Inventory SET quantity = :quantity WHERE Inventory_id = :Inventory_id");
+                    $this->db->bind(':quantity', $newQuantity);
+                    $this->db->bind(':Inventory_id', $existingInventory->Inventory_id);
+                }
+                $this->db->execute();
+            } else if ($quantityChange > 0) {
+                // Create new Inventory record only if adding Inventory
+                $batchNumber = 'ADJ-' . $data['product_id'] . '-' . date('YmdHis');
+                $this->db->query("
+                    INSERT INTO Inventory (product_id, quantity, batch_number) 
+                    VALUES (:product_id, :quantity, :batch_number)
+                ");
+                $this->db->bind(':product_id', $data['product_id']);
+                $this->db->bind(':quantity', $quantityChange);
+                $this->db->bind(':batch_number', $batchNumber);
+                $this->db->execute();
+            } else if ($quantityChange < 0) {
+                throw new Exception("No existing Inventory to reduce");
+            }
+
+            // Record the adjustment in Inventory_adjustments table
+            if ($quantityChange != 0) {
+                $this->db->query("
+                    INSERT INTO Inventory_adjustments (
+                        product_id, quantity_change, reason, adjustment_date
+                    ) VALUES (
+                        :product_id, :quantity_change, :reason, NOW()
+                    )
+                ");
+
+                $this->db->bind(':product_id', $data['product_id']);
+                $this->db->bind(':quantity_change', $quantityChange);
+                $this->db->bind(':reason', $data['reason'] ?? 'Manual adjustment');
+                $this->db->execute();
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollback();
+            error_log("Error in adjustInventorySimple: " . $e->getMessage());
             return false;
         }
     }

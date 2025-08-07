@@ -1,0 +1,95 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        // Override any user settings for this workspace
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": true,
+        "editor.defaultFormatter": null,
+        
+        // Language-specific formatters
+        "[javascript]": {
+            "editor.defaultFormatter": "vscode.typescript-language-features"
+        },
+        "[css]": {
+            "editor.defaultFormatter": "vscode.css-language-features"
+        },
+        "[html]": {
+            "editor.defaultFormatter": "vscode.html-language-features"
+        },
+        "[php]": {
+            "editor.defaultFormatter": "DEVSENSE.phptools-vscode"
+        },
+        "[json]": {
+            "editor.defaultFormatter": "vscode.json-language-features"
+        },
+        "[jsonc]": {
+            "editor.defaultFormatter": "vscode.json-language-features"
+        },
+        
+        // File associations
+        "files.associations": {
+            "*.php": "php",
+            "*.css": "css",
+            "*.js": "javascript",
+            "*.json": "json"
+        },
+        
+        // PHP-specific settings for this project
+        "php.format.rules.arrayInitializersWrap": "off",
+        "php.format.rules.arrayInitializersAlignKeyValuePairs": true,
+        "php.format.rules.callParametersWrap": "off",
+        "php.format.rules.groupUseWrap": "off",
+        "php.format.rules.spaceWithinExpressionParentheses": false,
+        "php.format.rules.spaceWithinDeclParentheses": false,
+        
+        // CSS settings
+        "css.validate": true,
+        "css.lint.unknownAtRules": "ignore",
+        "css.lint.emptyRulesets": "warning",
+        
+        // JavaScript settings
+        "javascript.format.semicolons": "insert",
+        "javascript.preferences.quoteStyle": "single",
+        "javascript.suggest.autoImports": true,
+        
+        // Editor settings
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": true,
+        "editor.rulers": [120],
+        "editor.wordWrap": "wordWrapColumn",
+        "editor.wordWrapColumn": 120,
+        
+        // File exclusions for better performance
+        "files.exclude": {
+            "**/vendor/**": true,
+            "**/node_modules/**": true,
+            "**/.git/**": true,
+            "**/storage/logs/**": true,
+            "**/temp/**": true
+        },
+        
+        // Search exclusions
+        "search.exclude": {
+            "**/vendor/**": true,
+            "**/node_modules/**": true,
+            "**/storage/logs/**": true,
+            "**/temp/**": true
+        }
+    },
+    "extensions": {
+        "recommendations": [
+            "DEVSENSE.phptools-vscode",
+            "DEVSENSE.composer-php-vscode",
+            "ritwickdey.liveserver",
+            "ms-vscode.vscode-json",
+            "ms-vscode.vscode-css-peek",
+            "formulahendry.auto-rename-tag",
+            "zignd.html-css-class-completion"
+        ]
+    }
+}

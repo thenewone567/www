@@ -9,7 +9,7 @@
         </div>
     </div>
 </div>
-<div class="card card-body bg-light mt-3">
+<div class="card card-body theme-card-light mt-3">
     <p>Edit the product with this form</p>
     <?php if (!empty($data['success'])): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -43,7 +43,7 @@
             <div class="col-md-3 col-6 mb-3">
                 <label for="category_id">Category: <sup>*</sup></label>
                 <select name="category_id"
-                    class="form-control form-control-lg <?php echo (!empty($data['category_id_err'])) ? 'is-invalid' : ''; ?>"
+                    class="form-control form-control-lg searchable-dropdown <?php echo (!empty($data['category_id_err'])) ? 'is-invalid' : ''; ?>"
                     required>
                     <option value="">Select Category</option>
                     <?php if (!empty($data['categories'])): ?>
@@ -59,7 +59,7 @@
             <div class="col-md-3 col-6 mb-3">
                 <label for="brand_id">Brand: <sup>*</sup></label>
                 <select name="brand_id"
-                    class="form-control form-control-lg <?php echo (!empty($data['brand_id_err'])) ? 'is-invalid' : ''; ?>"
+                    class="form-control form-control-lg searchable-dropdown <?php echo (!empty($data['brand_id_err'])) ? 'is-invalid' : ''; ?>"
                     required>
                     <option value="">Select Brand</option>
                     <?php if (!empty($data['brands'])): ?>
@@ -73,17 +73,17 @@
                 <span class="invalid-feedback"><?php echo $data['brand_id_err']; ?></span>
             </div>
             <div class="col-md-3 col-6 mb-3">
-                <label for="current_quantity">Current Stock Quantity:</label>
+                <label for="current_quantity">Current Inventory Quantity:</label>
                 <input type="number" name="current_quantity"
                     class="form-control form-control-lg <?php echo (!empty($data['current_quantity_err'])) ? 'is-invalid' : ''; ?>"
                     value="<?php echo $data['current_quantity'] ?? 0; ?>" min="0">
                 <span class="invalid-feedback"><?php echo $data['current_quantity_err']; ?></span>
-                <small class="form-text text-muted">Current stock level</small>
+                <small class="form-text text-muted">Current Inventory level</small>
             </div>
             <div class="col-md-3 col-6 mb-3">
                 <label for="unit_id">Unit: <sup>*</sup></label>
                 <select name="unit_id"
-                    class="form-control form-control-lg <?php echo (!empty($data['unit_id_err'])) ? 'is-invalid' : ''; ?>"
+                    class="form-control form-control-lg searchable-dropdown <?php echo (!empty($data['unit_id_err'])) ? 'is-invalid' : ''; ?>"
                     required>
                     <option value="">Select Unit</option>
                     <?php if (!empty($data['units'])): ?>
@@ -97,14 +97,14 @@
                 <span class="invalid-feedback"><?php echo $data['unit_id_err']; ?></span>
             </div>
             <div class="col-md-3 col-6 mb-3">
-                <label for="min_stock_level">Min Stock Level: <sup>*</sup></label>
-                <input type="number" name="min_stock_level" class="form-control form-control-lg"
-                    value="<?php echo $data['min_stock_level']; ?>" required>
+                <label for="min_Inventory_level">Min Inventory Level: <sup>*</sup></label>
+                <input type="number" name="min_Inventory_level" class="form-control form-control-lg"
+                    value="<?php echo $data['min_Inventory_level']; ?>" required>
             </div>
             <div class="col-md-3 col-6 mb-3">
-                <label for="max_stock_level">Max Stock Level: <sup>*</sup></label>
-                <input type="number" name="max_stock_level" class="form-control form-control-lg"
-                    value="<?php echo $data['max_stock_level']; ?>" required>
+                <label for="max_Inventory_level">Max Inventory Level: <sup>*</sup></label>
+                <input type="number" name="max_Inventory_level" class="form-control form-control-lg"
+                    value="<?php echo $data['max_Inventory_level']; ?>" required>
             </div>
             <div class="col-md-3 col-6 mb-3">
                 <label for="reorder_level">Reorder Level: <sup>*</sup></label>
@@ -123,28 +123,28 @@
             </div>
         </div>
 
-        <!-- Stock Location Management Section -->
+        <!-- Inventory Location Management Section -->
         <div class="row">
             <div class="col-12">
-                <h4 class="mt-4 mb-3"><i class="fas fa-map-marker-alt"></i> Stock Location Management</h4>
+                <h4 class="mt-4 mb-3"><i class="fas fa-map-marker-alt"></i> Inventory Location Management</h4>
                 
-                <!-- Current Stock Locations -->
-                <?php if (!empty($data['stock_locations'])): ?>
+                <!-- Current Inventory Locations -->
+                <?php if (!empty($data['Inventory_locations'])): ?>
                     <div class="card mb-3">
                         <div class="card-header">
-                            <h5 class="mb-0">Current Stock Locations</h5>
+                            <h5 class="mb-0">Current Inventory Locations</h5>
                         </div>
                         <div class="card-body">
-                            <?php foreach ($data['stock_locations'] as $index => $stock): ?>
-                                <div class="row mb-3 border rounded p-3 <?php echo $index % 2 == 0 ? 'bg-light' : ''; ?>">
+                            <?php foreach ($data['Inventory_locations'] as $index => $Inventory): ?>
+                                <div class="row mb-3 border rounded p-3 theme-row-striped">
                                     <div class="col-md-3">
                                         <label>Location:</label>
-                                        <select name="stock_locations[<?php echo $stock->stock_id; ?>][location_id]" class="form-control">
+                                        <select name="Inventory_locations[<?php echo $Inventory->Inventory_id; ?>][location_id]" class="form-control searchable-dropdown">
                                             <option value="">Select Location</option>
                                             <?php if (!empty($data['locations'])): ?>
                                                 <?php foreach ($data['locations'] as $location): ?>
                                                     <option value="<?php echo $location->location_id; ?>" 
-                                                            <?php echo ($stock->location_id == $location->location_id) ? 'selected' : ''; ?>>
+                                                            <?php echo ($Inventory->location_id == $location->location_id) ? 'selected' : ''; ?>>
                                                         <?php echo $location->location_code; ?> 
                                                         (<?php echo $location->section . $location->aisle . $location->bin; ?>)
                                                     </option>
@@ -155,23 +155,23 @@
                                     <div class="col-md-2">
                                         <label>Quantity:</label>
                                         <input type="number" 
-                                               name="stock_locations[<?php echo $stock->stock_id; ?>][quantity]" 
+                                               name="Inventory_locations[<?php echo $Inventory->Inventory_id; ?>][quantity]" 
                                                class="form-control" 
-                                               value="<?php echo $stock->quantity; ?>" 
+                                               value="<?php echo $Inventory->quantity; ?>" 
                                                min="0">
                                     </div>
                                     <div class="col-md-3">
                                         <label>Batch Number:</label>
                                         <input type="text" class="form-control" 
-                                               value="<?php echo $stock->batch_number; ?>" readonly>
+                                               value="<?php echo $Inventory->batch_number; ?>" readonly>
                                     </div>
                                     <div class="col-md-3">
                                         <label>Current Location:</label>
                                         <div class="form-control-plaintext">
-                                            <?php if ($stock->location_code): ?>
-                                                <code><?php echo $stock->location_code; ?></code>
+                                            <?php if ($Inventory->location_code): ?>
+                                                <code><?php echo $Inventory->location_code; ?></code>
                                                 <small class="text-muted d-block">
-                                                    <?php echo $stock->section . $stock->aisle . $stock->bin; ?>
+                                                    <?php echo $Inventory->section . $Inventory->aisle . $Inventory->bin; ?>
                                                 </small>
                                             <?php else: ?>
                                                 <span class="text-warning">No location assigned</span>
@@ -180,7 +180,7 @@
                                     </div>
                                     <div class="col-md-1 d-flex align-items-end">
                                         <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                onclick="removeStockLocation(this)" title="Remove this stock entry">
+                                                onclick="removeInventoryLocation(this)" title="Remove this Inventory entry">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -190,20 +190,20 @@
                     </div>
                 <?php else: ?>
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> This product has no current stock entries. Add stock below to assign a location.
+                        <i class="fas fa-info-circle"></i> This product has no current Inventory entries. Add Inventory below to assign a location.
                     </div>
                 <?php endif; ?>
 
-                <!-- Add New Stock Location -->
+                <!-- Add New Inventory Location -->
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Add New Stock Location</h5>
+                        <h5 class="mb-0">Add New Inventory Location</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-4">
-                                <label for="new_stock_location">Warehouse Location:</label>
-                                <select name="new_stock_location" id="new_stock_location" class="form-control">
+                                <label for="new_Inventory_location">Warehouse Location:</label>
+                                <select name="new_Inventory_location" id="new_Inventory_location" class="form-control searchable-dropdown">
                                     <option value="">Select Location</option>
                                     <?php if (!empty($data['locations'])): ?>
                                         <?php foreach ($data['locations'] as $location): ?>
@@ -216,8 +216,8 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="new_stock_quantity">Quantity:</label>
-                                <input type="number" name="new_stock_quantity" id="new_stock_quantity" 
+                                <label for="new_Inventory_quantity">Quantity:</label>
+                                <input type="number" name="new_Inventory_quantity" id="new_Inventory_quantity" 
                                        class="form-control" min="0" placeholder="Enter quantity">
                             </div>
                             <div class="col-md-5">
@@ -225,7 +225,7 @@
                                 <div class="form-control-plaintext">
                                     <small class="text-muted">
                                         <i class="fas fa-info-circle"></i> 
-                                        Adding stock here will create a new stock entry for this location.
+                                        Adding Inventory here will create a new Inventory entry for this location.
                                     </small>
                                 </div>
                             </div>
@@ -245,8 +245,8 @@
         }
     });
 
-    function removeStockLocation(button) {
-        if (confirm('Are you sure you want to remove this stock location? This will delete the stock entry.')) {
+    function removeInventoryLocation(button) {
+        if (confirm('Are you sure you want to remove this Inventory location? This will delete the Inventory entry.')) {
             const row = button.closest('.row');
             row.style.display = 'none';
             
@@ -257,7 +257,7 @@
             if (locationSelect) locationSelect.value = '';
             if (quantityInput) quantityInput.value = '0';
             
-            // Add a hidden field to mark this stock for deletion
+            // Add a hidden field to mark this Inventory for deletion
             const deleteInput = document.createElement('input');
             deleteInput.type = 'hidden';
             deleteInput.name = locationSelect.name.replace('[location_id]', '[delete]');
@@ -266,10 +266,10 @@
         }
     }
 
-    // Auto-calculate total quantity when individual stock quantities change
+    // Auto-calculate total quantity when individual Inventory quantities change
     function updateTotalQuantity() {
-        const quantityInputs = document.querySelectorAll('input[name*="[quantity]"]:not([name="new_stock_quantity"])');
-        const newQuantityInput = document.querySelector('input[name="new_stock_quantity"]');
+        const quantityInputs = document.querySelectorAll('input[name*="[quantity]"]:not([name="new_Inventory_quantity"])');
+        const newQuantityInput = document.querySelector('input[name="new_Inventory_quantity"]');
         const currentQuantityInput = document.querySelector('input[name="current_quantity"]');
         
         let total = 0;
@@ -290,24 +290,116 @@
 
     // Add event listeners to quantity inputs
     document.addEventListener('DOMContentLoaded', function() {
-        const quantityInputs = document.querySelectorAll('input[name*="[quantity]"], input[name="new_stock_quantity"]');
+        const quantityInputs = document.querySelectorAll('input[name*="[quantity]"], input[name="new_Inventory_quantity"]');
         quantityInputs.forEach(input => {
             input.addEventListener('input', updateTotalQuantity);
         });
         
+        // Auto-capitalize product name on blur
+        const productNameField = document.querySelector('input[name="product_name"]');
+        if (productNameField) {
+            productNameField.addEventListener('blur', function () {
+                if (this.value) {
+                    this.value = capitalizeProductName(this.value);
+                }
+            });
+        }
+
+        // Auto-uppercase SKU for consistency
+        const skuField = document.querySelector('input[name="sku"]');
+        if (skuField) {
+            skuField.addEventListener('blur', function () {
+                if (this.value) {
+                    this.value = this.value.toUpperCase();
+                }
+            });
+        }
+
+        // Auto-clean barcode (remove spaces and non-numeric characters)
+        const barcodeField = document.querySelector('input[name="barcode"]');
+        if (barcodeField) {
+            barcodeField.addEventListener('blur', function () {
+                if (this.value) {
+                    this.value = formatBarcode(this.value);
+                }
+            });
+        }
+
+        // Auto-uppercase model number for consistency
+        const modelNumberField = document.querySelector('input[name="model_number"]');
+        if (modelNumberField) {
+            modelNumberField.addEventListener('blur', function () {
+                if (this.value) {
+                    this.value = this.value.toUpperCase();
+                }
+            });
+        }
+
+        // Auto-uppercase supplier code for consistency
+        const supplierCodeField = document.querySelector('input[name="supplier_code"]');
+        if (supplierCodeField) {
+            supplierCodeField.addEventListener('blur', function () {
+                if (this.value) {
+                    this.value = this.value.toUpperCase();
+                }
+            });
+        }
+
+        // Auto-format dimensions for consistency
+        const dimensionsField = document.querySelector('input[name="dimensions"]');
+        if (dimensionsField) {
+            dimensionsField.addEventListener('blur', function () {
+                if (this.value) {
+                    this.value = formatDimensions(this.value);
+                }
+            });
+        }
+
+        // Auto-uppercase storage location for consistency
+        const storageLocationField = document.querySelector('input[name="storage_location"]');
+        if (storageLocationField) {
+            storageLocationField.addEventListener('blur', function () {
+                if (this.value) {
+                    this.value = this.value.toUpperCase();
+                }
+            });
+        }
+        
         // Initial calculation
         updateTotalQuantity();
     });
+
+    // Capitalize product name (First letter of each word)
+    function capitalizeProductName(str) {
+        return str.toLowerCase().replace(/\b\w/g, function(letter) {
+            return letter.toUpperCase();
+        });
+    }
+
+    // Capitalize first letter of each word (reusable for names)
+    function capitalizeWords(str) {
+        return str.toLowerCase().replace(/\b\w/g, function(letter) {
+            return letter.toUpperCase();
+        });
+    }
+
+    // Format dimensions consistently (15 x 10 x 5 cm → 15 X 10 X 5 CM)
+    function formatDimensions(str) {
+        return str.toUpperCase()
+                 .replace(/\s*x\s*/gi, ' X ')  // Replace x with X and normalize spacing
+                 .replace(/\s+/g, ' ')         // Remove extra spaces
+                 .trim();                      // Remove leading/trailing spaces
+    }
+
+    // Format barcode (remove spaces and non-numeric characters)
+    function formatBarcode(str) {
+        // Remove all spaces and keep only digits
+        return str.replace(/\D/g, '');
+    }
 </script>
 
             </div> <!-- End container-fluid -->
         </div> <!-- End page-content-wrapper -->
     </div> <!-- End wrapper -->
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
-    <script src="<?php echo URLROOT; ?>/js/main.js"></script>
-</body>
-</html>
+<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'footer.php'; ?>

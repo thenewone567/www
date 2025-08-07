@@ -7,7 +7,7 @@ class CycleCountsController extends Controller
 {
     public $cycleCountModel;
     public $productModel;
-    public $stockModel;
+    public $InventoryModel;
 
     public function __construct()
     {
@@ -16,7 +16,7 @@ class CycleCountsController extends Controller
         }
         $this->cycleCountModel = $this->model('CycleCount');
         $this->productModel = $this->model('Product');
-        $this->stockModel = $this->model('Stock');
+        $this->InventoryModel = $this->model('Inventory');
     }
 
     /**
@@ -82,12 +82,12 @@ class CycleCountsController extends Controller
                     die('Something went wrong');
                 }
             } else {
-                $data['locations'] = $this->stockModel->getWarehouseLocations();
+                $data['locations'] = $this->InventoryModel->getWarehouseLocations();
                 $data['categories'] = $this->productModel->getCategories();
                 $this->view('cycle_counts/create', $data);
             }
         } else {
-            $locations = $this->stockModel->getWarehouseLocations();
+            $locations = $this->InventoryModel->getWarehouseLocations();
             $categories = $this->productModel->getCategories();
 
             $data = [
@@ -154,7 +154,7 @@ class CycleCountsController extends Controller
                 $products = $this->productModel->getProducts();
                 break;
             case 'location':
-                $products = $this->stockModel->getProductsByLocation($cycleCount->location_id);
+                $products = $this->InventoryModel->getProductsByLocation($cycleCount->location_id);
                 break;
             case 'category':
                 $products = $this->productModel->getProductsByCategory($cycleCount->category_id);

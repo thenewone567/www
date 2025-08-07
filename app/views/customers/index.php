@@ -108,7 +108,7 @@
                                     <td><?php echo htmlspecialchars($customer->contact_info); ?></td>
                                     <td>
                                         <span class="text-success font-weight-bold">
-                                            $<?php echo number_format($customer->credit_limit, 2); ?>
+                                            <?php echo formatCurrency($customer->credit_limit, 2); ?>
                                         </span>
                                     </td>
                                     <td class="text-center">

@@ -4,6 +4,7 @@ class SalesController extends Controller
     public $productModel;
     public $saleModel;
     public $customerModel;
+    public $barcodeModel;
 
     public function __construct()
     {
@@ -13,6 +14,7 @@ class SalesController extends Controller
         $this->saleModel = $this->model('Sale');
         $this->productModel = $this->model('Product');
         $this->customerModel = $this->model('Customer');
+        $this->barcodeModel = $this->model('Barcode');
     }
 
     public function index()
@@ -23,6 +25,58 @@ class SalesController extends Controller
         ];
 
         $this->view('sales/index', $data);
+    }
+
+    /**
+     * Point of Sale interface with barcode scanning
+     */
+    public function pos()
+    {
+        $customers = $this->customerModel->getCustomers();
+        $products = $this->productModel->getProducts();
+
+        $data = [
+            'title' => 'Point of Sale System',
+            'customers' => $customers,
+            'products' => $products
+        ];
+
+        $this->view('sales/pos', $data);
+    }
+
+    /**
+     * Barcode scanning API for POS
+     */
+    public function scan_barcode()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $barcode = trim($_POST['barcode'] ?? '');
+
+            if (empty($barcode)) {
+                echo json_encode(['success' => false, 'message' => 'Barcode is required']);
+                return;
+            }
+
+            $product = $this->barcodeModel->getProductByBarcode($barcode);
+
+            if ($product) {
+                echo json_encode([
+                    'success' => true,
+                    'product' => [
+                        'id' => $product->product_id,
+                        'name' => $product->product_name,
+                        'sku' => $product->sku,
+                        'price' => number_format($product->sale_price ?? 0, 2),
+                        'inventory' => $product->inventory_quantity ?? 0,
+                        'barcode' => $product->barcode_value
+                    ]
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Product not found']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        }
     }
 
     public function list()

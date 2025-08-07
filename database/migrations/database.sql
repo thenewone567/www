@@ -169,8 +169,8 @@ CREATE TABLE `products` (
   `category_id` int(11) DEFAULT NULL,
   `brand_id` int(11) DEFAULT NULL,
   `unit_id` int(11) DEFAULT NULL,
-  `min_stock_level` int(11) DEFAULT 0,
-  `max_stock_level` int(11) DEFAULT 0,
+  `min_inventory_level` int(11) DEFAULT 0,
+  `max_inventory_level` int(11) DEFAULT 0,
   `reorder_level` int(11) DEFAULT 0,
   `image_path` varchar(255) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1
@@ -318,11 +318,11 @@ CREATE TABLE `settings` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `stock`
+-- Table structure for table `inventory`
 --
 
-CREATE TABLE `stock` (
-  `stock_id` int(11) NOT NULL,
+CREATE TABLE `inventory` (
+  `inventory_id` int(11) NOT NULL,
   `product_id` int(11) DEFAULT NULL,
   `batch_number` varchar(100) DEFAULT NULL,
   `expiry_date` date DEFAULT NULL,
@@ -333,10 +333,10 @@ CREATE TABLE `stock` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `stock_adjustments`
+-- Table structure for table `inventory_adjustments`
 --
 
-CREATE TABLE `stock_adjustments` (
+CREATE TABLE `inventory_adjustments` (
   `adjustment_id` int(11) NOT NULL,
   `product_id` int(11) DEFAULT NULL,
   `adjustment_date` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -347,10 +347,10 @@ CREATE TABLE `stock_adjustments` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `stock_ledger`
+-- Table structure for table `inventory_ledger`
 --
 
-CREATE TABLE `stock_ledger` (
+CREATE TABLE `inventory_ledger` (
   `ledger_id` int(11) NOT NULL,
   `product_id` int(11) DEFAULT NULL,
   `transaction_type` varchar(50) DEFAULT NULL,
@@ -362,10 +362,10 @@ CREATE TABLE `stock_ledger` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `stock_movements`
+-- Table structure for table `inventory_movements`
 --
 
-CREATE TABLE `stock_movements` (
+CREATE TABLE `inventory_movements` (
   `movement_id` int(11) NOT NULL,
   `product_id` int(11) DEFAULT NULL,
   `from_location_id` int(11) DEFAULT NULL,
@@ -381,11 +381,18 @@ CREATE TABLE `stock_movements` (
 --
 
 CREATE TABLE `suppliers` (
-  `supplier_id` int(11) NOT NULL,
+  `supplier_id` int(11) NOT NULL AUTO_INCREMENT,
   `supplier_name` varchar(100) NOT NULL,
-  `contact_info` varchar(255) DEFAULT NULL,
-  `gst_info` varchar(100) DEFAULT NULL,
-  `due_amount` decimal(10,2) DEFAULT 0.00
+  `contact_person` varchar(100) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `gst_number` varchar(15) DEFAULT NULL,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`supplier_id`),
+  INDEX `idx_supplier_gst` (`gst_number`),
+  INDEX `idx_supplier_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -582,31 +589,31 @@ ALTER TABLE `settings`
   ADD PRIMARY KEY (`setting_key`);
 
 --
--- Indexes for table `stock`
+-- Indexes for table `inventory`
 --
-ALTER TABLE `stock`
-  ADD PRIMARY KEY (`stock_id`),
+ALTER TABLE `inventory`
+  ADD PRIMARY KEY (`inventory_id`),
   ADD KEY `product_id` (`product_id`),
   ADD KEY `location_id` (`location_id`);
 
 --
--- Indexes for table `stock_adjustments`
+-- Indexes for table `inventory_adjustments`
 --
-ALTER TABLE `stock_adjustments`
+ALTER TABLE `inventory_adjustments`
   ADD PRIMARY KEY (`adjustment_id`),
   ADD KEY `product_id` (`product_id`);
 
 --
--- Indexes for table `stock_ledger`
+-- Indexes for table `inventory_ledger`
 --
-ALTER TABLE `stock_ledger`
+ALTER TABLE `inventory_ledger`
   ADD PRIMARY KEY (`ledger_id`),
   ADD KEY `product_id` (`product_id`);
 
 --
--- Indexes for table `stock_movements`
+-- Indexes for table `inventory_movements`
 --
-ALTER TABLE `stock_movements`
+ALTER TABLE `inventory_movements`
   ADD PRIMARY KEY (`movement_id`),
   ADD KEY `product_id` (`product_id`),
   ADD KEY `from_location_id` (`from_location_id`),
@@ -757,27 +764,27 @@ ALTER TABLE `sale_returns`
   MODIFY `sale_return_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `stock`
+-- AUTO_INCREMENT for table `inventory`
 --
-ALTER TABLE `stock`
-  MODIFY `stock_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `inventory`
+  MODIFY `inventory_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `stock_adjustments`
+-- AUTO_INCREMENT for table `inventory_adjustments`
 --
-ALTER TABLE `stock_adjustments`
+ALTER TABLE `inventory_adjustments`
   MODIFY `adjustment_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `stock_ledger`
+-- AUTO_INCREMENT for table `inventory_ledger`
 --
-ALTER TABLE `stock_ledger`
+ALTER TABLE `inventory_ledger`
   MODIFY `ledger_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `stock_movements`
+-- AUTO_INCREMENT for table `inventory_movements`
 --
-ALTER TABLE `stock_movements`
+ALTER TABLE `inventory_movements`
   MODIFY `movement_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -895,31 +902,31 @@ ALTER TABLE `role_permissions`
 -- (`sale_id`);
 
 --
--- Constraints for table `stock`
+-- Constraints for table `inventory`
 --
-ALTER TABLE `stock`
-  ADD CONSTRAINT `stock_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`),
-  ADD CONSTRAINT `stock_ibfk_2` FOREIGN KEY (`location_id`) REFERENCES `warehouse_locations` (`location_id`);
+ALTER TABLE `inventory`
+  ADD CONSTRAINT `inventory_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`),
+  ADD CONSTRAINT `inventory_ibfk_2` FOREIGN KEY (`location_id`) REFERENCES `warehouse_locations` (`location_id`);
 
 --
--- Constraints for table `stock_adjustments`
+-- Constraints for table `inventory_adjustments`
 --
-ALTER TABLE `stock_adjustments`
-  ADD CONSTRAINT `stock_adjustments_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`);
+ALTER TABLE `inventory_adjustments`
+  ADD CONSTRAINT `inventory_adjustments_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`);
 
 --
--- Constraints for table `stock_ledger`
+-- Constraints for table `inventory_ledger`
 --
-ALTER TABLE `stock_ledger`
-  ADD CONSTRAINT `stock_ledger_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`);
+ALTER TABLE `inventory_ledger`
+  ADD CONSTRAINT `inventory_ledger_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`);
 
 --
--- Constraints for table `stock_movements`
+-- Constraints for table `inventory_movements`
 --
-ALTER TABLE `stock_movements`
-  ADD CONSTRAINT `stock_movements_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`),
-  ADD CONSTRAINT `stock_movements_ibfk_2` FOREIGN KEY (`from_location_id`) REFERENCES `warehouse_locations` (`location_id`),
-  ADD CONSTRAINT `stock_movements_ibfk_3` FOREIGN KEY (`to_location_id`) REFERENCES `warehouse_locations` (`location_id`);
+ALTER TABLE `inventory_movements`
+  ADD CONSTRAINT `inventory_movements_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`),
+  ADD CONSTRAINT `inventory_movements_ibfk_2` FOREIGN KEY (`from_location_id`) REFERENCES `warehouse_locations` (`location_id`),
+  ADD CONSTRAINT `inventory_movements_ibfk_3` FOREIGN KEY (`to_location_id`) REFERENCES `warehouse_locations` (`location_id`);
 
 --
 -- Constraints for table `users`

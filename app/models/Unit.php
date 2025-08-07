@@ -34,6 +34,7 @@ class Unit
     {
         try {
             $this->db->query('SELECT * FROM units ORDER BY unit_name ASC');
+            $this->db->execute();
             return $this->db->resultSet();
         } catch (Exception $e) {
             error_log("Error in getUnits: " . $e->getMessage());

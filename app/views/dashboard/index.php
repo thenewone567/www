@@ -12,11 +12,6 @@
                 <p class="description">Real-time analytics and performance insights</p>
             </div>
             <div class="col-12 col-lg-4 text-lg-right mt-3 mt-lg-0">
-                <?php if (isAdmin()): ?>
-                    <a href="<?php echo URLROOT; ?>/admin" class="btn btn-light btn-sm mr-2">
-                        <i class="fas fa-cog"></i> Admin Panel
-                    </a>
-                <?php endif; ?>
                 <div class="btn-group">
                     <button class="btn btn-outline-light btn-sm dropdown-toggle" data-toggle="dropdown">
                         <i class="fa fa-calendar"></i> Last 30 Days
@@ -27,9 +22,6 @@
                         <a class="dropdown-item" href="#" onclick="updateDashboard('90')">Last 3 Months</a>
                     </div>
                 </div>
-                <button class="btn btn-outline-light btn-sm ml-2" onclick="refreshDashboard()">
-                    <i class="fa fa-sync"></i> Refresh
-                </button>
             </div>
         </div>
     </div>
@@ -41,7 +33,7 @@
                     <h5 class="mb-0"><i class="fas fa-chart-line"></i> Total Sales</h5>
                 </div>
                 <div class="card-body text-center">
-                    <h4 class="text-primary">$<?php echo number_format($data['total_sales'] ?? 0, 0); ?></h4>
+                    <h4 class="text-primary"><?php echo formatCurrency($data['total_sales'] ?? 0, 0); ?></h4>
                     <small class="text-success"><i class="fas fa-arrow-up"></i>
                         <?php echo $data['sales_growth'] ?? '0'; ?>%</small>
                 </div>
@@ -54,8 +46,9 @@
                     <h5 class="mb-0"><i class="fas fa-receipt"></i> Avg Transaction</h5>
                 </div>
                 <div class="card-body text-center">
-                    <h4 class="text-success">$<?php echo number_format($data['avg_transaction'] ?? 0, 2); ?></h4>
-                    <small class="text-muted"><?php echo $data['total_transactions'] ?? 0; ?> transactions</small>
+                    <h4 class="text-success"><?php echo formatCurrency($data['avg_transaction'] ?? 0, 2); ?></h4>
+                    <small class="text-muted"><?php echo formatIndianNumber($data['total_transactions'] ?? 0, 0); ?>
+                        transactions</small>
                 </div>
             </div>
         </div>
@@ -66,8 +59,9 @@
                     <h5 class="mb-0"><i class="fas fa-boxes"></i> Inventory Value</h5>
                 </div>
                 <div class="card-body text-center">
-                    <h4 class="text-info">$<?php echo number_format($data['inventory_value'] ?? 0, 0); ?></h4>
-                    <small class="text-muted"><?php echo $data['total_products'] ?? 0; ?> products</small>
+                    <h4 class="text-info"><?php echo formatCurrency($data['inventory_value'] ?? 0, 0); ?></h4>
+                    <small class="text-muted"><?php echo formatIndianNumber($data['total_products'] ?? 0, 0); ?>
+                        products</small>
                 </div>
             </div>
         </div>
@@ -75,11 +69,12 @@
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <div class="theme-card">
                 <div class="card-header bg-warning-theme text-white">
-                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Low Stock</h5>
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Low Inventory</h5>
                 </div>
                 <div class="card-body text-center">
-                    <h4 class="text-warning"><?php echo $data['low_stock_count'] ?? 0; ?></h4>
-                    <small class="text-danger"><?php echo $data['out_of_stock_count'] ?? 0; ?> out of stock</small>
+                    <h4 class="text-warning"><?php echo $data['low_Inventory_count'] ?? 0; ?></h4>
+                    <small class="text-danger"><?php echo $data['out_of_Inventory_count'] ?? 0; ?> out of
+                        Inventory</small>
                 </div>
             </div>
         </div>
@@ -112,7 +107,7 @@
     <!-- Main Content Section -->
     <div class="row">
         <!-- Main Analytics Column -->
-        <div class="col-lg-8">
+        <div class="col-lg-9 col-xl-9">
             <!-- Sales Trend Chart -->
             <div class="theme-card">
                 <div class="card-header bg-primary-theme text-white">
@@ -173,7 +168,7 @@
         </div>
 
         <!-- Sidebar Widgets -->
-        <div class="col-lg-4">
+        <div class="col-lg-3 col-xl-3">
             <!-- Quick Actions -->
             <div class="theme-card">
                 <div class="card-header bg-warning-theme text-white">
@@ -232,7 +227,7 @@
                             </div>
                             <div>
                                 <div class="font-weight-medium">Sale Completed</div>
-                                <div class="text-muted small">New sale of $245.50</div>
+                                <div class="text-muted small">New sale of <?php echo formatCurrency(245.50, 2); ?></div>
                                 <div class="text-muted small">2 hours ago</div>
                             </div>
                         </div>
@@ -253,7 +248,7 @@
                                 <i class="fas fa-exclamation-triangle fa-sm"></i>
                             </div>
                             <div>
-                                <div class="font-weight-medium">Low Stock Alert</div>
+                                <div class="font-weight-medium">Low Inventory Alert</div>
                                 <div class="text-muted small">Screws below minimum level</div>
                                 <div class="text-muted small">6 hours ago</div>
                             </div>
@@ -338,6 +333,23 @@
         initializeCustomerChart();
     });
 
+    // Listen for theme changes and update charts
+    window.addEventListener('themeChanged', function (e) {
+        // Reinitialize charts with new theme
+        if (monthlyChart) {
+            monthlyChart.destroy();
+            initializeMonthlyChart();
+        }
+        if (categoryChart) {
+            categoryChart.destroy();
+            initializeCategoryChart();
+        }
+        if (customerChart) {
+            customerChart.destroy();
+            initializeCustomerChart();
+        }
+    });
+
     // Monthly Chart
     function initializeMonthlyChart() {
         const ctx = document.getElementById('monthlyChart');
@@ -347,6 +359,9 @@
             ctx.parentNode.innerHTML = '<div class="text-center text-muted py-5">No sales data available for chart.</div>';
             return;
         }
+
+        const colors = getThemeColors();
+
         monthlyChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -354,14 +369,14 @@
                 datasets: [{
                     label: 'Monthly Sales',
                     data: dashboardData.monthly.data,
-                    borderColor: '#007bff',
-                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    borderColor: colors.primary,
+                    backgroundColor: colors.primary + '20',
                     borderWidth: 3,
                     fill: true,
                     tension: 0.4
                 }]
             },
-            options: {
+            options: getChartOptions({
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
@@ -374,12 +389,12 @@
                         beginAtZero: true,
                         ticks: {
                             callback: function (value) {
-                                return '$' + value.toLocaleString();
+                                return '₹' + value.toLocaleString('en-IN');
                             }
                         }
                     }
                 }
-            }
+            })
         });
     }
 
@@ -392,17 +407,20 @@
             ctx.parentNode.innerHTML = '<div class="text-center text-muted py-5">No category sales data available for chart.</div>';
             return;
         }
+
+        const colors = getThemeColors();
+
         categoryChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: dashboardData.categories.labels,
                 datasets: [{
                     data: dashboardData.categories.data,
-                    backgroundColor: dashboardData.categories.colors,
+                    backgroundColor: [colors.primary, colors.success, colors.warning, colors.danger, colors.info],
                     borderWidth: 0
                 }]
             },
-            options: {
+            options: getChartOptions({
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
@@ -411,7 +429,7 @@
                     }
                 },
                 cutout: '60%'
-            }
+            })
         });
     }
 
@@ -420,6 +438,8 @@
         const ctx = document.getElementById('customerChart');
         if (!ctx) return;
 
+        const colors = getThemeColors();
+
         customerChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -427,14 +447,14 @@
                 datasets: [{
                     label: 'New Customers',
                     data: dashboardData.customers.new_customers,
-                    backgroundColor: '#28a745'
+                    backgroundColor: colors.success
                 }, {
                     label: 'Returning Customers',
                     data: dashboardData.customers.returning_customers,
-                    backgroundColor: '#007bff'
+                    backgroundColor: colors.primary
                 }]
             },
-            options: {
+            options: getChartOptions({
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
@@ -447,7 +467,7 @@
                         beginAtZero: true
                     }
                 }
-            }
+            })
         });
     }
 

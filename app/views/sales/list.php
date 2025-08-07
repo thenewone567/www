@@ -43,7 +43,7 @@
                                             <?php endif; ?>
                                         </td>
                                         <td><?php echo date('M j, Y g:i A', strtotime($sale->sale_date)); ?></td>
-                                        <td>$<?php echo number_format($sale->total_amount, 2); ?></td>
+                                        <td><?php echo formatCurrency($sale->total_amount, 2); ?></td>
                                         <td>
                                             <span
                                                 class="badge bg-<?php echo $sale->payment_mode == 'cash' ? 'success' : ($sale->payment_mode == 'card' ? 'primary' : 'secondary'); ?>">

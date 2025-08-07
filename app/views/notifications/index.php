@@ -2,7 +2,7 @@
 
 <div class="row">
     <div class="col-md-8 mx-auto">
-        <div class="card card-body bg-light mt-3">
+        <div class="card card-body theme-card-light mt-3">
             <h2><i class="fas fa-bell"></i> Notifications</h2>
             <?php flash('notification_message'); ?>
 

@@ -65,7 +65,7 @@ class User
       $errors[] = 'Username cannot contain consecutive underscores';
     }
 
-    // Reserved usernames check
+    // Reserved usernames
     $reserved = ['admin', 'root', 'user', 'test', 'guest', 'null', 'undefined', 'system', 'administrator'];
     if (in_array(strtolower($username), $reserved)) {
       $errors[] = 'This username is reserved and cannot be used';
@@ -755,5 +755,44 @@ class User
   {
     $permissions = $this->getUserPermissions($userId);
     return isset($permissions[$page]) && $permissions[$page] === true;
+  }
+
+  /**
+   * Update user profile picture
+   * @param int $userId
+   * @param string $filename
+   * @return bool
+   */
+  public function updateProfilePicture($userId, $filename)
+  {
+    $this->db->query("UPDATE users SET profile_picture = :profile_picture WHERE user_id = :user_id");
+    $this->db->bind(':user_id', $userId);
+    $this->db->bind(':profile_picture', $filename);
+    return $this->db->execute();
+  }
+
+  /**
+   * Get user profile picture
+   * @param int $userId
+   * @return string|null
+   */
+  public function getProfilePicture($userId)
+  {
+    $this->db->query("SELECT profile_picture FROM users WHERE user_id = :user_id");
+    $this->db->bind(':user_id', $userId);
+    $result = $this->db->single();
+    return $result ? $result->profile_picture : null;
+  }
+
+  /**
+   * Remove user profile picture
+   * @param int $userId
+   * @return bool
+   */
+  public function removeProfilePicture($userId)
+  {
+    $this->db->query("UPDATE users SET profile_picture = NULL WHERE user_id = :user_id");
+    $this->db->bind(':user_id', $userId);
+    return $this->db->execute();
   }
 }

@@ -11,6 +11,7 @@ class Customer
     public function getCustomers()
     {
         $this->db->query("SELECT * FROM customers");
+        $this->db->execute();
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }
@@ -31,6 +32,7 @@ class Customer
     {
         $this->db->query("SELECT * FROM customers WHERE customer_id = :id");
         $this->db->bind(':id', $id);
+        $this->db->execute();
         $result = $this->db->single();
         return $result ? $result : null;
     }

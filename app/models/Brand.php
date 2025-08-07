@@ -34,6 +34,7 @@ class Brand
     {
         try {
             $this->db->query('SELECT * FROM brands ORDER BY brand_name ASC');
+            $this->db->execute();
             return $this->db->resultSet();
         } catch (Exception $e) {
             error_log("Error in getBrands: " . $e->getMessage());

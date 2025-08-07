@@ -259,24 +259,24 @@ class PurchaseOrder
                 $this->db->bind(':item_id', $item['poi_id']);
                 $this->db->execute();
 
-                // Update stock if quantity received > 0
+                // Update Inventory if quantity received > 0
                 if ($item['quantity_received'] > 0) {
-                    // Check if stock exists for this product
-                    $this->db->query("SELECT stock_id FROM stock WHERE product_id = :product_id LIMIT 1");
+                    // Check if Inventory exists for this product
+                    $this->db->query("SELECT Inventory_id FROM Inventory WHERE product_id = :product_id LIMIT 1");
                     $this->db->bind(':product_id', $item['product_id']);
-                    $existingStock = $this->db->single();
+                    $existingInventory = $this->db->single();
 
-                    if ($existingStock) {
-                        // Update existing stock
+                    if ($existingInventory) {
+                        // Update existing Inventory
                         $this->db->query("
-                            UPDATE stock 
-                            SET current_stock = current_stock + :quantity 
+                            UPDATE Inventory 
+                            SET current_Inventory = current_Inventory + :quantity 
                             WHERE product_id = :product_id
                         ");
                     } else {
-                        // Create new stock entry
+                        // Create new Inventory entry
                         $this->db->query("
-                            INSERT INTO stock (product_id, current_stock, last_updated)
+                            INSERT INTO Inventory (product_id, current_Inventory, last_updated)
                             VALUES (:product_id, :quantity, NOW())
                         ");
                     }

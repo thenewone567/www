@@ -1,74 +1,99 @@
-<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
+<!-- Profile page content - accessed from within dashboard -->
+<div class="container-fluid theme-container">
+    <!-- Page Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col-12">
+            <h1 class="mb-0">
+                <i class="fas fa-user-circle"></i>
+                User Profile
+            </h1>
+            <p class="text-muted mb-0">Manage your account information and settings</p>
+        </div>
+    </div>
 
-<div class="row">
-    <div class="col-md-6 mx-auto">
-        <div class="card card-body bg-light mt-5">
-            <h2>User Profile</h2>
-            <?php flash('profile_message'); ?>
-            <?php flash('change_password_success'); ?>
+    <!-- Profile Content Row -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <!-- Profile Card -->
+            <div class="theme-card">
+                <div class="card-header bg-primary-theme text-white text-center profile-header">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h2 class="mb-0"><?php echo htmlspecialchars($data['user']->username); ?></h2>
+                    <p class="mb-0 opacity-75">
+                        <span class="badge badge-light">
+                            <?php echo ucfirst($data['user']->role_name ?? 'employee'); ?>
+                        </span>
+                    </p>
+                </div>
 
-            <div class="profile-info">
-                <h4>Profile Information</h4>
-                <table class="table table-striped">
-                    <tr>
-                        <td><strong>Username:</strong></td>
-                        <td><?php echo $data['user']->username; ?></td>
-                    </tr>
-                    <tr>
-                        <td><strong>User ID:</strong></td>
-                        <td><?php echo $data['user']->user_id; ?></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Role:</strong></td>
-                        <td>
+                <div class="card-body profile-body">
+                    <?php flash('profile_message'); ?>
+                    <?php flash('change_password_success'); ?>
+
+                    <h5 class="mb-4"><i class="fas fa-info-circle text-primary"></i> Profile Information</h5>
+
+                    <div class="info-row">
+                        <span class="info-label"><i class="fas fa-user text-muted"></i> Username</span>
+                        <span class="info-value"><?php echo htmlspecialchars($data['user']->username); ?></span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label"><i class="fas fa-id-badge text-muted"></i> User ID</span>
+                        <span class="info-value"><?php echo $data['user']->user_id; ?></span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label"><i class="fas fa-shield-alt text-muted"></i> Role</span>
+                        <span class="info-value">
                             <span
                                 class="badge badge-<?php echo $data['user']->role_name === 'admin' ? 'danger' : 'primary'; ?>">
                                 <?php echo ucfirst($data['user']->role_name ?? 'employee'); ?>
                             </span>
-                        </td>
-                    </tr>
-                    <?php if (isset($data['user']->created_at)): ?>
-                        <tr>
-                            <td><strong>Member Since:</strong></td>
-                            <td><?php echo date('F j, Y', strtotime($data['user']->created_at)); ?></td>
-                        </tr>
-                    <?php endif; ?>
-                    <?php if (isset($data['user']->last_login) && $data['user']->last_login): ?>
-                        <tr>
-                            <td><strong>Last Login:</strong></td>
-                            <td><?php echo date('F j, Y g:i A', strtotime($data['user']->last_login)); ?></td>
-                        </tr>
-                    <?php endif; ?>
-                </table>
-            </div>
+                        </span>
+                    </div>
 
-            <div class="profile-actions mt-4">
-                <h4>Actions</h4>
-                <a href="<?php echo URLROOT; ?>/users/changePassword" class="btn btn-warning">
-                    <i class="fas fa-key"></i> Change Password
-                </a>
-                <a href="<?php echo URLROOT; ?>/pages/index" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
-                <?php if (isAdmin()): ?>
-                    <a href="<?php echo URLROOT; ?>/admin" class="btn btn-primary">
-                        <i class="fas fa-cog"></i> Admin Panel
-                    </a>
-                <?php endif; ?>
+                    <?php if (isset($data['user']->created_at)): ?>
+                        <div class="info-row">
+                            <span class="info-label"><i class="fas fa-calendar-plus text-muted"></i> Member Since</span>
+                            <span
+                                class="info-value"><?php echo date('F j, Y', strtotime($data['user']->created_at)); ?></span>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (isset($data['user']->last_login) && $data['user']->last_login): ?>
+                        <div class="info-row">
+                            <span class="info-label"><i class="fas fa-clock text-muted"></i> Last Login</span>
+                            <span
+                                class="info-value"><?php echo date('F j, Y g:i A', strtotime($data['user']->last_login)); ?></span>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="card-footer profile-actions">
+                    <h6 class="mb-3"><i class="fas fa-cogs text-primary"></i> Account Actions</h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <a href="<?php echo URLROOT; ?>/users/changePassword" class="btn btn-warning btn-block">
+                                <i class="fas fa-key"></i> Change Password
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <a href="<?php echo URLROOT; ?>/pages/index" class="btn btn-secondary btn-block">
+                                <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            </a>
+                        </div>
+                        <?php if (isAdmin()): ?>
+                            <div class="col-md-4 mb-2">
+                                <a href="<?php echo URLROOT; ?>/admin" class="btn btn-primary btn-block">
+                                    <i class="fas fa-cog"></i> Admin Panel
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-</div> <!-- End container-fluid -->
-</div> <!-- End page-content-wrapper -->
-</div> <!-- End wrapper -->
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-    crossorigin="anonymous"></script>
-<script src="<?php echo URLROOT; ?>/js/main.js"></script>
-</body>
-
-</html>

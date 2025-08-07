@@ -33,6 +33,7 @@ spl_autoload_register(function ($className) {
 // Helper functions
 require_once __DIR__ . "/app/helpers.php";
 require_once __DIR__ . "/app/helpers/permissions.php";
+require_once __DIR__ . "/app/helpers/transaction_verification.php";
 
 // Start session
 if (session_status() === PHP_SESSION_NONE) {

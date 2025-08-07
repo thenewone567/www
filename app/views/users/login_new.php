@@ -93,7 +93,7 @@
             </div>
 
             <!-- Quick Login for Development -->
-            <?php if (APP_ENV === 'development'): ?>
+            <?php if (defined('APP_ENV') && APP_ENV === 'development'): ?>
                 <div class="dev-tools mt-3 p-2" style="background: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">
                     <small class="text-muted"><strong>Development Mode:</strong></small><br>
                     <small class="text-muted">Quick login options (remove in production):</small>

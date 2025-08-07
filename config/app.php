@@ -19,12 +19,17 @@ ini_set("session.use_only_cookies", 1);
 ini_set("session.cookie_secure", 0); // Set to 1 for HTTPS
 
 // Error reporting
-if (APP_ENV === "development") {
-    error_reporting(E_ALL);
-    ini_set("display_errors", 1);
-} else {
-    error_reporting(0);
-    ini_set("display_errors", 0);
+switch (APP_ENV) {
+    case "development":
+        error_reporting(E_ALL);
+        ini_set("display_errors", 1);
+        ini_set("log_errors", 1);
+        break;
+    case "production":
+    default:
+        error_reporting(0);
+        ini_set("display_errors", 0);
+        break;
 }
 
 // Logging

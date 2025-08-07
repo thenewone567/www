@@ -74,7 +74,7 @@
                                     <div class="d-flex justify-content-between">
                                         <div>
                                             <h6 class="card-title">Average Sale</h6>
-                                            <h4>$<?php echo count($data['sales']) > 0 ? number_format($totalRevenue / count($data['sales']), 2) : '0.00'; ?>
+                                            <h4><?php echo count($data['sales']) > 0 ? formatCurrency($totalRevenue / count($data['sales']), 2) : formatCurrency(0, 2); ?>
                                             </h4>
                                         </div>
                                         <div class="align-self-center">
@@ -110,7 +110,7 @@
                                             <?php endif; ?>
                                         </td>
                                         <td><?php echo date('g:i A', strtotime($sale->sale_date)); ?></td>
-                                        <td>$<?php echo number_format($sale->total_amount, 2); ?></td>
+                                        <td><?php echo formatCurrency($sale->total_amount, 2); ?></td>
                                         <td>
                                             <span
                                                 class="badge bg-<?php echo $sale->payment_mode == 'cash' ? 'success' : ($sale->payment_mode == 'card' ? 'primary' : 'secondary'); ?>">

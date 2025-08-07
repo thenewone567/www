@@ -19,9 +19,9 @@
                                 <label for="barcode-input">Barcode:</label>
                                 <div class="input-group">
                                     <input type="text" id="barcode-input" class="form-control form-control-lg"
-                                        placeholder="Scan or type barcode" autofocus>
+                                        placeholder="Scan product or location barcode" autofocus>
                                     <div class="input-group-append">
-                                        <button class="btn btn-primary" type="button" onclick="searchProduct()">
+                                        <button class="btn btn-primary" type="button" onclick="searchBarcode()">
                                             <i class="fa-solid fa-search"></i>
                                         </button>
                                     </div>
@@ -33,15 +33,17 @@
                                 <strong>Instructions:</strong>
                                 <ul class="mb-0 mt-2">
                                     <li>Use a barcode scanner or type the barcode manually</li>
-                                    <li>Press Enter or click Search to find the product</li>
-                                    <li>Product details will appear on the right</li>
+                                    <li>Supports both product and location barcodes</li>
+                                    <li>Press Enter or click Search to find the item</li>
+                                    <li>Results will appear on the right</li>
                                 </ul>
                             </div>
                         </div>
 
                         <div class="col-md-6">
+                            <!-- Product Result -->
                             <div id="product-result" class="d-none">
-                                <h5>Product Information</h5>
+                                <h5><i class="fa-solid fa-box"></i> Product Information</h5>
                                 <div class="card">
                                     <div class="card-body">
                                         <h6 class="card-title" id="product-name"></h6>
@@ -50,14 +52,41 @@
                                             <strong>Category:</strong> <span id="product-category"></span><br>
                                             <strong>Brand:</strong> <span id="product-brand"></span><br>
                                             <strong>Unit Price:</strong> $<span id="product-price"></span><br>
-                                            <strong>Current Stock:</strong> <span id="product-stock"></span>
+                                            <strong>Current Inventory:</strong> <span id="product-Inventory"></span>
                                         </p>
                                         <div class="btn-group">
                                             <a href="#" id="edit-product-link" class="btn btn-outline-primary btn-sm">
                                                 <i class="fa-solid fa-edit"></i> Edit Product
                                             </a>
-                                            <a href="#" id="stock-movement-link" class="btn btn-outline-success btn-sm">
-                                                <i class="fa-solid fa-exchange-alt"></i> Stock Movement
+                                            <a href="#" id="Inventory-movement-link"
+                                                class="btn btn-outline-success btn-sm">
+                                                <i class="fa-solid fa-exchange-alt"></i> Inventory Movement
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Location Result -->
+                            <div id="location-result" class="d-none">
+                                <h5><i class="fa-solid fa-map-marker-alt"></i> Location Information</h5>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title" id="location-name"></h6>
+                                        <p class="card-text">
+                                            <strong>Location ID:</strong> <span id="location-id"></span><br>
+                                            <strong>Rack:</strong> <span id="location-rack"></span><br>
+                                            <strong>Shelf:</strong> <span id="location-shelf"></span><br>
+                                            <strong>Barcode:</strong> <span id="location-barcode"></span>
+                                        </p>
+                                        <div class="btn-group">
+                                            <a href="<?php echo URLROOT; ?>/locations/location_barcodes"
+                                                class="btn btn-outline-primary btn-sm">
+                                                <i class="fa-solid fa-qrcode"></i> Manage Barcodes
+                                            </a>
+                                            <a href="<?php echo URLROOT; ?>/Inventory"
+                                                class="btn btn-outline-success btn-sm">
+                                                <i class="fa-solid fa-warehouse"></i> View Inventory
                                             </a>
                                         </div>
                                     </div>
@@ -66,7 +95,7 @@
 
                             <div id="no-result" class="alert alert-warning d-none">
                                 <i class="fa-solid fa-exclamation-triangle"></i>
-                                No product found with this barcode.
+                                No product or location found with this barcode.
                             </div>
                         </div>
                     </div>
@@ -83,7 +112,7 @@
         // Auto-submit on Enter key
         barcodeInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
-                searchProduct();
+                searchBarcode();
             }
         });
 
@@ -93,24 +122,25 @@
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 if (this.value.length >= 8) { // Typical barcode length
-                    searchProduct();
+                    searchBarcode();
                 }
             }, 500);
         });
     });
 
-    function searchProduct() {
+    function searchBarcode() {
         const barcode = document.getElementById('barcode-input').value.trim();
         if (!barcode) {
             alert('Please enter a barcode');
             return;
         }
 
-        // Show loading state
+        // Hide all result containers
         document.getElementById('product-result').classList.add('d-none');
+        document.getElementById('location-result').classList.add('d-none');
         document.getElementById('no-result').classList.add('d-none');
 
-        // Make AJAX request
+        // First try to find product
         fetch('<?php echo URLROOT; ?>/inventory/scanBarcode', {
             method: 'POST',
             headers: {
@@ -124,13 +154,38 @@
                     // Display product information
                     displayProduct(data.product);
                 } else {
+                    // Try to find location if product not found
+                    searchLocation(barcode);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Try location search as fallback
+                searchLocation(barcode);
+            });
+    }
+
+    function searchLocation(barcode) {
+        fetch('<?php echo URLROOT; ?>/Inventory/scan_location_barcode', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'barcode=' + encodeURIComponent(barcode)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Display location information
+                    displayLocation(data.location);
+                } else {
                     // Show no result message
                     document.getElementById('no-result').classList.remove('d-none');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while searching for the product');
+                document.getElementById('no-result').classList.remove('d-none');
             });
     }
 
@@ -140,14 +195,25 @@
         document.getElementById('product-category').textContent = product.category_name || 'N/A';
         document.getElementById('product-brand').textContent = product.brand_name || 'N/A';
         document.getElementById('product-price').textContent = product.unit_price || '0.00';
-        document.getElementById('product-stock').textContent = product.quantity || '0';
+        document.getElementById('product-Inventory').textContent = product.quantity || '0';
 
         // Update links
         document.getElementById('edit-product-link').href = '<?php echo URLROOT; ?>/products/edit/' + product.product_id;
-        document.getElementById('stock-movement-link').href = '<?php echo URLROOT; ?>/inventory/movement/' + product.product_id;
+        document.getElementById('Inventory-movement-link').href = '<?php echo URLROOT; ?>/inventory/movement/' + product.product_id;
 
         // Show result
         document.getElementById('product-result').classList.remove('d-none');
+    }
+
+    function displayLocation(location) {
+        document.getElementById('location-name').textContent = location.name || 'N/A';
+        document.getElementById('location-id').textContent = location.id || 'N/A';
+        document.getElementById('location-rack').textContent = location.rack || 'N/A';
+        document.getElementById('location-shelf').textContent = location.shelf || 'N/A';
+        document.getElementById('location-barcode').textContent = location.barcode || 'N/A';
+
+        // Show result
+        document.getElementById('location-result').classList.remove('d-none');
     }
 </script>
 

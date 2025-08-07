@@ -94,10 +94,10 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Low Stock Items
+                                Low Inventory Items
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="lowStockItems">
-                                <?= $data['analytics']['low_stock_count'] ?? 0 ?>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="lowInventoryItems">
+                                <?= $data['analytics']['low_Inventory_count'] ?? 0 ?>
                             </div>
                         </div>
                         <div class="col-auto">
@@ -217,12 +217,12 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
     </div>
 
     <!-- Inventory Alerts -->
-    <?php if (isset($data['lowStockItems']) && !empty($data['lowStockItems'])): ?>
+    <?php if (isset($data['lowInventoryItems']) && !empty($data['lowInventoryItems'])): ?>
         <div class="row">
             <div class="col-12">
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-danger">Low Stock Alerts</h6>
+                        <h6 class="m-0 font-weight-bold text-danger">Low Inventory Alerts</h6>
                         <a href="<?= URLROOT ?>/inventory" class="btn btn-sm btn-outline-danger">
                             View All <i class="fas fa-arrow-right"></i>
                         </a>
@@ -233,19 +233,19 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                 <thead>
                                     <tr>
                                         <th>Product</th>
-                                        <th>Current Stock</th>
-                                        <th>Minimum Stock</th>
+                                        <th>Current Inventory</th>
+                                        <th>Minimum Inventory</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach (array_slice($data['lowStockItems'], 0, 5) as $item): ?>
+                                    <?php foreach (array_slice($data['lowInventoryItems'], 0, 5) as $item): ?>
                                         <tr>
                                             <td><?= htmlspecialchars($item->product_name) ?></td>
                                             <td>
-                                                <span class="badge badge-danger"><?= $item->current_stock ?></span>
+                                                <span class="badge badge-danger"><?= $item->current_Inventory ?></span>
                                             </td>
-                                            <td><?= $item->minimum_stock ?></td>
+                                            <td><?= $item->minimum_Inventory ?></td>
                                             <td>
                                                 <a href="<?= URLROOT ?>/purchases/add?product_id=<?= $item->product_id ?>"
                                                     class="btn btn-sm btn-primary">

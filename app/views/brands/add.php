@@ -8,3 +8,24 @@
         <button type="submit" class="btn btn-primary">Add Brand</button>
     </form>
 </div>
+
+<script>
+    // Auto-capitalize brand name
+    document.addEventListener('DOMContentLoaded', function () {
+        const brandNameField = document.querySelector('input[name="brand_name"]');
+        if (brandNameField) {
+            brandNameField.addEventListener('blur', function () {
+                if (this.value) {
+                    this.value = capitalizeWords(this.value);
+                }
+            });
+        }
+    });
+
+    // Capitalize first letter of each word
+    function capitalizeWords(str) {
+        return str.toLowerCase().replace(/\b\w/g, function (letter) {
+            return letter.toUpperCase();
+        });
+    }
+</script>

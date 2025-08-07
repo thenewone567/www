@@ -1,28 +1,28 @@
 // Enhanced Inventory Management JavaScript
 
-$(document).ready(function() {
+$(document).ready(function () {
     initializeInventoryPage();
 });
 
 function initializeInventoryPage() {
     // Initialize DataTable
     initializeDataTable();
-    
+
     // Initialize Chart
-    initializeStockChart();
-    
+    initializeInventoryChart();
+
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
-    
+
     // Set up event listeners
     setupEventListeners();
-    
+
     // Initialize filters
     setupFilters();
-    
+
     // Set up keyboard shortcuts
     setupKeyboardShortcuts();
-    
+
     // Update adjustment preview when form changes
     setupAdjustmentPreview();
 }
@@ -31,11 +31,11 @@ function initializeDataTable() {
     if ($.fn.DataTable.isDataTable('#inventoryTable')) {
         $('#inventoryTable').DataTable().destroy();
     }
-    
+
     $('#inventoryTable').DataTable({
         "responsive": true,
         "pageLength": 25,
-        "order": [[8, "asc"], [4, "asc"]], // Sort by status then stock level
+        "order": [[8, "asc"], [4, "asc"]], // Sort by status then Inventory level
         "columnDefs": [
             { "orderable": false, "targets": [0, 9] }, // Disable sorting for checkbox and actions
             { "searchable": false, "targets": [0, 9] }
@@ -53,43 +53,43 @@ function initializeDataTable() {
                 "previous": "<i class='fas fa-angle-left'></i>"
             }
         },
-        "initComplete": function() {
+        "initComplete": function () {
             // Hide default search box since we have custom search
             $('.dataTables_filter').hide();
         }
     });
 }
 
-function initializeStockChart() {
-    const ctx = document.getElementById('stockStatusChart');
+function initializeInventoryChart() {
+    const ctx = document.getElementById('InventoryStatusChart');
     if (!ctx) return;
-    
-    // Calculate stock distribution
+
+    // Calculate Inventory distribution
     const products = window.inventoryData || [];
-    let inStock = 0, lowStock = 0, outOfStock = 0;
-    
+    let inInventory = 0, lowInventory = 0, outOfInventory = 0;
+
     products.forEach(product => {
-        const stock = product.current_stock || 0;
+        const Inventory = product.current_Inventory || 0;
         const reorder = product.reorder_level || 0;
-        
-        if (stock <= 0) {
-            outOfStock++;
-        } else if (stock <= reorder) {
-            lowStock++;
+
+        if (Inventory <= 0) {
+            outOfInventory++;
+        } else if (Inventory <= reorder) {
+            lowInventory++;
         } else {
-            inStock++;
+            inInventory++;
         }
     });
-    
+
     new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['In Stock', 'Low Stock', 'Out of Stock'],
+            labels: ['In Inventory', 'Low Inventory', 'Out of Inventory'],
             datasets: [{
-                data: [inStock, lowStock, outOfStock],
+                data: [inInventory, lowInventory, outOfInventory],
                 backgroundColor: [
                     '#28a745',
-                    '#ffc107', 
+                    '#ffc107',
                     '#dc3545'
                 ],
                 borderWidth: 0,
@@ -106,7 +106,7 @@ function initializeStockChart() {
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
                             const percentage = ((context.parsed * 100) / total).toFixed(1);
                             return `${context.label}: ${context.parsed} items (${percentage}%)`;
@@ -126,40 +126,40 @@ function initializeStockChart() {
 function setupEventListeners() {
     // Select all checkbox
     $('#selectAll').on('change', toggleSelectAll);
-    
+
     // Individual product checkboxes
     $(document).on('change', '.product-checkbox', updateBulkActionsPanel);
-    
+
     // Filter changes
     $('#inventorySearch').on('keyup', debounce(applyCustomSearch, 300));
     $('#categoryFilter, #statusFilter, #locationFilter').on('change', applyFilters);
-    
+
     // Adjustment type changes
     $('#adjust_type, #adjust_quantity').on('change input', updateAdjustmentPreview);
 }
 
 function setupFilters() {
     // Custom search functionality
-    $('#inventorySearch').on('keyup', function() {
+    $('#inventorySearch').on('keyup', function () {
         const table = $('#inventoryTable').DataTable();
         table.search(this.value).draw();
     });
 }
 
 function setupKeyboardShortcuts() {
-    $(document).keydown(function(e) {
+    $(document).keydown(function (e) {
         // Ctrl+F - Focus search
         if (e.ctrlKey && e.which === 70) {
             e.preventDefault();
             $('#inventorySearch').focus();
         }
-        
+
         // Ctrl+A - Select all visible items
         if (e.ctrlKey && e.which === 65) {
             e.preventDefault();
             $('#selectAll').prop('checked', true).trigger('change');
         }
-        
+
         // Escape - Clear selection
         if (e.which === 27) {
             clearSelection();
@@ -168,7 +168,7 @@ function setupKeyboardShortcuts() {
 }
 
 function setupAdjustmentPreview() {
-    $('#adjust_type, #adjust_quantity').on('input change', function() {
+    $('#adjust_type, #adjust_quantity').on('input change', function () {
         updateAdjustmentPreview();
     });
 }
@@ -183,7 +183,7 @@ function toggleSelectAll() {
 function updateBulkActionsPanel() {
     const selectedCount = $('.product-checkbox:checked').length;
     $('#selectedCount').text(selectedCount);
-    
+
     if (selectedCount > 0) {
         $('#bulkActionsPanel').slideDown();
     } else {
@@ -202,30 +202,30 @@ function applyFilters() {
     const category = $('#categoryFilter').val();
     const status = $('#statusFilter').val();
     const location = $('#locationFilter').val();
-    
+
     const table = $('#inventoryTable').DataTable();
-    
+
     // Apply category filter
     if (category) {
         table.column(2).search(category, true, false);
     } else {
         table.column(2).search('');
     }
-    
+
     // Apply status filter
     if (status) {
         let statusText = '';
-        switch(status) {
-            case 'in_stock': statusText = 'Good|Medium'; break;
-            case 'low_stock': statusText = 'Low Stock'; break;
-            case 'out_of_stock': statusText = 'Out of Stock'; break;
-            case 'critical': statusText = 'Low Stock|Out of Stock'; break;
+        switch (status) {
+            case 'in_Inventory': statusText = 'Good|Medium'; break;
+            case 'low_Inventory': statusText = 'Low Inventory'; break;
+            case 'out_of_Inventory': statusText = 'Out of Inventory'; break;
+            case 'critical': statusText = 'Low Inventory|Out of Inventory'; break;
         }
         table.column(8).search(statusText, true, false);
     } else {
         table.column(8).search('');
     }
-    
+
     table.draw();
     showNotification('Filters applied successfully', 'success');
 }
@@ -235,10 +235,10 @@ function clearFilters() {
     $('#categoryFilter').val('');
     $('#statusFilter').val('');
     $('#locationFilter').val('');
-    
+
     const table = $('#inventoryTable').DataTable();
     table.search('').columns().search('').draw();
-    
+
     showNotification('Filters cleared', 'info');
 }
 
@@ -248,52 +248,52 @@ function applyCustomSearch() {
     table.search(searchTerm).draw();
 }
 
-// Stock Management Functions
-function adjustStock(productId) {
+// Inventory Management Functions
+function adjustInventory(productId) {
     const product = window.inventoryData?.find(p => p.product_id == productId);
-    
+
     if (product) {
         $('#adjust_product_id').val(product.product_id);
         $('#adjust_product_name').val(product.product_name);
-        $('#adjust_current_stock').val(product.current_stock || 0);
+        $('#adjust_current_Inventory').val(product.current_Inventory || 0);
         $('#adjust_type').val('');
         $('#adjust_quantity').val('');
         $('#adjust_reason_type').val('');
         $('#adjust_reason').val('');
         updateAdjustmentPreview();
-        $('#stockAdjustmentModal').modal('show');
+        $('#InventoryAdjustmentModal').modal('show');
     }
 }
 
 function updateAdjustmentPreview() {
-    const currentStock = parseInt($('#adjust_current_stock').val()) || 0;
+    const currentInventory = parseInt($('#adjust_current_Inventory').val()) || 0;
     const adjustType = $('#adjust_type').val();
     const quantity = parseInt($('#adjust_quantity').val()) || 0;
-    
-    let newStock = currentStock;
+
+    let newInventory = currentInventory;
     let previewText = 'Make your selections to see the preview';
-    
+
     if (adjustType && quantity >= 0) {
-        switch(adjustType) {
+        switch (adjustType) {
             case 'add':
-                newStock = currentStock + quantity;
-                previewText = `Current: ${currentStock} → New: ${newStock} (+${quantity})`;
+                newInventory = currentInventory + quantity;
+                previewText = `Current: ${currentInventory} → New: ${newInventory} (+${quantity})`;
                 break;
             case 'remove':
-                newStock = Math.max(0, currentStock - quantity);
-                previewText = `Current: ${currentStock} → New: ${newStock} (-${quantity})`;
+                newInventory = Math.max(0, currentInventory - quantity);
+                previewText = `Current: ${currentInventory} → New: ${newInventory} (-${quantity})`;
                 break;
             case 'set':
-                newStock = quantity;
-                previewText = `Current: ${currentStock} → New: ${newStock} (set to ${quantity})`;
+                newInventory = quantity;
+                previewText = `Current: ${currentInventory} → New: ${newInventory} (set to ${quantity})`;
                 break;
         }
     }
-    
+
     $('#adjustment_preview').text(previewText);
 }
 
-function submitStockAdjustment() {
+function submitInventoryAdjustment() {
     const formData = {
         product_id: $('#adjust_product_id').val(),
         type: $('#adjust_type').val(),
@@ -301,21 +301,21 @@ function submitStockAdjustment() {
         reason_type: $('#adjust_reason_type').val(),
         reason: $('#adjust_reason').val()
     };
-    
+
     // Validate form
     if (!formData.type || !formData.quantity) {
         showNotification('Please fill in all required fields', 'error');
         return;
     }
-    
+
     showLoading(true);
-    
+
     // Simulate API call
     setTimeout(() => {
         showLoading(false);
-        $('#stockAdjustmentModal').modal('hide');
-        showNotification('Stock adjustment applied successfully!', 'success');
-        
+        $('#InventoryAdjustmentModal').modal('hide');
+        showNotification('Inventory adjustment applied successfully!', 'success');
+
         // In real implementation, refresh the data
         setTimeout(() => {
             location.reload();
@@ -324,77 +324,77 @@ function submitStockAdjustment() {
 }
 
 // Quick Actions
-function quickStockAdjustment() {
+function quickInventoryAdjustment() {
     showNotification('Quick adjustment panel coming soon!', 'info');
 }
 
-function performStockTake() {
-    if (confirm('This will start a new stock take session. Continue?')) {
-        showNotification('Stock take session started', 'success');
-        // Implement stock take functionality
+function performInventoryTake() {
+    if (confirm('This will start a new Inventory take session. Continue?')) {
+        showNotification('Inventory take session started', 'success');
+        // Implement Inventory take functionality
     }
 }
 
-function bulkStockUpdate() {
+function bulkInventoryUpdate() {
     showNotification('Bulk update feature coming soon!', 'info');
 }
 
 function generateAlerts() {
-    const criticalCount = $('.status-out-of-stock, .status-low-stock').length;
+    const criticalCount = $('.status-out-of-Inventory, .status-low-Inventory').length;
     showNotification(`Found ${criticalCount} items requiring attention`, 'warning');
 }
 
 // Bulk Operations
-function bulkAdjustStock() {
-    const selectedIds = $('.product-checkbox:checked').map(function() {
+function bulkAdjustInventory() {
+    const selectedIds = $('.product-checkbox:checked').map(function () {
         return this.value;
     }).get();
-    
+
     if (selectedIds.length === 0) {
         showNotification('Please select items first', 'warning');
         return;
     }
-    
+
     showNotification(`Bulk adjustment for ${selectedIds.length} items - feature coming soon!`, 'info');
 }
 
 function bulkSetReorder() {
-    const selectedIds = $('.product-checkbox:checked').map(function() {
+    const selectedIds = $('.product-checkbox:checked').map(function () {
         return this.value;
     }).get();
-    
+
     showNotification(`Setting reorder levels for ${selectedIds.length} items - feature coming soon!`, 'info');
 }
 
 function bulkPrintLabels() {
-    const selectedIds = $('.product-checkbox:checked').map(function() {
+    const selectedIds = $('.product-checkbox:checked').map(function () {
         return this.value;
     }).get();
-    
+
     if (selectedIds.length === 0) {
         showNotification('Please select items first', 'warning');
         return;
     }
-    
+
     showNotification(`Printing labels for ${selectedIds.length} items...`, 'success');
 }
 
 function bulkExport() {
-    const selectedIds = $('.product-checkbox:checked').map(function() {
+    const selectedIds = $('.product-checkbox:checked').map(function () {
         return this.value;
     }).get();
-    
+
     if (selectedIds.length === 0) {
         showNotification('Please select items first', 'warning');
         return;
     }
-    
+
     showNotification(`Exporting ${selectedIds.length} selected items...`, 'success');
 }
 
 // Individual Item Actions
 function viewMovements(productId) {
-    showNotification('Stock movement history - feature coming soon!', 'info');
+    showNotification('Inventory movement history - feature coming soon!', 'info');
 }
 
 function setReorderLevel(productId) {
@@ -453,7 +453,7 @@ function showNotification(message, type = 'info') {
         'warning': 'fa-exclamation-triangle',
         'info': 'fa-info-circle'
     }[type] || 'fa-info-circle';
-    
+
     const alert = $(`
         <div class="alert ${alertClass} notification fade show" role="alert">
             <i class="fas ${iconClass} mr-2"></i>
@@ -463,9 +463,9 @@ function showNotification(message, type = 'info') {
             </button>
         </div>
     `);
-    
+
     $('body').append(alert);
-    
+
     // Auto-dismiss after 4 seconds
     setTimeout(() => {
         alert.alert('close');

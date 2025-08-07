@@ -24,7 +24,8 @@
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-primary">
                         <div class="inner">
-                            <h3><?= isset($expenses) && is_array($expenses) ? count($expenses) : 0 ?></h3>
+                            <h3><?= isset($data['expenses']) && is_array($data['expenses']) ? count($data['expenses']) : 0 ?>
+                            </h3>
                             <p>Total Expenses</p>
                         </div>
                         <div class="icon">
@@ -35,7 +36,8 @@
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-info">
                         <div class="inner">
-                            <h3>$<?= number_format($summary->total_amount ?? 0, 2) ?></h3>
+                            <h3>$<?= number_format(isset($data['summary']->total_amount) ? $data['summary']->total_amount : 0, 2) ?>
+                            </h3>
                             <p>Total Amount</p>
                         </div>
                         <div class="icon">
@@ -46,7 +48,8 @@
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-success">
                         <div class="inner">
-                            <h3>$<?= number_format($summary->monthly_total ?? 0, 2) ?></h3>
+                            <h3>$<?= number_format(isset($data['summary']->monthly_total) ? $data['summary']->monthly_total : 0, 2) ?>
+                            </h3>
                             <p>This Month</p>
                         </div>
                         <div class="icon">
@@ -57,7 +60,8 @@
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-warning">
                         <div class="inner">
-                            <h3><?= isset($categories) && is_array($categories) ? count($categories) : 0 ?></h3>
+                            <h3><?= isset($data['categories']) && is_array($data['categories']) ? count($data['categories']) : 0 ?>
+                            </h3>
                             <p>Categories</p>
                         </div>
                         <div class="icon">
@@ -111,11 +115,13 @@
                                     <label>Category</label>
                                     <select name="category_id" class="form-control">
                                         <option value="">All Categories</option>
-                                        <?php foreach ($categories as $category): ?>
-                                            <option value="<?= $category->category_id ?>" <?= ($_GET['category_id'] ?? '') == $category->category_id ? 'selected' : '' ?>>
-                                                <?= htmlspecialchars($category->category_name) ?>
-                                            </option>
-                                        <?php endforeach; ?>
+                                        <?php if (isset($data['categories']) && is_array($data['categories'])): ?>
+                                            <?php foreach ($data['categories'] as $category): ?>
+                                                <option value="<?= $category->category_id ?>" <?= ($_GET['category_id'] ?? '') == $category->category_id ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($category->category_name) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
                                     </select>
                                 </div>
                             </div>
@@ -153,8 +159,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($expenses)): ?>
-                                    <?php foreach ($expenses as $expense): ?>
+                                <?php if (isset($data['expenses']) && !empty($data['expenses'])): ?>
+                                    <?php foreach ($data['expenses'] as $expense): ?>
                                         <tr>
                                             <td><?= date('Y-m-d', strtotime($expense->expense_date)) ?></td>
                                             <td><?= htmlspecialchars($expense->description) ?></td>
@@ -199,7 +205,7 @@
 
     function deleteExpense(expenseId) {
         if (confirm('Are you sure you want to delete this expense?')) {
-            window.location.href = '/expenses/delete/' + expenseId;
+            window.location.href = '<?php echo URLROOT; ?>/expenses/delete/' + expenseId;
         }
     }
 
@@ -209,16 +215,4 @@
     }
 </script>
 
-
-</div> <!-- End container-fluid -->
-</div> <!-- End page-content-wrapper -->
-</div> <!-- End wrapper -->
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-    crossorigin="anonymous"></script>
-<script src="<?php echo URLROOT; ?>/js/main.js"></script>
-</body>
-
-</html>
+<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'footer.php'; ?>

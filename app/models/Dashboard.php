@@ -104,7 +104,7 @@ class Dashboard
         $this->db->query("
             SELECT SUM(COALESCE(s.quantity, 0) * COALESCE(p.purchase_price, 0)) as total_value
             FROM products p
-            LEFT JOIN stock s ON p.product_id = s.product_id
+            LEFT JOIN Inventory s ON p.product_id = s.product_id
             WHERE p.is_active = 1 AND COALESCE(s.quantity, 0) > 0
         ");
         $this->db->execute();
@@ -120,17 +120,17 @@ class Dashboard
         return $result && $result->total !== null ? $result->total : 0;
     }
 
-    public function getLowStockProducts($limit = 10)
+    public function getLowInventoryProducts($limit = 10)
     {
         $this->db->query("
             SELECT p.product_id, p.product_name, p.sku, 
-                   COALESCE(SUM(s.quantity), 0) as current_stock,
-                   p.min_stock_level, p.reorder_level, c.category_name
+                   COALESCE(SUM(s.quantity), 0) as current_Inventory,
+                   p.min_Inventory_level, p.reorder_level, c.category_name
             FROM products p
             LEFT JOIN categories c ON p.category_id = c.category_id
-            LEFT JOIN stock s ON p.product_id = s.product_id
+            LEFT JOIN Inventory s ON p.product_id = s.product_id
             WHERE p.is_active = 1
-            GROUP BY p.product_id, p.product_name, p.sku, p.min_stock_level, p.reorder_level, c.category_name
+            GROUP BY p.product_id, p.product_name, p.sku, p.min_Inventory_level, p.reorder_level, c.category_name
             HAVING COALESCE(SUM(s.quantity), 0) <= p.reorder_level
             ORDER BY (COALESCE(SUM(s.quantity), 0) / NULLIF(p.reorder_level, 1)) ASC
             LIMIT :limit
@@ -141,52 +141,52 @@ class Dashboard
         return $result ? $result : [];
     }
 
-    public function getLowStockCount()
+    public function getLowInventoryCount()
     {
         $this->db->query("
             SELECT COUNT(DISTINCT p.product_id) as total 
             FROM products p
-            LEFT JOIN stock s ON p.product_id = s.product_id
+            LEFT JOIN Inventory s ON p.product_id = s.product_id
             WHERE p.is_active = 1
-            AND COALESCE((SELECT SUM(quantity) FROM stock WHERE product_id = p.product_id), 0) <= p.reorder_level
+            AND COALESCE((SELECT SUM(quantity) FROM Inventory WHERE product_id = p.product_id), 0) <= p.reorder_level
         ");
         $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total !== null ? $result->total : 0;
     }
 
-    public function getOutOfStockCount()
+    public function getOutOfInventoryCount()
     {
         $this->db->query("
             SELECT COUNT(DISTINCT p.product_id) as total 
             FROM products p
-            LEFT JOIN stock s ON p.product_id = s.product_id
+            LEFT JOIN Inventory s ON p.product_id = s.product_id
             WHERE p.is_active = 1
-            AND COALESCE((SELECT SUM(quantity) FROM stock WHERE product_id = p.product_id), 0) <= 0
+            AND COALESCE((SELECT SUM(quantity) FROM Inventory WHERE product_id = p.product_id), 0) <= 0
         ");
         $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total !== null ? $result->total : 0;
     }
 
-    public function getOutOfStockPercentage()
+    public function getOutOfInventoryPercentage()
     {
         $total = $this->getTotalProducts();
         if ($total == 0)
             return 0;
-        $outOfStock = $this->getOutOfStockCount();
-        return round(($outOfStock / $total) * 100, 1);
+        $outOfInventory = $this->getOutOfInventoryCount();
+        return round(($outOfInventory / $total) * 100, 1);
     }
 
-    public function getLowStockByCategory()
+    public function getLowInventoryByCategory()
     {
         $this->db->query("
-            SELECT c.category_name, COUNT(p.product_id) as low_stock_count
+            SELECT c.category_name, COUNT(p.product_id) as low_Inventory_count
             FROM products p
             LEFT JOIN categories c ON p.category_id = c.category_id
-            WHERE p.current_stock <= p.reorder_level AND p.is_active = 1
+            WHERE p.current_Inventory <= p.reorder_level AND p.is_active = 1
             GROUP BY c.category_id, c.category_name
-            ORDER BY low_stock_count DESC
+            ORDER BY low_Inventory_count DESC
         ");
         $this->db->execute();
         $result = $this->db->resultSet();

@@ -18,8 +18,16 @@ class SuppliersController extends Controller
             $suppliers = [];
             flash('supplier_message', 'No suppliers found');
         }
+
+        // Get supplier statistics for dashboard cards
+        $stats = $this->supplierModel->getSupplierOverviewStats();
+
         $data = [
-            'suppliers' => $suppliers
+            'suppliers' => $suppliers,
+            'total_suppliers' => $stats['total'],
+            'active_suppliers' => $stats['active'],
+            'pending_suppliers' => $stats['pending'],
+            'onhold_suppliers' => $stats['onhold']
         ];
         $this->view('suppliers/index', $data);
     }
@@ -30,23 +38,36 @@ class SuppliersController extends Controller
             $_POST = sanitizePost($_POST);
             $data = [
                 'supplier_name' => isset($_POST['supplier_name']) ? trim($_POST['supplier_name']) : '',
-                'contact_info' => isset($_POST['contact_info']) ? trim($_POST['contact_info']) : '',
-                'gst_info' => isset($_POST['gst_info']) ? trim($_POST['gst_info']) : '',
-                'due_amount' => isset($_POST['due_amount']) ? trim($_POST['due_amount']) : '',
+                'contact_person' => isset($_POST['contact_person']) ? trim($_POST['contact_person']) : '',
+                'phone' => isset($_POST['phone']) ? trim($_POST['phone']) : '',
+                'email' => isset($_POST['email']) ? trim($_POST['email']) : '',
+                'address' => isset($_POST['address']) ? trim($_POST['address']) : '',
+                'gst_number' => isset($_POST['gst_number']) ? trim($_POST['gst_number']) : '',
                 'supplier_name_err' => '',
-                'due_amount_err' => ''
+                'email_err' => '',
+                'gst_number_err' => ''
             ];
 
             // Validate supplier name
             if (empty($data['supplier_name'])) {
                 $data['supplier_name_err'] = 'Please enter supplier name';
-            }
-            // Validate due amount (optional, but recommended)
-            if (!empty($data['due_amount']) && !is_numeric($data['due_amount'])) {
-                $data['due_amount_err'] = 'Due amount must be a number';
+            } elseif ($this->supplierModel->isSupplierNameExists($data['supplier_name'])) {
+                $data['supplier_name_err'] = 'Supplier name already exists';
             }
 
-            if (empty($data['supplier_name_err']) && empty($data['due_amount_err'])) {
+            // Validate email format if provided
+            if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $data['email_err'] = 'Please enter a valid email address';
+            } elseif (!empty($data['email']) && $this->supplierModel->isEmailExists($data['email'])) {
+                $data['email_err'] = 'Email address already exists';
+            }
+
+            // Validate GST number for duplicates if provided
+            if (!empty($data['gst_number']) && $this->supplierModel->isGstNumberExists($data['gst_number'])) {
+                $data['gst_number_err'] = 'GST number already exists';
+            }
+
+            if (empty($data['supplier_name_err']) && empty($data['email_err']) && empty($data['gst_number_err'])) {
                 if ($this->supplierModel->addSupplier($data)) {
                     flash('supplier_message', 'Supplier Added');
                     redirect('suppliers');
@@ -59,11 +80,14 @@ class SuppliersController extends Controller
         } else {
             $data = [
                 'supplier_name' => '',
-                'contact_info' => '',
-                'gst_info' => '',
-                'due_amount' => '',
+                'contact_person' => '',
+                'phone' => '',
+                'email' => '',
+                'address' => '',
+                'gst_number' => '',
                 'supplier_name_err' => '',
-                'due_amount_err' => ''
+                'email_err' => '',
+                'gst_number_err' => ''
             ];
             $this->view('suppliers/add', $data);
         }
@@ -76,23 +100,34 @@ class SuppliersController extends Controller
             $data = [
                 'id' => $id,
                 'supplier_name' => isset($_POST['supplier_name']) ? trim($_POST['supplier_name']) : '',
-                'contact_info' => isset($_POST['contact_info']) ? trim($_POST['contact_info']) : '',
-                'gst_info' => isset($_POST['gst_info']) ? trim($_POST['gst_info']) : '',
-                'due_amount' => isset($_POST['due_amount']) ? trim($_POST['due_amount']) : '',
+                'contact_person' => isset($_POST['contact_person']) ? trim($_POST['contact_person']) : '',
+                'phone' => isset($_POST['phone']) ? trim($_POST['phone']) : '',
+                'email' => isset($_POST['email']) ? trim($_POST['email']) : '',
+                'address' => isset($_POST['address']) ? trim($_POST['address']) : '',
+                'gst_number' => isset($_POST['gst_number']) ? trim($_POST['gst_number']) : '',
                 'supplier_name_err' => '',
-                'due_amount_err' => ''
+                'email_err' => '',
+                'gst_number_err' => ''
             ];
 
             // Validate supplier name
             if (empty($data['supplier_name'])) {
                 $data['supplier_name_err'] = 'Please enter supplier name';
-            }
-            // Validate due amount
-            if (!empty($data['due_amount']) && !is_numeric($data['due_amount'])) {
-                $data['due_amount_err'] = 'Due amount must be a number';
+            } elseif ($this->supplierModel->isSupplierNameExists($data['supplier_name'], $id)) {
+                $data['supplier_name_err'] = 'Supplier name already exists';
             }
 
-            if (empty($data['supplier_name_err']) && empty($data['due_amount_err'])) {
+            // Validate email format if provided
+            if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $data['email_err'] = 'Please enter a valid email address';
+            }
+
+            // Validate GST number for duplicates if provided
+            if (!empty($data['gst_number']) && $this->supplierModel->isGstNumberExists($data['gst_number'], $id)) {
+                $data['gst_number_err'] = 'GST number already exists';
+            }
+
+            if (empty($data['supplier_name_err']) && empty($data['email_err']) && empty($data['gst_number_err'])) {
                 if ($this->supplierModel->updateSupplier($data)) {
                     flash('supplier_message', 'Supplier Updated');
                     redirect('suppliers');
@@ -108,21 +143,27 @@ class SuppliersController extends Controller
                 $data = [
                     'id' => $id,
                     'supplier_name' => $supplier->supplier_name,
-                    'contact_info' => $supplier->contact_info,
-                    'gst_info' => $supplier->gst_info,
-                    'due_amount' => $supplier->due_amount,
+                    'contact_person' => $supplier->contact_person ?? '',
+                    'phone' => $supplier->phone ?? '',
+                    'email' => $supplier->email ?? '',
+                    'address' => $supplier->address ?? '',
+                    'gst_number' => $supplier->gst_number ?? '',
                     'supplier_name_err' => '',
-                    'due_amount_err' => ''
+                    'email_err' => '',
+                    'gst_number_err' => ''
                 ];
             } else {
                 $data = [
                     'id' => $id,
                     'supplier_name' => '',
-                    'contact_info' => '',
-                    'gst_info' => '',
-                    'due_amount' => '',
+                    'contact_person' => '',
+                    'phone' => '',
+                    'email' => '',
+                    'address' => '',
+                    'gst_number' => '',
                     'supplier_name_err' => '',
-                    'due_amount_err' => ''
+                    'email_err' => '',
+                    'gst_number_err' => ''
                 ];
                 flash('supplier_message', 'Supplier not found');
             }

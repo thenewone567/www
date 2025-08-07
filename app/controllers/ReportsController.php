@@ -30,7 +30,7 @@ class ReportsController extends Controller
         $topProducts = $this->reportModel->getTopSellingProducts(5);
         $topCustomers = $this->reportModel->getCustomerAnalysis($period);
         $supplierPerformance = $this->reportModel->getSupplierPerformance();
-        $lowStockItems = $this->inventoryModel->getLowStockItems();
+        $lowInventoryItems = $this->inventoryModel->getLowInventoryItems();
 
         // Prepare chart data
         $salesTrend = $this->prepareSalesTrendData($period);
@@ -41,7 +41,7 @@ class ReportsController extends Controller
             'topProducts' => $topProductsChart,
             'topCustomers' => $topCustomers,
             'supplierPerformance' => $supplierPerformance,
-            'lowStockItems' => $lowStockItems,
+            'lowInventoryItems' => $lowInventoryItems,
             'salesTrend' => $salesTrend
         ];
 
@@ -115,12 +115,12 @@ class ReportsController extends Controller
     public function inventory()
     {
         $inventoryData = $this->reportModel->getInventoryReport();
-        $lowStockItems = $this->inventoryModel->getLowStockItems();
+        $lowInventoryItems = $this->inventoryModel->getLowInventoryItems();
         $turnoverData = $this->reportModel->getInventoryTurnover();
 
         $data = [
             'inventory' => $inventoryData,
-            'lowStock' => $lowStockItems,
+            'lowInventory' => $lowInventoryItems,
             'turnover' => $turnoverData
         ];
 
@@ -196,15 +196,15 @@ class ReportsController extends Controller
      */
     private function exportInventoryReport($output)
     {
-        fputcsv($output, ['Product ID', 'Product Name', 'Stock', 'Min Stock', 'Unit Price', 'Total Value']);
+        fputcsv($output, ['Product ID', 'Product Name', 'Inventory', 'Min Inventory', 'Unit Price', 'Total Value']);
 
         $inventory = $this->reportModel->getInventoryReport();
         foreach ($inventory as $item) {
             fputcsv($output, [
                 $item->product_id,
                 $item->product_name,
-                $item->stock,
-                $item->minimum_stock,
+                $item->Inventory,
+                $item->minimum_Inventory,
                 $item->unit_price,
                 $item->total_value
             ]);

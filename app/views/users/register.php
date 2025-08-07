@@ -16,7 +16,8 @@
                     easy.
                 </p>
 
-                <form action="<?php echo URLROOT; ?>/users/register" method="post" id="registerForm">
+                <form action="<?php echo URLROOT; ?>/users/register" method="post" id="registerForm" data-verify="user"
+                    data-verify-redirect="<?php echo URLROOT; ?>/users">
                     <div class="form-group">
                         <input type="text" name="username" id="username"
                             class="form-control <?php echo (!empty($data['username_err'])) ? 'is-invalid' : ''; ?>"

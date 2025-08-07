@@ -77,7 +77,7 @@
 ### Secondary Priority Pages
 
 1. **Reports Module** (`/app/views/reports/`)
-2. **Settings Module** (`/app/views/settings/`)
+2. **Company Profile Module** (`/app/views/company-profile/`)
 3. **Barcodes Module** (`/app/views/barcodes/`)
 4. **Invoices Module** (`/app/views/invoices/`)
 

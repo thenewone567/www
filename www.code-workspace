@@ -9,6 +9,7 @@
 	],
 	"settings": {
 		"liveServer.settings.port": 81,
-		"powershell.cwd": "www3"
+		"powershell.cwd": "www3",
+		"liveServer.settings.multiRootWorkspaceName": "www"
 	}
 }

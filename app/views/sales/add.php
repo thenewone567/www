@@ -77,8 +77,8 @@
                                 <button type="button" id="show-all" class="btn btn-outline-primary">
                                     <i class="fa-solid fa-list"></i> Show All
                                 </button>
-                                <button type="button" id="show-in-stock" class="btn btn-outline-success">
-                                    <i class="fa-solid fa-check"></i> In Stock Only
+                                <button type="button" id="show-in-Inventory" class="btn btn-outline-success">
+                                    <i class="fa-solid fa-check"></i> In Inventory Only
                                 </button>
                                 <button type="button" id="sort-price" class="btn btn-outline-info">
                                     <i class="fa-solid fa-sort"></i> Sort by Price
@@ -99,7 +99,7 @@
                                          data-id="<?php echo $product->product_id; ?>"
                                          data-name="<?php echo htmlspecialchars($product->product_name); ?>"
                                          data-price="<?php echo $product->unit_price; ?>"
-                                         data-stock="<?php echo $product->current_stock ?? 0; ?>">
+                                         data-inventory="<?php echo $product->current_Inventory ?? 0; ?>">
                                         <div class="card-body text-center">
                                             <h6 class="card-title mb-2"><?php echo htmlspecialchars($product->product_name); ?></h6>
                                             <p class="text-muted small mb-1">
@@ -109,13 +109,13 @@
                                                 <?php echo htmlspecialchars($product->category_name ?? 'Uncategorized'); ?>
                                             </p>
                                             <div class="mb-2">
-                                                <span class="badge <?php echo ($product->current_stock > 0) ? 'badge-success' : 'badge-danger'; ?>">
-                                                    Stock: <?php echo $product->current_stock ?? 0; ?>
+                                                <span class="badge <?php echo ($product->current_Inventory > 0) ? 'badge-success' : 'badge-danger'; ?>">
+                                                    Inventory: <?php echo $product->current_Inventory ?? 0; ?>
                                                 </span>
                                             </div>
-                                            <h5 class="text-primary mb-2">$<?php echo number_format($product->unit_price, 2); ?></h5>
+                                            <h5 class="text-primary mb-2"><?php echo formatCurrency($product->unit_price, 2); ?></h5>
                                             <button class="btn btn-success btn-sm w-100" 
-                                                    <?php echo ($product->current_stock <= 0) ? 'disabled' : ''; ?>>
+                                                    <?php echo ($product->current_Inventory <= 0) ? 'disabled' : ''; ?>>
                                                 <i class="fa-solid fa-plus"></i> Add to Cart
                                             </button>
                                         </div>
@@ -144,7 +144,7 @@
                     </button>
                 </div>
                 <div class="card-body">
-                    <form action="<?php echo URLROOT; ?>/sales/add" method="post">
+                    <form action="<?php echo URLROOT; ?>/sales/add" method="post" data-verify="sale" data-verify-redirect="<?php echo URLROOT; ?>/sales">
                         <!-- Cart Items -->
                         <div class="table-responsive">
                             <table class="table table-sm" id="cart-table">
@@ -172,6 +172,19 @@
 
                         <!-- Cart Summary -->
                         <div id="cart-summary" style="display: none;">
+                            <!-- Customer Display -->
+                            <div id="customer-display" class="mb-3 p-3 rounded" style="display: none; background-color: #e8f5e8; border: 1px solid #d4edda;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong><i class="fa-solid fa-user text-success"></i> Customer:</strong>
+                                        <span id="selected-customer-name" class="text-success font-weight-bold">None Selected</span>
+                                    </div>
+                                    <button type="button" id="clear-customer" class="btn btn-sm btn-outline-secondary" title="Clear Customer">
+                                        <i class="fa-solid fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
                             <hr>
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h4 class="mb-0">Total: </h4>
@@ -230,11 +243,15 @@
     const noProductsFound = document.getElementById('no-products-found');
     const clearSearchBtn = document.getElementById('clear-search');
     const showAllBtn = document.getElementById('show-all');
-    const showInStockBtn = document.getElementById('show-in-stock');
+    const showInInventoryBtn = document.getElementById('show-in-Inventory');
     const sortPriceBtn = document.getElementById('sort-price');
+    const customerSelect = document.querySelector('select[name="customer_id"]');
+    const customerDisplay = document.getElementById('customer-display');
+    const selectedCustomerName = document.getElementById('selected-customer-name');
+    const clearCustomerBtn = document.getElementById('clear-customer');
     
     let cart = [];
-    let currentFilter = 'all'; // 'all', 'in-stock'
+    let currentFilter = 'all'; // 'all', 'in-Inventory'
     let currentSort = 'name'; // 'name', 'price-asc', 'price-desc'
 
     // Search and Filter Functionality
@@ -249,7 +266,7 @@
             const sku = item.dataset.sku;
             const category = item.dataset.category;
             const productCard = item.querySelector('.product-card');
-            const stock = parseInt(productCard.dataset.stock);
+            const inventory = parseInt(productCard.dataset.inventory);
             
             const matchesSearch = searchTerm === '' || 
                                 name.includes(searchTerm) || 
@@ -261,10 +278,10 @@
             
             const matchesCategory = selectedCategory === '' || category === selectedCategory;
             
-            const matchesStockFilter = currentFilter === 'all' || 
-                                     (currentFilter === 'in-stock' && stock > 0);
+            const matchesInventoryFilter = currentFilter === 'all' || 
+                                     (currentFilter === 'in-Inventory' && inventory > 0);
             
-            if (matchesSearch && matchesBarcode && matchesCategory && matchesStockFilter) {
+            if (matchesSearch && matchesBarcode && matchesCategory && matchesInventoryFilter) {
                 item.style.display = 'block';
                 visibleCount++;
             } else {
@@ -342,13 +359,13 @@
     showAllBtn.addEventListener('click', () => {
         currentFilter = 'all';
         showAllBtn.classList.add('active');
-        showInStockBtn.classList.remove('active');
+        showInInventoryBtn.classList.remove('active');
         filterProducts();
     });
 
-    showInStockBtn.addEventListener('click', () => {
-        currentFilter = 'in-stock';
-        showInStockBtn.classList.add('active');
+    showInInventoryBtn.addEventListener('click', () => {
+        currentFilter = 'in-Inventory';
+        showInInventoryBtn.classList.add('active');
         showAllBtn.classList.remove('active');
         filterProducts();
     });
@@ -370,20 +387,20 @@
             const productId = card.dataset.id;
             const productName = card.dataset.name;
             const productPrice = parseFloat(card.dataset.price);
-            const productStock = parseInt(card.dataset.stock);
+            const productInventory = parseInt(card.dataset.inventory);
 
-            if (productStock <= 0) {
-                alert('This product is out of stock!');
+            if (productInventory <= 0) {
+                alert('This product is out of Inventory!');
                 return;
             }
 
             const existingProduct = cart.find(item => item.id === productId);
 
             if (existingProduct) {
-                if (existingProduct.quantity < productStock) {
+                if (existingProduct.quantity < productInventory) {
                     existingProduct.quantity++;
                 } else {
-                    alert(`Cannot add more items. Only ${productStock} units available in stock.`);
+                    alert(`Cannot add more items. Only ${productInventory} units available in Inventory.`);
                     return;
                 }
             } else {
@@ -392,7 +409,7 @@
                     name: productName,
                     price: productPrice,
                     quantity: 1,
-                    stock: productStock,
+                    inventory: productInventory,
                     discount: 0
                 });
             }
@@ -408,6 +425,25 @@
         }
     });
 
+    // Customer selection functionality
+    customerSelect.addEventListener('change', () => {
+        const selectedOption = customerSelect.options[customerSelect.selectedIndex];
+        if (customerSelect.value) {
+            selectedCustomerName.textContent = selectedOption.text;
+            customerDisplay.style.display = 'block';
+        } else {
+            selectedCustomerName.textContent = 'None Selected';
+            customerDisplay.style.display = 'none';
+        }
+    });
+
+    // Clear customer functionality
+    clearCustomerBtn.addEventListener('click', () => {
+        customerSelect.value = '';
+        selectedCustomerName.textContent = 'None Selected';
+        customerDisplay.style.display = 'none';
+    });
+
     function updateCart() {
         cartTableBody.innerHTML = '';
         let total = 0;
@@ -421,6 +457,11 @@
             cartSummary.style.display = 'block';
             clearCartBtn.style.display = 'inline-block';
 
+            // Show customer display if customer is selected
+            if (customerSelect.value) {
+                customerDisplay.style.display = 'block';
+            }
+
             cart.forEach((item, index) => {
                 const itemTotal = (item.quantity * item.price) - (item.discount || 0);
                 total += itemTotal;
@@ -432,7 +473,7 @@
                         </td>
                         <td>
                             <input type="number" class="form-control form-control-sm quantity-input" 
-                                   data-index="${index}" value="${item.quantity}" min="1" max="${item.stock}" 
+                                   data-index="${index}" value="${item.quantity}" min="1" max="${item.inventory}" 
                                    style="width: 60px;">
                         </td>
                         <td><small>$${item.price.toFixed(2)}</small></td>
@@ -464,14 +505,14 @@
             input.addEventListener('change', (e) => {
                 const index = e.target.dataset.index;
                 const newQuantity = parseInt(e.target.value);
-                const maxStock = cart[index].stock;
+                const maxInventory = cart[index].inventory;
                 
-                if (newQuantity > 0 && newQuantity <= maxStock) {
+                if (newQuantity > 0 && newQuantity <= maxInventory) {
                     cart[index].quantity = newQuantity;
-                } else if (newQuantity > maxStock) {
-                    alert(`Maximum available quantity is ${maxStock}`);
-                    e.target.value = maxStock;
-                    cart[index].quantity = maxStock;
+                } else if (newQuantity > maxInventory) {
+                    alert(`Maximum available quantity is ${maxInventory}`);
+                    e.target.value = maxInventory;
+                    cart[index].quantity = maxInventory;
                 } else {
                     cart[index].quantity = 1;
                     e.target.value = 1;

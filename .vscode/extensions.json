@@ -1,5 +1,24 @@
 {
     "recommendations": [
-        "ritwickdey.liveserver"
+        // Live Server for development
+        "ritwickdey.liveserver",
+        
+        // PHP Development
+        "DEVSENSE.phptools-vscode",
+        "DEVSENSE.composer-php-vscode",
+        
+        // Web Development
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-rename-tag",
+        "ms-vscode.vscode-json",
+        
+        // Code Quality
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-css-peek",
+        "zignd.html-css-class-completion",
+        
+        // Productivity
+        "ms-vscode.vscode-guid",
+        "streetsidesoftware.code-spell-checker"
     ]
 }

@@ -1,6 +1,6 @@
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
 <a href="<?php echo URLROOT; ?>/returns" class="btn btn-light"><i class="fa fa-arrow-left"></i> Back</a>
-<div class="card card-body bg-light mt-5">
+<div class="card card-body theme-card-light mt-5">
     <h2>Add Purchase Return</h2>
     <p>Create a new purchase return with this form</p>
     <form action="<?php echo URLROOT; ?>/returns/addpurchase" method="post">

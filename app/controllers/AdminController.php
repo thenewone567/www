@@ -392,7 +392,7 @@ class AdminController extends Controller
             // Handle settings update
             $settings = [
                 'auto_approve_threshold' => floatval($_POST['auto_approve_threshold'] ?? 1000),
-                'low_stock_threshold' => intval($_POST['low_stock_threshold'] ?? 10),
+                'low_Inventory_threshold' => intval($_POST['low_Inventory_threshold'] ?? 10),
                 'session_timeout' => intval($_POST['session_timeout'] ?? 3600),
                 'backup_frequency' => $_POST['backup_frequency'] ?? 'daily'
             ];
@@ -517,7 +517,7 @@ class AdminController extends Controller
         // For now, return defaults
         return [
             'auto_approve_threshold' => 1000,
-            'low_stock_threshold' => 10,
+            'low_Inventory_threshold' => 10,
             'session_timeout' => 3600,
             'backup_frequency' => 'daily'
         ];
@@ -585,7 +585,7 @@ class AdminController extends Controller
             ],
             'inventory' => [
                 'label' => 'Inventory Management',
-                'description' => 'Manage stock, products, and inventory'
+                'description' => 'Manage products, and inventory'
             ],
             'customers' => [
                 'label' => 'Customer Management',

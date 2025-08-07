@@ -166,7 +166,7 @@ Apply changes systematically to each module.
 ### Secondary Module Files (Priority 3)
 
 1. `/app/views/reports/`
-2. `/app/views/settings/`
+2. `/app/views/company-profile/`
 3. `/app/views/cycle_counts/`
 4. `/app/views/barcodes/`
 5. All other view files

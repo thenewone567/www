@@ -81,6 +81,17 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             </select>
                             <div class="form-text">Number of items to display per page in lists and tables.</div>
                         </div>
+
+                        <div class="form-group">
+                            <label for="default_theme" class="form-label">Default Theme</label>
+                            <select class="form-control" id="default_theme" name="default_theme">
+                                <option value="auto" <?= ($data['settings']['default_theme'] ?? 'auto') === 'auto' ? 'selected' : '' ?>>Auto (Follow System)</option>
+                                <option value="light" <?= ($data['settings']['default_theme'] ?? 'auto') === 'light' ? 'selected' : '' ?>>Light Theme</option>
+                                <option value="dark" <?= ($data['settings']['default_theme'] ?? 'auto') === 'dark' ? 'selected' : '' ?>>Dark Theme</option>
+                            </select>
+                            <div class="form-text">Default theme for new users and guests. Users can override this in
+                                their profiles.</div>
+                        </div>
                     </div>
                 </div>
 
@@ -101,10 +112,10 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         </div>
 
                         <div class="form-group">
-                            <label for="low_stock_threshold" class="form-label">Low Stock Threshold</label>
-                            <input type="number" class="form-control" id="low_stock_threshold"
-                                name="low_stock_threshold" min="1"
-                                value="<?= $data['settings']['low_stock_threshold'] ?? 10 ?>"
+                            <label for="low_Inventory_threshold" class="form-label">Low Inventory Threshold</label>
+                            <input type="number" class="form-control" id="low_Inventory_threshold"
+                                name="low_Inventory_threshold" min="1"
+                                value="<?= $data['settings']['low_Inventory_threshold'] ?? 10 ?>"
                                 class="form-control inr-format">
                             <div class="form-text">Alert when product quantity falls below this number.</div>
                         </div>
@@ -112,11 +123,9 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <div class="form-group">
                             <label for="currency" class="form-label">Default Currency</label>
                             <select class="form-control" id="currency" name="currency">
-                                <option value="USD" <?= ($data['settings']['currency'] ?? 'USD') === 'USD' ? 'selected' : '' ?>>USD ($)</option>
-                                <option value="EUR" <?= ($data['settings']['currency'] ?? 'USD') === 'EUR' ? 'selected' : '' ?>>EUR (€)</option>
-                                <option value="GBP" <?= ($data['settings']['currency'] ?? 'USD') === 'GBP' ? 'selected' : '' ?>>GBP (£)</option>
-                                <option value="CAD" <?= ($data['settings']['currency'] ?? 'USD') === 'CAD' ? 'selected' : '' ?>>CAD ($)</option>
-                                <option value="INR" <?= ($data['settings']['currency'] ?? 'USD') === 'INR' ? 'selected' : '' ?>>INR (₹)</option>
+                                <option value="INR" <?= ($data['settings']['currency'] ?? 'INR') === 'INR' ? 'selected' : '' ?>>INR (₹)</option>
+                                <option value="USD" <?= ($data['settings']['currency'] ?? 'INR') === 'USD' ? 'selected' : '' ?>>USD ($)</option>
+                                <option value="CAD" <?= ($data['settings']['currency'] ?? 'INR') === 'CAD' ? 'selected' : '' ?>>CAD ($)</option>
                             </select>
                             <div class="form-text">Default currency for pricing and financial calculations.</div>
                         </div>
@@ -230,10 +239,10 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
                         <div class="form-group">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="low_stock_alerts"
-                                    name="low_stock_alerts" value="1" <?= ($data['settings']['low_stock_alerts'] ?? true) ? 'checked' : '' ?>>
-                                <label class="form-check-label" for="low_stock_alerts">
-                                    Low Stock Alerts
+                                <input class="form-check-input" type="checkbox" id="low_Inventory_alerts"
+                                    name="low_Inventory_alerts" value="1" <?= ($data['settings']['low_Inventory_alerts'] ?? true) ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="low_Inventory_alerts">
+                                    Low Inventory Alerts
                                 </label>
                             </div>
                         </div>
@@ -246,6 +255,57 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                 <label class="form-check-label" for="system_maintenance_alerts">
                                     System Maintenance Alerts
                                 </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Theme Controls -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary-theme text-white">
+                        <i class="fas fa-palette"></i> Theme Controls
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Current Theme</h6>
+                                <p class="text-muted small">This shows your current active theme</p>
+                                <div class="btn-group btn-block" role="group">
+                                    <button type="button" class="btn btn-outline-primary"
+                                        onclick="window.themeController?.setTheme('light')">
+                                        <i class="fas fa-sun"></i> Light
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary"
+                                        onclick="window.themeController?.setTheme('dark')">
+                                        <i class="fas fa-moon"></i> Dark
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary"
+                                        onclick="window.themeController?.resetToSystemPreference()">
+                                        <i class="fas fa-desktop"></i> Auto
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Theme Preview</h6>
+                                <p class="text-muted small">Preview how themes look</p>
+                                <div class="theme-preview-container">
+                                    <div class="theme-preview light-preview"
+                                        onclick="window.themeController?.setTheme('light')">
+                                        <div class="preview-header"></div>
+                                        <div class="preview-content">
+                                            <div class="preview-text"></div>
+                                            <div class="preview-text short"></div>
+                                        </div>
+                                    </div>
+                                    <div class="theme-preview dark-preview"
+                                        onclick="window.themeController?.setTheme('dark')">
+                                        <div class="preview-header"></div>
+                                        <div class="preview-content">
+                                            <div class="preview-text"></div>
+                                            <div class="preview-text short"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -267,6 +327,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
 <script>
     // Format number in Indian numbering system
+    // Format number in Indian numbering system
     function formatINR(num) {
         num = num.toString().replace(/[^0-9.]/g, '');
         let [integer, decimal] = num.split('.');
@@ -279,32 +340,49 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         return formatted;
     }
 
-    function applyINRFormatting() {
+    // Format number in standard (western) system
+    function formatStandard(num) {
+        num = num.toString().replace(/[^0-9.]/g, '');
+        let [integer, decimal] = num.split('.');
+        let formatted = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        if (decimal) formatted += '.' + decimal;
+        return formatted;
+    }
+
+    function applyCurrencyFormatting() {
         const currency = document.getElementById('currency').value;
-        const inrFields = document.querySelectorAll('.inr-format');
+        const currencyFields = document.querySelectorAll('.inr-format');
         if (currency === 'INR') {
-            inrFields.forEach(function (input) {
+            currencyFields.forEach(function (input) {
                 input.value = formatINR(input.value);
             });
         } else {
-            inrFields.forEach(function (input) {
-                input.value = input.value.replace(/,/g, '');
+            currencyFields.forEach(function (input) {
+                input.value = formatStandard(input.value);
             });
         }
     }
 
     document.getElementById('currency').addEventListener('change', function () {
-        applyINRFormatting();
+        applyCurrencyFormatting();
+        // Optionally, trigger a reload or update of all currency displays in the app
+        // For SPA, you may need to trigger a global event or call a function to update all currency fields
     });
 
     document.querySelectorAll('.inr-format').forEach(function (input) {
         input.addEventListener('blur', function () {
-            if (document.getElementById('currency').value === 'INR') {
+            const currency = document.getElementById('currency').value;
+            if (currency === 'INR') {
                 input.value = formatINR(input.value);
             } else {
-                input.value = input.value.replace(/,/g, '');
+                input.value = formatStandard(input.value);
             }
         });
+    });
+
+    // On page load, apply default formatting
+    document.addEventListener('DOMContentLoaded', function () {
+        applyCurrencyFormatting();
     });
     function resetToDefaults() {
         if (confirm('Are you sure you want to reset all settings to their default values?')) {
@@ -316,7 +394,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
             document.getElementById('timezone').value = 'UTC';
             document.getElementById('items_per_page').value = '25';
             document.getElementById('auto_approve_threshold').value = '1000';
-            document.getElementById('low_stock_threshold').value = '10';
+            document.getElementById('low_Inventory_threshold').value = '10';
             document.getElementById('currency').value = 'USD';
             document.getElementById('tax_rate').value = '8.25';
             document.getElementById('session_timeout').value = '60';
@@ -327,7 +405,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
             // Check default checkboxes
             document.getElementById('require_strong_passwords').checked = true;
             document.getElementById('email_notifications').checked = true;
-            document.getElementById('low_stock_alerts').checked = true;
+            document.getElementById('low_Inventory_alerts').checked = true;
             document.getElementById('system_maintenance_alerts').checked = true;
         }
     }
@@ -358,7 +436,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
     // Form validation
     document.getElementById('settingsForm').addEventListener('submit', function (e) {
         const autoApprove = parseFloat(document.getElementById('auto_approve_threshold').value.replace(/,/g, ''));
-        const lowStock = parseInt(document.getElementById('low_stock_threshold').value.replace(/,/g, ''));
+        const lowInventory = parseInt(document.getElementById('low_Inventory_threshold').value.replace(/,/g, ''));
         const taxRate = parseFloat(document.getElementById('tax_rate').value.replace(/,/g, ''));
 
         if (autoApprove < 0) {
@@ -367,8 +445,8 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
             return;
         }
 
-        if (lowStock < 1) {
-            alert('Low stock threshold must be at least 1.');
+        if (lowInventory < 1) {
+            alert('Low Inventory threshold must be at least 1.');
             e.preventDefault();
             return;
         }

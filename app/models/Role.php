@@ -163,7 +163,7 @@ class Role
                 ]
             ],
             [
-                'role_name' => 'Stock Clerk',
+                'role_name' => 'Inventory Clerk',
                 'description' => 'Inventory and product management',
                 'permissions' => [
                     'view_dashboard',

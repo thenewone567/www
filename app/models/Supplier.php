@@ -10,19 +10,22 @@ class Supplier
 
     public function getSuppliers()
     {
-        $this->db->query("SELECT * FROM suppliers");
+        $this->db->query("SELECT * FROM suppliers ORDER BY supplier_name");
+        $this->db->execute();
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }
 
     public function addSupplier($data)
     {
-        $this->db->query("INSERT INTO suppliers (supplier_name, contact_info, gst_info, due_amount) VALUES (:supplier_name, :contact_info, :gst_info, :due_amount)");
+        $this->db->query("INSERT INTO suppliers (supplier_name, contact_person, phone, email, address, gst_number) VALUES (:supplier_name, :contact_person, :phone, :email, :address, :gst_number)");
         // Bind values
         $this->db->bind(':supplier_name', $data['supplier_name']);
-        $this->db->bind(':contact_info', $data['contact_info']);
-        $this->db->bind(':gst_info', $data['gst_info']);
-        $this->db->bind(':due_amount', $data['due_amount']);
+        $this->db->bind(':contact_person', $data['contact_person']);
+        $this->db->bind(':phone', $data['phone']);
+        $this->db->bind(':email', $data['email']);
+        $this->db->bind(':address', $data['address']);
+        $this->db->bind(':gst_number', $data['gst_number']);
 
         // Execute
         return $this->db->execute();
@@ -32,19 +35,22 @@ class Supplier
     {
         $this->db->query("SELECT * FROM suppliers WHERE supplier_id = :id");
         $this->db->bind(':id', $id);
+        $this->db->execute();
         $result = $this->db->single();
         return $result ? $result : null;
     }
 
     public function updateSupplier($data)
     {
-        $this->db->query("UPDATE suppliers SET supplier_name = :supplier_name, contact_info = :contact_info, gst_info = :gst_info, due_amount = :due_amount WHERE supplier_id = :id");
+        $this->db->query("UPDATE suppliers SET supplier_name = :supplier_name, contact_person = :contact_person, phone = :phone, email = :email, address = :address, gst_number = :gst_number WHERE supplier_id = :id");
         // Bind values
         $this->db->bind(':id', $data['id']);
         $this->db->bind(':supplier_name', $data['supplier_name']);
-        $this->db->bind(':contact_info', $data['contact_info']);
-        $this->db->bind(':gst_info', $data['gst_info']);
-        $this->db->bind(':due_amount', $data['due_amount']);
+        $this->db->bind(':contact_person', $data['contact_person']);
+        $this->db->bind(':phone', $data['phone']);
+        $this->db->bind(':email', $data['email']);
+        $this->db->bind(':address', $data['address']);
+        $this->db->bind(':gst_number', $data['gst_number']);
 
         // Execute
         return $this->db->execute();
@@ -55,6 +61,71 @@ class Supplier
         $this->db->query("DELETE FROM suppliers WHERE supplier_id = :id");
         $this->db->bind(':id', $id);
         return $this->db->execute();
+    }
+
+    /**
+     * Check if supplier name already exists
+     * @param string $supplierName
+     * @param int $excludeId (optional) - exclude this ID from check (for edit)
+     * @return bool
+     */
+    public function isSupplierNameExists($supplierName, $excludeId = null)
+    {
+        if ($excludeId) {
+            $this->db->query("SELECT supplier_id FROM suppliers WHERE supplier_name = :supplier_name AND supplier_id != :exclude_id");
+            $this->db->bind(':exclude_id', $excludeId);
+        } else {
+            $this->db->query("SELECT supplier_id FROM suppliers WHERE supplier_name = :supplier_name");
+        }
+        $this->db->bind(':supplier_name', $supplierName);
+        $this->db->execute();
+        return $this->db->rowCount() > 0;
+    }
+
+    /**
+     * Check if GST number already exists
+     * @param string $gstNumber
+     * @param int $excludeId (optional) - exclude this ID from check (for edit)
+     * @return bool
+     */
+    public function isGstNumberExists($gstNumber, $excludeId = null)
+    {
+        if (empty($gstNumber)) {
+            return false; // GST number is optional, so empty is allowed
+        }
+
+        if ($excludeId) {
+            $this->db->query("SELECT supplier_id FROM suppliers WHERE gst_number = :gst_number AND supplier_id != :exclude_id");
+            $this->db->bind(':exclude_id', $excludeId);
+        } else {
+            $this->db->query("SELECT supplier_id FROM suppliers WHERE gst_number = :gst_number");
+        }
+        $this->db->bind(':gst_number', $gstNumber);
+        $this->db->execute();
+        return $this->db->rowCount() > 0;
+    }
+
+    /**
+     * Check if email already exists
+     * @param string $email
+     * @param int|null $excludeId
+     * @return bool
+     */
+    public function isEmailExists($email, $excludeId = null)
+    {
+        if (empty($email)) {
+            return false;
+        }
+
+        if ($excludeId) {
+            $this->db->query("SELECT supplier_id FROM suppliers WHERE email = :email AND supplier_id != :exclude_id");
+            $this->db->bind(':exclude_id', $excludeId);
+        } else {
+            $this->db->query("SELECT supplier_id FROM suppliers WHERE email = :email");
+        }
+        $this->db->bind(':email', $email);
+        $this->db->execute();
+        return $this->db->rowCount() > 0;
     }
 
     /**
@@ -186,5 +257,61 @@ class Supplier
         ");
         $this->db->bind(':supplier_id', $supplierId);
         return $this->db->single();
+    }
+
+    /**
+     * Get supplier overview statistics for dashboard cards
+     */
+    public function getSupplierOverviewStats()
+    {
+        // Get total suppliers
+        $this->db->query("SELECT COUNT(*) as total FROM suppliers");
+        $this->db->execute();
+        $total_result = $this->db->single();
+        $total = $total_result ? $total_result->total : 0;
+
+        // Get suppliers with recent activity (active - have orders in last 30 days)
+        $this->db->query("
+            SELECT COUNT(DISTINCT s.supplier_id) as active 
+            FROM suppliers s 
+            INNER JOIN purchases p ON s.supplier_id = p.supplier_id 
+            WHERE p.purchase_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        ");
+        $this->db->execute();
+        $active_result = $this->db->single();
+        $active = $active_result ? $active_result->active : 0;
+
+        // Get suppliers with pending orders (recent activity in last 7 days)
+        $this->db->query("
+            SELECT COUNT(DISTINCT s.supplier_id) as pending 
+            FROM suppliers s 
+            INNER JOIN purchases p ON s.supplier_id = p.supplier_id 
+            WHERE p.purchase_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        ");
+        $this->db->execute();
+        $pending_result = $this->db->single();
+        $pending = $pending_result ? $pending_result->pending : 0;
+
+        // Get suppliers with no recent activity (on hold - no orders in last 90 days)
+        $this->db->query("
+            SELECT COUNT(*) as onhold 
+            FROM suppliers s 
+            WHERE s.supplier_id NOT IN (
+                SELECT DISTINCT p.supplier_id 
+                FROM purchases p 
+                WHERE p.purchase_date >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+                AND p.supplier_id IS NOT NULL
+            )
+        ");
+        $this->db->execute();
+        $onhold_result = $this->db->single();
+        $onhold = $onhold_result ? $onhold_result->onhold : 0;
+
+        return [
+            'total' => $total,
+            'active' => $active,
+            'pending' => $pending,
+            'onhold' => $onhold
+        ];
     }
 }

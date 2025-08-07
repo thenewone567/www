@@ -8,6 +8,8 @@ class ProductsController extends Controller
     public $categoryModel;
     public $brandModel;
     public $unitModel;
+    public $barcodeModel;
+    public $supplierModel;
 
 
     public function downloadMappingsCSV()
@@ -65,24 +67,31 @@ class ProductsController extends Controller
         $this->categoryModel = $this->model('Category');
         $this->brandModel = $this->model('Brand');
         $this->unitModel = $this->model('Unit');
+        $this->barcodeModel = $this->model('Barcode');
+        $this->supplierModel = $this->model('Supplier');
     }
 
     public function index()
     {
         $products = $this->productModel->getProducts();
         $categories = $this->categoryModel->getCategories();
+        $brands = $this->brandModel->getBrands();
+
+        // Get recent product activities (last 50)
+        $activities = $this->getRecentActivities(50);
 
         $data = [
             'products' => $products,
-            'categories' => $categories
+            'categories' => $categories,
+            'brands' => $brands,
+            'activities' => $activities
         ];
         $this->view('products/index', $data);
     }
-
     public function show($id)
     {
         $product = $this->productModel->getProductById($id);
-        $stockByLocation = $this->productModel->getStockByLocation($id);
+        $InventoryByLocation = $this->productModel->getInventoryByLocation($id);
 
         if (!$product) {
             redirect('products');
@@ -90,7 +99,7 @@ class ProductsController extends Controller
 
         $data = [
             'product' => $product,
-            'stock_locations' => $stockByLocation
+            'Inventory_locations' => $InventoryByLocation
         ];
         $this->view('products/show', $data);
     }
@@ -103,24 +112,31 @@ class ProductsController extends Controller
             $data = [
                 'product_name' => trim($_POST['product_name'] ?? ''),
                 'sku' => trim($_POST['sku'] ?? ''),
+                'barcode' => trim($_POST['barcode'] ?? ''),
+                'model_number' => trim($_POST['model_number'] ?? ''),
                 'supplier_code' => trim($_POST['supplier_code'] ?? ''),
                 'category_id' => intval($_POST['category_id'] ?? 0),
-                'brand_id' => intval($_POST['brand_id'] ?? 0),
-                'unit_id' => intval($_POST['unit_id'] ?? 0),
-                'min_stock_level' => intval($_POST['min_stock_level'] ?? 0),
-                'max_stock_level' => intval($_POST['max_stock_level'] ?? 0),
-                'reorder_level' => intval($_POST['reorder_level'] ?? 0),
-                'purchase_price' => floatval($_POST['purchase_price'] ?? 0),
-                'selling_price' => floatval($_POST['selling_price'] ?? 0),
+                'supplier_id' => intval($_POST['supplier_id'] ?? 0),
+                'brand_id' => !empty($_POST['brand_id']) ? intval($_POST['brand_id']) : null,
+                'unit_id' => !empty($_POST['unit_id']) ? intval($_POST['unit_id']) : null,
+                'min_Inventory_level' => intval($_POST['min_Inventory_level'] ?? 5),
+                'max_Inventory_level' => intval($_POST['max_Inventory_level'] ?? 100),
+                'reorder_level' => intval($_POST['reorder_level'] ?? 10),
+                'purchase_price' => !empty($_POST['purchase_price']) ? floatval($_POST['purchase_price']) : null,
+                'selling_price' => !empty($_POST['selling_price']) ? floatval($_POST['selling_price']) : null,
                 'profit_margin' => floatval($_POST['profit_margin'] ?? 0),
-                'weight' => floatval($_POST['weight'] ?? 0),
+                'gst_rate' => floatval($_POST['gst_rate'] ?? 18),
+                'weight' => !empty($_POST['weight']) ? floatval($_POST['weight']) : null,
                 'dimensions' => trim($_POST['dimensions'] ?? ''),
                 'warranty_period' => intval($_POST['warranty_period'] ?? 0),
+                'storage_location' => trim($_POST['storage_location'] ?? ''),
+                'product_status' => trim($_POST['product_status'] ?? 'active'),
                 'initial_quantity' => intval($_POST['initial_quantity'] ?? 0),
                 'image_path' => '',
                 'product_name_err' => '',
                 'sku_err' => '',
                 'category_id_err' => '',
+                'supplier_id_err' => '',
                 'brand_id_err' => '',
                 'unit_id_err' => '',
                 'purchase_price_err' => '',
@@ -154,51 +170,75 @@ class ProductsController extends Controller
                 $data['category_id_err'] = 'Please select a valid category';
             }
 
-            if ($data['brand_id'] <= 0) {
-                $data['brand_id_err'] = 'Please select a valid brand';
+            if ($data['supplier_id'] <= 0) {
+                $data['supplier_id_err'] = 'Please select a valid supplier';
             }
 
-            if ($data['unit_id'] <= 0) {
-                $data['unit_id_err'] = 'Please select a valid unit';
-            }
+            // Remove mandatory validation for brand and unit since they're optional
+            // if ($data['brand_id'] <= 0) {
+            //     $data['brand_id_err'] = 'Please select a valid brand';
+            // }
+
+            // if ($data['unit_id'] <= 0) {
+            //     $data['unit_id_err'] = 'Please select a valid unit';
+            // }
 
             if ($data['initial_quantity'] < 0) {
                 $data['initial_quantity_err'] = 'Initial quantity cannot be negative';
             }
 
-            if (empty($data['purchase_price']) || $data['purchase_price'] <= 0) {
-                $data['purchase_price_err'] = 'Please enter a valid purchase price';
-            }
+            // Remove mandatory validation for purchase and selling price since they're optional
+            // if (empty($data['purchase_price']) || $data['purchase_price'] <= 0) {
+            //     $data['purchase_price_err'] = 'Please enter a valid purchase price';
+            // }
 
-            if (empty($data['selling_price']) || $data['selling_price'] <= 0) {
-                $data['selling_price_err'] = 'Please enter a valid selling price';
-            }
+            // if (empty($data['selling_price']) || $data['selling_price'] <= 0) {
+            //     $data['selling_price_err'] = 'Please enter a valid selling price';
+            // }
 
+            // Optional validation: if both prices are provided, selling price should be higher
             if (
-                !empty($data['purchase_price']) && !empty($data['selling_price']) &&
+                $data['purchase_price'] !== null && $data['selling_price'] !== null &&
                 $data['selling_price'] <= $data['purchase_price']
             ) {
                 $data['selling_price_err'] = 'Selling price must be higher than purchase price';
             }
 
-            // If no errors, add product
+            // If no errors, add product (only check mandatory fields)
             if (
-                empty($data['product_name_err']) && empty($data['sku_err']) && empty($data['category_id_err']) &&
-                empty($data['brand_id_err']) && empty($data['unit_id_err']) && empty($data['initial_quantity_err']) &&
-                empty($data['purchase_price_err']) && empty($data['selling_price_err'])
+                empty($data['product_name_err']) && empty($data['sku_err']) &&
+                empty($data['category_id_err']) && empty($data['supplier_id_err']) &&
+                empty($data['initial_quantity_err']) && empty($data['selling_price_err'])
             ) {
+                // Debug logging
+                error_log('ProductsController::add - Attempting to add product with data: ' . print_r($data, true));
 
                 $result = $this->productModel->addProduct($data);
                 if ($result) {
+                    // Log the activity
+                    $this->logActivity('product_add', 'product', $result, 'Product "' . $data['product_name'] . '" added successfully');
+
                     flash('product_message', 'Product Added Successfully with Complete Details');
                     redirect('products');
                 } else {
+                    error_log('ProductsController::add - addProduct returned false');
                     $data['error'] = 'Something went wrong. Please try again.';
                 }
+            } else {
+                // Debug validation errors
+                error_log('ProductsController::add - Validation errors: ' . print_r([
+                    'product_name_err' => $data['product_name_err'] ?? '',
+                    'sku_err' => $data['sku_err'] ?? '',
+                    'category_id_err' => $data['category_id_err'] ?? '',
+                    'supplier_id_err' => $data['supplier_id_err'] ?? '',
+                    'initial_quantity_err' => $data['initial_quantity_err'] ?? '',
+                    'selling_price_err' => $data['selling_price_err'] ?? ''
+                ], true));
             }
 
             // Load form data for redisplay
             $data['categories'] = $this->categoryModel->getCategories();
+            $data['suppliers'] = $this->supplierModel->getSuppliers();
             $data['brands'] = $this->brandModel->getBrands();
             $data['units'] = $this->unitModel->getUnits();
             $this->view('products/add', $data);
@@ -208,26 +248,34 @@ class ProductsController extends Controller
             $data = [
                 'product_name' => '',
                 'sku' => '',
+                'barcode' => '',
+                'model_number' => '',
                 'supplier_code' => '',
                 'category_id' => '',
+                'supplier_id' => '',
                 'brand_id' => '',
                 'unit_id' => '',
-                'min_stock_level' => 5,
-                'max_stock_level' => 100,
+                'min_Inventory_level' => 5,
+                'max_Inventory_level' => 100,
                 'reorder_level' => 10,
                 'purchase_price' => '',
                 'selling_price' => '',
                 'profit_margin' => '',
+                'gst_rate' => '',
                 'weight' => '',
                 'dimensions' => '',
                 'warranty_period' => 0,
+                'storage_location' => '',
+                'product_status' => 'active',
                 'initial_quantity' => 0,
                 'categories' => $this->categoryModel->getCategories(),
+                'suppliers' => $this->supplierModel->getSuppliers(),
                 'brands' => $this->brandModel->getBrands(),
                 'units' => $this->unitModel->getUnits(),
                 'product_name_err' => '',
                 'sku_err' => '',
                 'category_id_err' => '',
+                'supplier_id_err' => '',
                 'brand_id_err' => '',
                 'unit_id_err' => '',
                 'purchase_price_err' => '',
@@ -251,8 +299,8 @@ class ProductsController extends Controller
                 'category_id' => intval($_POST['category_id'] ?? 0),
                 'brand_id' => intval($_POST['brand_id'] ?? 0),
                 'unit_id' => intval($_POST['unit_id'] ?? 0),
-                'min_stock_level' => intval($_POST['min_stock_level'] ?? 0),
-                'max_stock_level' => intval($_POST['max_stock_level'] ?? 0),
+                'min_Inventory_level' => intval($_POST['min_Inventory_level'] ?? 0),
+                'max_Inventory_level' => intval($_POST['max_Inventory_level'] ?? 0),
                 'reorder_level' => intval($_POST['reorder_level'] ?? 0),
                 'purchase_price' => floatval($_POST['purchase_price'] ?? 0),
                 'selling_price' => floatval($_POST['selling_price'] ?? 0),
@@ -355,8 +403,8 @@ class ProductsController extends Controller
                 'category_id' => $product->category_id,
                 'brand_id' => $product->brand_id,
                 'unit_id' => $product->unit_id,
-                'min_stock_level' => $product->min_stock_level,
-                'max_stock_level' => $product->max_stock_level,
+                'min_Inventory_level' => $product->min_Inventory_level,
+                'max_Inventory_level' => $product->max_Inventory_level,
                 'reorder_level' => $product->reorder_level,
                 'purchase_price' => $product->purchase_price ?? 0,
                 'selling_price' => $product->selling_price ?? 0,
@@ -394,7 +442,7 @@ class ProductsController extends Controller
         }
     }
 
-    public function adjustStock($id)
+    public function adjustInventory($id)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = sanitizePost();
@@ -405,10 +453,10 @@ class ProductsController extends Controller
 
             $adjustmentReason = $reason . ($notes ? ': ' . $notes : '');
 
-            if ($this->productModel->adjustStock($id, $newQuantity, $adjustmentReason)) {
-                echo json_encode(['success' => true, 'message' => 'Stock adjusted successfully']);
+            if ($this->productModel->adjustInventory($id, $newQuantity, $adjustmentReason)) {
+                echo json_encode(['success' => true, 'message' => 'Inventory adjusted successfully']);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to adjust stock']);
+                echo json_encode(['success' => false, 'message' => 'Failed to adjust Inventory']);
             }
         }
     }
@@ -420,9 +468,9 @@ class ProductsController extends Controller
 
             $searchTerm = trim($_POST['search'] ?? '');
             $categoryId = intval($_POST['category_id'] ?? 0);
-            $inStockOnly = isset($_POST['in_stock_only']);
+            $inInventoryOnly = isset($_POST['in_Inventory_only']);
 
-            $products = $this->productModel->searchProducts($searchTerm, $categoryId ?: null, $inStockOnly);
+            $products = $this->productModel->searchProducts($searchTerm, $categoryId ?: null, $inInventoryOnly);
 
             echo json_encode([
                 'success' => true,
@@ -493,8 +541,8 @@ class ProductsController extends Controller
             'brand_name',
             'unit_id',
             'unit_name',
-            'min_stock_level',
-            'max_stock_level',
+            'min_Inventory_level',
+            'max_Inventory_level',
             'reorder_level'
         ];
         $missingHeaders = [];
@@ -615,8 +663,8 @@ class ProductsController extends Controller
                         'category_id' => $categoryId,
                         'brand_id' => $brandId,
                         'unit_id' => $unitId,
-                        'min_stock_level' => isset($row['min_stock_level']) && is_numeric($row['min_stock_level']) ? (int) $row['min_stock_level'] : 0,
-                        'max_stock_level' => isset($row['max_stock_level']) && is_numeric($row['max_stock_level']) ? (int) $row['max_stock_level'] : 0,
+                        'min_Inventory_level' => isset($row['min_Inventory_level']) && is_numeric($row['min_Inventory_level']) ? (int) $row['min_Inventory_level'] : 0,
+                        'max_Inventory_level' => isset($row['max_Inventory_level']) && is_numeric($row['max_Inventory_level']) ? (int) $row['max_Inventory_level'] : 0,
                         'reorder_level' => isset($row['reorder_level']) && is_numeric($row['reorder_level']) ? (int) $row['reorder_level'] : 0,
                         'image_path' => null,
                         'is_active' => 1
@@ -671,8 +719,8 @@ class ProductsController extends Controller
             'brand_name',
             'unit_id',
             'unit_name',
-            'min_stock_level',
-            'max_stock_level',
+            'min_Inventory_level',
+            'max_Inventory_level',
             'reorder_level'
         ]);
 
@@ -706,6 +754,296 @@ class ProductsController extends Controller
         ]);
 
         fclose($output);
+    }
+
+    /**
+     * Generate barcode for a product
+     */
+    public function generate_barcode($product_id = null)
+    {
+        if (!$product_id || !is_numeric($product_id)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid product ID']);
+            exit;
+        }
+
+        // Check if product exists
+        $product = $this->productModel->getProductById($product_id);
+        if (!$product) {
+            echo json_encode(['success' => false, 'message' => 'Product not found']);
+            exit;
+        }
+
+        // Check if barcode already exists
+        $existingBarcode = $this->barcodeModel->getBarcodesForProduct($product_id);
+        if ($existingBarcode) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Product already has a barcode',
+                'barcode' => $existingBarcode[0]['barcode_value']
+            ]);
+            exit;
+        }
+
+        // Generate new barcode
+        $barcodeValue = $this->barcodeModel->generateBarcodeForProduct($product_id);
+        if ($barcodeValue) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Barcode generated successfully',
+                'barcode' => $barcodeValue
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to generate barcode']);
+        }
+        exit;
+    }
+
+    /**
+     * View product barcodes
+     */
+    public function view_barcodes($product_id = null)
+    {
+        if (!$product_id || !is_numeric($product_id)) {
+            flash('product_message', 'Invalid product ID', 'alert alert-danger');
+            redirect('products');
+            return;
+        }
+
+        $product = $this->productModel->getProductById($product_id);
+        if (!$product) {
+            flash('product_message', 'Product not found', 'alert alert-danger');
+            redirect('products');
+            return;
+        }
+
+        $barcodes = $this->barcodeModel->getBarcodesForProduct($product_id);
+
+        $data = [
+            'title' => 'Barcodes - ' . $product->product_name,
+            'product' => $product,
+            'barcodes' => $barcodes
+        ];
+
+        $this->view('products/barcodes', $data);
+    }
+
+    /**
+     * Print product barcode
+     */
+    public function print_product_barcode($product_id = null)
+    {
+        if (!$product_id || !is_numeric($product_id)) {
+            flash('product_message', 'Invalid product ID', 'alert alert-danger');
+            redirect('products');
+            return;
+        }
+
+        $product = $this->productModel->getProductById($product_id);
+        if (!$product) {
+            flash('product_message', 'Product not found', 'alert alert-danger');
+            redirect('products');
+            return;
+        }
+
+        $barcodes = $this->barcodeModel->getBarcodesForProduct($product_id);
+        if (!$barcodes) {
+            // Generate barcode if doesn't exist
+            $barcodeValue = $this->barcodeModel->generateBarcodeForProduct($product_id);
+            if ($barcodeValue) {
+                $barcodes = [['barcode_value' => $barcodeValue, 'type' => 'CODE128']];
+            }
+        }
+
+        $data = [
+            'title' => 'Print Barcode - ' . $product->product_name,
+            'product' => $product,
+            'barcodes' => $barcodes
+        ];
+
+        $this->view('products/print_barcode', $data);
+    }
+
+    /**
+     * Bulk generate barcodes for products without barcodes
+     */
+    public function bulk_generate_barcodes()
+    {
+        // Get all products without barcodes
+        $products = $this->productModel->getProducts();
+        $generatedCount = 0;
+        $errors = [];
+
+        foreach ($products as $product) {
+            $existingBarcode = $this->barcodeModel->getBarcodesForProduct($product->product_id);
+
+            if (!$existingBarcode) {
+                $barcodeValue = $this->barcodeModel->generateBarcodeForProduct($product->product_id);
+                if ($barcodeValue) {
+                    $generatedCount++;
+                } else {
+                    $errors[] = "Failed to generate barcode for " . $product->product_name;
+                }
+            }
+        }
+
+        echo json_encode([
+            'success' => true,
+            'generated' => $generatedCount,
+            'errors' => $errors,
+            'message' => "$generatedCount barcodes generated successfully"
+        ]);
+        exit;
+    }
+
+    /**
+     * Get product by barcode (AJAX)
+     */
+    public function get_by_barcode()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $barcode = $_POST['barcode'] ?? '';
+
+            if (empty($barcode)) {
+                echo json_encode(['success' => false, 'message' => 'Barcode required']);
+                exit;
+            }
+
+            $product = $this->barcodeModel->getProductByBarcode($barcode);
+
+            if ($product) {
+                echo json_encode([
+                    'success' => true,
+                    'product' => [
+                        'id' => $product['product_id'],
+                        'name' => $product['product_name'],
+                        'sku' => $product['sku'] ?? '',
+                        'price' => $product['sale_price'] ?? 0,
+                        'Inventory' => $product['Inventory_quantity'] ?? 0
+                    ]
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Product not found']);
+            }
+            exit;
+        }
+    }
+
+    /**
+     * Get recent product activities
+     */
+    private function getRecentActivities($limit = 50)
+    {
+        try {
+            $db = new Database();
+
+            // Query to get recent product activities from activity_logs table
+            $db->query("
+                SELECT 
+                    al.log_id as id,
+                    al.action,
+                    COALESCE(p.product_name, 'Unknown Product') as product_name,
+                    COALESCE(u.username, 'System') as user_name,
+                    CONCAT(al.action, ' - ', COALESCE(p.product_name, CONCAT('Product ID: ', CAST(al.target_id AS CHAR)))) as details,
+                    al.log_timestamp as created_at,
+                    CASE 
+                        WHEN al.action LIKE '%add%' OR al.action LIKE '%create%' THEN 'success'
+                        WHEN al.action LIKE '%delete%' OR al.action LIKE '%remove%' THEN 'warning'
+                        WHEN al.action LIKE '%error%' OR al.action LIKE '%fail%' THEN 'error'
+                        ELSE 'success'
+                    END as status
+                FROM activity_logs al
+                LEFT JOIN users u ON al.user_id = u.user_id
+                LEFT JOIN products p ON al.target_type = 'product' AND al.target_id = p.product_id
+                WHERE al.target_type = 'product' OR al.action LIKE '%product%'
+                ORDER BY al.log_timestamp DESC
+                LIMIT :limit
+            ");
+
+            $db->bind(':limit', (int) $limit);
+            $db->execute();
+            $result = $db->resultSet();
+
+            if ($result) {
+                // Format the action names for better display
+                foreach ($result as &$activity) {
+                    $originalAction = $activity->action;
+                    if (strpos($originalAction, 'add') !== false || strpos($originalAction, 'create') !== false) {
+                        $activity->action = 'ADD';
+                    } elseif (strpos($originalAction, 'edit') !== false || strpos($originalAction, 'update') !== false) {
+                        $activity->action = 'EDIT';
+                    } elseif (strpos($originalAction, 'delete') !== false || strpos($originalAction, 'remove') !== false) {
+                        $activity->action = 'DELETE';
+                    } else {
+                        $activity->action = strtoupper($originalAction);
+                    }
+                }
+                return $result;
+            }
+
+            return [];
+
+        } catch (Exception $e) {
+            // Return empty array if there's an error
+            error_log('Error fetching recent activities: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Clear activity history (AJAX)
+     */
+    public function clearActivity()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $db = new Database();
+
+                // Clear product-related activities
+                $db->query("
+                    DELETE FROM user_activity_log 
+                    WHERE action IN ('product_created', 'product_updated', 'product_deleted', 'Inventory_adjusted')
+                       OR details LIKE '%product%'
+                       OR details LIKE '%Inventory%'
+                ");
+
+                $db->execute();
+
+                echo json_encode(['success' => true, 'message' => 'Activity history cleared successfully']);
+
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => 'Failed to clear activity history']);
+            }
+            exit;
+        }
+    }
+
+    /**
+     * Log activity to the activity_logs table
+     */
+    private function logActivity($action, $targetType, $targetId, $description = null)
+    {
+        try {
+            $db = new Database();
+
+            // Get current user ID from session
+            $userId = $_SESSION['user_id'] ?? null;
+
+            $db->query("
+                INSERT INTO activity_logs (user_id, action, target_type, target_id) 
+                VALUES (:user_id, :action, :target_type, :target_id)
+            ");
+
+            $db->bind(':user_id', $userId);
+            $db->bind(':action', $action);
+            $db->bind(':target_type', $targetType);
+            $db->bind(':target_id', $targetId);
+
+            $db->execute();
+
+        } catch (Exception $e) {
+            error_log('Error logging activity: ' . $e->getMessage());
+            // Don't throw exception, just log error - activity logging shouldn't break the main functionality
+        }
     }
 }
 ?>

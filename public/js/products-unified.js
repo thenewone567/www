@@ -1,47 +1,52 @@
 // Products & Inventory Unified Page JavaScript
 
-$(document).ready(function() {
+$(document).ready(function () {
     // Initialize the page
     initializeUnifiedPage();
-    
+
     // Add keyboard shortcuts
     addKeyboardShortcuts();
-    
+
     // Auto-refresh every 5 minutes
     setInterval(refreshData, 300000);
 });
 
 function initializeUnifiedPage() {
+    // Debug logging
+    console.log('Initializing unified page...');
+    console.log('Products data:', window.productsData);
+    console.log('Number of products:', window.productsData ? window.productsData.length : 'No data');
+
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
-    
+
     // Load initial products view (list view by default)
     loadProductsView('list');
-    
+
     // Set up event handlers
     setupEventHandlers();
-    
+
     // Initialize filters
     setupFilters();
-    
+
     // Show loading animation
     showLoading(false);
 }
 
 function addKeyboardShortcuts() {
-    $(document).keydown(function(e) {
+    $(document).keydown(function (e) {
         // Ctrl+N - Add new product
         if (e.ctrlKey && e.which === 78) {
             e.preventDefault();
             window.location.href = `${window.URLROOT}/products/add`;
         }
-        
+
         // Ctrl+F - Focus search
         if (e.ctrlKey && e.which === 70) {
             e.preventDefault();
             $('#search').focus();
         }
-        
+
         // Ctrl+R - Refresh data
         if (e.ctrlKey && e.which === 82) {
             e.preventDefault();
@@ -70,7 +75,7 @@ function showLoading(show = true) {
 
 function refreshData() {
     showLoading(true);
-    
+
     // Simulate refresh - in real implementation, you'd make an AJAX call
     setTimeout(() => {
         location.reload();
@@ -79,13 +84,13 @@ function refreshData() {
 
 function setupEventHandlers() {
     // View mode switching
-    $('#listViewBtn').click(function() {
+    $('#listViewBtn').click(function () {
         $(this).addClass('btn-primary').removeClass('btn-outline-secondary');
         $('#cardViewBtn').removeClass('btn-primary').addClass('btn-outline-secondary');
         loadProductsView('list');
     });
 
-    $('#cardViewBtn').click(function() {
+    $('#cardViewBtn').click(function () {
         $(this).addClass('btn-primary').removeClass('btn-outline-secondary');
         $('#listViewBtn').removeClass('btn-primary').addClass('btn-outline-secondary');
         loadProductsView('card');
@@ -95,34 +100,34 @@ function setupEventHandlers() {
     $('#productTabs a').on('click', function (e) {
         e.preventDefault();
         $(this).tab('show');
-        
+
         // Initialize DataTable when switching to inventory tab
         if ($(this).attr('href') === '#inventory') {
-            initializeStockTable();
+            initializeInventoryTable();
         }
     });
 }
 
 function setupFilters() {
     // Search filter
-    $('#search').on('keyup', function() {
+    $('#search').on('keyup', function () {
         applyFilters();
     });
 
     // Category filter
-    $('#category_filter').on('change', function() {
+    $('#category_filter').on('change', function () {
         applyFilters();
     });
 
     // Status filter
-    $('#status_filter').on('change', function() {
+    $('#status_filter').on('change', function () {
         applyFilters();
     });
 }
 
 function loadProductsView(viewType) {
     const container = $('#productsContainer');
-    
+
     if (viewType === 'card') {
         loadCardView(container);
     } else {
@@ -132,7 +137,12 @@ function loadProductsView(viewType) {
 
 function loadListView(container) {
     const products = window.productsData || [];
-    
+
+    console.log('Loading list view...');
+    console.log('Container:', container);
+    console.log('Products array:', products);
+    console.log('Products length:', products.length);
+
     let html = `
         <div class="table-responsive">
             <table id="productsTable" class="table table-hover">
@@ -142,7 +152,7 @@ function loadListView(container) {
                         <th>Product Name</th>
                         <th>SKU</th>
                         <th>Category</th>
-                        <th>Stock</th>
+                        <th>Inventory</th>
                         <th>Price</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -153,18 +163,18 @@ function loadListView(container) {
 
     if (products.length > 0) {
         products.forEach(product => {
-            const stockStatus = getStockStatus(product);
-            const statusBadge = getStatusBadge(stockStatus);
-            
+            const InventoryStatus = getInventoryStatus(product);
+            const statusBadge = getStatusBadge(InventoryStatus);
+
             html += `
                 <tr>
                     <td>
-                        ${product.image_path ? 
-                            `<img src="${window.URLROOT}/${product.image_path}" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">` :
-                            `<div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        ${product.image_path ?
+                    `<img src="${window.URLROOT}/${product.image_path}" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">` :
+                    `<div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                 <i class="fas fa-image text-muted"></i>
                              </div>`
-                        }
+                }
                     </td>
                     <td>
                         <div class="font-weight-bold">${escapeHtml(product.product_name)}</div>
@@ -173,7 +183,7 @@ function loadListView(container) {
                     <td><span class="font-weight-bold">${escapeHtml(product.sku || 'N/A')}</span></td>
                     <td><span class="badge badge-secondary">${escapeHtml(product.category_name || 'Uncategorized')}</span></td>
                     <td>
-                        <span class="font-weight-bold">${formatNumber(product.current_stock || 0)}</span>
+                        <span class="font-weight-bold">${formatNumber(product.current_Inventory || 0)}</span>
                         <small class="text-muted d-block">Min: ${formatNumber(product.reorder_level || 0)}</small>
                     </td>
                     <td>$${formatNumber(product.selling_price || 0, 2)}</td>
@@ -186,7 +196,7 @@ function loadListView(container) {
                             <a href="${window.URLROOT}/products/edit/${product.product_id}" class="btn btn-outline-secondary" data-toggle="tooltip" title="Edit Product">
                                 <i class="fas fa-pencil-alt"></i>
                             </a>
-                            <button class="btn btn-outline-info" onclick="adjustStock(${product.product_id})" data-toggle="tooltip" title="Adjust Stock">
+                            <button class="btn btn-outline-info" onclick="adjustInventory(${product.product_id})" data-toggle="tooltip" title="Adjust Inventory">
                                 <i class="fas fa-boxes"></i>
                             </button>
                         </div>
@@ -217,36 +227,48 @@ function loadListView(container) {
     `;
 
     container.html(html);
-    
-    // Initialize DataTable
-    $('#productsTable').DataTable({
-        "responsive": true,
-        "pageLength": 25,
-        "order": [[1, "asc"]], // Sort by product name
-        "columnDefs": [
-            { "orderable": false, "targets": [0, 7] } // Disable sorting for image and actions columns
-        ]
-    });
+
+    console.log('HTML set to container, container content:', container.html().substring(0, 100) + '...');
+
+    // Initialize DataTable if available
+    if (typeof $.fn.DataTable !== 'undefined') {
+        console.log('Initializing DataTable...');
+        try {
+            $('#productsTable').DataTable({
+                "responsive": true,
+                "pageLength": 25,
+                "order": [[1, "asc"]], // Sort by product name
+                "columnDefs": [
+                    { "orderable": false, "targets": [0, 7] } // Disable sorting for image and actions columns
+                ]
+            });
+            console.log('DataTable initialized successfully');
+        } catch (error) {
+            console.error('DataTable initialization failed:', error);
+        }
+    } else {
+        console.warn('DataTables not available, skipping initialization');
+    }
 }
 
 function loadCardView(container) {
     const products = window.productsData || [];
-    
+
     let html = '<div class="row">';
 
     if (products.length > 0) {
         products.forEach(product => {
-            const stockStatus = getStockStatus(product);
-            const statusBadge = getStatusBadge(stockStatus);
-            
+            const InventoryStatus = getInventoryStatus(product);
+            const statusBadge = getStatusBadge(InventoryStatus);
+
             html += `
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="card h-100 shadow-sm">
                         <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 200px; background-color: #f8f9fa;">
-                            ${product.image_path ? 
-                                `<img src="${window.URLROOT}/${product.image_path}" class="img-fluid" style="max-height: 180px; max-width: 100%; object-fit: cover;">` :
-                                `<i class="fas fa-image fa-3x text-muted"></i>`
-                            }
+                            ${product.image_path ?
+                    `<img src="${window.URLROOT}/${product.image_path}" class="img-fluid" style="max-height: 180px; max-width: 100%; object-fit: cover;">` :
+                    `<i class="fas fa-image fa-3x text-muted"></i>`
+                }
                         </div>
                         <div class="card-body">
                             <h6 class="card-title font-weight-bold">${escapeHtml(product.product_name)}</h6>
@@ -261,8 +283,8 @@ function loadCardView(container) {
                                     <small class="text-muted">Price</small>
                                 </div>
                                 <div class="col-6">
-                                    <div class="font-weight-bold">${formatNumber(product.current_stock || 0)}</div>
-                                    <small class="text-muted">Stock</small>
+                                    <div class="font-weight-bold">${formatNumber(product.current_Inventory || 0)}</div>
+                                    <small class="text-muted">Inventory</small>
                                 </div>
                             </div>
                         </div>
@@ -274,7 +296,7 @@ function loadCardView(container) {
                                 <a href="${window.URLROOT}/products/edit/${product.product_id}" class="btn btn-outline-secondary btn-sm">
                                     <i class="fas fa-pencil-alt"></i>
                                 </a>
-                                <button class="btn btn-outline-info btn-sm" onclick="adjustStock(${product.product_id})">
+                                <button class="btn btn-outline-info btn-sm" onclick="adjustInventory(${product.product_id})">
                                     <i class="fas fa-boxes"></i>
                                 </button>
                             </div>
@@ -301,9 +323,9 @@ function loadCardView(container) {
     container.html(html);
 }
 
-function initializeStockTable() {
-    if (!$.fn.DataTable.isDataTable('#stockTable')) {
-        $('#stockTable').DataTable({
+function initializeInventoryTable() {
+    if (!$.fn.DataTable.isDataTable('#InventoryTable')) {
+        $('#InventoryTable').DataTable({
             "responsive": true,
             "pageLength": 25,
             "order": [[7, "asc"]], // Sort by status
@@ -314,28 +336,28 @@ function initializeStockTable() {
     }
 }
 
-function getStockStatus(product) {
-    const stock = product.current_stock || 0;
+function getInventoryStatus(product) {
+    const Inventory = product.current_Inventory || 0;
     const reorder = product.reorder_level || 0;
-    
-    if (stock <= 0) {
-        return 'out_of_stock';
-    } else if (stock <= reorder) {
-        return 'low_stock';
+
+    if (Inventory <= 0) {
+        return 'out_of_Inventory';
+    } else if (Inventory <= reorder) {
+        return 'low_Inventory';
     } else {
-        return 'in_stock';
+        return 'in_Inventory';
     }
 }
 
 function getStatusBadge(status) {
     switch (status) {
-        case 'out_of_stock':
-            return '<span class="badge badge-danger">Out of Stock</span>';
-        case 'low_stock':
-            return '<span class="badge badge-warning">Low Stock</span>';
-        case 'in_stock':
+        case 'out_of_Inventory':
+            return '<span class="badge badge-danger">Out of Inventory</span>';
+        case 'low_Inventory':
+            return '<span class="badge badge-warning">Low Inventory</span>';
+        case 'in_Inventory':
         default:
-            return '<span class="badge badge-success">In Stock</span>';
+            return '<span class="badge badge-success">In Inventory</span>';
     }
 }
 
@@ -343,7 +365,7 @@ function applyFilters() {
     const searchTerm = $('#search').val().toLowerCase();
     const categoryFilter = $('#category_filter').val();
     const statusFilter = $('#status_filter').val();
-    
+
     // Apply filters to the current view
     // This would filter the products data and reload the view
     console.log('Applying filters:', { searchTerm, categoryFilter, statusFilter });
@@ -356,20 +378,20 @@ function clearFilters() {
     applyFilters();
 }
 
-// Stock adjustment functions
-function adjustStock(productId) {
+// Inventory adjustment functions
+function adjustInventory(productId) {
     // Find product data
     const product = window.productsData?.find(p => p.product_id == productId);
-    
+
     if (product) {
         $('#adjust_product_id').val(product.product_id);
         $('#adjust_product_name').val(product.product_name);
-        $('#adjust_current_stock').val(product.current_stock || 0);
-        $('#stockAdjustmentModal').modal('show');
+        $('#adjust_current_Inventory').val(product.current_Inventory || 0);
+        $('#InventoryAdjustmentModal').modal('show');
     }
 }
 
-function submitStockAdjustment() {
+function submitInventoryAdjustment() {
     const formData = {
         product_id: $('#adjust_product_id').val(),
         type: $('#adjust_type').val(),
@@ -378,14 +400,14 @@ function submitStockAdjustment() {
     };
 
     // Here you would make an AJAX call to your backend
-    console.log('Stock adjustment:', formData);
-    
+    console.log('Inventory adjustment:', formData);
+
     // For now, just close the modal and show success
-    $('#stockAdjustmentModal').modal('hide');
-    
+    $('#InventoryAdjustmentModal').modal('hide');
+
     // Show success message
-    showNotification('Stock adjustment saved successfully!', 'success');
-    
+    showNotification('Inventory adjustment saved successfully!', 'success');
+
     // In a real implementation, you would reload the data
     setTimeout(() => {
         location.reload();
@@ -397,20 +419,20 @@ function viewProduct(productId) {
     window.location.href = `${window.URLROOT}/products/view/${productId}`;
 }
 
-function openStockAdjustment() {
+function openInventoryAdjustment() {
     $('#inventory-tab').tab('show');
 }
 
-function viewStockMovements() {
+function viewInventoryMovements() {
     window.location.href = `${window.URLROOT}/inventory/movements`;
 }
 
-function generateLowStockReport() {
-    window.open(`${window.URLROOT}/reports/low-stock`, '_blank');
+function generateLowInventoryReport() {
+    window.open(`${window.URLROOT}/reports/low-Inventory`, '_blank');
 }
 
-function performStockTake() {
-    window.location.href = `${window.URLROOT}/inventory/stock-take`;
+function performInventoryTake() {
+    window.location.href = `${window.URLROOT}/inventory/Inventory-take`;
 }
 
 function generateReport(type) {
@@ -436,7 +458,7 @@ function escapeHtml(text) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return text ? text.replace(/[&<>"']/g, function(m) { return map[m]; }) : '';
+    return text ? text.replace(/[&<>"']/g, function (m) { return map[m]; }) : '';
 }
 
 function showNotification(message, type = 'info') {
@@ -451,9 +473,9 @@ function showNotification(message, type = 'info') {
             </button>
         </div>
     `);
-    
+
     $('body').append(alert);
-    
+
     // Auto-dismiss after 3 seconds
     setTimeout(() => {
         alert.alert('close');
@@ -507,34 +529,34 @@ function startImport() {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        clearInterval(progressInterval);
-        $('.progress-bar').css('width', '100%');
-        $('#progressText').text('Complete!');
+        .then(response => response.json())
+        .then(data => {
+            clearInterval(progressInterval);
+            $('.progress-bar').css('width', '100%');
+            $('#progressText').text('Complete!');
 
-        setTimeout(() => {
+            setTimeout(() => {
+                $('#importProgress').hide();
+                showImportResults(data);
+            }, 500);
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
             $('#importProgress').hide();
-            showImportResults(data);
-        }, 500);
-    })
-    .catch(error => {
-        clearInterval(progressInterval);
-        $('#importProgress').hide();
-        console.error('Error:', error);
-        showImportResults({
-            success: false,
-            message: 'An error occurred during import. Please try again.'
+            console.error('Error:', error);
+            showImportResults({
+                success: false,
+                message: 'An error occurred during import. Please try again.'
+            });
+        })
+        .finally(() => {
+            $('#importBtn').prop('disabled', false).html('<i class="fas fa-upload mr-1"></i>Start Import');
         });
-    })
-    .finally(() => {
-        $('#importBtn').prop('disabled', false).html('<i class="fas fa-upload mr-1"></i>Start Import');
-    });
 }
 
 function showImportResults(data) {
     $('#importResults').show();
-    
+
     if (data.success) {
         let alertClass = 'alert-success';
         let title = 'Import Successful!';

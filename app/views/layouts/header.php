@@ -5,11 +5,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <!-- Prevent flash of white content by applying dark theme immediately -->
+    <script>
+        // Apply theme immediately before any content renders
+        (function () {
+            const savedTheme = localStorage.getItem('preferred-theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/style.css">
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/css/unified-theme.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap4-theme@1.0.0/dist/select2-bootstrap4.min.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/css/theme-system.css">
     <title><?php echo SITENAME; ?></title>
 </head>
 
@@ -18,7 +32,7 @@
         <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'sidebar.php'; ?>
         <div id="page-content-wrapper" class="w-100 h-100">
             <!-- Navbar -->
-            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+            <nav class="navbar navbar-expand-lg theme-navbar border-bottom">
 
                 <button class="navbar-toggler" type="button" data-toggle="collapse"
                     data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
@@ -113,3 +127,11 @@
                     updateDateTime();
                     setInterval(updateDateTime, 1000);
                 </script>
+
+                <!-- Make URLROOT available to JavaScript -->
+                <script>
+                    const URLROOT = '<?php echo URLROOT; ?>';
+                </script>
+
+                <!-- Theme Controller Script -->
+                <script src="<?php echo URLROOT; ?>/public/js/theme-controller.js"></script>

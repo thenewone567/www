@@ -40,7 +40,11 @@ CREATE TABLE IF NOT EXISTS `suppliers` (
   `supplier_id` int(11) NOT NULL AUTO_INCREMENT,
   `supplier_code` varchar(50) UNIQUE,
   `supplier_name` varchar(255) NOT NULL,
-  `contact_info` text,
+  `contact_person` varchar(100) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `gst_number` varchar(15) DEFAULT NULL,
   `payment_terms` varchar(100) DEFAULT 'Net 30',
   `credit_limit` decimal(12,2) DEFAULT 0.00,
   `is_active` tinyint(1) DEFAULT 1,
@@ -48,6 +52,8 @@ CREATE TABLE IF NOT EXISTS `suppliers` (
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`supplier_id`),
   KEY `idx_supplier_name` (`supplier_name`),
+  KEY `idx_supplier_gst` (`gst_number`),
+  KEY `idx_supplier_email` (`email`),
   KEY `idx_is_active` (`is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

@@ -24,10 +24,10 @@ class DashboardController extends Controller
         // Inventory Management Data
         $inventoryValue = $this->dashboardModel->getTotalInventoryValue();
         $totalProducts = $this->dashboardModel->getTotalProducts();
-        $lowStock = $this->dashboardModel->getLowStockProducts(10);
-        $lowStockCount = $this->dashboardModel->getLowStockCount();
-        $outOfStockCount = $this->dashboardModel->getOutOfStockCount();
-        $outOfStockPercentage = $this->dashboardModel->getOutOfStockPercentage();
+        $lowInventory = $this->dashboardModel->getLowInventoryProducts(10);
+        $lowInventoryCount = $this->dashboardModel->getLowInventoryCount();
+        $outOfInventoryCount = $this->dashboardModel->getOutOfInventoryCount();
+        $outOfInventoryPercentage = $this->dashboardModel->getOutOfInventoryPercentage();
 
         // Customer Analytics Data
         $newCustomers = $this->dashboardModel->getNewCustomers(30);
@@ -55,10 +55,10 @@ class DashboardController extends Controller
             // Inventory Management
             'inventory_value' => $inventoryValue,
             'total_products' => $totalProducts,
-            'low_stock' => is_array($lowStock) ? $lowStock : [],
-            'low_stock_count' => $lowStockCount,
-            'out_of_stock_count' => $outOfStockCount,
-            'out_of_stock_percentage' => $outOfStockPercentage,
+            'low_Inventory' => is_array($lowInventory) ? $lowInventory : [],
+            'low_Inventory_count' => $lowInventoryCount,
+            'out_of_Inventory_count' => $outOfInventoryCount,
+            'out_of_Inventory_percentage' => $outOfInventoryPercentage,
 
             // Customer Analytics
             'new_customers' => $newCustomers,
@@ -89,10 +89,10 @@ class DashboardController extends Controller
             'avg_transaction' => $this->dashboardModel->getAverageTransactionValue($days),
             'top_selling' => $this->dashboardModel->getTopSellingProducts(5, $days),
             'sales_by_category' => $this->dashboardModel->getSalesByCategory($days),
-            'low_stock' => $this->dashboardModel->getLowStockProducts(10),
+            'low_Inventory' => $this->dashboardModel->getLowInventoryProducts(10),
             'gross_margin' => $this->dashboardModel->getGrossMargin($days),
             'new_customers' => $this->dashboardModel->getNewCustomers($days),
-            'out_of_stock_percentage' => $this->dashboardModel->getOutOfStockPercentage()
+            'out_of_Inventory_percentage' => $this->dashboardModel->getOutOfInventoryPercentage()
         ];
 
         echo json_encode(['success' => true, 'data' => $data]);

@@ -56,3 +56,239 @@ function sanitizePost($inputArray = null)
 
   return $sanitized;
 }
+
+/**
+ * Format currency in Indian Rupees with Indian number formatting
+ * @param float $amount The amount to format
+ * @param int $decimals Number of decimal places (default: 2)
+ * @return string Formatted currency string
+ */
+function formatCurrency($amount, $decimals = 2)
+{
+  return '₹' . formatIndianNumber($amount, $decimals);
+}
+
+/**
+ * Format numbers in Indian numbering system (lakhs, crores)
+ * @param float $number The number to format
+ * @param int $decimals Number of decimal places (default: 2)
+ * @return string Formatted number string
+ */
+function formatIndianNumber($number, $decimals = 2)
+{
+  if ($number == 0) {
+    return number_format(0, $decimals);
+  }
+
+  $isNegative = $number < 0;
+  $number = abs($number);
+
+  // Format based on Indian numbering system
+  if ($number >= 10000000) {
+    // Crores
+    $formatted = number_format($number / 10000000, $decimals) . ' Cr';
+  } elseif ($number >= 100000) {
+    // Lakhs
+    $formatted = number_format($number / 100000, $decimals) . ' L';
+  } elseif ($number >= 1000) {
+    // Thousands with Indian comma placement
+    $formatted = formatWithIndianCommas($number, $decimals);
+  } else {
+    $formatted = number_format($number, $decimals);
+  }
+
+  return $isNegative ? '-' . $formatted : $formatted;
+}
+
+/**
+ * Format numbers with Indian comma placement (xx,xx,xxx)
+ * @param float $number The number to format
+ * @param int $decimals Number of decimal places
+ * @return string Formatted number string
+ */
+function formatWithIndianCommas($number, $decimals = 2)
+{
+  $number = number_format($number, $decimals, '.', '');
+  $parts = explode('.', $number);
+  $integerPart = $parts[0];
+  $decimalPart = isset($parts[1]) ? $parts[1] : '';
+
+  // Add commas in Indian format
+  $length = strlen($integerPart);
+  if ($length > 3) {
+    $lastThree = substr($integerPart, -3);
+    $remaining = substr($integerPart, 0, -3);
+    $remaining = preg_replace('/\B(?=(\d{2})+(?!\d))/', ',', $remaining);
+    $integerPart = $remaining . ',' . $lastThree;
+  }
+
+  return $decimalPart ? $integerPart . '.' . $decimalPart : $integerPart;
+}
+
+/**
+ * Format currency for display without denomination suffix
+ * @param float $amount The amount to format
+ * @param int $decimals Number of decimal places (default: 2)
+ * @return string Formatted currency string
+ */
+function formatCurrencySimple($amount, $decimals = 2)
+{
+  return '₹' . formatWithIndianCommas($amount, $decimals);
+}
+
+/**
+ * Demonstrate inventory costing calculation
+ * @param array $purchases Array of purchase records with quantity and unit_price
+ * @param int $quantitySold Quantity sold using FIFO method
+ * @return array Cost calculation details
+ */
+function demonstrateInventoryCosting($purchases, $quantitySold = 0)
+{
+  $totalInventoryValue = 0;
+  $totalQuantity = 0;
+  $costOfGoodsSold = 0;
+  $remainingQuantity = $quantitySold;
+  $fifoLayers = [];
+
+  // Sort purchases by date (oldest first for FIFO)
+  usort($purchases, function ($a, $b) {
+    return strtotime($a['date']) - strtotime($b['date']);
+  });
+
+  // Calculate FIFO cost layers
+  foreach ($purchases as $purchase) {
+    $layerRemaining = $purchase['quantity'];
+
+    // If we need to sell from this layer
+    if ($remainingQuantity > 0) {
+      $soldFromThisLayer = min($remainingQuantity, $layerRemaining);
+      $costOfGoodsSold += $soldFromThisLayer * $purchase['unit_price'];
+      $layerRemaining -= $soldFromThisLayer;
+      $remainingQuantity -= $soldFromThisLayer;
+    }
+
+    // Add remaining inventory from this layer
+    if ($layerRemaining > 0) {
+      $fifoLayers[] = [
+        'date' => $purchase['date'],
+        'quantity' => $layerRemaining,
+        'unit_price' => $purchase['unit_price'],
+        'layer_value' => $layerRemaining * $purchase['unit_price']
+      ];
+      $totalInventoryValue += $layerRemaining * $purchase['unit_price'];
+      $totalQuantity += $layerRemaining;
+    }
+  }
+
+  $averageCost = $totalQuantity > 0 ? $totalInventoryValue / $totalQuantity : 0;
+
+  return [
+    'total_inventory_value' => $totalInventoryValue,
+    'total_quantity' => $totalQuantity,
+    'average_cost' => $averageCost,
+    'cost_of_goods_sold' => $costOfGoodsSold,
+    'fifo_layers' => $fifoLayers
+  ];
+}
+
+/**
+ * Calculate average price for inventory costing
+ * @param float $currentInventory Current Inventory quantity
+ * @param float $currentPrice Current Inventory price per unit
+ * @param float $newQuantity New purchase quantity
+ * @param float $newPrice New purchase price per unit
+ * @return array Result with total quantity, total value, and average price
+ */
+function calculateAveragePrice($currentInventory, $currentPrice, $newQuantity, $newPrice)
+{
+  $currentValue = $currentInventory * $currentPrice;
+  $newValue = $newQuantity * $newPrice;
+
+  $totalQuantity = $currentInventory + $newQuantity;
+  $totalValue = $currentValue + $newValue;
+
+  $averagePrice = $totalQuantity > 0 ? $totalValue / $totalQuantity : 0;
+
+  return [
+    'total_quantity' => $totalQuantity,
+    'total_value' => $totalValue,
+    'average_price' => $averagePrice,
+    'current_value' => $currentValue,
+    'new_value' => $newValue
+  ];
+}
+
+/**
+ * Calculate separate batch costing
+ * @param array $existingBatches Array of existing batches [quantity, price, batch_number]
+ * @param float $newQuantity New purchase quantity
+ * @param float $newPrice New purchase price per unit
+ * @param string $newBatchNumber New batch number
+ * @return array Result with updated batches and total inventory value
+ */
+function calculateSeparateBatches($existingBatches, $newQuantity, $newPrice, $newBatchNumber)
+{
+  $totalValue = 0;
+  $totalQuantity = 0;
+
+  // Calculate existing batches value
+  foreach ($existingBatches as $batch) {
+    $batchValue = $batch['quantity'] * $batch['price'];
+    $totalValue += $batchValue;
+    $totalQuantity += $batch['quantity'];
+  }
+
+  // Add new batch
+  $newBatchValue = $newQuantity * $newPrice;
+  $totalValue += $newBatchValue;
+  $totalQuantity += $newQuantity;
+
+  $newBatch = [
+    'quantity' => $newQuantity,
+    'price' => $newPrice,
+    'batch_number' => $newBatchNumber,
+    'value' => $newBatchValue
+  ];
+
+  return [
+    'total_quantity' => $totalQuantity,
+    'total_value' => $totalValue,
+    'new_batch' => $newBatch,
+    'existing_batches' => $existingBatches,
+    'weighted_average_price' => $totalQuantity > 0 ? $totalValue / $totalQuantity : 0
+  ];
+}
+
+/**
+ * Generate example for costing method comparison
+ * @param float $currentInventory Current Inventory quantity
+ * @param float $currentPrice Current Inventory price per unit
+ * @param float $newQuantity New purchase quantity
+ * @param float $newPrice New purchase price per unit
+ * @return array Comparison of both methods
+ */
+function getCostingMethodExample($currentInventory, $currentPrice, $newQuantity, $newPrice)
+{
+  $averageMethod = calculateAveragePrice($currentInventory, $currentPrice, $newQuantity, $newPrice);
+
+  $existingBatches = [
+    [
+      'quantity' => $currentInventory,
+      'price' => $currentPrice,
+      'batch_number' => 'BATCH-001'
+    ]
+  ];
+
+  $separateMethod = calculateSeparateBatches($existingBatches, $newQuantity, $newPrice, 'BATCH-002');
+
+  return [
+    'average_method' => $averageMethod,
+    'separate_method' => $separateMethod,
+    'price_difference' => abs($averageMethod['average_price'] - $separateMethod['weighted_average_price']),
+    'method_comparison' => [
+      'average_shows_single_price' => $averageMethod['average_price'],
+      'separate_maintains_individual_costs' => true,
+      'inventory_value_same' => ($averageMethod['total_value'] == $separateMethod['total_value'])
+    ]
+  ];
+}

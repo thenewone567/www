@@ -198,20 +198,20 @@ class Report
                     p.product_name,
                     p.product_code,
                     COALESCE(SUM(si.quantity), 0) as units_sold,
-                    COALESCE(AVG(stock.quantity), 0) as avg_inventory,
+                    COALESCE(AVG(Inventory.quantity), 0) as avg_inventory,
                     CASE 
-                        WHEN AVG(stock.quantity) > 0 
-                        THEN SUM(si.quantity) / AVG(stock.quantity)
+                        WHEN AVG(Inventory.quantity) > 0 
+                        THEN SUM(si.quantity) / AVG(Inventory.quantity)
                         ELSE 0 
                     END as turnover_ratio,
                     CASE 
                         WHEN SUM(si.quantity) > 0 
-                        THEN 365 / (SUM(si.quantity) / AVG(stock.quantity))
+                        THEN 365 / (SUM(si.quantity) / AVG(Inventory.quantity))
                         ELSE 0 
                     END as days_to_sell
                   FROM products p
                   LEFT JOIN sale_items si ON p.product_id = si.product_id
-                  LEFT JOIN stock ON p.product_id = stock.product_id
+                  LEFT JOIN Inventory ON p.product_id = Inventory.product_id
                   GROUP BY p.product_id, p.product_name, p.product_code
                   ORDER BY turnover_ratio DESC";
 

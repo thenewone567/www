@@ -31,6 +31,16 @@ class Category
     }
 
     /**
+     * Find category by name (alias for getCategoryByName for controller compatibility)
+     * @param string $name
+     * @return object|null
+     */
+    public function findCategoryByName($name)
+    {
+        return $this->getCategoryByName($name);
+    }
+
+    /**
      * Get all categories
      * @return array
      */

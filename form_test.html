@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Form Test</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap4-theme@1.0.0/dist/select2-bootstrap4.min.css">
+    <link rel="stylesheet" href="public/css/theme-system.css">
+</head>
+
+<body class="p-4">
+    <div class="container">
+        <h1>Product Form Dropdown Test</h1>
+
+        <form>
+            <div class="row">
+                <div class="col-md-4 col-12 mb-3">
+                    <label for="category_id">Category: <sup>*</sup></label>
+                    <select name="category_id" id="categorySelect"
+                        class="form-control form-control-lg searchable-dropdown" required>
+                        <option value="">Select Category</option>
+                        <option value="1">Tools</option>
+                        <option value="2">Hardware</option>
+                        <option value="3">Electrical</option>
+                        <option value="4">Plumbing</option>
+                        <option value="add_new_category">+ Add Category</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 col-12 mb-3">
+                    <label for="supplier_id">Supplier: <sup>*</sup></label>
+                    <select name="supplier_id" id="supplierSelect"
+                        class="form-control form-control-lg searchable-dropdown" required>
+                        <option value="">Select Supplier</option>
+                        <option value="1">ABC Tools Ltd</option>
+                        <option value="2">Hardware Supply Co</option>
+                        <option value="3">Pro Equipment Inc</option>
+                        <option value="add_new_supplier">+ Add Supplier</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 col-12 mb-3">
+                    <label for="brand_id">Brand:</label>
+                    <select name="brand_id" id="brandSelect" class="form-control form-control-lg searchable-dropdown">
+                        <option value="">Select Brand</option>
+                        <option value="1">DeWalt</option>
+                        <option value="2">Makita</option>
+                        <option value="3">Bosch</option>
+                        <option value="add_new_brand">+ Add Brand</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <div class="mt-4">
+            <button class="btn btn-primary" onclick="testSelections()">Test Current Selections</button>
+            <button class="btn btn-secondary" onclick="reinitializeDropdowns()">Re-initialize Dropdowns</button>
+            <button class="btn btn-info" onclick="destroyAndReinit()">Destroy & Re-init</button>
+        </div>
+
+        <div class="mt-4">
+            <h3>Selection Results:</h3>
+            <div id="selectionResults" class="alert alert-info"></div>
+        </div>
+
+        <div class="mt-4">
+            <h3>Debug Log:</h3>
+            <pre id="debugLog" class="bg-light p-3" style="max-height: 300px; overflow-y: auto;"></pre>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        let debugLog = '';
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog += `[${timestamp}] ${message}\n`;
+            document.getElementById('debugLog').textContent = debugLog;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function testSelections() {
+            log('=== Testing Current Selections ===');
+            const results = [];
+
+            $('.searchable-dropdown').each(function () {
+                const id = this.id;
+                const value = $(this).val();
+                const text = $(this).find('option:selected').text();
+                const message = `${id}: value="${value}" text="${text}"`;
+
+                log(message);
+                results.push(message);
+            });
+
+            document.getElementById('selectionResults').innerHTML = results.join('<br>');
+        }
+
+        function reinitializeDropdowns() {
+            log('=== Re-initializing via global function ===');
+            if (typeof window.initializeSelect2 === 'function') {
+                window.initializeSelect2();
+                log('Global function called successfully');
+            } else {
+                log('ERROR: Global initializeSelect2 function not found!');
+            }
+        }
+
+        function destroyAndReinit() {
+            log('=== Destroying and re-initializing dropdowns ===');
+
+            $('.searchable-dropdown').each(function () {
+                const id = this.id;
+                try {
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2('destroy');
+                        log(`Destroyed ${id}`);
+                    }
+                } catch (error) {
+                    log(`Error destroying ${id}: ${error.message}`);
+                }
+            });
+
+            setTimeout(() => {
+                $('.searchable-dropdown').each(function () {
+                    const id = this.id;
+                    try {
+                        $(this).select2({
+                            theme: 'bootstrap4',
+                            placeholder: 'Search...',
+                            allowClear: true,
+                            width: '100%'
+                        });
+                        log(`Re-initialized ${id} successfully`);
+                    } catch (error) {
+                        log(`Error re-initializing ${id}: ${error.message}`);
+                    }
+                });
+            }, 100);
+        }
+
+        $(document).ready(function () {
+            log('Document ready');
+            log(`jQuery version: ${$.fn.jquery}`);
+            log(`Select2 available: ${typeof $.fn.select2 !== 'undefined'}`);
+
+            // Add event listeners
+            $('.searchable-dropdown').on('select2:select', function (e) {
+                const data = e.params.data;
+                log(`SELECTION EVENT: ${this.id} - ${data.id} = "${data.text}"`);
+            });
+
+            $('.searchable-dropdown').on('select2:unselect', function (e) {
+                log(`UNSELECT EVENT: ${this.id}`);
+            });
+
+            $('.searchable-dropdown').on('select2:open', function (e) {
+                log(`OPEN EVENT: ${this.id}`);
+            });
+
+            $('.searchable-dropdown').on('select2:close', function (e) {
+                log(`CLOSE EVENT: ${this.id}`);
+            });
+
+            // Try to initialize after a delay
+            setTimeout(() => {
+                log('Attempting initialization...');
+                if (typeof window.initializeSelect2 === 'function') {
+                    log('Using global initializeSelect2 function');
+                    window.initializeSelect2();
+                } else {
+                    log('Global function not found, using basic initialization');
+                    $('.searchable-dropdown').each(function () {
+                        const id = this.id;
+                        try {
+                            $(this).select2({
+                                theme: 'bootstrap4',
+                                placeholder: 'Search...',
+                                allowClear: true,
+                                width: '100%'
+                            });
+                            log(`Basic init successful for ${id}`);
+                        } catch (error) {
+                            log(`Basic init failed for ${id}: ${error.message}`);
+                        }
+                    });
+                }
+            }, 500);
+        });
+    </script>
+
+    <!-- Load the custom script -->
+    <script src="public/js/select2-init.js"></script>
+</body>
+
+</html>
