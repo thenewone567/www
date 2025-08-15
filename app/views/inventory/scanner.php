@@ -7,7 +7,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h4 class="mb-0"><i class="fa-solid fa-barcode"></i> Barcode Scanner</h4>
-                        <a href="<?php echo URLROOT; ?>/inventory" class="btn btn-secondary">
+                        <a href="<?php echo URLROOT; ?>/inventory" class="btn-theme btn-secondary">
                             <i class="fa-solid fa-arrow-left"></i> Back to Inventory
                         </a>
                     </div>
@@ -21,7 +21,7 @@
                                     <input type="text" id="barcode-input" class="form-control form-control-lg"
                                         placeholder="Scan product or location barcode" autofocus>
                                     <div class="input-group-append">
-                                        <button class="btn btn-primary" type="button" onclick="searchBarcode()">
+                                        <button class="btn-theme btn-primary-theme" type="button" onclick="searchBarcode()">
                                             <i class="fa-solid fa-search"></i>
                                         </button>
                                     </div>

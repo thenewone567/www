@@ -77,7 +77,7 @@ class CycleCountsController extends Controller
 
                 if ($this->cycleCountModel->createCycleCount($data)) {
                     flash('cycle_count_message', 'Cycle count created successfully');
-                    redirect('cycle-counts');
+                    redirect('inventory/cycle_counting');
                 } else {
                     die('Something went wrong');
                 }
@@ -117,7 +117,7 @@ class CycleCountsController extends Controller
         $cycleCount = $this->cycleCountModel->getCycleCountById($id);
         if (!$cycleCount) {
             flash('cycle_count_message', 'Cycle count not found', 'alert alert-danger');
-            redirect('cycle-counts');
+            redirect('inventory/cycle_counting');
         }
 
         $items = $this->cycleCountModel->getCycleCountItems($id);
@@ -139,12 +139,12 @@ class CycleCountsController extends Controller
         $cycleCount = $this->cycleCountModel->getCycleCountById($id);
         if (!$cycleCount) {
             flash('cycle_count_message', 'Cycle count not found', 'alert alert-danger');
-            redirect('cycle-counts');
+            redirect('inventory/cycle_counting');
         }
 
         if ($cycleCount->status !== 'planned') {
             flash('cycle_count_message', 'Cycle count cannot be started', 'alert alert-danger');
-            redirect('cycle-counts');
+            redirect('inventory/cycle_counting');
         }
 
         // Generate cycle count items based on type
@@ -167,7 +167,7 @@ class CycleCountsController extends Controller
             flash('cycle_count_message', 'Error starting cycle count', 'alert alert-danger');
         }
 
-        redirect('cycle-counts/show/' . $id);
+        redirect('inventory/cycle_counting');
     }
 
     /**
@@ -178,7 +178,7 @@ class CycleCountsController extends Controller
         $cycleCount = $this->cycleCountModel->getCycleCountById($id);
         if (!$cycleCount || $cycleCount->status !== 'in_progress') {
             flash('cycle_count_message', 'Invalid cycle count', 'alert alert-danger');
-            redirect('cycle-counts');
+            redirect('inventory/cycle_counting');
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -199,7 +199,7 @@ class CycleCountsController extends Controller
             }
 
             flash('cycle_count_message', 'Counts updated successfully');
-            redirect('cycle-counts/count/' . $id);
+            redirect('inventory/cycle_counting');
         } else {
             $items = $this->cycleCountModel->getCycleCountItems($id);
 
@@ -224,7 +224,7 @@ class CycleCountsController extends Controller
             flash('cycle_count_message', 'Error completing cycle count', 'alert alert-danger');
         }
 
-        redirect('cycle-counts/show/' . $id);
+        redirect('inventory/cycle_counting');
     }
 
     /**
@@ -238,6 +238,6 @@ class CycleCountsController extends Controller
             flash('cycle_count_message', 'Error cancelling cycle count', 'alert alert-danger');
         }
 
-        redirect('cycle-counts');
+        redirect('inventory/cycle_counting');
     }
 }

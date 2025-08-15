@@ -107,7 +107,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
     <!-- Activity Logs Table -->
     <div class="row">
         <div class="col-12">
-            <div class="card shadow">
+            <div class="card-theme">
                 <div class="card-header py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h6 class="m-0 font-weight-bold text-primary">
@@ -251,7 +251,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
     <!-- Activity Statistics -->
     <div class="row mt-4">
         <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-theme border-left-success shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
@@ -284,7 +284,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         </div>
 
         <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-theme border-left-warning shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
@@ -314,7 +314,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         </div>
 
         <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-theme border-left-danger shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">

@@ -1,441 +1,1618 @@
-<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
+<?php
+require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php';
 
-<div class="container-fluid theme-container mt-0 pt-3">
-    <!-- Statistics Cards Row -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Suppliers
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo isset($data['total_suppliers']) ? $data['total_suppliers'] : '0'; ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+// Helper function to build pagination URLs with all current parameters
+function buildPaginationUrl($page, $perPage = null)
+{
+    $params = [];
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Active
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo isset($data['active_suppliers']) ? $data['active_suppliers'] : '0'; ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    // Add page parameter
+    $params['page'] = $page;
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Pending
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo isset($data['pending_suppliers']) ? $data['pending_suppliers'] : '0'; ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    // Preserve current parameters
+    if (!empty($_GET['search']))
+        $params['search'] = $_GET['search'];
+    if (!empty($_GET['status']))
+        $params['status'] = $_GET['status'];
+    if (!empty($_GET['tier']))
+        $params['tier'] = $_GET['tier'];
+    if (!empty($_GET['sort']))
+        $params['sort'] = $_GET['sort'];
+    if (!empty($_GET['order']))
+        $params['order'] = $_GET['order'];
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                On Hold
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo isset($data['onhold_suppliers']) ? $data['onhold_suppliers'] : '0'; ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-pause-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    // Use provided per_page or current per_page
+    if ($perPage) {
+        $params['per_page'] = $perPage;
+    } elseif (!empty($_GET['per_page'])) {
+        $params['per_page'] = $_GET['per_page'];
+    }
 
-    <!-- Page Header -->
-    <div class="row">
-        <div class="col-md-6">
-            <h1>Suppliers</h1>
+    return '?' . http_build_query($params);
+}
+?>
+
+<div class="container-fluid mb-4">
+    <div class="row align-items-center">
+        <div class="col-12 col-md-6">
+            <h1 class="mb-1 font-weight-bold">
+                <i class="fas fa-users mr-2"></i>Suppliers Dashboard
+            </h1>
+            <small class="text-muted">Complete supplier management and performance tracking</small>
         </div>
-        <div class="col-md-6">
-            <a href="<?php echo URLROOT; ?>/suppliers/add" class="btn btn-primary float-right">
+        <div class="col-12 col-md-6 text-md-right mt-3 mt-md-0">
+            <a href="<?php echo URLROOT; ?>/suppliers/add" class="btn btn-success btn-lg mr-2">
                 <i class="fa fa-plus"></i> Add Supplier
+            </a>
+            <a href="<?php echo URLROOT; ?>/suppliers/link" class="btn btn-primary btn-lg mr-2">
+                <i class="fas fa-link"></i> Link Supplier
+            </a>
+            <a href="<?php echo URLROOT; ?>/suppliers/competitionReport" class="btn btn-warning btn-lg">
+                <i class="fas fa-chart-line"></i> Competition Report
             </a>
         </div>
     </div>
+</div>
 
-    <!-- Search and Filter Section -->
-    <div class="card mt-3 mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">
-                <i class="fas fa-search"></i> Search Suppliers
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-8 mb-3">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text">
-                                <i class="fas fa-search"></i>
-                            </span>
-                        </div>
-                        <input type="text" id="globalSearch" class="form-control form-control-lg"
-                            placeholder="Search by name, contact person, phone, email, address, or GST number...">
-                        <div class="input-group-append">
-                            <button type="button" id="clearSearch" class="btn btn-outline-secondary">
-                                <i class="fas fa-times"></i> Clear
-                            </button>
-                        </div>
+<div class="container-fluid mt-0 pt-3">
+    <!-- Enhanced KPI Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-2 col-md-4 mb-3">
+            <div class="kpi-card h-100 primary">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-users"></i>
                     </div>
-                    <small class="form-text text-muted">
-                        Search across all fields simultaneously. Results update as you type.
-                    </small>
+                    <div class="kpi-card-title">
+                        <h5>Total Suppliers</h5>
+                    </div>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <div class="d-flex align-items-center h-100">
-                        <span class="text-muted">
-                            <span id="resultCount"><?php echo count($data['suppliers']); ?></span> suppliers shown
-                        </span>
+                <div class="kpi-card-body text-center">
+                    <div class="kpi-card-value">
+                        <?php echo isset($data['total_suppliers']) ? $data['total_suppliers'] : '0'; ?>
+                    </div>
+                    <div class="kpi-card-label">Registered</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 mb-3">
+            <div class="kpi-card h-100 success">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="kpi-card-title">
+                        <h5>Active</h5>
+                    </div>
+                </div>
+                <div class="kpi-card-body text-center">
+                    <div class="kpi-card-value">
+                        <?php echo isset($data['active_suppliers']) ? $data['active_suppliers'] : '0'; ?>
+                    </div>
+                    <div class="kpi-card-label">Suppliers</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 mb-3">
+            <div class="kpi-card h-100 info">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="kpi-card-title">
+                        <h5>Avg Delivery</h5>
+                    </div>
+                </div>
+                <div class="kpi-card-body text-center">
+                    <div class="kpi-card-value">
+                        <?php echo isset($data['avg_delivery_days']) ? number_format($data['avg_delivery_days'], 1) : '0'; ?>
+                    </div>
+                    <div class="kpi-card-label">Days</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 mb-3">
+            <div class="kpi-card h-100 warning">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="kpi-card-title">
+                        <h5>On-Time Rate</h5>
+                    </div>
+                </div>
+                <div class="kpi-card-body text-center">
+                    <div class="kpi-card-value">
+                        <?php echo isset($data['avg_on_time_rate']) ? number_format($data['avg_on_time_rate'], 1) : '0'; ?>%
+                    </div>
+                    <div class="kpi-card-label">Average</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 mb-3">
+            <div class="kpi-card h-100 warning special">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="kpi-card-title">
+                        <h5>Gold Tier</h5>
+                    </div>
+                </div>
+                <div class="kpi-card-body text-center">
+                    <div class="kpi-card-value">
+                        <?php echo isset($data['gold_tier_suppliers']) ? $data['gold_tier_suppliers'] : '0'; ?>
+                    </div>
+                    <div class="kpi-card-label">Suppliers</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 mb-3">
+            <div class="kpi-card h-100 secondary special">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="kpi-card-title">
+                        <h5>Total Value</h5>
+                    </div>
+                </div>
+                <div class="kpi-card-body text-center">
+                    <div class="kpi-card-value">
+                        ₹<?php echo isset($data['total_order_value']) ? number_format($data['total_order_value'] / 100000, 1) : '0'; ?>L
+                    </div>
+                    <div class="kpi-card-label">Order Value</div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- end of KPI row -->
+
+    <!-- Quick Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="kpi-card primary">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <div class="kpi-card-value">
+                        ₹<?php echo isset($data['total_order_value']) ? number_format($data['total_order_value'] / 100000, 1) : '2.45'; ?>L
+                    </div>
+                    <div class="kpi-card-label">Total Supplier Value</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="kpi-card success">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="kpi-card-value">
+                        <?php echo isset($data['avg_on_time_rate']) ? number_format($data['avg_on_time_rate'], 1) : '85.2'; ?>%
+                    </div>
+                    <div class="kpi-card-label">Average On-Time Rate</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="kpi-card warning">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="kpi-card-value">
+                        <?php echo isset($data['poor_performers_count']) ? $data['poor_performers_count'] : '3'; ?>
+                    </div>
+                    <div class="kpi-card-label">Suppliers Need Attention</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="kpi-card info">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <div class="kpi-card-value">
+                        <?php echo isset($data['active_suppliers']) ? $data['active_suppliers'] : '8'; ?>
+                    </div>
+                    <div class="kpi-card-label">Active Partnerships</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Performers Section -->
+    <div class="row mb-4">
+        <div class="col-lg-4 mb-3">
+            <div class="kpi-card shadow h-100 success">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="kpi-card-title">
+                        <h6>Top Performers</h6>
+                    </div>
+                </div>
+                <div class="kpi-card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <?php if (!empty($data['top_performers'])): ?>
+                            <?php foreach (array_slice($data['top_performers'], 0, 3) as $index => $supplier): ?>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong><?php echo htmlspecialchars($supplier->supplier_name); ?></strong>
+                                        <br><small
+                                            class="text-muted"><?php echo number_format($supplier->on_time_delivery_rate ?? 0, 1); ?>%
+                                            on-time</small>
+                                    </div>
+                                    <span
+                                        class="badge badge-<?php echo $index === 0 ? 'warning' : ($index === 1 ? 'secondary' : 'primary'); ?> badge-pill">
+                                        <?php echo $index + 1; ?>
+                                    </span>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="list-group-item text-center text-muted">
+                                No performance data available
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-3">
+            <div class="kpi-card shadow h-100 warning">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="kpi-card-title">
+                        <h6>Needs Attention</h6>
+                    </div>
+                </div>
+                <div class="kpi-card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <?php if (!empty($data['poor_performers'])): ?>
+                            <?php foreach (array_slice($data['poor_performers'], 0, 3) as $supplier): ?>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong><?php echo htmlspecialchars($supplier->supplier_name); ?></strong>
+                                        <br><small
+                                            class="text-muted"><?php echo number_format($supplier->on_time_delivery_rate ?? 0, 1); ?>%
+                                            on-time</small>
+                                    </div>
+                                    <span class="badge badge-danger badge-pill">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </span>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="list-group-item text-center text-muted">
+                                All suppliers performing well
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-3">
+            <div class="kpi-card shadow h-100 info">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="kpi-card-title">
+                        <h6>Recent Deliveries</h6>
+                    </div>
+                </div>
+                <div class="kpi-card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <?php if (!empty($data['recent_deliveries'])): ?>
+                            <?php foreach (array_slice($data['recent_deliveries'], 0, 3) as $delivery): ?>
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <strong><?php echo htmlspecialchars($delivery->supplier_name); ?></strong>
+                                        <span
+                                            class="badge badge-<?php echo $delivery->days_early_late > 0 ? 'danger' : ($delivery->days_early_late < 0 ? 'success' : 'primary'); ?>">
+                                            <?php
+                                            if ($delivery->days_early_late > 0) {
+                                                echo '+' . $delivery->days_early_late . ' days';
+                                            } elseif ($delivery->days_early_late < 0) {
+                                                echo abs($delivery->days_early_late) . ' days early';
+                                            } else {
+                                                echo 'On time';
+                                            }
+                                            ?>
+                                        </span>
+                                    </div>
+                                    <small
+                                        class="text-muted"><?php echo date('M d, Y', strtotime($delivery->actual_delivery_date)); ?></small>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="list-group-item text-center text-muted">
+                                No recent deliveries
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="theme-table">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th class="sortable" data-column="0" style="cursor: pointer; user-select: none;">
-                        ID <i class="fas fa-sort text-muted"></i>
-                    </th>
-                    <th class="sortable" data-column="1" style="cursor: pointer; user-select: none;">
-                        Name <i class="fas fa-sort text-muted"></i>
-                    </th>
-                    <th class="sortable" data-column="2" style="cursor: pointer; user-select: none;">
-                        Contact Person <i class="fas fa-sort text-muted"></i>
-                    </th>
-                    <th class="sortable" data-column="3" style="cursor: pointer; user-select: none;">
-                        Phone <i class="fas fa-sort text-muted"></i>
-                    </th>
-                    <th class="sortable" data-column="4" style="cursor: pointer; user-select: none;">
-                        Email <i class="fas fa-sort text-muted"></i>
-                    </th>
-                    <th class="sortable" data-column="5" style="cursor: pointer; user-select: none;">
-                        Address <i class="fas fa-sort text-muted"></i>
-                    </th>
-                    <th class="sortable" data-column="6" style="cursor: pointer; user-select: none;">
-                        GST Number <i class="fas fa-sort text-muted"></i>
-                    </th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($data['suppliers'])): ?>
-                    <?php foreach ($data['suppliers'] as $supplier): ?>
-                        <tr>
-                            <td><?php echo $supplier->supplier_id; ?></td>
-                            <td><?php echo htmlspecialchars($supplier->supplier_name); ?></td>
-                            <td><?php echo htmlspecialchars($supplier->contact_person ?? '-'); ?></td>
-                            <td><?php echo htmlspecialchars($supplier->phone ?? '-'); ?></td>
-                            <td><?php echo htmlspecialchars($supplier->email ?? '-'); ?></td>
-                            <td>
-                                <?php
-                                $address = $supplier->address ?? '';
-                                echo htmlspecialchars($address ? (strlen($address) > 50 ? substr($address, 0, 50) . '...' : $address) : '-');
-                                ?>
-                            </td>
-                            <td><?php echo htmlspecialchars($supplier->gst_number ?? '-'); ?></td>
-                            <td>
-                                <a href="<?php echo URLROOT; ?>/suppliers/edit/<?php echo $supplier->supplier_id; ?>"
-                                    class="btn btn-dark btn-sm">Edit</a>
-                                <form class="d-inline"
-                                    action="<?php echo URLROOT; ?>/suppliers/delete/<?php echo $supplier->supplier_id; ?>"
-                                    method="post" style="display:inline;">
-                                    <input type="submit" value="Delete" class="btn btn-danger btn-sm"
-                                        onclick="return confirm('Are you sure you want to delete this supplier?')">
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="8" class="text-center text-muted">No suppliers found</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div> <!-- End theme-table -->
-</div> <!-- End theme-container -->
+</div>
 
-<style>
-    .sortable:hover {
-        background-color: #f8f9fa;
-        transition: background-color 0.2s ease;
-    }
+<!-- Suppliers Management Table -->
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="kpi-card">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <div class="kpi-card-title">
+                        <h5>Supplier Management</h5>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <form method="GET" action="<?php echo URLROOT; ?>/suppliers" class="mr-3" id="searchForm">
+                            <div class="input-group input-group-sm" style="width: 250px;">
+                                <input type="text" class="form-control" id="supplierSearch" name="search"
+                                    placeholder="Search suppliers..."
+                                    value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                                <!-- Preserve all current GET parameters -->
+                                <?php if (isset($_GET['per_page'])): ?>
+                                    <input type="hidden" name="per_page" value="<?php echo (int) $_GET['per_page']; ?>">
+                                <?php endif; ?>
+                                <?php if (isset($_GET['status'])): ?>
+                                    <input type="hidden" name="status"
+                                        value="<?php echo htmlspecialchars($_GET['status']); ?>">
+                                <?php endif; ?>
+                                <?php if (isset($_GET['tier'])): ?>
+                                    <input type="hidden" name="tier" value="<?php echo htmlspecialchars($_GET['tier']); ?>">
+                                <?php endif; ?>
+                                <?php if (isset($_GET['sort'])): ?>
+                                    <input type="hidden" name="sort" value="<?php echo htmlspecialchars($_GET['sort']); ?>">
+                                <?php endif; ?>
+                                <?php if (isset($_GET['order'])): ?>
+                                    <input type="hidden" name="order"
+                                        value="<?php echo htmlspecialchars($_GET['order']); ?>">
+                                <?php endif; ?>
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <?php if (isset($_GET['search']) && !empty($_GET['search'])): ?>
+                                        <a href="<?php echo URLROOT; ?>/suppliers" class="btn btn-outline-danger"
+                                            title="Clear search">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="d-flex align-items-center mr-2">
+                            <label class="mb-0 mr-2 text-muted" style="font-size: 0.875rem;">Show:</label>
+                            <select class="form-control form-control-sm" id="itemsPerPage"
+                                onchange="changeItemsPerPage()" style="width: auto;">
+                                <option value="25" <?php echo (!isset($_GET['per_page']) || $_GET['per_page'] == 25) ? 'selected' : ''; ?>>25</option>
+                                <option value="50" <?php echo (isset($_GET['per_page']) && $_GET['per_page'] == 50) ? 'selected' : ''; ?>>50</option>
+                                <option value="100" <?php echo (isset($_GET['per_page']) && $_GET['per_page'] == 100) ? 'selected' : ''; ?>>100</option>
+                                <option value="500" <?php echo (isset($_GET['per_page']) && $_GET['per_page'] == 500) ? 'selected' : ''; ?>>500</option>
+                            </select>
+                        </div>
+                        <div class="btn-group btn-group-sm mr-2">
+                            <button class="btn btn-outline-secondary" onclick="exportSuppliers('csv')">
+                                <i class="fas fa-file-csv mr-1"></i>CSV
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="exportSuppliers('excel')">
+                                <i class="fas fa-file-excel mr-1"></i>Excel
+                            </button>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button"
+                                data-toggle="dropdown">
+                                <i class="fas fa-filter mr-1"></i>Filter
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="#" onclick="filterSuppliers('all')">All Suppliers</a>
+                                <a class="dropdown-item" href="#" onclick="filterSuppliers('active')">Active Only</a>
+                                <a class="dropdown-item" href="#" onclick="filterSuppliers('inactive')">Inactive
+                                    Only</a>
+                                <a class="dropdown-item" href="#" onclick="filterSuppliers('gold_tier')">Gold Tier</a>
+                                <a class="dropdown-item" href="#" onclick="filterSuppliers('poor_performance')">Poor
+                                    Performance</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="suppliersTable">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th width="3%">
+                                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th width="8%" id="sort-supplier_id" class="sortable" data-sort="supplier_id">
+                                        ID
+                                        <?php if (isset($data['current_sort']) && $data['current_sort'] === 'supplier_id'): ?>
+                                            <i
+                                                class="fas fa-sort-<?php echo $data['current_order'] === 'DESC' ? 'down' : 'up'; ?>"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-sort text-muted"></i>
+                                        <?php endif; ?>
+                                    </th>
+                                    <th width="20%" id="sort-supplier_name" class="sortable" data-sort="supplier_name">
+                                        Supplier Details
+                                        <?php if (isset($data['current_sort']) && $data['current_sort'] === 'supplier_name'): ?>
+                                            <i
+                                                class="fas fa-sort-<?php echo $data['current_order'] === 'DESC' ? 'down' : 'up'; ?>"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-sort text-muted"></i>
+                                        <?php endif; ?>
+                                    </th>
+                                    <th width="15%" id="sort-contact_person" class="sortable"
+                                        data-sort="contact_person">
+                                        Contact Info
+                                        <?php if (isset($data['current_sort']) && $data['current_sort'] === 'contact_person'): ?>
+                                            <i
+                                                class="fas fa-sort-<?php echo $data['current_order'] === 'DESC' ? 'down' : 'up'; ?>"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-sort text-muted"></i>
+                                        <?php endif; ?>
+                                    </th>
+                                    <th width="10%" id="sort-reliability_score" class="sortable"
+                                        data-sort="reliability_score">
+                                        Performance
+                                        <?php if (isset($data['current_sort']) && $data['current_sort'] === 'reliability_score'): ?>
+                                            <i
+                                                class="fas fa-sort-<?php echo $data['current_order'] === 'DESC' ? 'down' : 'up'; ?>"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-sort text-muted"></i>
+                                        <?php endif; ?>
+                                    </th>
+                                    <th width="12%" id="sort-average_delivery_days" class="sortable"
+                                        data-sort="average_delivery_days">
+                                        Delivery
+                                        <?php if (isset($data['current_sort']) && $data['current_sort'] === 'average_delivery_days'): ?>
+                                            <i
+                                                class="fas fa-sort-<?php echo $data['current_order'] === 'DESC' ? 'down' : 'up'; ?>"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-sort text-muted"></i>
+                                        <?php endif; ?>
+                                    </th>
+                                    <th width="8%" id="sort-supplier_tier" class="sortable" data-sort="supplier_tier">
+                                        Tier
+                                        <?php if (isset($data['current_sort']) && $data['current_sort'] === 'supplier_tier'): ?>
+                                            <i
+                                                class="fas fa-sort-<?php echo $data['current_order'] === 'DESC' ? 'down' : 'up'; ?>"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-sort text-muted"></i>
+                                        <?php endif; ?>
+                                    </th>
+                                    <th width="10%" id="sort-status" class="sortable" data-sort="status">
+                                        Status
+                                        <?php if (isset($data['current_sort']) && $data['current_sort'] === 'status'): ?>
+                                            <i
+                                                class="fas fa-sort-<?php echo $data['current_order'] === 'DESC' ? 'down' : 'up'; ?>"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-sort text-muted"></i>
+                                        <?php endif; ?>
+                                    </th>
+                                    <th width="14%">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="suppliersTableBody">
+                                <?php if (!empty($data['suppliers'])): ?>
+                                    <?php foreach ($data['suppliers'] as $supplier): ?>
+                                        <tr>
+                                            <td>
+                                                <input type="checkbox" class="supplier-checkbox"
+                                                    value="<?php echo $supplier->supplier_id; ?>">
+                                            </td>
+                                            <td>
+                                                <span
+                                                    class="badge badge-secondary">#<?php echo $supplier->supplier_id; ?></span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div>
+                                                        <strong><?php echo htmlspecialchars($supplier->supplier_name); ?></strong>
+                                                        <br><small class="text-muted">
+                                                            <i class="fas fa-envelope mr-1"></i>
+                                                            <?php echo htmlspecialchars($supplier->email ?? 'No email'); ?>
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <i class="fas fa-user text-muted mr-1"></i>
+                                                    <?php echo htmlspecialchars($supplier->contact_person ?? '-'); ?>
+                                                    <br>
+                                                    <i class="fas fa-phone text-muted mr-1"></i>
+                                                    <small><?php echo htmlspecialchars($supplier->phone ?? '-'); ?></small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <?php
+                                                $performance_score = $supplier->delivery_performance_score ?? 0;
+                                                $score_class = $performance_score >= 90 ? 'success' : ($performance_score >= 70 ? 'warning' : 'danger');
+                                                ?>
+                                                <div class="text-center">
+                                                    <div class="circular-progress circular-progress-<?php echo $score_class; ?>"
+                                                        style="width: 40px; height: 40px; display: inline-block;">
+                                                        <span class="score-text"
+                                                            style="font-size: 12px;"><?php echo number_format($performance_score, 0); ?></span>
+                                                    </div>
+                                                    <br><small class="text-muted">Score</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <?php
+                                                $avg_delivery = $supplier->avg_delivery_days ?? 0;
+                                                $delivery_class = $avg_delivery <= 3 ? 'success' : ($avg_delivery <= 7 ? 'warning' : 'danger');
+                                                $on_time_rate = 0;
+                                                if (isset($supplier->total_completed_orders) && $supplier->total_completed_orders > 0) {
+                                                    $on_time_rate = (($supplier->on_time_deliveries_count ?? 0) / $supplier->total_completed_orders) * 100;
+                                                }
+                                                $rate_class = $on_time_rate >= 90 ? 'success' : ($on_time_rate >= 70 ? 'warning' : 'danger');
+                                                ?>
+                                                <span class="badge badge-<?php echo $delivery_class; ?>">
+                                                    <i class="fas fa-truck mr-1"></i>
+                                                    <?php echo number_format($avg_delivery, 1); ?> days
+                                                </span>
+                                                <br>
+                                                <small class="text-<?php echo $rate_class; ?>">
+                                                    <?php echo number_format($on_time_rate, 1); ?>% on-time
+                                                </small>
+                                            </td>
+                                            <td class="text-center">
+                                                <?php
+                                                $tier = 'Bronze';
+                                                $tier_class = 'secondary';
+                                                $tier_icon = 'medal';
 
-    .sortable:active {
-        background-color: #e9ecef;
-    }
+                                                if ($performance_score >= 95) {
+                                                    $tier = 'Gold';
+                                                    $tier_class = 'warning';
+                                                    $tier_icon = 'crown';
+                                                } elseif ($performance_score >= 80) {
+                                                    $tier = 'Silver';
+                                                    $tier_class = 'light';
+                                                    $tier_icon = 'medal';
+                                                }
+                                                ?>
+                                                <span class="badge badge-<?php echo $tier_class; ?> p-2">
+                                                    <i class="fas fa-<?php echo $tier_icon; ?> mr-1"></i>
+                                                    <?php echo $tier; ?>
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <?php
+                                                $status = $supplier->status ?? 'active';
+                                                $status_class = $status === 'active' ? 'success' : ($status === 'pending' ? 'warning' : 'danger');
+                                                ?>
+                                                <span class="badge badge-<?php echo $status_class; ?>">
+                                                    <i
+                                                        class="fas fa-<?php echo $status === 'active' ? 'check-circle' : ($status === 'pending' ? 'clock' : 'times-circle'); ?> mr-1"></i>
+                                                    <?php echo ucfirst($status); ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary"
+                                                        onclick="viewSupplier(<?php echo $supplier->supplier_id; ?>)"
+                                                        title="View">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-warning"
+                                                        onclick="editSupplier(<?php echo $supplier->supplier_id; ?>)"
+                                                        title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                            <i class="fas fa-ellipsis-v"></i>
+                                                        </button>
+                                                        <div class="dropdown-menu dropdown-menu-right">
+                                                            <a class="dropdown-item" href="#"
+                                                                onclick="viewSupplierOrders(<?php echo $supplier->supplier_id; ?>)">
+                                                                <i class="fas fa-shopping-cart mr-2"></i>Orders
+                                                            </a>
+                                                            <a class="dropdown-item" href="#"
+                                                                data-supplier-id="<?php echo $supplier->supplier_id; ?>"
+                                                                data-supplier-name="<?php echo htmlspecialchars($supplier->supplier_name, ENT_QUOTES); ?>"
+                                                                onclick="linkProducts(this.getAttribute('data-supplier-id'), this.getAttribute('data-supplier-name'))">
+                                                                <i class="fas fa-link mr-2"></i>Link Products
+                                                            </a>
+                                                            <a class="dropdown-item" href="#"
+                                                                onclick="toggleSupplierStatus(<?php echo $supplier->supplier_id; ?>, '<?php echo $status; ?>')">
+                                                                <i
+                                                                    class="fas fa-toggle-<?php echo $status === 'active' ? 'off' : 'on'; ?> mr-2"></i>
+                                                                <?php echo $status === 'active' ? 'Deactivate' : 'Activate'; ?>
+                                                            </a>
+                                                            <div class="dropdown-divider"></div>
+                                                            <a class="dropdown-item text-danger" href="#"
+                                                                onclick="deleteSupplier(<?php echo $supplier->supplier_id; ?>)">
+                                                                <i class="fas fa-archive mr-2"></i>Archive
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted py-4">
+                                            <i class="fas fa-users fa-3x mb-3 text-muted"></i>
+                                            <h5>No suppliers found</h5>
+                                            <p>Get started by adding your first supplier.</p>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
 
-    .sortable i {
-        margin-left: 5px;
-        font-size: 0.8em;
-    }
+                    <!-- Pagination Controls -->
+                    <div class="card-footer">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 offset-md-3">
+                                <?php if (isset($data['pagination']) && $data['pagination']['total_pages'] > 1): ?>
+                                    <nav aria-label="Suppliers pagination">
+                                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                                            <!-- Previous Button -->
+                                            <?php if ($data['pagination']['current_page'] > 1): ?>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                        href="<?php echo buildPaginationUrl($data['pagination']['current_page'] - 1, $data['pagination']['per_page']); ?>">
+                                                        <i class="fas fa-chevron-left"></i>
+                                                    </a>
+                                                </li>
+                                            <?php else: ?>
+                                                <li class="page-item disabled">
+                                                    <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                                                </li>
+                                            <?php endif; ?>
 
-    .table thead th.sortable {
-        position: relative;
-        padding-right: 30px;
-    }
-</style>
+                                            <!-- Page Numbers -->
+                                            <?php
+                                            $start_page = max(1, $data['pagination']['current_page'] - 2);
+                                            $end_page = min($data['pagination']['total_pages'], $data['pagination']['current_page'] + 2);
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Single global search functionality
-        const globalSearch = document.getElementById('globalSearch');
-        const clearButton = document.getElementById('clearSearch');
-        const tableRows = document.querySelectorAll('tbody tr');
-        const resultCount = document.getElementById('resultCount');
+                                            // Show first page if not in range
+                                            if ($start_page > 1): ?>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                        href="<?php echo buildPaginationUrl(1, $data['pagination']['per_page']); ?>">1</a>
+                                                </li>
+                                                <?php if ($start_page > 2): ?>
+                                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                                <?php endif;
+                                            endif;
 
-        // Add event listeners
-        globalSearch.addEventListener('input', filterTable);
-        globalSearch.addEventListener('keyup', filterTable);
+                                            // Show page numbers in range
+                                            for ($i = $start_page; $i <= $end_page; $i++): ?>
+                                                <li
+                                                    class="page-item <?php echo ($i == $data['pagination']['current_page']) ? 'active' : ''; ?>">
+                                                    <a class="page-link"
+                                                        href="<?php echo buildPaginationUrl($i, $data['pagination']['per_page']); ?>"><?php echo $i; ?></a>
+                                                </li>
+                                            <?php endfor;
 
-        // Clear search button
-        clearButton.addEventListener('click', function () {
-            globalSearch.value = '';
-            filterTable();
-            globalSearch.focus();
+                                            // Show last page if not in range
+                                            if ($end_page < $data['pagination']['total_pages']):
+                                                if ($end_page < $data['pagination']['total_pages'] - 1): ?>
+                                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                                <?php endif; ?>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                        href="<?php echo buildPaginationUrl($data['pagination']['total_pages'], $data['pagination']['per_page']); ?>"><?php echo $data['pagination']['total_pages']; ?></a>
+                                                </li>
+                                            <?php endif; ?>
+
+                                            <!-- Next Button -->
+                                            <?php if ($data['pagination']['current_page'] < $data['pagination']['total_pages']): ?>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                        href="<?php echo buildPaginationUrl($data['pagination']['current_page'] + 1, $data['pagination']['per_page']); ?>">
+                                                        <i class="fas fa-chevron-right"></i>
+                                                    </a>
+                                                </li>
+                                            <?php else: ?>
+                                                <li class="page-item disabled">
+                                                    <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                                                </li>
+                                            <?php endif; ?>
+                                        </ul>
+                                    </nav>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-md-3">
+                                <?php if (isset($data['pagination'])): ?>
+                                    <small class="text-muted text-right d-block">
+                                        Showing <?php echo $data['pagination']['start_record']; ?> to
+                                        <?php echo $data['pagination']['end_record']; ?>
+                                        of <?php echo $data['pagination']['total_records']; ?> entries
+                                    </small>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bulk Actions -->
+                    <div class="card-footer bg-light" id="bulkActions" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <span class="mr-3" id="selectedCount">0 items selected</span>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-primary" onclick="bulkEditSuppliers()">
+                                    <i class="fas fa-edit mr-1"></i>Bulk Edit
+                                </button>
+                                <button type="button" class="btn btn-outline-success" onclick="bulkActivateSuppliers()">
+                                    <i class="fas fa-check mr-1"></i>Activate
+                                </button>
+                                <button type="button" class="btn btn-outline-warning"
+                                    onclick="bulkDeactivateSuppliers()">
+                                    <i class="fas fa-pause mr-1"></i>Deactivate
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" onclick="bulkDeleteSuppliers()">
+                                    <i class="fas fa-archive mr-1"></i>Archive
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pass PHP data to JavaScript
+        window.URLROOT = '<?php echo URLROOT; ?>';
+        window.suppliersData = <?php echo json_encode($data['suppliers'] ?? []); ?>;
+
+        // Debug: Log the data being passed
+        console.log('PHP Suppliers Data:', window.suppliersData);
+        console.log('Data length:', window.suppliersData ? window.suppliersData.length : 'No data');
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Charts removed - no initialization needed
         });
 
-        // Add keyboard shortcut (Ctrl+F or Cmd+F)
-        document.addEventListener('keydown', function (e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-                e.preventDefault();
-                globalSearch.focus();
-                globalSearch.select();
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.supplier-checkbox');
+
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+
+            updateBulkActions();
+        }
+
+        function updateBulkActions() {
+            const checkboxes = document.querySelectorAll('.supplier-checkbox:checked');
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+
+            if (checkboxes.length > 0) {
+                bulkActions.style.display = 'block';
+                selectedCount.textContent = `${checkboxes.length} item${checkboxes.length > 1 ? 's' : ''} selected`;
+            } else {
+                bulkActions.style.display = 'none';
             }
+        }
 
-            // Escape key to clear search
-            if (e.key === 'Escape' && document.activeElement === globalSearch) {
-                globalSearch.value = '';
-                filterTable();
-                globalSearch.blur();
-            }
-        });
+        // Supplier Action Functions
+        function toggleSupplierStatus(supplierId, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            const action = newStatus === 'active' ? 'activate' : 'deactivate';
 
-        function filterTable() {
-            const searchTerm = globalSearch.value.toLowerCase().trim();
-            let visibleCount = 0;
+            if (confirm(`Are you sure you want to ${action} this supplier?`)) {
+                const formData = new FormData();
+                formData.append('supplier_id', supplierId);
+                formData.append('status', newStatus);
 
-            tableRows.forEach(row => {
-                // Skip the "no suppliers found" row
-                if (row.cells.length === 1 && row.cells[0].colSpan === 8) {
-                    return;
-                }
-
-                let showRow = false;
-
-                if (searchTerm === '') {
-                    // Show all rows if search is empty
-                    showRow = true;
-                } else {
-                    // Search across all relevant columns (skip ID and Actions columns)
-                    const searchableColumns = [1, 2, 3, 4, 5, 6]; // Name, Contact, Phone, Email, Address, GST
-
-                    for (let i = 0; i < searchableColumns.length; i++) {
-                        const cellIndex = searchableColumns[i];
-                        const cellValue = row.cells[cellIndex].textContent.toLowerCase().trim();
-
-                        if (cellValue.includes(searchTerm)) {
-                            showRow = true;
-                            break; // Found match, no need to check other columns
+                fetch(`${window.URLROOT}/suppliers/updateStatus`, {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotification(`Supplier ${action}d successfully`, 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            showNotification(data.error || `Failed to ${action} supplier`, 'error');
                         }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('An error occurred', 'error');
+                    });
+            }
+        }
+
+        function deleteSupplier(supplierId) {
+            if (confirm('Archive this supplier?\n\nThis will hide the supplier from active lists but preserve all records and history.\n\nYou can restore this supplier later if needed.\n\nProceed to archive?')) {
+                // Use fetch for AJAX request instead of redirect
+                fetch(`${window.URLROOT}/suppliers/delete/${supplierId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
                     }
-                }
-
-                // Show/hide row with smooth transition
-                if (showRow) {
-                    row.style.display = '';
-                    row.style.opacity = '1';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                    row.style.opacity = '0.5';
-                }
-            });
-
-            // Update result counter
-            resultCount.textContent = visibleCount;
-
-            // Show/hide "no results" message
-            const tbody = document.querySelector('tbody');
-            let noResultsRow = document.getElementById('noResultsRow');
-
-            if (visibleCount === 0 && searchTerm !== '') {
-                // Show "no results found" message
-                if (!noResultsRow) {
-                    noResultsRow = document.createElement('tr');
-                    noResultsRow.id = 'noResultsRow';
-                    noResultsRow.innerHTML = `
-                    <td colspan="8" class="text-center text-muted py-4">
-                        <i class="fas fa-search fa-2x mb-2"></i><br>
-                        <strong>No suppliers found for "${escapeHtml(globalSearch.value)}"</strong><br>
-                        <small>Try searching with different keywords</small>
-                    </td>
-                `;
-                    tbody.appendChild(noResultsRow);
-                } else {
-                    // Update the search term in existing message
-                    noResultsRow.innerHTML = `
-                    <td colspan="8" class="text-center text-muted py-4">
-                        <i class="fas fa-search fa-2x mb-2"></i><br>
-                        <strong>No suppliers found for "${escapeHtml(globalSearch.value)}"</strong><br>
-                        <small>Try searching with different keywords</small>
-                    </td>
-                `;
-                }
-                noResultsRow.style.display = '';
-            } else {
-                // Hide "no results found" message
-                if (noResultsRow) {
-                    noResultsRow.style.display = 'none';
-                }
-            }
-
-            // Update search box styling based on results
-            if (searchTerm !== '') {
-                if (visibleCount > 0) {
-                    globalSearch.classList.remove('is-invalid');
-                    globalSearch.classList.add('is-valid');
-                } else {
-                    globalSearch.classList.remove('is-valid');
-                    globalSearch.classList.add('is-invalid');
-                }
-            } else {
-                globalSearch.classList.remove('is-valid', 'is-invalid');
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Supplier archived successfully!');
+                            location.reload();
+                        } else {
+                            alert('Error archiving supplier: ' + (data.error || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error archiving supplier');
+                    });
             }
         }
 
-        // Helper function to escape HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        // New action functions to match Products Management style
+        function viewSupplier(supplierId) {
+            window.location.href = `${window.URLROOT}/suppliers/view/${supplierId}`;
         }
 
-        // Table sorting functionality
-        let currentSortColumn = -1;
-        let sortDirection = 'asc';
+        function editSupplier(supplierId) {
+            window.location.href = `${window.URLROOT}/suppliers/edit/${supplierId}`;
+        }
 
-        // Add click handlers to sortable headers
-        document.querySelectorAll('.sortable').forEach(header => {
-            header.addEventListener('click', function () {
-                const column = parseInt(this.dataset.column);
-                sortTable(column);
-                updateSortIcons(column);
+        function viewSupplierPerformance(supplierId) {
+            window.location.href = `${window.URLROOT}/suppliers/performance/${supplierId}`;
+        }
+
+        function viewSupplierOrders(supplierId) {
+            window.location.href = `${window.URLROOT}/suppliers/orders/${supplierId}`;
+        }
+
+        // Filter Functions - Enhanced with server-side filtering
+        function filterSuppliers(filterType) {
+            const currentUrl = new URL(window.location.href);
+
+            // Set filter parameters
+            if (filterType === 'all') {
+                currentUrl.searchParams.delete('status');
+                currentUrl.searchParams.delete('tier');
+            } else if (filterType === 'active' || filterType === 'inactive') {
+                currentUrl.searchParams.set('status', filterType);
+                currentUrl.searchParams.delete('tier');
+            } else {
+                currentUrl.searchParams.set('tier', filterType);
+                currentUrl.searchParams.delete('status');
+            }
+
+            currentUrl.searchParams.set('page', '1'); // Reset to first page
+            window.location.href = currentUrl.toString();
+        }
+
+        // Pagination Functions
+        function changeItemsPerPage() {
+            const perPage = document.getElementById('itemsPerPage').value;
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('per_page', perPage);
+            currentUrl.searchParams.set('page', '1'); // Reset to first page
+            window.location.href = currentUrl.toString();
+        }
+
+        // Export Functions
+        function exportSuppliers(format) {
+            const selectedSuppliers = Array.from(document.querySelectorAll('.supplier-checkbox:checked')).map(cb => cb.value);
+            const exportType = selectedSuppliers.length > 0 ? 'selected' : 'all';
+
+            const params = new URLSearchParams({
+                format: format,
+                type: exportType,
+                suppliers: selectedSuppliers.join(',')
             });
+
+            window.location.href = `${window.URLROOT}/suppliers/export?${params}`;
+        }
+
+        // Bulk Operations
+        function bulkEditSuppliers() {
+            const selectedSuppliers = Array.from(document.querySelectorAll('.supplier-checkbox:checked')).map(cb => cb.value);
+            if (selectedSuppliers.length === 0) {
+                alert('Please select suppliers to edit');
+                return;
+            }
+            window.location.href = `${window.URLROOT}/suppliers/bulkEdit?suppliers=${selectedSuppliers.join(',')}`;
+        }
+
+        function bulkActivateSuppliers() {
+            const selectedSuppliers = Array.from(document.querySelectorAll('.supplier-checkbox:checked')).map(cb => cb.value);
+            if (selectedSuppliers.length === 0) {
+                alert('Please select suppliers to activate');
+                return;
+            }
+
+            if (confirm(`Activate ${selectedSuppliers.length} selected suppliers?`)) {
+                const formData = new FormData();
+                formData.append('suppliers', selectedSuppliers.join(','));
+                formData.append('action', 'activate');
+
+                fetch(`${window.URLROOT}/suppliers/bulkUpdateStatus`, {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotification('Suppliers activated successfully', 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            showNotification(data.error || 'Failed to activate suppliers', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('An error occurred while activating suppliers', 'error');
+                    });
+            }
+        }
+
+        function bulkDeactivateSuppliers() {
+            const selectedSuppliers = Array.from(document.querySelectorAll('.supplier-checkbox:checked')).map(cb => cb.value);
+            if (selectedSuppliers.length === 0) {
+                alert('Please select suppliers to deactivate');
+                return;
+            }
+
+            if (confirm(`Deactivate ${selectedSuppliers.length} selected suppliers?`)) {
+                const formData = new FormData();
+                formData.append('suppliers', selectedSuppliers.join(','));
+                formData.append('action', 'deactivate');
+
+                fetch(`${window.URLROOT}/suppliers/bulkUpdateStatus`, {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotification('Suppliers deactivated successfully', 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            showNotification(data.error || 'Failed to deactivate suppliers', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('An error occurred while deactivating suppliers', 'error');
+                    });
+            }
+        }
+
+        function bulkDeleteSuppliers() {
+            const selectedSuppliers = Array.from(document.querySelectorAll('.supplier-checkbox:checked')).map(cb => cb.value);
+            if (selectedSuppliers.length === 0) {
+                alert('Please select suppliers to archive');
+                return;
+            }
+
+            if (confirm(`Archive ${selectedSuppliers.length} selected suppliers?\n\nThis will hide the suppliers from active lists but preserve all records and history.\n\nYou can restore these suppliers later if needed.\n\nProceed to archive?`)) {
+                // Use AJAX instead of redirect for proper handling
+                const formData = new FormData();
+                selectedSuppliers.forEach(id => formData.append('supplier_ids[]', id));
+
+                fetch(`${window.URLROOT}/suppliers/bulkDelete`, {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`${selectedSuppliers.length} suppliers archived successfully!`);
+                            location.reload();
+                        } else {
+                            alert('Error archiving suppliers: ' + (data.error || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error archiving suppliers');
+                    });
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            // Simple notification function
+            const alertClass = type === 'success' ? 'alert-success' :
+                type === 'error' ? 'alert-danger' : 'alert-info';
+
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        `;
+
+            document.body.appendChild(notification);
+
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+
+        // Initialize tooltips
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
         });
 
+        // Column Sorting functionality
         function sortTable(column) {
-            const table = document.querySelector('.table tbody');
-            const rows = Array.from(table.querySelectorAll('tr')).filter(row => {
-                // Exclude "no suppliers found" and "no results" rows
-                return row.cells.length > 1 && !row.id;
-            });
+            console.log('Sorting by column:', column); // Debug output
+            const currentUrl = new URL(window.location.href);
+            const currentSort = currentUrl.searchParams.get('sort');
+            const currentOrder = currentUrl.searchParams.get('order');
 
-            // Determine sort direction
-            if (currentSortColumn === column) {
-                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortDirection = 'asc';
-                currentSortColumn = column;
+            // Determine new sort order
+            let newOrder = 'ASC';
+            if (currentSort === column && currentOrder === 'ASC') {
+                newOrder = 'DESC';
             }
 
-            // Sort rows
-            rows.sort((a, b) => {
-                let aVal = a.cells[column].textContent.trim();
-                let bVal = b.cells[column].textContent.trim();
+            // Update URL parameters
+            currentUrl.searchParams.set('sort', column);
+            currentUrl.searchParams.set('order', newOrder);
+            currentUrl.searchParams.set('page', '1'); // Reset to first page
 
-                // Handle empty values
-                if (aVal === '-') aVal = '';
-                if (bVal === '-') bVal = '';
+            console.log('New URL:', currentUrl.toString()); // Debug output
 
-                // Special handling for ID column (numeric sort)
-                if (column === 0) {
-                    aVal = parseInt(aVal) || 0;
-                    bVal = parseInt(bVal) || 0;
-                    return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-                }
-
-                // String comparison for other columns
-                if (sortDirection === 'asc') {
-                    return aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' });
-                } else {
-                    return bVal.localeCompare(aVal, undefined, { numeric: true, sensitivity: 'base' });
-                }
-            });
-
-            // Re-append sorted rows
-            rows.forEach(row => table.appendChild(row));
-
-            // Reapply current search filter after sorting
-            filterTable();
+            // Navigate to new URL
+            window.location.href = currentUrl.toString();
         }
 
-        function updateSortIcons(activeColumn) {
-            // Reset all icons
-            document.querySelectorAll('.sortable i').forEach(icon => {
-                icon.className = 'fas fa-sort text-muted';
+        // Initialize sorting event listeners
+        $(document).ready(function () {
+            // Add click event listeners to sortable columns
+            $('.sortable').on('click', function (e) {
+                e.preventDefault();
+                const sortColumn = $(this).data('sort');
+                sortTable(sortColumn);
+            });
+        });
+    </script>
+
+    <!-- Link Products Modal -->
+    <div class="modal fade" id="LinkProductsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content kpi-card">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-link mr-2"></i>Link Products to Supplier
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="link_supplier_id" name="supplier_id">
+                    <div class="form-group mb-3">
+                        <label><strong>Supplier:</strong></label>
+                        <div id="link_supplier_name" class="form-control-plaintext font-weight-bold text-primary">
+                            <!-- Supplier name will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Existing Products Display -->
+                    <div id="existing_products_section" class="mb-4" style="display: none;">
+                        <h6 class="mb-3"><i class="fas fa-boxes mr-2"></i>Currently Linked Products</h6>
+                        <div id="existing_products_list" class="border rounded p-2" style="background-color: #f8f9fa;">
+                            <!-- Existing products will be loaded here -->
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label>Search Products:</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            </div>
+                            <input type="text" id="product_search" class="form-control"
+                                placeholder="Search by product name, SKU, or barcode..." autocomplete="off">
+                        </div>
+                        <small class="form-text text-muted">Search will update results automatically as you type</small>
+                    </div>
+                    <div id="products_loading" class="text-center py-3" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading products...
+                    </div>
+                    <div id="products_list" class="products-list">
+                        <!-- Products will be loaded here -->
+                    </div>
+
+                    <!-- Product Details Form -->
+                    <div id="product_details_form" class="mt-4 p-3 border rounded bg-light" style="display: none;">
+                        <h6 class="mb-3"><i class="fas fa-info-circle mr-2"></i>Supplier Pricing Details</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="supplier_purchase_price">Purchase Price *</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">₹</span>
+                                        </div>
+                                        <input type="number" id="supplier_purchase_price" class="form-control"
+                                            placeholder="0.00" step="0.01" min="0" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="supplier_product_sku">Supplier SKU</label>
+                                    <input type="text" id="supplier_product_sku" class="form-control"
+                                        placeholder="Supplier's product code">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="supplier_lead_time_days">Lead Time (Days)</label>
+                                    <input type="number" id="supplier_lead_time_days" class="form-control"
+                                        placeholder="7" value="7" min="1" max="365">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="supplier_min_order_quantity">Minimum Order Quantity</label>
+                                    <input type="number" id="supplier_min_order_quantity" class="form-control"
+                                        placeholder="1" value="1" min="1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="supplier_product_rating">Quality Rating</label>
+                                    <select id="supplier_product_rating" class="form-control">
+                                        <option value="5">★★★★★ Excellent</option>
+                                        <option value="4" selected>★★★★☆ Good</option>
+                                        <option value="3">★★★☆☆ Average</option>
+                                        <option value="2">★★☆☆☆ Below Average</option>
+                                        <option value="1">★☆☆☆☆ Poor</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="supplier_product_notes">Notes</label>
+                                    <textarea id="supplier_product_notes" class="form-control" rows="2"
+                                        placeholder="Additional notes about this product from this supplier..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm_link_product"
+                        onclick="confirmLinkProduct()" disabled>
+                        <i class="fas fa-link mr-1"></i>Link Product
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Link Products functionality
+        let selectedProductId = null;
+
+        function linkProducts(supplierId, supplierName) {
+            // Set supplier details
+            document.getElementById('link_supplier_id').value = supplierId;
+
+            // Handle supplier name with better error handling
+            const supplierNameElement = document.getElementById('link_supplier_name');
+            if (supplierNameElement) {
+                const displayName = supplierName && supplierName.trim() ? supplierName.trim() : 'Unknown Supplier';
+                supplierNameElement.textContent = displayName;
+            }
+
+            // Reset modal state
+            document.getElementById('product_search').value = '';
+            document.getElementById('confirm_link_product').disabled = true;
+            selectedProductId = null;
+
+            // Reset existing products display
+            document.getElementById('existing_products_section').style.display = 'none';
+            document.getElementById('existing_products_list').innerHTML = '';
+
+            // Reset product details form
+            document.getElementById('product_details_form').style.display = 'none';
+            document.getElementById('supplier_purchase_price').value = '';
+            document.getElementById('supplier_product_sku').value = '';
+            document.getElementById('supplier_lead_time_days').value = '7';
+            document.getElementById('supplier_min_order_quantity').value = '1';
+            document.getElementById('supplier_product_notes').value = '';
+            document.getElementById('supplier_product_rating').value = '4';
+
+            // Set up search functionality for this modal instance
+            setupProductSearch();
+
+            // Add validation event listeners
+            document.getElementById('supplier_purchase_price').addEventListener('input', validateProductForm);
+
+            // Load existing products first
+            loadExistingProducts(supplierId);
+
+            // Show modal and load products
+            $('#LinkProductsModal').modal('show');
+
+            // Focus on search input after modal is shown
+            $('#LinkProductsModal').on('shown.bs.modal', function () {
+                document.getElementById('product_search').focus();
             });
 
-            // Update active column icon
-            const activeHeader = document.querySelector(`[data-column="${activeColumn}"] i`);
-            if (sortDirection === 'asc') {
-                activeHeader.className = 'fas fa-sort-up text-primary';
-            } else {
-                activeHeader.className = 'fas fa-sort-down text-primary';
+            loadProductsForLinking();
+        }
+
+        // Separate function to set up product search
+        function setupProductSearch() {
+            const productSearchInput = document.getElementById('product_search');
+            if (productSearchInput) {
+                // Remove any existing event listeners
+                productSearchInput.removeEventListener('input', productSearchHandler);
+
+                // Add the event listener
+                productSearchInput.addEventListener('input', productSearchHandler);
             }
         }
 
-        // Initial focus on search box
-        setTimeout(() => {
-            globalSearch.focus();
-        }, 100);
-    });
-</script>
+        // Load existing products for the supplier
+        function loadExistingProducts(supplierId) {
+            console.log('Loading existing products for supplier:', supplierId);
 
-<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'footer.php'; ?>
+            fetch(`${window.URLROOT}/suppliers/getSupplierProducts/${supplierId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Existing products data:', data);
+                    displayExistingProducts(data.products || []);
+                })
+                .catch(error => {
+                    console.error('Error loading existing products:', error);
+                    // Don't show an error message, just continue without existing products display
+                });
+        }
+
+        function displayExistingProducts(products) {
+            const existingSection = document.getElementById('existing_products_section');
+            const existingList = document.getElementById('existing_products_list');
+
+            if (!products || products.length === 0) {
+                existingSection.style.display = 'none';
+                return;
+            }
+
+            let html = '';
+
+            products.forEach(product => {
+                const price = product.purchase_price ? parseFloat(product.purchase_price).toFixed(2) : 'Not set';
+                const leadTime = product.lead_time_days || 'Not set';
+                const minOrderQty = product.min_order_quantity || 'Not set';
+                const rating = product.supplier_rating || 'Not rated';
+
+                html += `
+                <div class="existing-product-item mb-2 p-2 border rounded border-secondary">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <strong>${product.product_name}</strong>
+                            <br><small class="text-muted">SKU: ${product.sku || 'N/A'}</small>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted">Price:</small><br>
+                            <span class="font-weight-bold">₹${price}</span>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted">Lead Time:</small><br>
+                            <span>${leadTime} days</span>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted">Min Order:</small><br>
+                            <span>${minOrderQty}</span>
+                        </div>
+                        <div class="col-md-1">
+                            <small class="text-muted">Rating:</small><br>
+                            <span>${rating}/5</span>
+                        </div>
+                        <div class="col-md-1 text-right">
+                            <button class="btn btn-sm btn-outline-danger" 
+                                onclick="unlinkProduct(${product.product_id})" 
+                                title="Remove Link">
+                                <i class="fas fa-unlink"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            });
+
+            if (products.length > 0) {
+                html = `
+                <div class="mb-2">
+                    <small class="text-muted">This supplier currently has ${products.length} product${products.length > 1 ? 's' : ''} linked:</small>
+                </div>
+                ${html}
+            `;
+            }
+
+            existingList.innerHTML = html;
+            existingSection.style.display = 'block';
+        }
+
+        // Search handler function
+        let productSearchTimeout;
+        function productSearchHandler() {
+            clearTimeout(productSearchTimeout);
+            productSearchTimeout = setTimeout(() => {
+                const searchTerm = this.value.trim();
+                console.log('Searching for products with term:', searchTerm); // Debug log
+                loadProductsForLinking(searchTerm);
+            }, 300);
+        }
+
+        function loadProductsForLinking(searchTerm = '') {
+            console.log('loadProductsForLinking called with searchTerm:', searchTerm); // Debug log
+
+            const loadingDiv = document.getElementById('products_loading');
+            const listDiv = document.getElementById('products_list');
+
+            if (!loadingDiv || !listDiv) {
+                console.error('Required DOM elements not found');
+                return;
+            }
+
+            loadingDiv.style.display = 'block';
+            listDiv.innerHTML = '';
+
+            const url = searchTerm
+                ? `${window.URLROOT}/api/getProducts.php?search=${encodeURIComponent(searchTerm)}`
+                : `${window.URLROOT}/api/getProducts.php`;
+
+            console.log('Fetching products from URL:', url); // Debug log
+
+            fetch(url)
+                .then(response => {
+                    console.log('Response status:', response.status); // Debug log
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Products data received:', data); // Debug log
+                    loadingDiv.style.display = 'none';
+
+                    if (data.success && data.products && data.products.length > 0) {
+                        let html = '<div class="table-responsive"><table class="table table-hover"><tbody>';
+
+                        data.products.forEach(product => {
+                            html += `
+                            <tr class="product-row" data-product-id="${product.product_id}">
+                                <td style="width: 40px;">
+                                    <input type="radio" name="selected_product" value="${product.product_id}" 
+                                        onchange="selectProduct(${product.product_id}, '${product.product_name.replace(/'/g, "\\'")}')">
+                                </td>
+                                <td>
+                                    <strong>${product.product_name}</strong>
+                                    <br><small class="text-muted">SKU: ${product.sku || 'N/A'}</small>
+                                </td>
+                                <td>
+                                    <span class="badge badge-primary">₹${product.selling_price || '0.00'}</span>
+                                    <br><small class="text-muted">Current Price</small>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">${product.current_inventory || 0}</span>
+                                    <br><small class="text-muted">In Stock</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">${product.category_name || 'Uncategorized'}</small>
+                                </td>
+                            </tr>
+                        `;
+                        });
+
+                        html += '</tbody></table></div>';
+                        listDiv.innerHTML = html;
+                    } else {
+                        const message = searchTerm
+                            ? `No products found matching "${searchTerm}".`
+                            : 'No products found.';
+                        listDiv.innerHTML = `<div class="alert alert-info"><i class="fas fa-info-circle mr-2"></i>${message}</div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching products:', error); // Debug log
+                    loadingDiv.style.display = 'none';
+                    listDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Error loading products. Please try again.</div>';
+                });
+        }
+
+        function selectProduct(productId, productName) {
+            // Clear previous selection
+            document.querySelectorAll('.product-row').forEach(row => {
+                row.classList.remove('table-active');
+            });
+
+            // Mark new selection
+            const selectedRow = document.querySelector(`[data-product-id="${productId}"]`);
+            if (selectedRow) {
+                selectedRow.classList.add('table-active');
+                selectedRow.querySelector('input[type="radio"]').checked = true;
+            }
+
+            // Show product details form
+            const detailsForm = document.getElementById('product_details_form');
+            detailsForm.style.display = 'block';
+
+            // Focus on purchase price field
+            setTimeout(() => {
+                document.getElementById('supplier_purchase_price').focus();
+            }, 100);
+
+            // Enable confirm button (but require purchase price validation)
+            selectedProductId = productId;
+            validateProductForm();
+        }
+
+        function validateProductForm() {
+            const purchasePrice = document.getElementById('supplier_purchase_price').value;
+            const confirmButton = document.getElementById('confirm_link_product');
+
+            // Enable button only if product is selected and purchase price is provided
+            if (selectedProductId && purchasePrice && parseFloat(purchasePrice) > 0) {
+                confirmButton.disabled = false;
+            } else {
+                confirmButton.disabled = true;
+            }
+        }
+
+        function confirmLinkProduct() {
+            if (!selectedProductId) {
+                showNotification('Please select a product', 'error');
+                return;
+            }
+
+            // Validate purchase price
+            const purchasePrice = document.getElementById('supplier_purchase_price').value;
+            if (!purchasePrice || parseFloat(purchasePrice) <= 0) {
+                showNotification('Please enter a valid purchase price', 'error');
+                document.getElementById('supplier_purchase_price').focus();
+                return;
+            }
+
+            const supplierId = document.getElementById('link_supplier_id').value;
+            console.log('Linking product:', selectedProductId, 'to supplier:', supplierId);
+
+            const formData = new FormData();
+            formData.append('product_id', selectedProductId);
+            formData.append('supplier_id', supplierId);
+            formData.append('purchase_price', purchasePrice);
+            formData.append('supplier_sku', document.getElementById('supplier_product_sku').value || '');
+            formData.append('lead_time_days', document.getElementById('supplier_lead_time_days').value || '7');
+            formData.append('min_order_quantity', document.getElementById('supplier_min_order_quantity').value || '1');
+            formData.append('supplier_notes', document.getElementById('supplier_product_notes').value || '');
+            formData.append('supplier_rating', document.getElementById('supplier_product_rating').value || '4');
+
+            fetch(`${window.URLROOT}/suppliers/linkProduct`, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    console.log('Link product response status:', response.status);
+                    console.log('Link product response headers:', response.headers);
+
+                    // Check if response is JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        console.error('Response is not JSON:', contentType);
+                        return response.text().then(text => {
+                            console.error('Response text:', text);
+                            throw new Error('Server returned non-JSON response: ' + text.substring(0, 200));
+                        });
+                    }
+
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Link product response data:', data);
+                    if (data.success) {
+                        $('#LinkProductsModal').modal('hide');
+                        showNotification('Product linked successfully', 'success');
+                        // Optionally reload the page to show updated data
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showNotification(data.error || 'Failed to link product', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error linking product:', error);
+                    showNotification('An error occurred while linking product', 'error');
+                });
+        }
+
+        function unlinkProduct(productId) {
+            const supplierId = document.getElementById('link_supplier_id').value;
+
+            if (confirm('Are you sure you want to remove this product link? This action cannot be undone.')) {
+                const formData = new FormData();
+                formData.append('product_id', productId);
+                formData.append('supplier_id', supplierId);
+
+                fetch(`${window.URLROOT}/suppliers/unlinkProduct`, {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadExistingProducts(supplierId);
+                            showNotification('Product unlinked successfully', 'success');
+                        } else {
+                            showNotification(data.error || 'Failed to unlink product', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error unlinking product:', error);
+                        showNotification('An error occurred while unlinking product', 'error');
+                    });
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            // Simple notification function
+            const alertClass = type === 'success' ? 'alert-success' :
+                type === 'error' ? 'alert-danger' : 'alert-info';
+
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        `;
+
+            document.body.appendChild(notification);
+
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+    </script>
+
+    <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'footer.php'; ?>

@@ -205,9 +205,9 @@ class Barcode
     {
         try {
             $this->db->query("
-                SELECT wl.*, lb.barcode_value, lb.type as barcode_type
+                SELECT l.*, lb.barcode_value, lb.type as barcode_type
                 FROM location_barcodes lb
-                INNER JOIN warehouse_locations wl ON lb.location_id = wl.location_id
+                INNER JOIN locations l ON lb.location_id = l.id
                 WHERE lb.barcode_value = :barcode_value 
                 AND lb.is_active = 1
             ");
@@ -250,11 +250,11 @@ class Barcode
     {
         try {
             $this->db->query("
-                SELECT lb.*, wl.location_name, wl.rack, wl.shelf
+                SELECT lb.*, l.name as location_name, l.standardized_address, l.description
                 FROM location_barcodes lb
-                INNER JOIN warehouse_locations wl ON lb.location_id = wl.location_id
+                INNER JOIN locations l ON lb.location_id = l.id
                 WHERE lb.is_active = 1
-                ORDER BY wl.location_name ASC
+                ORDER BY l.name ASC
             ");
 
             $result = $this->db->resultSet();

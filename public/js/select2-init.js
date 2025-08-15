@@ -4,6 +4,12 @@
  */
 
 $(document).ready(function () {
+    // Check if global Select2 initialization should be disabled
+    if (window.DISABLE_GLOBAL_SELECT2) {
+        console.log('Global Select2 initialization disabled by page script');
+        return;
+    }
+
     // Global Select2 configuration (moved outside to be accessible)
     window.initializeSelect2 = function () {
         $('.searchable-dropdown').each(function () {

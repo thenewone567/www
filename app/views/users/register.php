@@ -17,7 +17,7 @@
                 </p>
 
                 <form action="<?php echo URLROOT; ?>/users/register" method="post" id="registerForm" data-verify="user"
-                    data-verify-redirect="<?php echo URLROOT; ?>/users">
+                    data-verify-redirect="<?php echo URLROOT; ?>/users" enctype="multipart/form-data">
                     <div class="form-group">
                         <input type="text" name="username" id="username"
                             class="form-control <?php echo (!empty($data['username_err'])) ? 'is-invalid' : ''; ?>"
@@ -30,6 +30,30 @@
                         <small class="form-text text-muted">
                             3-20 characters, letters/numbers/underscores only, must start with letter
                         </small>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" name="email" id="email" class="form-control" placeholder="Email"
+                            value="<?php echo isset($data['email']) ? $data['email'] : ''; ?>">
+                    </div>
+                    <div class="form-group">
+                        <input type="file" name="profile_picture_file" id="profile_picture_file"
+                            class="form-control-file" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="address" id="address" class="form-control" placeholder="Address"
+                            value="<?php echo isset($data['address']) ? $data['address'] : ''; ?>">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="job_title" id="job_title" class="form-control" placeholder="Job Title"
+                            value="<?php echo isset($data['job_title']) ? $data['job_title'] : ''; ?>">
+                    </div>
+                    <div class="form-group">
+                        <input type="date" name="birthday" id="birthday" class="form-control" placeholder="Birthday"
+                            value="<?php echo isset($data['birthday']) ? $data['birthday'] : ''; ?>">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="education" id="education" class="form-control" placeholder="Education"
+                            value="<?php echo isset($data['education']) ? $data['education'] : ''; ?>">
                     </div>
 
                     <div class="form-group">
@@ -88,7 +112,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
-    <script src="<?php echo URLROOT; ?>/js/main.js"></script>
+    <script src="<?php echo URLROOT; ?>/public/js/main.js"></script>
 
     <script>
         // Real-time username validation

@@ -3,6 +3,35 @@ class User
 {
   private $db;
 
+  /**
+   * Update user profile (full_name, username, email)
+   * @param array $data
+   * @return bool
+   */
+  public function updateProfile($data)
+  {
+    $this->db->query("UPDATE users SET 
+        profile_picture = :profile_picture,
+        full_name = :full_name, 
+        username = :username, 
+        email = :email,
+        address = :address,
+        job_title = :job_title,
+        birthday = :birthday,
+        education = :education
+        WHERE user_id = :user_id");
+    $this->db->bind(':user_id', $data['user_id']);
+    $this->db->bind(':profile_picture', $data['profile_picture']);
+    $this->db->bind(':full_name', $data['full_name']);
+    $this->db->bind(':username', $data['username']);
+    $this->db->bind(':email', $data['email']);
+    $this->db->bind(':address', $data['address']);
+    $this->db->bind(':job_title', $data['job_title']);
+    $this->db->bind(':birthday', $data['birthday']);
+    $this->db->bind(':education', $data['education']);
+    return $this->db->execute();
+  }
+
   public function __construct()
   {
     $this->db = new Database;
@@ -11,11 +40,17 @@ class User
   // Register user
   public function register($data)
   {
-    $this->db->query('INSERT INTO users (username, password_hash, role_id) VALUES(:username, :password, :role_id)');
+    $this->db->query('INSERT INTO users (username, password_hash, role_id, email, profile_picture, address, job_title, birthday, education) VALUES(:username, :password, :role_id, :email, :profile_picture, :address, :job_title, :birthday, :education)');
     // Bind values
     $this->db->bind(':username', $data['username']);
     $this->db->bind(':password', $data['password']);
     $this->db->bind(':role_id', $data['role_id']);
+    $this->db->bind(':email', $data['email']);
+    $this->db->bind(':profile_picture', $data['profile_picture']);
+    $this->db->bind(':address', $data['address']);
+    $this->db->bind(':job_title', $data['job_title']);
+    $this->db->bind(':birthday', $data['birthday']);
+    $this->db->bind(':education', $data['education']);
 
     // Execute
     return $this->db->execute();
@@ -182,33 +217,34 @@ class User
   {
     // Fixed query without the non-existent permissions column
     $success = $this->db->query('
-      SELECT u.user_id, u.username, u.password_hash, u.role_id, u.is_active,
+      SELECT u.user_id, u.username, u.full_name, u.profile_picture, u.address, u.job_title, u.birthday, u.education, u.password_hash, u.role_id, u.is_active,
              r.role_name
       FROM users u
       LEFT JOIN roles r ON u.role_id = r.role_id
-      WHERE u.user_id = :user_id
+      WHERE u.user_id = :user_id OR u.username = :username
     ');
 
     if ($success) {
-      $this->db->bind(':user_id', $userId);
-      $this->db->execute(); // Added missing execute() call
+      $param = is_numeric($userId) ? (int) $userId : 0;
+      $this->db->bind(':user_id', $param);
+      $this->db->bind(':username', $userId);
+      $this->db->execute();
       $result = $this->db->single();
-
-      // Check if we got a valid result and it has the expected properties
       if ($result && isset($result->user_id) && isset($result->username)) {
         return $result;
       }
     }
 
     // Fallback: get user without role using single() method
-    $this->db->query('SELECT * FROM users WHERE user_id = :user_id');
-    $this->db->bind(':user_id', $userId);
-    $this->db->execute(); // Added missing execute() call
+    $this->db->query('SELECT * FROM users WHERE user_id = :user_id OR username = :username');
+    $param = is_numeric($userId) ? (int) $userId : 0;
+    $this->db->bind(':user_id', $param);
+    $this->db->bind(':username', $userId);
+    $this->db->execute();
 
     $user = $this->db->single();
     if ($user) {
-      // Add default role info for display
-      $user->role_name = 'Associate'; // Default fallback
+      $user->role_name = 'Associate';
       return $user;
     }
 
@@ -457,9 +493,11 @@ class User
    */
   public function getUserById($userId)
   {
+    $userId = (int) $userId;
     $this->db->query("SELECT * FROM users WHERE user_id = :user_id");
     $this->db->bind(':user_id', $userId);
-    return $this->db->single();
+    $result = $this->db->single();
+    return $result;
   }
 
   /**
@@ -793,6 +831,108 @@ class User
   {
     $this->db->query("UPDATE users SET profile_picture = NULL WHERE user_id = :user_id");
     $this->db->bind(':user_id', $userId);
+    return $this->db->execute();
+  }
+
+  /**
+   * Save password reset token
+   * @param int $userId
+   * @param string $token
+   * @param string $expiresAt
+   * @return bool
+   */
+  public function savePasswordResetToken($userId, $token, $expiresAt)
+  {
+    // First, delete any existing tokens for this user
+    $this->db->query('DELETE FROM password_reset_tokens WHERE user_id = :user_id');
+    $this->db->bind(':user_id', $userId);
+    $this->db->execute();
+
+    // Insert new token
+    $this->db->query('
+      INSERT INTO password_reset_tokens (user_id, token, expires_at, created_at) 
+      VALUES (:user_id, :token, :expires_at, NOW())
+    ');
+    $this->db->bind(':user_id', $userId);
+    $this->db->bind(':token', $token);
+    $this->db->bind(':expires_at', $expiresAt);
+
+    return $this->db->execute();
+  }
+
+  /**
+   * Get password reset token data
+   * @param string $token
+   * @return object|null
+   */
+  public function getPasswordResetToken($token)
+  {
+    $this->db->query('
+      SELECT prt.*, u.user_id, u.username, u.email 
+      FROM password_reset_tokens prt 
+      JOIN users u ON prt.user_id = u.user_id 
+      WHERE prt.token = :token AND prt.expires_at > NOW()
+    ');
+    $this->db->bind(':token', $token);
+    $this->db->execute();
+    return $this->db->single();
+  }
+
+  /**
+   * Update password by reset token
+   * @param string $token
+   * @param string $hashedPassword
+   * @return bool
+   */
+  public function updatePasswordByToken($token, $hashedPassword)
+  {
+    // Get user ID from token
+    $tokenData = $this->getPasswordResetToken($token);
+    if (!$tokenData) {
+      return false;
+    }
+
+    // Update password
+    $this->db->query('UPDATE users SET password_hash = :password WHERE user_id = :user_id');
+    $this->db->bind(':password', $hashedPassword);
+    $this->db->bind(':user_id', $tokenData->user_id);
+
+    return $this->db->execute();
+  }
+
+  /**
+   * Delete password reset token
+   * @param string $token
+   * @return bool
+   */
+  public function deletePasswordResetToken($token)
+  {
+    $this->db->query('DELETE FROM password_reset_tokens WHERE token = :token');
+    $this->db->bind(':token', $token);
+    return $this->db->execute();
+  }
+
+  /**
+   * Clean expired password reset tokens
+   * @return bool
+   */
+  public function cleanExpiredResetTokens()
+  {
+    $this->db->query('DELETE FROM password_reset_tokens WHERE expires_at < NOW()');
+    return $this->db->execute();
+  }
+
+  /**
+   * Update password by username (for direct local reset)
+   * @param string $username
+   * @param string $hashedPassword
+   * @return bool
+   */
+  public function updatePasswordByUsername($username, $hashedPassword)
+  {
+    $this->db->query('UPDATE users SET password_hash = :password WHERE username = :username');
+    $this->db->bind(':password', $hashedPassword);
+    $this->db->bind(':username', $username);
     return $this->db->execute();
   }
 }

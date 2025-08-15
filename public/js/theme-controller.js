@@ -11,16 +11,16 @@ class ThemeController {
     init() {
         // Load saved theme from localStorage
         this.loadSavedTheme();
-        
+
         // Create theme toggle button
         this.createThemeToggle();
-        
+
         // Apply initial theme
         this.applyTheme(this.currentTheme);
-        
+
         // Listen for system theme changes
         this.listenForSystemThemeChanges();
-        
+
         // Enable transitions after page load to prevent flash
         this.enableTransitionsAfterLoad();
     }
@@ -54,47 +54,63 @@ class ThemeController {
     }
 
     createThemeToggle() {
-        // Check if toggle already exists
-        if (document.querySelector('.theme-toggle')) {
+        // Check if toggle already exists in the navbar
+        const existingToggle = document.getElementById('theme-toggle');
+        if (existingToggle) {
+            // Use existing button from navbar
+            existingToggle.addEventListener('click', () => this.toggleTheme());
+            this.updateToggleIcon(existingToggle.querySelector('i'), this.currentTheme);
             return;
         }
 
+        // Fallback: create floating toggle if navbar button doesn't exist
         const toggle = document.createElement('button');
         toggle.className = 'theme-toggle';
         toggle.setAttribute('aria-label', 'Toggle theme');
         toggle.setAttribute('title', 'Toggle between light and dark theme');
-        
+
         const icon = document.createElement('i');
         icon.className = this.currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         toggle.appendChild(icon);
 
         toggle.addEventListener('click', () => this.toggleTheme());
-        
+
         // Add to body
         document.body.appendChild(toggle);
+    }
+
+    updateToggleIcon(iconElement, theme) {
+        if (iconElement) {
+            iconElement.className = theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        }
     }
 
     applyTheme(theme) {
         // Remove existing theme classes
         document.documentElement.removeAttribute('data-theme');
-        
+
         // Apply new theme
         if (theme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
-        
-        // Update toggle icon
-        const toggleIcon = document.querySelector('.theme-toggle i');
-        if (toggleIcon) {
-            toggleIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+        // Update toggle icon - check both navbar and floating toggle
+        const navbarIcon = document.querySelector('#theme-toggle i');
+        const floatingIcon = document.querySelector('.theme-toggle i');
+
+        if (navbarIcon) {
+            this.updateToggleIcon(navbarIcon, theme);
+        }
+        if (floatingIcon) {
+            this.updateToggleIcon(floatingIcon, theme);
         }
 
         // Update charts if they exist
         this.updateCharts(theme);
-        
+
         // Save to localStorage
         localStorage.setItem('theme', theme);
-        
+
         // Trigger custom event for other components
         window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme } }));
     }
@@ -155,7 +171,7 @@ class ThemeController {
 }
 
 // Initialize theme controller when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     window.themeController = new ThemeController();
 });
 
@@ -171,7 +187,7 @@ if (typeof module !== 'undefined' && module.exports) {
 // Function to get theme-appropriate colors for charts
 function getThemeColors() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    
+
     return {
         background: isDark ? '#2d2d2d' : '#ffffff',
         text: isDark ? '#e0e0e0' : '#212529',
@@ -187,7 +203,7 @@ function getThemeColors() {
 // Function to create theme-aware chart options
 function getChartOptions(baseOptions = {}) {
     const colors = getThemeColors();
-    
+
     return {
         ...baseOptions,
         plugins: {
@@ -227,3 +243,8 @@ function getChartOptions(baseOptions = {}) {
         }
     };
 }
+
+// Initialize the theme controller when DOM is ready
+document.addEventListener('DOMContentLoaded', function () {
+    window.themeController = new ThemeController();
+});

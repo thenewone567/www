@@ -243,7 +243,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                         <tr>
                                             <td><?= htmlspecialchars($item->product_name) ?></td>
                                             <td>
-                                                <span class="badge badge-danger"><?= $item->current_Inventory ?></span>
+                                                <span class="badge badge-danger"><?= $item->current_inventory ?></span>
                                             </td>
                                             <td><?= $item->minimum_Inventory ?></td>
                                             <td>
@@ -342,7 +342,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
     integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
     crossorigin="anonymous"></script>
-<script src="<?php echo URLROOT; ?>/js/main.js"></script>
+<script src="<?php echo URLROOT; ?>/public/js/main.js"></script>
 </body>
 
 </html>

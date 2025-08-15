@@ -17,7 +17,7 @@
 </form>
 
 <?php if (isset($data['salereturns']) && is_array($data['salereturns']) && count($data['salereturns']) > 0): ?>
-    <table class="table table-striped mt-3">
+    <table class="table table-striped table-hover mt-3">
         <thead>
             <tr>
                 <th>ID</th>
@@ -51,7 +51,7 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
     integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
     crossorigin="anonymous"></script>
-<script src="<?php echo URLROOT; ?>/js/main.js"></script>
+<script src="<?php echo URLROOT; ?>/public/js/main.js"></script>
 </body>
 
 </html>

@@ -6,7 +6,6 @@ define('DB_PASS', '');
 define('DB_NAME', 'master_hardware');
 
 // App Root
-define('APPROOT', dirname(dirname(__FILE__)));
 define('DS', DIRECTORY_SEPARATOR);
 // URL Root
 define('URLROOT', 'http://localhost');

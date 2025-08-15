@@ -637,4 +637,371 @@ class AdminController extends Controller
     {
         return $this->userModel->updateUserPermissions($userId, $permissions);
     }
+
+    /**
+     * Price Management page
+     */
+    public function priceManagement()
+    {
+        // Load the Product model
+        $productModel = $this->model('Product');
+
+        // Get filter parameters from URL
+        $filters = [
+            'category' => $_GET['category'] ?? '',
+            'price_range' => $_GET['price_range'] ?? '',
+            'stock_status' => $_GET['stock_status'] ?? '',
+            'margin_filter' => $_GET['margin_filter'] ?? ''
+        ];
+
+        // Get products with pricing information
+        $products = $productModel->getProductsForPriceManagement($filters);
+
+        // Get price management statistics
+        $stats = $this->getPriceManagementStats($productModel);
+
+        $data = [
+            'title' => 'Price Management',
+            'products' => $products,
+            'stats' => $stats,
+            'filters' => $filters
+        ];
+
+        $this->view('admin/price_management', $data);
+    }
+
+    /**
+     * Update product price via AJAX
+     */
+    public function updateProductPrice()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+
+        try {
+            $productId = intval($_POST['product_id'] ?? 0);
+            $newPrice = floatval($_POST['new_price'] ?? 0);
+            $autoSave = isset($_POST['auto_save']) && $_POST['auto_save'] === 'true';
+
+            if ($productId <= 0 || $newPrice < 0) {
+                throw new Exception('Invalid product ID or price');
+            }
+
+            $productModel = $this->model('Product');
+
+            // Update the product price
+            if ($productModel->updateProductPrice($productId, $newPrice)) {
+                // Log the price change if method exists
+                if (method_exists($this->userModel, 'logActivity')) {
+                    $this->userModel->logActivity(
+                        $_SESSION['user_id'],
+                        'price_updated',
+                        "Updated price for product ID {$productId} to $" . number_format($newPrice, 2)
+                    );
+                }
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => $autoSave ? 'Price auto-saved' : 'Price updated successfully',
+                    'new_price' => number_format($newPrice, 2)
+                ]);
+            } else {
+                throw new Exception('Failed to update price in database');
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get price history for a product
+     */
+    public function getPriceHistory()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+
+        try {
+            $productId = intval($_GET['product_id'] ?? 0);
+
+            if ($productId <= 0) {
+                throw new Exception('Invalid product ID');
+            }
+
+            $productModel = $this->model('Product');
+            $priceHistory = $productModel->getPriceHistory($productId);
+
+            echo json_encode([
+                'success' => true,
+                'data' => $priceHistory
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Bulk update product prices
+     */
+    public function bulkPriceUpdate()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+
+        try {
+            $products = $_POST['products'] ?? [];
+            $updateType = $_POST['update_type'] ?? '';
+            $updateValue = floatval($_POST['update_value'] ?? 0);
+            $roundPrices = isset($_POST['round_prices']) && $_POST['round_prices'] === 'true';
+
+            if (empty($products) || empty($updateType) || $updateValue <= 0) {
+                throw new Exception('Invalid bulk update parameters');
+            }
+
+            $productModel = $this->model('Product');
+            $updatedCount = 0;
+
+            foreach ($products as $productId) {
+                $productId = intval($productId);
+                if ($productId <= 0)
+                    continue;
+
+                // Get current price
+                $currentPrice = $productModel->getProductPrice($productId);
+                if (!$currentPrice)
+                    continue;
+
+                // Calculate new price based on update type
+                $newPrice = $this->calculateNewPrice($currentPrice, $updateType, $updateValue, $roundPrices);
+
+                if ($newPrice > 0 && $productModel->updateProductPrice($productId, $newPrice)) {
+                    $updatedCount++;
+                }
+            }
+
+            // Log bulk update activity
+            if (method_exists($this->userModel, 'logActivity')) {
+                $this->userModel->logActivity(
+                    $_SESSION['user_id'],
+                    'bulk_price_update',
+                    "Bulk updated {$updatedCount} product prices using {$updateType}"
+                );
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => "Successfully updated {$updatedCount} product prices",
+                'updated_count' => $updatedCount
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Export product prices
+     */
+    public function exportPrices()
+    {
+        try {
+            $productModel = $this->model('Product');
+            $selectedProducts = !empty($_GET['products']) ? explode(',', $_GET['products']) : [];
+
+            // Get products for export
+            if (!empty($selectedProducts)) {
+                $products = $productModel->getProductsByIds($selectedProducts);
+            } else {
+                $products = $productModel->getAllProductsForExport();
+            }
+
+            // Set headers for CSV download
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="product_prices_' . date('Y-m-d') . '.csv"');
+
+            $output = fopen('php://output', 'w');
+
+            // CSV headers
+            fputcsv($output, ['Product ID', 'SKU', 'Name', 'Category', 'Current Price', 'Cost', 'Margin %', 'Stock Quantity']);
+
+            // CSV data
+            foreach ($products as $product) {
+                $margin = 0;
+                if (($product->price ?? 0) > 0 && ($product->cost ?? 0) > 0) {
+                    $margin = (($product->price - $product->cost) / $product->price) * 100;
+                }
+
+                fputcsv($output, [
+                    $product->product_id ?? '',
+                    $product->sku ?? '',
+                    $product->name ?? '',
+                    $product->category ?? '',
+                    number_format($product->price ?? 0, 2),
+                    number_format($product->cost ?? 0, 2),
+                    number_format($margin, 2),
+                    $product->stock_quantity ?? 0
+                ]);
+            }
+
+            fclose($output);
+
+            // Log export activity
+            if (method_exists($this->userModel, 'logActivity')) {
+                $count = count($products);
+                $this->userModel->logActivity(
+                    $_SESSION['user_id'],
+                    'price_export',
+                    "Exported {$count} product prices to CSV"
+                );
+            }
+        } catch (Exception $e) {
+            flash('error_message', 'Export failed: ' . $e->getMessage(), 'alert alert-danger');
+            redirect('admin/priceManagement');
+        }
+    }
+
+    /**
+     * Import product prices from CSV
+     */
+    public function importPrices()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+
+        try {
+            if (!isset($_FILES['price_file']) || $_FILES['price_file']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception('No file uploaded or upload error');
+            }
+
+            $file = $_FILES['price_file'];
+            $allowedTypes = ['text/csv', 'application/csv', 'application/vnd.ms-excel'];
+
+            if (!in_array($file['type'], $allowedTypes)) {
+                throw new Exception('Only CSV files are allowed');
+            }
+
+            $productModel = $this->model('Product');
+            $handle = fopen($file['tmp_name'], 'r');
+            $updatedCount = 0;
+            $lineNumber = 0;
+
+            // Skip header row
+            fgetcsv($handle);
+
+            while (($data = fgetcsv($handle)) !== FALSE) {
+                $lineNumber++;
+
+                if (count($data) < 5)
+                    continue; // Need at least product ID and price
+
+                $productId = intval($data[0]);
+                $newPrice = floatval($data[4]);
+
+                if ($productId > 0 && $newPrice > 0) {
+                    if ($productModel->updateProductPrice($productId, $newPrice)) {
+                        $updatedCount++;
+                    }
+                }
+            }
+
+            fclose($handle);
+
+            // Log import activity
+            if (method_exists($this->userModel, 'logActivity')) {
+                $this->userModel->logActivity(
+                    $_SESSION['user_id'],
+                    'price_import',
+                    "Imported {$updatedCount} product prices from CSV"
+                );
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => "Successfully updated {$updatedCount} product prices",
+                'updated_count' => $updatedCount
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get price management statistics
+     */
+    private function getPriceManagementStats($productModel)
+    {
+        try {
+            $stats = $productModel->getPriceManagementStats();
+            return [
+                'total_products' => $stats['total_products'] ?? 0,
+                'average_margin' => $stats['average_margin'] ?? 0,
+                'low_margin_products' => $stats['low_margin_products'] ?? 0,
+                'recent_updates' => $stats['recent_updates'] ?? 0
+            ];
+        } catch (Exception $e) {
+            // Return default stats if there's an error
+            return [
+                'total_products' => 0,
+                'average_margin' => 0,
+                'low_margin_products' => 0,
+                'recent_updates' => 0
+            ];
+        }
+    }
+
+    /**
+     * Calculate new price based on update type
+     */
+    private function calculateNewPrice($currentPrice, $updateType, $updateValue, $roundPrices = false)
+    {
+        $newPrice = $currentPrice;
+
+        switch ($updateType) {
+            case 'percentage_increase':
+                $newPrice = $currentPrice * (1 + $updateValue / 100);
+                break;
+            case 'percentage_decrease':
+                $newPrice = $currentPrice * (1 - $updateValue / 100);
+                break;
+            case 'fixed_increase':
+                $newPrice = $currentPrice + $updateValue;
+                break;
+            case 'fixed_decrease':
+                $newPrice = $currentPrice - $updateValue;
+                break;
+            case 'set_margin':
+                // This would require cost data - simplified for now
+                $newPrice = $currentPrice; // Keep current price if cost is unknown
+                break;
+        }
+
+        // Ensure price doesn't go below 0
+        $newPrice = max(0, $newPrice);
+
+        // Round prices if requested
+        if ($roundPrices && $newPrice > 0) {
+            if ($newPrice < 10) {
+                $newPrice = floor($newPrice) + 0.99;
+            } else {
+                $newPrice = floor($newPrice) + 0.95;
+            }
+        }
+
+        return round($newPrice, 2);
+    }
 }

@@ -12,8 +12,14 @@
                 <p class="description">Real-time analytics and performance insights</p>
             </div>
             <div class="col-12 col-lg-4 text-lg-right mt-3 mt-lg-0">
+                <a href="<?php echo URLROOT; ?>/sales/add" class="btn btn-success btn-lg mr-2">
+                    <i class="fas fa-plus"></i> New Sale
+                </a>
+                <a href="<?php echo URLROOT; ?>/purchases/add" class="btn btn-primary btn-lg mr-2">
+                    <i class="fas fa-shopping-cart"></i> New Purchase
+                </a>
                 <div class="btn-group">
-                    <button class="btn btn-outline-light btn-sm dropdown-toggle" data-toggle="dropdown">
+                    <button class="btn btn-outline-secondary btn-lg dropdown-toggle" data-toggle="dropdown">
                         <i class="fa fa-calendar"></i> Last 30 Days
                     </button>
                     <div class="dropdown-menu dropdown-menu-right">
@@ -25,91 +31,91 @@
             </div>
         </div>
     </div>
-    <!-- Key Performance Indicators -->
-    <div class="row mb-4">
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
-            <div class="theme-card">
+    <!-- Key Performance Indicators - All 6 in One Line -->
+    <div class="row mb-4 kpi-row">
+        <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
+            <div class="kpi-card">
                 <div class="card-header bg-primary-theme text-white">
-                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Total Sales</h5>
+                    <h6 class="mb-0"><i class="fas fa-chart-line"></i> Total Sales</h6>
                 </div>
-                <div class="card-body text-center">
-                    <h4 class="text-primary"><?php echo formatCurrency($data['total_sales'] ?? 0, 0); ?></h4>
+                <div class="card-body text-center p-2">
+                    <h5 class="text-primary mb-1"><?php echo formatCurrency($data['total_sales'] ?? 0, 0); ?></h5>
                     <small class="text-success"><i class="fas fa-arrow-up"></i>
                         <?php echo $data['sales_growth'] ?? '0'; ?>%</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
-            <div class="theme-card">
+        <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
+            <div class="kpi-card">
                 <div class="card-header bg-success-theme text-white">
-                    <h5 class="mb-0"><i class="fas fa-receipt"></i> Avg Transaction</h5>
+                    <h6 class="mb-0"><i class="fas fa-receipt"></i> Avg Transaction</h6>
                 </div>
-                <div class="card-body text-center">
-                    <h4 class="text-success"><?php echo formatCurrency($data['avg_transaction'] ?? 0, 2); ?></h4>
+                <div class="card-body text-center p-2">
+                    <h5 class="text-success mb-1"><?php echo formatCurrency($data['avg_transaction'] ?? 0, 2); ?></h5>
                     <small class="text-muted"><?php echo formatIndianNumber($data['total_transactions'] ?? 0, 0); ?>
                         transactions</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
-            <div class="theme-card">
+        <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
+            <div class="kpi-card">
                 <div class="card-header bg-info-theme text-white">
-                    <h5 class="mb-0"><i class="fas fa-boxes"></i> Inventory Value</h5>
+                    <h6 class="mb-0"><i class="fas fa-boxes"></i> Inventory Value</h6>
                 </div>
-                <div class="card-body text-center">
-                    <h4 class="text-info"><?php echo formatCurrency($data['inventory_value'] ?? 0, 0); ?></h4>
+                <div class="card-body text-center p-2">
+                    <h5 class="text-info mb-1"><?php echo formatCurrency($data['inventory_value'] ?? 0, 0); ?></h5>
                     <small class="text-muted"><?php echo formatIndianNumber($data['total_products'] ?? 0, 0); ?>
                         products</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
-            <div class="theme-card">
+        <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
+            <div class="kpi-card">
                 <div class="card-header bg-warning-theme text-white">
-                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Low Inventory</h5>
+                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Low Inventory</h6>
                 </div>
-                <div class="card-body text-center">
-                    <h4 class="text-warning"><?php echo $data['low_Inventory_count'] ?? 0; ?></h4>
+                <div class="card-body text-center p-2">
+                    <h5 class="text-warning mb-1"><?php echo $data['low_Inventory_count'] ?? 0; ?></h5>
                     <small class="text-danger"><?php echo $data['out_of_Inventory_count'] ?? 0; ?> out of
                         Inventory</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
-            <div class="theme-card">
+        <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
+            <div class="kpi-card">
                 <div class="card-header bg-success-theme text-white">
-                    <h5 class="mb-0"><i class="fas fa-percentage"></i> Gross Margin</h5>
+                    <h6 class="mb-0"><i class="fas fa-percentage"></i> Gross Margin</h6>
                 </div>
-                <div class="card-body text-center">
-                    <h4 class="text-success"><?php echo number_format($data['gross_margin'] ?? 0, 1); ?>%</h4>
+                <div class="card-body text-center p-2">
+                    <h5 class="text-success mb-1"><?php echo number_format($data['gross_margin'] ?? 0, 1); ?>%</h5>
                     <small class="text-muted">Target: 25%</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
-            <div class="theme-card">
+        <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
+            <div class="kpi-card">
                 <div class="card-header bg-primary-theme text-white">
-                    <h5 class="mb-0"><i class="fas fa-users"></i> New Customers</h5>
+                    <h6 class="mb-0"><i class="fas fa-users"></i> New Customers</h6>
                 </div>
-                <div class="card-body text-center">
-                    <h4 class="text-primary"><?php echo $data['new_customers'] ?? 0; ?></h4>
+                <div class="card-body text-center p-2">
+                    <h5 class="text-primary mb-1"><?php echo $data['new_customers'] ?? 0; ?></h5>
                     <small class="text-muted">This month</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Content Section -->
+    <!-- Main Content Section - Full Width Layout -->
     <div class="row">
-        <!-- Main Analytics Column -->
-        <div class="col-lg-9 col-xl-9">
+        <!-- Main Analytics Column - Extended Width -->
+        <div class="col-lg-8 col-xl-8">
             <!-- Sales Trend Chart -->
-            <div class="theme-card">
+            <div class="kpi-card mb-4">
                 <div class="card-header bg-primary-theme text-white">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
@@ -117,13 +123,13 @@
                             Monthly Sales Trend
                         </h5>
                         <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-light" onclick="updateChart('sales')">Sales</button>
-                            <button class="btn btn-outline-light" onclick="updateChart('profit')">Profit</button>
+                            <button class="btn-outline-modern" onclick="updateChart('sales')">Sales</button>
+                            <button class="btn-outline-modern" onclick="updateChart('profit')">Profit</button>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div style="height: 300px;">
+                    <div style="height: 350px;">
                         <canvas id="monthlyChart"></canvas>
                     </div>
                 </div>
@@ -133,7 +139,7 @@
             <div class="row">
                 <!-- Sales by Category -->
                 <div class="col-lg-6 mb-3">
-                    <div class="theme-card">
+                    <div class="kpi-card">
                         <div class="card-header bg-success-theme text-white">
                             <h5 class="mb-0">
                                 <i class="fas fa-chart-pie"></i>
@@ -150,7 +156,7 @@
 
                 <!-- Customer Analytics -->
                 <div class="col-lg-6 mb-3">
-                    <div class="theme-card">
+                    <div class="kpi-card">
                         <div class="card-header bg-info-theme text-white">
                             <h5 class="mb-0">
                                 <i class="fas fa-users"></i>
@@ -167,10 +173,10 @@
             </div>
         </div>
 
-        <!-- Sidebar Widgets -->
-        <div class="col-lg-3 col-xl-3">
+        <!-- Sidebar Widgets - Extended Width -->
+        <div class="col-lg-4 col-xl-4">
             <!-- Quick Actions -->
-            <div class="theme-card">
+            <div class="kpi-card mb-4">
                 <div class="card-header bg-warning-theme text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-bolt"></i>
@@ -180,25 +186,25 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-6 mb-2">
-                            <a href="<?php echo URLROOT; ?>/sales/add" class="btn btn-success btn-block">
+                            <a href="<?php echo URLROOT; ?>/sales/add" class="btn-action btn-success-theme">
                                 <i class="fas fa-plus"></i>
                                 <div>New Sale</div>
                             </a>
                         </div>
                         <div class="col-6 mb-2">
-                            <a href="<?php echo URLROOT; ?>/products/add" class="btn btn-primary btn-block">
+                            <a href="<?php echo URLROOT; ?>/products/add" class="btn-action btn-primary-theme">
                                 <i class="fas fa-box"></i>
                                 <div>Add Product</div>
                             </a>
                         </div>
                         <div class="col-6 mb-2">
-                            <a href="<?php echo URLROOT; ?>/purchases/add" class="btn btn-info btn-block">
+                            <a href="<?php echo URLROOT; ?>/purchases/add" class="btn-action btn-info-theme">
                                 <i class="fas fa-shopping-cart"></i>
                                 <div>New Purchase</div>
                             </a>
                         </div>
                         <div class="col-6 mb-2">
-                            <a href="<?php echo URLROOT; ?>/customers" class="btn btn-secondary btn-block">
+                            <a href="<?php echo URLROOT; ?>/customers" class="btn-action btn-secondary-theme">
                                 <i class="fas fa-users"></i>
                                 <div>Customers</div>
                             </a>
@@ -208,49 +214,47 @@
             </div>
 
             <!-- Recent Activity -->
-            <div class="theme-card">
+            <div class="kpi-card">
                 <div class="card-header bg-info-theme text-white">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
                             <i class="fas fa-clock"></i>
                             Recent Activity
                         </h5>
-                        <a href="#" class="btn btn-sm btn-outline-light">View All</a>
+                        <a href="#" class="btn-outline-modern btn-sm">View All</a>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        <div class="list-group-item d-flex align-items-center">
-                            <div class="bg-primary text-white rounded-circle p-2 me-3"
-                                style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
-                                <i class="fas fa-chart-line fa-sm"></i>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon bg-primary">
+                                <i class="fas fa-chart-line"></i>
                             </div>
-                            <div>
-                                <div class="font-weight-medium">Sale Completed</div>
-                                <div class="text-muted small">New sale of <?php echo formatCurrency(245.50, 2); ?></div>
-                                <div class="text-muted small">2 hours ago</div>
-                            </div>
-                        </div>
-                        <div class="list-group-item d-flex align-items-center">
-                            <div class="bg-success text-white rounded-circle p-2 me-3"
-                                style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
-                                <i class="fas fa-box fa-sm"></i>
-                            </div>
-                            <div>
-                                <div class="font-weight-medium">Product Added</div>
-                                <div class="text-muted small">New hammer added to inventory</div>
-                                <div class="text-muted small">4 hours ago</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Sale Completed</div>
+                                <div class="activity-description">New sale of <?php echo formatCurrency(245.50, 2); ?>
+                                </div>
+                                <div class="activity-time">2 hours ago</div>
                             </div>
                         </div>
-                        <div class="list-group-item d-flex align-items-center">
-                            <div class="bg-warning text-white rounded-circle p-2 me-3"
-                                style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
-                                <i class="fas fa-exclamation-triangle fa-sm"></i>
+                        <div class="activity-item">
+                            <div class="activity-icon bg-success">
+                                <i class="fas fa-box"></i>
                             </div>
-                            <div>
-                                <div class="font-weight-medium">Low Inventory Alert</div>
-                                <div class="text-muted small">Screws below minimum level</div>
-                                <div class="text-muted small">6 hours ago</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Product Added</div>
+                                <div class="activity-description">New hammer added to inventory</div>
+                                <div class="activity-time">4 hours ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon bg-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Low Inventory Alert</div>
+                                <div class="activity-description">Screws below minimum level</div>
+                                <div class="activity-time">6 hours ago</div>
                             </div>
                         </div>
                     </div>
@@ -258,7 +262,7 @@
             </div>
 
             <!-- Performance Summary -->
-            <div class="theme-card">
+            <div class="kpi-card">
                 <div class="card-header bg-secondary-theme text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-trophy"></i>
@@ -267,32 +271,32 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="font-weight-medium">Daily Sales Target</span>
-                            <span class="text-success font-weight-bold">85%</span>
+                        <div class="progress-label">
+                            <span class="progress-label-title">Daily Sales Target</span>
+                            <span class="progress-label-value text-success">85%</span>
                         </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-success" style="width: 85%"></div>
+                        <div class="progress-modern">
+                            <div class="progress-bar-modern bg-success" style="width: 85%"></div>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="font-weight-medium">Inventory Turnover</span>
-                            <span class="text-info font-weight-bold">Good</span>
+                        <div class="progress-label">
+                            <span class="progress-label-title">Inventory Turnover</span>
+                            <span class="progress-label-value text-info">Good</span>
                         </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-info" style="width: 72%"></div>
+                        <div class="progress-modern">
+                            <div class="progress-bar-modern bg-info" style="width: 72%"></div>
                         </div>
                     </div>
 
                     <div class="mb-0">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="font-weight-medium">Customer Satisfaction</span>
-                            <span class="text-warning font-weight-bold">92%</span>
+                        <div class="progress-label">
+                            <span class="progress-label-title">Customer Satisfaction</span>
+                            <span class="progress-label-value text-warning">92%</span>
                         </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-warning" style="width: 92%"></div>
+                        <div class="progress-modern">
+                            <div class="progress-bar-modern bg-warning" style="width: 92%"></div>
                         </div>
                     </div>
                 </div>

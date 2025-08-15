@@ -46,14 +46,14 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         <div class="row">
             <div class="col-lg-8">
                 <!-- General Settings -->
-                <div class="card mb-4">
+                <div class="card-theme mb-4">
                     <div class="card-header bg-primary text-white">
                         <i class="fas fa-cogs"></i> General Settings
                     </div>
                     <div class="card-body">
                         <div class="form-group">
                             <label for="site_name" class="form-label">Site Name</label>
-                            <input type="text" class="form-control" id="site_name" name="site_name"
+                            <input type="text" class="form-theme" id="site_name" name="site_name"
                                 value="<?= htmlspecialchars($data['settings']['site_name'] ?? 'Inventory Management System') ?>">
                             <div class="form-text">The name of your application displayed in the browser title and
                                 header.</div>
@@ -61,7 +61,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
                         <div class="form-group">
                             <label for="timezone" class="form-label">Timezone</label>
-                            <select class="form-control" id="timezone" name="timezone">
+                            <select class="form-theme" id="timezone" name="timezone">
                                 <option value="UTC" <?= ($data['settings']['timezone'] ?? 'UTC') === 'UTC' ? 'selected' : '' ?>>UTC</option>
                                 <option value="America/New_York" <?= ($data['settings']['timezone'] ?? '') === 'America/New_York' ? 'selected' : '' ?>>Eastern Time</option>
                                 <option value="America/Chicago" <?= ($data['settings']['timezone'] ?? '') === 'America/Chicago' ? 'selected' : '' ?>>Central Time</option>
@@ -73,7 +73,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
                         <div class="form-group">
                             <label for="items_per_page" class="form-label">Items Per Page</label>
-                            <select class="form-control" id="items_per_page" name="items_per_page">
+                            <select class="form-theme" id="items_per_page" name="items_per_page">
                                 <option value="10" <?= ($data['settings']['items_per_page'] ?? 25) == 10 ? 'selected' : '' ?>>10</option>
                                 <option value="25" <?= ($data['settings']['items_per_page'] ?? 25) == 25 ? 'selected' : '' ?>>25</option>
                                 <option value="50" <?= ($data['settings']['items_per_page'] ?? 25) == 50 ? 'selected' : '' ?>>50</option>
@@ -84,7 +84,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
                         <div class="form-group">
                             <label for="default_theme" class="form-label">Default Theme</label>
-                            <select class="form-control" id="default_theme" name="default_theme">
+                            <select class="form-theme" id="default_theme" name="default_theme">
                                 <option value="auto" <?= ($data['settings']['default_theme'] ?? 'auto') === 'auto' ? 'selected' : '' ?>>Auto (Follow System)</option>
                                 <option value="light" <?= ($data['settings']['default_theme'] ?? 'auto') === 'light' ? 'selected' : '' ?>>Light Theme</option>
                                 <option value="dark" <?= ($data['settings']['default_theme'] ?? 'auto') === 'dark' ? 'selected' : '' ?>>Dark Theme</option>
@@ -96,14 +96,14 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                 </div>
 
                 <!-- Business Settings -->
-                <div class="card mb-4">
+                <div class="card-theme mb-4">
                     <div class="card-header bg-info text-white">
                         <i class="fas fa-store"></i> Business Settings
                     </div>
                     <div class="card-body">
                         <div class="form-group">
                             <label for="auto_approve_threshold" class="form-label">Auto-Approve Threshold ($)</label>
-                            <input type="number" class="form-control" id="auto_approve_threshold"
+                            <input type="number" class="form-theme" id="auto_approve_threshold"
                                 name="auto_approve_threshold" step="0.01" min="0"
                                 value="<?= $data['settings']['auto_approve_threshold'] ?? 1000 ?>"
                                 class="form-control inr-format">
@@ -113,7 +113,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
                         <div class="form-group">
                             <label for="low_Inventory_threshold" class="form-label">Low Inventory Threshold</label>
-                            <input type="number" class="form-control" id="low_Inventory_threshold"
+                            <input type="number" class="form-theme" id="low_Inventory_threshold"
                                 name="low_Inventory_threshold" min="1"
                                 value="<?= $data['settings']['low_Inventory_threshold'] ?? 10 ?>"
                                 class="form-control inr-format">
@@ -122,7 +122,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
                         <div class="form-group">
                             <label for="currency" class="form-label">Default Currency</label>
-                            <select class="form-control" id="currency" name="currency">
+                            <select class="form-theme" id="currency" name="currency">
                                 <option value="INR" <?= ($data['settings']['currency'] ?? 'INR') === 'INR' ? 'selected' : '' ?>>INR (₹)</option>
                                 <option value="USD" <?= ($data['settings']['currency'] ?? 'INR') === 'USD' ? 'selected' : '' ?>>USD ($)</option>
                                 <option value="CAD" <?= ($data['settings']['currency'] ?? 'INR') === 'CAD' ? 'selected' : '' ?>>CAD ($)</option>
@@ -132,7 +132,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
                         <div class="form-group">
                             <label for="tax_rate" class="form-label">Default Tax Rate (%)</label>
-                            <input type="number" class="form-control" id="tax_rate" name="tax_rate" step="0.01" min="0"
+                            <input type="number" class="form-theme" id="tax_rate" name="tax_rate" step="0.01" min="0"
                                 max="100" value="<?= $data['settings']['tax_rate'] ?? 8.25 ?>"
                                 class="form-control inr-format">
                             <div class="form-text">Default tax rate applied to sales and purchases.</div>
@@ -141,14 +141,14 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                 </div>
 
                 <!-- Security Settings -->
-                <div class="card mb-4">
+                <div class="card-theme mb-4">
                     <div class="card-header bg-warning text-dark">
                         <i class="fas fa-shield-alt"></i> Security Settings
                     </div>
                     <div class="card-body">
                         <div class="form-group">
                             <label for="session_timeout" class="form-label">Session Timeout (minutes)</label>
-                            <select class="form-control" id="session_timeout" name="session_timeout">
+                            <select class="form-theme" id="session_timeout" name="session_timeout">
                                 <option value="30" <?= ($data['settings']['session_timeout'] ?? 60) == 30 ? 'selected' : '' ?>>30 minutes</option>
                                 <option value="60" <?= ($data['settings']['session_timeout'] ?? 60) == 60 ? 'selected' : '' ?>>1 hour</option>
                                 <option value="120" <?= ($data['settings']['session_timeout'] ?? 60) == 120 ? 'selected' : '' ?>>2 hours</option>
@@ -159,7 +159,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
                         <div class="form-group">
                             <label for="max_login_attempts" class="form-label">Max Login Attempts</label>
-                            <select class="form-control" id="max_login_attempts" name="max_login_attempts">
+                            <select class="form-theme" id="max_login_attempts" name="max_login_attempts">
                                 <option value="3" <?= ($data['settings']['max_login_attempts'] ?? 5) == 3 ? 'selected' : '' ?>>3</option>
                                 <option value="5" <?= ($data['settings']['max_login_attempts'] ?? 5) == 5 ? 'selected' : '' ?>>5</option>
                                 <option value="10" <?= ($data['settings']['max_login_attempts'] ?? 5) == 10 ? 'selected' : '' ?>>10</option>
@@ -184,14 +184,14 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
             <div class="col-lg-4">
                 <!-- Backup Settings -->
-                <div class="card mb-4">
+                <div class="card-theme mb-4">
                     <div class="card-header bg-success text-white">
                         <i class="fas fa-database"></i> Backup Settings
                     </div>
                     <div class="card-body">
                         <div class="form-group">
                             <label for="backup_frequency" class="form-label">Backup Frequency</label>
-                            <select class="form-control" id="backup_frequency" name="backup_frequency">
+                            <select class="form-theme" id="backup_frequency" name="backup_frequency">
                                 <option value="daily" <?= ($data['settings']['backup_frequency'] ?? 'daily') === 'daily' ? 'selected' : '' ?>>Daily</option>
                                 <option value="weekly" <?= ($data['settings']['backup_frequency'] ?? 'daily') === 'weekly' ? 'selected' : '' ?>>Weekly</option>
                                 <option value="monthly" <?= ($data['settings']['backup_frequency'] ?? 'daily') === 'monthly' ? 'selected' : '' ?>>Monthly</option>
@@ -202,7 +202,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
                         <div class="form-group">
                             <label for="backup_retention" class="form-label">Backup Retention (days)</label>
-                            <select class="form-control" id="backup_retention" name="backup_retention">
+                            <select class="form-theme" id="backup_retention" name="backup_retention">
                                 <option value="7" <?= ($data['settings']['backup_retention'] ?? 30) == 7 ? 'selected' : '' ?>>7 days</option>
                                 <option value="30" <?= ($data['settings']['backup_retention'] ?? 30) == 30 ? 'selected' : '' ?>>30 days</option>
                                 <option value="90" <?= ($data['settings']['backup_retention'] ?? 30) == 90 ? 'selected' : '' ?>>90 days</option>
@@ -222,7 +222,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                 </div>
 
                 <!-- Notification Settings -->
-                <div class="card mb-4">
+                <div class="card-theme mb-4">
                     <div class="card-header bg-secondary text-white">
                         <i class="fas fa-bell"></i> Notifications
                     </div>
@@ -261,7 +261,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                 </div>
 
                 <!-- Theme Controls -->
-                <div class="card mb-4">
+                <div class="card-theme mb-4">
                     <div class="card-header bg-primary-theme text-white">
                         <i class="fas fa-palette"></i> Theme Controls
                     </div>

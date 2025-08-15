@@ -305,6 +305,268 @@ class Inventory
     }
 
     /**
+     * Enhanced product search for Unified Smart Search
+     */
+    public function searchProducts($query)
+    {
+        try {
+            $searchTerm = '%' . $query . '%';
+
+            $this->db->query("
+                SELECT 
+                    p.product_id,
+                    p.product_name,
+                    p.product_code,
+                    p.sku,
+                    p.unit_price,
+                    p.current_inventory,
+                    p.reorder_level,
+                    p.barcode,
+                    c.category_name,
+                    b.brand_name,
+                    l.location_name,
+                    l.location_id
+                FROM products p
+                LEFT JOIN categories c ON p.category_id = c.category_id
+                LEFT JOIN brands b ON p.brand_id = b.brand_id
+                LEFT JOIN product_locations pl ON p.product_id = pl.product_id
+                LEFT JOIN locations l ON pl.location_id = l.location_id
+                WHERE p.product_name LIKE :search 
+                   OR p.product_code LIKE :search 
+                   OR p.sku LIKE :search
+                   OR p.barcode LIKE :search
+                   OR c.category_name LIKE :search
+                   OR b.brand_name LIKE :search
+                ORDER BY 
+                    CASE 
+                        WHEN p.product_code = :exact_search THEN 1
+                        WHEN p.sku = :exact_search THEN 2
+                        WHEN p.barcode = :exact_search THEN 3
+                        WHEN p.product_name LIKE :exact_search THEN 4
+                        ELSE 5
+                    END,
+                    p.product_name
+                LIMIT 20
+            ");
+
+            $this->db->bind(':search', $searchTerm);
+            $this->db->bind(':exact_search', $query);
+
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in searchProducts: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Enhanced location search for Unified Smart Search
+     */
+    public function searchLocations($query)
+    {
+        try {
+            $searchTerm = '%' . $query . '%';
+
+            $this->db->query("
+                SELECT 
+                    l.location_id,
+                    l.location_name,
+                    l.location_type,
+                    l.capacity,
+                    l.rack,
+                    l.shelf,
+                    l.aisle,
+                    COUNT(pl.product_id) as item_count,
+                    SUM(p.current_inventory) as total_inventory,
+                    lb.barcode_value
+                FROM locations l
+                LEFT JOIN product_locations pl ON l.location_id = pl.location_id
+                LEFT JOIN products p ON pl.product_id = p.product_id
+                LEFT JOIN location_barcodes lb ON l.location_id = lb.location_id
+                WHERE l.location_name LIKE :search 
+                   OR l.location_type LIKE :search
+                   OR l.rack LIKE :search
+                   OR l.shelf LIKE :search
+                   OR l.aisle LIKE :search
+                   OR lb.barcode_value LIKE :search
+                GROUP BY l.location_id
+                ORDER BY 
+                    CASE 
+                        WHEN l.location_name = :exact_search THEN 1
+                        WHEN lb.barcode_value = :exact_search THEN 2
+                        ELSE 3
+                    END,
+                    l.location_name
+                LIMIT 15
+            ");
+
+            $this->db->bind(':search', $searchTerm);
+            $this->db->bind(':exact_search', $query);
+
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in searchLocations: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Search inventory adjustments
+     */
+    public function searchAdjustments($query)
+    {
+        try {
+            $searchTerm = '%' . $query . '%';
+
+            $this->db->query("
+                SELECT 
+                    ia.adjustment_id,
+                    ia.product_id,
+                    ia.quantity_change,
+                    ia.reason,
+                    ia.adjustment_date as created_at,
+                    ia.updated_by,
+                    p.product_name,
+                    p.product_code,
+                    p.sku,
+                    u.name as user_name
+                FROM inventory_adjustments ia
+                INNER JOIN products p ON ia.product_id = p.product_id
+                LEFT JOIN users u ON ia.updated_by = u.user_id
+                WHERE p.product_name LIKE :search
+                   OR p.product_code LIKE :search
+                   OR p.sku LIKE :search
+                   OR ia.reason LIKE :search
+                   OR u.name LIKE :search
+                   OR DATE_FORMAT(ia.adjustment_date, '%Y-%m-%d') LIKE :search
+                ORDER BY ia.adjustment_date DESC
+                LIMIT 25
+            ");
+
+            $this->db->bind(':search', $searchTerm);
+
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in searchAdjustments: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Search cycle counts
+     */
+    public function searchCycleCounts($query)
+    {
+        try {
+            $searchTerm = '%' . $query . '%';
+
+            $this->db->query("
+                SELECT 
+                    cc.count_id,
+                    cc.location_id,
+                    cc.count_date,
+                    cc.status,
+                    cc.notes,
+                    l.location_name,
+                    COUNT(DISTINCT cci.product_id) as products_counted,
+                    SUM(CASE WHEN cci.variance != 0 THEN 1 ELSE 0 END) as variances,
+                    u.name as counted_by
+                FROM cycle_counts cc
+                INNER JOIN locations l ON cc.location_id = l.location_id
+                LEFT JOIN cycle_count_items cci ON cc.count_id = cci.count_id
+                LEFT JOIN users u ON cc.counted_by = u.user_id
+                WHERE l.location_name LIKE :search
+                   OR cc.status LIKE :search
+                   OR cc.notes LIKE :search
+                   OR u.name LIKE :search
+                   OR DATE_FORMAT(cc.count_date, '%Y-%m-%d') LIKE :search
+                GROUP BY cc.count_id
+                ORDER BY cc.count_date DESC
+                LIMIT 20
+            ");
+
+            $this->db->bind(':search', $searchTerm);
+
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in searchCycleCounts: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Save cycle count with all counted items
+     */
+    public function saveCycleCount($countInfo, $countedItems, $userId = null)
+    {
+        try {
+            $this->db->beginTransaction();
+
+            // Create cycle count record
+            $this->db->query("
+                INSERT INTO cycle_counts (
+                    location_id, count_type, notes, status, count_date, counted_by
+                ) VALUES (
+                    :location_id, :count_type, :notes, 'completed', NOW(), :user_id
+                )
+            ");
+
+            $this->db->bind(':location_id', $countInfo['location_id']);
+            $this->db->bind(':count_type', $countInfo['type']);
+            $this->db->bind(':notes', $countInfo['notes'] ?? '');
+            $this->db->bind(':user_id', $userId);
+
+            $this->db->execute();
+            $cycleCountId = $this->db->lastInsertId();
+
+            // Process each counted item
+            $varianceCount = 0;
+            foreach ($countedItems as $item) {
+                // Insert cycle count item
+                $this->db->query("
+                    INSERT INTO cycle_count_items (
+                        count_id, product_id, system_count, physical_count, variance, notes
+                    ) VALUES (
+                        :count_id, :product_id, :system_count, :physical_count, :variance, :notes
+                    )
+                ");
+
+                $this->db->bind(':count_id', $cycleCountId);
+                $this->db->bind(':product_id', $item['product_id']);
+                $this->db->bind(':system_count', $item['system_count']);
+                $this->db->bind(':physical_count', $item['physical_count']);
+                $this->db->bind(':variance', $item['variance']);
+                $this->db->bind(':notes', $item['notes'] ?? '');
+
+                $this->db->execute();
+
+                if ($item['variance'] != 0) {
+                    $varianceCount++;
+                }
+            }
+
+            $this->db->commit();
+
+            return [
+                'success' => true,
+                'data' => [
+                    'cycle_count_id' => $cycleCountId,
+                    'items_counted' => count($countedItems),
+                    'variances_found' => $varianceCount
+                ]
+            ];
+
+        } catch (Exception $e) {
+            $this->db->rollback();
+            error_log("Error in saveCycleCount: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to save cycle count: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Update minimum Inventory level for a product
      * @param int $productId
      * @param int $minimumInventory
@@ -333,13 +595,13 @@ class Inventory
             $this->db->query("
                 SELECT s.Inventory_id, s.product_id, s.quantity, s.batch_number,
                        p.product_name, p.sku, 
-                       wl.location_name, wl.rack, wl.shelf
+                       wl.location_name, wl.shelf, wl.bin
                 FROM Inventory s
                 LEFT JOIN products p ON s.product_id = p.product_id
-                LEFT JOIN warehouse_locations wl ON s.location_id = wl.location_id
-                WHERE wl.location_name LIKE 'B-%' 
+                LEFT JOIN locations wl ON s.location_id = wl.location_id
+                WHERE wl.location_type = 'storage' 
                 AND s.quantity > 0
-                ORDER BY wl.location_name, p.product_name
+                ORDER BY wl.standardized_address, p.product_name
             ");
 
             $result = $this->db->resultSet();
@@ -357,10 +619,10 @@ class Inventory
     {
         try {
             $this->db->query("
-                SELECT location_id, location_name, rack, shelf
-                FROM warehouse_locations 
-                WHERE location_name NOT LIKE 'B-%'
-                ORDER BY location_name
+                SELECT location_id, location_name, standardized_address, shelf, bin
+                FROM locations 
+                WHERE location_type IN ('storage', 'bin')
+                ORDER BY standardized_address
             ");
 
             $result = $this->db->resultSet();
@@ -383,7 +645,7 @@ class Inventory
             $this->db->query("
                 SELECT s.*, wl.location_name as from_location_name
                 FROM Inventory s
-                LEFT JOIN warehouse_locations wl ON s.location_id = wl.location_id
+                LEFT JOIN locations wl ON s.location_id = wl.location_id
                 WHERE s.Inventory_id = :Inventory_id
             ");
             $this->db->bind(':Inventory_id', $InventoryId);
@@ -471,13 +733,13 @@ class Inventory
 
             // Get current Inventory for this product
             $this->db->query("
-                SELECT COALESCE(SUM(quantity), 0) as current_Inventory 
+                SELECT COALESCE(SUM(quantity), 0) as current_inventory 
                 FROM Inventory 
                 WHERE product_id = :product_id
             ");
             $this->db->bind(':product_id', $data['product_id']);
             $InventoryResult = $this->db->single();
-            $currentInventory = $InventoryResult ? $InventoryResult->current_Inventory : 0;
+            $currentInventory = $InventoryResult ? $InventoryResult->current_inventory : 0;
 
             // Calculate new Inventory
             $quantityChange = (int) $data['quantity_change'];

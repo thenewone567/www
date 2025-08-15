@@ -57,6 +57,31 @@ class Category
     }
 
     /**
+     * Get categories with product count
+     * @return array
+     */
+    public function getCategoriesWithCount()
+    {
+        try {
+            $this->db->query('
+                SELECT 
+                    c.*,
+                    COUNT(p.product_id) as product_count
+                FROM categories c
+                LEFT JOIN products p ON c.category_id = p.category_id
+                WHERE c.is_active = 1
+                GROUP BY c.category_id, c.category_name, c.parent_category_id, c.is_active
+                ORDER BY c.category_name ASC
+            ');
+            $this->db->execute();
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in getCategoriesWithCount: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
      * Get category by ID
      * @param int $id
      * @return object|null
@@ -82,9 +107,9 @@ class Category
     public function addCategory($data)
     {
         try {
-            $this->db->query('INSERT INTO categories (category_name, description) VALUES (:category_name, :description)');
+            $this->db->query('INSERT INTO categories (category_name, is_active) VALUES (:category_name, :is_active)');
             $this->db->bind(':category_name', $data['category_name']);
-            $this->db->bind(':description', $data['description'] ?? '');
+            $this->db->bind(':is_active', 1); // Default to active
             return $this->db->execute();
         } catch (Exception $e) {
             error_log("Error in addCategory: " . $e->getMessage());
@@ -100,10 +125,14 @@ class Category
     public function updateCategory($data)
     {
         try {
-            $this->db->query('UPDATE categories SET category_name = :category_name, description = :description WHERE category_id = :category_id');
-            $this->db->bind(':category_id', $data['category_id']);
+            $this->db->query('UPDATE categories SET category_name = :category_name WHERE category_id = :category_id');
+            // Use 'id' key if 'category_id' is not present (for controller compatibility)
+            $categoryId = $data['category_id'] ?? $data['id'] ?? null;
+            if (!$categoryId) {
+                throw new Exception("Category ID is required for update");
+            }
+            $this->db->bind(':category_id', $categoryId);
             $this->db->bind(':category_name', $data['category_name']);
-            $this->db->bind(':description', $data['description'] ?? '');
             return $this->db->execute();
         } catch (Exception $e) {
             error_log("Error in updateCategory: " . $e->getMessage());

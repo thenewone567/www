@@ -3,8 +3,7 @@
 <div class="card card-body theme-card-light mt-5">
     <h2>Add Supplier</h2>
     <p>Create a new supplier with this form</p>
-    <form action="<?php echo URLROOT; ?>/suppliers/add" method="post" data-verify="supplier"
-        data-verify-redirect="<?php echo URLROOT; ?>/suppliers">
+    <form action="<?php echo URLROOT; ?>/suppliers/add" method="post">
         <div class="form-group">
             <label for="supplier_name">Supplier Name: <sup>*</sup></label>
             <input type="text" name="supplier_name"
@@ -42,8 +41,68 @@
             <span class="invalid-feedback"><?php echo $data['gst_number_err'] ?? ''; ?></span>
             <small class="form-text text-muted">15-digit GST identification number (optional)</small>
         </div>
+        <div class="form-group">
+            <label for="default_delivery_days">Default Delivery Time (Days):</label>
+            <input type="number" name="default_delivery_days" class="form-control form-control-lg"
+                value="<?php echo $data['default_delivery_days'] ?? '7'; ?>" min="1" max="365" placeholder="e.g., 7">
+            <small class="form-text text-muted">Default number of days this supplier takes to deliver orders (can be
+                customized per product)</small>
+        </div>
         <input type="submit" class="btn btn-success" value="Submit">
     </form>
 </div>
+
+<script>
+    // Live duplicate check for supplier name, email, and GST number
+    function showFieldError(input, message) {
+        input.classList.add('is-invalid');
+        let feedback = input.parentElement.querySelector('.invalid-feedback');
+        if (feedback) feedback.textContent = message;
+    }
+    function clearFieldError(input) {
+        input.classList.remove('is-invalid');
+        let feedback = input.parentElement.querySelector('.invalid-feedback');
+        if (feedback) feedback.textContent = '';
+    }
+
+    function checkDuplicate(field, value, input) {
+        if (!value) { clearFieldError(input); return; }
+        fetch('<?php echo URLROOT; ?>/suppliers/check_duplicate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ field, value })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.exists) {
+                    showFieldError(input, data.message);
+                } else {
+                    clearFieldError(input);
+                }
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const nameInput = document.querySelector('input[name="supplier_name"]');
+        const emailInput = document.querySelector('input[name="email"]');
+        const gstInput = document.querySelector('input[name="gst_number"]');
+
+        if (nameInput) {
+            nameInput.addEventListener('blur', function () {
+                checkDuplicate('supplier_name', nameInput.value, nameInput);
+            });
+        }
+        if (emailInput) {
+            emailInput.addEventListener('blur', function () {
+                checkDuplicate('email', emailInput.value, emailInput);
+            });
+        }
+        if (gstInput) {
+            gstInput.addEventListener('blur', function () {
+                checkDuplicate('gst_number', gstInput.value, gstInput);
+            });
+        }
+    });
+</script>
 
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'footer.php'; ?>

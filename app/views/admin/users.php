@@ -127,7 +127,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
     <!-- Users Table -->
     <div class="row">
         <div class="col-12">
-            <div class="card shadow">
+            <div class="card-theme">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">
                         <i class="fas fa-users"></i> System Users
@@ -247,13 +247,13 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="userName">Full Name *</label>
-                                <input type="text" class="form-control" id="userName" name="name" required>
+                                <input type="text" class="form-theme" id="userName" name="name" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="userUsername">Username *</label>
-                                <input type="text" class="form-control" id="userUsername" name="username" required>
+                                <input type="text" class="form-theme" id="userUsername" name="username" required>
                                 <small class="form-text text-muted">Unique username for login</small>
                             </div>
                         </div>
@@ -262,13 +262,13 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="userEmail">Email Address *</label>
-                                <input type="email" class="form-control" id="userEmail" name="email" required>
+                                <input type="email" class="form-theme" id="userEmail" name="email" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="userRole">Role *</label>
-                                <select class="form-control" id="userRole" name="role_id" required>
+                                <select class="form-theme" id="userRole" name="role_id" required>
                                     <option value="">Select Role</option>
                                     <?php if (isset($data['roles'])): ?>
                                         <?php foreach ($data['roles'] as $role): ?>
@@ -283,7 +283,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="userPassword">Password *</label>
-                                <input type="password" class="form-control" id="userPassword" name="password" required
+                                <input type="password" class="form-theme" id="userPassword" name="password" required
                                     minlength="6">
                                 <small class="form-text text-muted">Minimum 6 characters</small>
                             </div>
@@ -291,7 +291,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="userStatus">Status</label>
-                                <select class="form-control" id="userStatus" name="status">
+                                <select class="form-theme" id="userStatus" name="status">
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
                                 </select>
@@ -300,8 +300,8 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="button" class="btn-theme btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-theme btn-primary-theme">
                         <i class="fas fa-save"></i> Create User
                     </button>
                 </div>
@@ -329,13 +329,13 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editUserName">Full Name *</label>
-                                <input type="text" class="form-control" id="editUserName" name="name" required>
+                                <input type="text" class="form-theme" id="editUserName" name="name" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editUserUsername">Username *</label>
-                                <input type="text" class="form-control" id="editUserUsername" name="username" required>
+                                <input type="text" class="form-theme" id="editUserUsername" name="username" required>
                                 <small class="form-text text-muted">Unique username for login</small>
                             </div>
                         </div>
@@ -344,13 +344,13 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editUserEmail">Email Address *</label>
-                                <input type="email" class="form-control" id="editUserEmail" name="email" required>
+                                <input type="email" class="form-theme" id="editUserEmail" name="email" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editUserRole">Role *</label>
-                                <select class="form-control" id="editUserRole" name="role_id" required>
+                                <select class="form-theme" id="editUserRole" name="role_id" required>
                                     <?php if (isset($data['roles'])): ?>
                                         <?php foreach ($data['roles'] as $role): ?>
                                             <option value="<?= $role->role_id ?>"><?= ucfirst($role->role_name) ?></option>
@@ -364,7 +364,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editUserStatus">Status</label>
-                                <select class="form-control" id="editUserStatus" name="status">
+                                <select class="form-theme" id="editUserStatus" name="status">
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
                                     <option value="suspended">Suspended</option>
@@ -374,8 +374,8 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="button" class="btn-theme btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-theme btn-primary-theme">
                         <i class="fas fa-save"></i> Update User
                     </button>
                 </div>
@@ -410,8 +410,8 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="button" class="btn-theme btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-theme btn-primary-theme">
                         <i class="fas fa-save"></i> Save Permissions
                     </button>
                 </div>

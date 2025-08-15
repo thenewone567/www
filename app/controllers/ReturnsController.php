@@ -23,9 +23,18 @@ class ReturnsController extends Controller
             $purchaseReturns = [];
             flash('return_message', 'No purchase returns found');
         }
+
+        // Also load cancelled purchase orders that should appear in returns
+        $purchaseModel = $this->model('Purchase');
+        $cancelledPurchases = $purchaseModel->getCancelledPurchases();
+        if (!$cancelledPurchases) {
+            $cancelledPurchases = [];
+        }
+
         $data = [
             'sale_returns' => $saleReturns,
-            'purchase_returns' => $purchaseReturns
+            'purchase_returns' => $purchaseReturns,
+            'cancelled_purchases' => $cancelledPurchases
         ];
         $this->view('returns/index', $data);
     }

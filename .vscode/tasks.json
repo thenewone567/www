@@ -1,0 +1,23 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start WAMP Server",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-Command",
+				"Start-Process",
+				"powershell",
+				"-Verb",
+				"RunAs",
+				"-ArgumentList",
+				"'-Command'",
+				"'net start wampapache64; net start wampmysqld64'"
+			],
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

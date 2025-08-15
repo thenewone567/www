@@ -108,7 +108,7 @@
                     <div class="row">
                         <?php foreach ($data['available_pages'] as $page => $info): ?>
                             <div class="col-md-4 col-sm-6 mb-2">
-                                <div class="card border-left-primary py-2">
+                                <div class="card-theme border-left-primary py-2">
                                     <div class="card-body py-2">
                                         <strong><?php echo $info['label']; ?></strong>
                                         <p class="small text-muted mb-0"><?php echo $info['description']; ?></p>

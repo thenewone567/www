@@ -12,7 +12,7 @@
                     </h1>
                     <p class="text-muted mb-0">Transfer Inventory from one location to another</p>
                 </div>
-                <a href="<?php echo URLROOT; ?>/inventory/inventory_levels" class="btn btn-secondary">
+                <a href="<?php echo URLROOT; ?>/inventory/inventory_levels" class="btn-theme btn-secondary">
                     <i class="fa fa-arrow-left"></i> Back to Inventory
                 </a>
             </div>
@@ -21,7 +21,7 @@
 
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card theme-card-light">
+            <div class="card-theme theme-card-light">
                 <div class="card-body">
                     <form action="<?php echo URLROOT; ?>/inventory/move_inventory" method="post" data-verify="inventory"
                         data-verify-redirect="<?php echo URLROOT; ?>/inventory">

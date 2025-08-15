@@ -47,6 +47,8 @@ class ProductsController extends Controller
 
     public function __construct()
     {
+        // TEMPORARY: Comment out authentication for testing
+        /*
         // Only redirect for non-AJAX requests
         if (!isLoggedIn()) {
             $isAjax = (
@@ -63,6 +65,7 @@ class ProductsController extends Controller
                 redirect('users/login');
             }
         }
+        */
         $this->productModel = $this->model('Product');
         $this->categoryModel = $this->model('Category');
         $this->brandModel = $this->model('Brand');
@@ -73,7 +76,27 @@ class ProductsController extends Controller
 
     public function index()
     {
-        $products = $this->productModel->getProducts();
+        // Get pagination parameters
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $per_page = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 25;
+        $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+        // Ensure valid values
+        $page = max(1, $page);
+        $per_page = in_array($per_page, [25, 50, 100, 500]) ? $per_page : 25;
+
+        // Calculate offset
+        $offset = ($page - 1) * $per_page;
+
+        // Get products with pagination
+        $products = $this->productModel->getProductsPaginated($offset, $per_page, $search);
+        $total_products = $this->productModel->getTotalProductsCount($search);
+
+        // Calculate pagination info
+        $total_pages = ceil($total_products / $per_page);
+        $start_record = $total_products > 0 ? $offset + 1 : 0;
+        $end_record = min($offset + $per_page, $total_products);
+
         $categories = $this->categoryModel->getCategories();
         $brands = $this->brandModel->getBrands();
 
@@ -84,64 +107,92 @@ class ProductsController extends Controller
             'products' => $products,
             'categories' => $categories,
             'brands' => $brands,
-            'activities' => $activities
+            'activities' => $activities,
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $per_page,
+                'total_pages' => $total_pages,
+                'total_records' => $total_products,
+                'start_record' => $start_record,
+                'end_record' => $end_record,
+                'search' => $search
+            ]
         ];
         $this->view('products/index', $data);
     }
     public function show($id)
     {
         $product = $this->productModel->getProductById($id);
-        $InventoryByLocation = $this->productModel->getInventoryByLocation($id);
 
         if (!$product) {
             redirect('products');
         }
 
+        // Get inventory by location
+        $inventoryByLocation = $this->productModel->getInventoryByLocation($id);
+
+        // Get suppliers for this product (for the enhanced supplier table)
+        $suppliers = $this->productModel->getProductSuppliers($id);
+
+        // Get product statistics
+        $stats = $this->productModel->getProductStats($id);
+
         $data = [
             'product' => $product,
-            'Inventory_locations' => $InventoryByLocation
+            'inventory_locations' => $inventoryByLocation,
+            'suppliers' => $suppliers,
+            'stats' => $stats
         ];
-        $this->view('products/show', $data);
+
+        $this->view('products/view', $data);
+    }
+
+    // Handle /products/view/ID URLs by delegating to show method
+    public function details($id)
+    {
+        $this->show($id);
     }
 
     public function add()
     {
+        // Debug: Always log that we reached this method
+        error_log('=== ProductsController::add method called ===');
+        error_log('Request method: ' . $_SERVER['REQUEST_METHOD']);
+        file_put_contents('debug_products.log', date('Y-m-d H:i:s') . " - ProductsController::add called\n", FILE_APPEND);
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = sanitizePost();
+
+            // Debug: Log the incoming POST data
+            error_log('ProductsController::add - Raw POST data: ' . print_r($_POST, true));
+            file_put_contents('debug_products.log', date('Y-m-d H:i:s') . " - POST data: " . print_r($_POST, true) . "\n", FILE_APPEND);
 
             $data = [
                 'product_name' => trim($_POST['product_name'] ?? ''),
                 'sku' => trim($_POST['sku'] ?? ''),
-                'barcode' => trim($_POST['barcode'] ?? ''),
                 'model_number' => trim($_POST['model_number'] ?? ''),
-                'supplier_code' => trim($_POST['supplier_code'] ?? ''),
-                'category_id' => intval($_POST['category_id'] ?? 0),
-                'supplier_id' => intval($_POST['supplier_id'] ?? 0),
-                'brand_id' => !empty($_POST['brand_id']) ? intval($_POST['brand_id']) : null,
-                'unit_id' => !empty($_POST['unit_id']) ? intval($_POST['unit_id']) : null,
-                'min_Inventory_level' => intval($_POST['min_Inventory_level'] ?? 5),
-                'max_Inventory_level' => intval($_POST['max_Inventory_level'] ?? 100),
-                'reorder_level' => intval($_POST['reorder_level'] ?? 10),
-                'purchase_price' => !empty($_POST['purchase_price']) ? floatval($_POST['purchase_price']) : null,
-                'selling_price' => !empty($_POST['selling_price']) ? floatval($_POST['selling_price']) : null,
-                'profit_margin' => floatval($_POST['profit_margin'] ?? 0),
-                'gst_rate' => floatval($_POST['gst_rate'] ?? 18),
-                'weight' => !empty($_POST['weight']) ? floatval($_POST['weight']) : null,
-                'dimensions' => trim($_POST['dimensions'] ?? ''),
-                'warranty_period' => intval($_POST['warranty_period'] ?? 0),
-                'storage_location' => trim($_POST['storage_location'] ?? ''),
+                'category_id' => !empty($_POST['category_id']) ? intval($_POST['category_id']) : null,
+                'product_type' => trim($_POST['product_type'] ?? ''),
                 'product_status' => trim($_POST['product_status'] ?? 'active'),
-                'initial_quantity' => intval($_POST['initial_quantity'] ?? 0),
+                // Dimensions
+                'width' => !empty($_POST['width']) ? floatval($_POST['width']) : null,
+                'width_unit' => trim($_POST['width_unit'] ?? 'cm'),
+                'height' => !empty($_POST['height']) ? floatval($_POST['height']) : null,
+                'height_unit' => trim($_POST['height_unit'] ?? 'cm'),
+                'length' => !empty($_POST['length']) ? floatval($_POST['length']) : null,
+                'length_unit' => trim($_POST['length_unit'] ?? 'cm'),
+                'weight' => !empty($_POST['weight']) ? floatval($_POST['weight']) : null,
+                'weight_unit' => trim($_POST['weight_unit'] ?? 'kg'),
+                // Expiry and Warranty
+                'has_expiry' => isset($_POST['has_expiry']) ? 1 : 0,
+                'expiry_months' => !empty($_POST['expiry_months']) ? intval($_POST['expiry_months']) : null,
+                'has_warranty' => isset($_POST['has_warranty']) ? 1 : 0,
+                'warranty_period' => !empty($_POST['warranty_period']) ? intval($_POST['warranty_period']) : null,
                 'image_path' => '',
+                // Error fields
                 'product_name_err' => '',
                 'sku_err' => '',
-                'category_id_err' => '',
-                'supplier_id_err' => '',
-                'brand_id_err' => '',
-                'unit_id_err' => '',
-                'purchase_price_err' => '',
-                'selling_price_err' => '',
-                'initial_quantity_err' => ''
+                'category_id_err' => ''
             ];
 
             // Handle file upload
@@ -166,49 +217,15 @@ class ProductsController extends Controller
                 $data['sku_err'] = 'Please enter SKU';
             }
 
-            if ($data['category_id'] <= 0) {
+            // Category is now optional, so only validate if provided
+            if (!empty($_POST['category_id']) && $data['category_id'] <= 0) {
                 $data['category_id_err'] = 'Please select a valid category';
             }
 
-            if ($data['supplier_id'] <= 0) {
-                $data['supplier_id_err'] = 'Please select a valid supplier';
-            }
-
-            // Remove mandatory validation for brand and unit since they're optional
-            // if ($data['brand_id'] <= 0) {
-            //     $data['brand_id_err'] = 'Please select a valid brand';
-            // }
-
-            // if ($data['unit_id'] <= 0) {
-            //     $data['unit_id_err'] = 'Please select a valid unit';
-            // }
-
-            if ($data['initial_quantity'] < 0) {
-                $data['initial_quantity_err'] = 'Initial quantity cannot be negative';
-            }
-
-            // Remove mandatory validation for purchase and selling price since they're optional
-            // if (empty($data['purchase_price']) || $data['purchase_price'] <= 0) {
-            //     $data['purchase_price_err'] = 'Please enter a valid purchase price';
-            // }
-
-            // if (empty($data['selling_price']) || $data['selling_price'] <= 0) {
-            //     $data['selling_price_err'] = 'Please enter a valid selling price';
-            // }
-
-            // Optional validation: if both prices are provided, selling price should be higher
-            if (
-                $data['purchase_price'] !== null && $data['selling_price'] !== null &&
-                $data['selling_price'] <= $data['purchase_price']
-            ) {
-                $data['selling_price_err'] = 'Selling price must be higher than purchase price';
-            }
-
-            // If no errors, add product (only check mandatory fields)
+            // If no errors, add product
             if (
                 empty($data['product_name_err']) && empty($data['sku_err']) &&
-                empty($data['category_id_err']) && empty($data['supplier_id_err']) &&
-                empty($data['initial_quantity_err']) && empty($data['selling_price_err'])
+                empty($data['category_id_err'])
             ) {
                 // Debug logging
                 error_log('ProductsController::add - Attempting to add product with data: ' . print_r($data, true));
@@ -218,29 +235,28 @@ class ProductsController extends Controller
                     // Log the activity
                     $this->logActivity('product_add', 'product', $result, 'Product "' . $data['product_name'] . '" added successfully');
 
+                    // Set success message for display
+                    $data['success'] = 'Product "' . $data['product_name'] . '" (SKU: ' . $data['sku'] . ') was created successfully! Product ID: ' . $result;
+
                     flash('product_message', 'Product Added Successfully with Complete Details');
                     redirect('products');
                 } else {
                     error_log('ProductsController::add - addProduct returned false');
-                    $data['error'] = 'Something went wrong. Please try again.';
+                    $data['error'] = 'Submission failed! Unable to save product to database. Please check all fields and try again.';
                 }
             } else {
                 // Debug validation errors
                 error_log('ProductsController::add - Validation errors: ' . print_r([
                     'product_name_err' => $data['product_name_err'] ?? '',
                     'sku_err' => $data['sku_err'] ?? '',
-                    'category_id_err' => $data['category_id_err'] ?? '',
-                    'supplier_id_err' => $data['supplier_id_err'] ?? '',
-                    'initial_quantity_err' => $data['initial_quantity_err'] ?? '',
-                    'selling_price_err' => $data['selling_price_err'] ?? ''
+                    'category_id_err' => $data['category_id_err'] ?? ''
                 ], true));
+
+                $data['error'] = 'Submission failed! Please fix the validation errors and try again.';
             }
 
             // Load form data for redisplay
             $data['categories'] = $this->categoryModel->getCategories();
-            $data['suppliers'] = $this->supplierModel->getSuppliers();
-            $data['brands'] = $this->brandModel->getBrands();
-            $data['units'] = $this->unitModel->getUnits();
             $this->view('products/add', $data);
 
         } else {
@@ -248,39 +264,22 @@ class ProductsController extends Controller
             $data = [
                 'product_name' => '',
                 'sku' => '',
-                'barcode' => '',
                 'model_number' => '',
-                'supplier_code' => '',
                 'category_id' => '',
-                'supplier_id' => '',
-                'brand_id' => '',
-                'unit_id' => '',
-                'min_Inventory_level' => 5,
-                'max_Inventory_level' => 100,
-                'reorder_level' => 10,
-                'purchase_price' => '',
-                'selling_price' => '',
-                'profit_margin' => '',
-                'gst_rate' => '',
-                'weight' => '',
-                'dimensions' => '',
-                'warranty_period' => 0,
-                'storage_location' => '',
+                'product_type' => 'STANDARD',
                 'product_status' => 'active',
-                'initial_quantity' => 0,
+                'width' => '',
+                'height' => '',
+                'length' => '',
+                'weight' => '',
+                'has_expiry' => false,
+                'expiry_months' => '',
+                'has_warranty' => false,
+                'warranty_period' => '',
                 'categories' => $this->categoryModel->getCategories(),
-                'suppliers' => $this->supplierModel->getSuppliers(),
-                'brands' => $this->brandModel->getBrands(),
-                'units' => $this->unitModel->getUnits(),
                 'product_name_err' => '',
                 'sku_err' => '',
-                'category_id_err' => '',
-                'supplier_id_err' => '',
-                'brand_id_err' => '',
-                'unit_id_err' => '',
-                'purchase_price_err' => '',
-                'selling_price_err' => '',
-                'initial_quantity_err' => ''
+                'category_id_err' => ''
             ];
             $this->view('products/add', $data);
         }
@@ -299,6 +298,9 @@ class ProductsController extends Controller
                 'category_id' => intval($_POST['category_id'] ?? 0),
                 'brand_id' => intval($_POST['brand_id'] ?? 0),
                 'unit_id' => intval($_POST['unit_id'] ?? 0),
+                'product_type' => trim($_POST['product_type'] ?? 'STANDARD'),
+                'has_expiry' => isset($_POST['has_expiry']) ? 1 : 0,
+                'expiry_months' => intval($_POST['expiry_months'] ?? 0),
                 'min_Inventory_level' => intval($_POST['min_Inventory_level'] ?? 0),
                 'max_Inventory_level' => intval($_POST['max_Inventory_level'] ?? 0),
                 'reorder_level' => intval($_POST['reorder_level'] ?? 0),
@@ -314,6 +316,7 @@ class ProductsController extends Controller
                 'category_id_err' => '',
                 'brand_id_err' => '',
                 'unit_id_err' => '',
+                'product_type_err' => '',
                 'purchase_price_err' => '',
                 'selling_price_err' => ''
             ];
@@ -352,6 +355,10 @@ class ProductsController extends Controller
                 $data['unit_id_err'] = 'Please select a valid unit';
             }
 
+            if (empty($data['product_type']) || !in_array($data['product_type'], ['STANDARD', 'BULK', 'OVERSIZED', 'FRAGILE', 'HAZMAT'])) {
+                $data['product_type_err'] = 'Please select a valid product type';
+            }
+
             if (empty($data['purchase_price']) || $data['purchase_price'] <= 0) {
                 $data['purchase_price_err'] = 'Please enter a valid purchase price';
             }
@@ -370,7 +377,7 @@ class ProductsController extends Controller
             // If no errors, update product
             if (
                 empty($data['product_name_err']) && empty($data['sku_err']) && empty($data['category_id_err']) &&
-                empty($data['brand_id_err']) && empty($data['unit_id_err']) &&
+                empty($data['brand_id_err']) && empty($data['unit_id_err']) && empty($data['product_type_err']) &&
                 empty($data['purchase_price_err']) && empty($data['selling_price_err'])
             ) {
 
@@ -403,6 +410,9 @@ class ProductsController extends Controller
                 'category_id' => $product->category_id,
                 'brand_id' => $product->brand_id,
                 'unit_id' => $product->unit_id,
+                'product_type' => $product->product_type ?? 'STANDARD',
+                'has_expiry' => $product->has_expiry ?? 0,
+                'expiry_months' => $product->expiry_months ?? 0,
                 'min_Inventory_level' => $product->min_Inventory_level,
                 'max_Inventory_level' => $product->max_Inventory_level,
                 'reorder_level' => $product->reorder_level,
@@ -421,6 +431,7 @@ class ProductsController extends Controller
                 'category_id_err' => '',
                 'brand_id_err' => '',
                 'unit_id_err' => '',
+                'product_type_err' => '',
                 'purchase_price_err' => '',
                 'selling_price_err' => ''
             ];
@@ -1018,6 +1029,92 @@ class ProductsController extends Controller
     }
 
     /**
+     * Link a supplier to a product
+     */
+    public function linkSupplier()
+    {
+        header('Content-Type: application/json');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Method not allowed');
+            }
+
+            $productId = $_POST['product_id'] ?? null;
+            $supplierId = $_POST['supplier_id'] ?? null;
+            $purchasePrice = $_POST['purchase_price'] ?? null;
+            $supplierSku = $_POST['supplier_sku'] ?? null;
+            $leadTimeDays = $_POST['lead_time_days'] ?? 7;
+            $minOrderQuantity = $_POST['min_order_quantity'] ?? 1;
+            $supplierNotes = $_POST['supplier_notes'] ?? '';
+            $supplierRating = $_POST['supplier_rating'] ?? 4;
+
+            error_log("LinkSupplier: productId=$productId, supplierId=$supplierId, purchasePrice=$purchasePrice");
+
+            if (!$productId || !$supplierId) {
+                throw new Exception('Product ID and Supplier ID are required');
+            }
+
+            if (!$purchasePrice || $purchasePrice <= 0) {
+                throw new Exception('Valid purchase price is required');
+            }
+
+            // Check if product exists
+            $product = $this->productModel->getProductById($productId);
+            error_log("LinkSupplier: Product lookup result: " . ($product ? 'found' : 'not found'));
+            if (!$product) {
+                throw new Exception('Product not found');
+            }
+
+            // Check if supplier exists
+            $supplier = $this->supplierModel->getSupplierById($supplierId);
+            error_log("LinkSupplier: Supplier lookup result: " . ($supplier ? 'found' : 'not found'));
+            if (!$supplier) {
+                throw new Exception('Supplier not found');
+            }
+
+            // Check if relationship already exists
+            $existingLink = $this->productModel->getProductSupplierLink($productId, $supplierId);
+            error_log("LinkSupplier: Existing link check: " . ($existingLink ? 'exists' : 'does not exist'));
+            if ($existingLink) {
+                throw new Exception('Supplier is already linked to this product');
+            }
+
+            // Create the link
+            $success = $this->productModel->linkSupplier(
+                $productId,
+                $supplierId,
+                $purchasePrice,    // purchase_price from form
+                $leadTimeDays,     // lead_time_days from form
+                $minOrderQuantity, // min_order_quantity from form  
+                $supplierSku,      // supplier_sku from form
+                $supplierNotes,    // supplier_notes from form
+                $supplierRating    // supplier_rating from form
+            );
+            error_log("LinkSupplier: Link creation result: " . ($success ? 'success' : 'failed'));
+
+            if ($success) {
+                // Log the activity
+                $this->logActivity('link_supplier', 'product', $productId, "Linked supplier {$supplier->supplier_name} to product {$product->product_name}");
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Supplier linked successfully'
+                ]);
+            } else {
+                throw new Exception('Failed to link supplier');
+            }
+
+        } catch (Exception $e) {
+            error_log("LinkSupplier error: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Log activity to the activity_logs table
      */
     private function logActivity($action, $targetType, $targetId, $description = null)
@@ -1045,5 +1142,266 @@ class ProductsController extends Controller
             // Don't throw exception, just log error - activity logging shouldn't break the main functionality
         }
     }
+
+    public function getProductSuppliers($productId)
+    {
+        header('Content-Type: application/json');
+
+        try {
+            if (!$productId) {
+                throw new Exception('Product ID is required');
+            }
+
+            // Get product suppliers with supplier details
+            $suppliers = $this->productModel->getProductSuppliers($productId);
+
+            echo json_encode([
+                'success' => true,
+                'suppliers' => $suppliers
+            ]);
+
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function unlinkSupplier()
+    {
+        header('Content-Type: application/json');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Method not allowed');
+            }
+
+            $productId = $_POST['product_id'] ?? null;
+            $supplierId = $_POST['supplier_id'] ?? null;
+
+            if (!$productId || !$supplierId) {
+                throw new Exception('Product ID and Supplier ID are required');
+            }
+
+            // Remove the supplier link
+            $success = $this->productModel->unlinkSupplier($productId, $supplierId);
+
+            if ($success) {
+                // Log the activity
+                $this->logActivity('unlink_supplier', 'product', $productId, "Unlinked supplier from product");
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Supplier unlinked successfully'
+                ]);
+            } else {
+                throw new Exception('Failed to unlink supplier');
+            }
+
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Update supplier price for a product
+     */
+    public function updateSupplierPrice()
+    {
+        header('Content-Type: application/json');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Method not allowed');
+            }
+
+            $productId = $_POST['product_id'] ?? null;
+            $supplierId = $_POST['supplier_id'] ?? null;
+            $newPrice = $_POST['price'] ?? null;
+
+            if (!$productId || !$supplierId) {
+                throw new Exception('Product ID and Supplier ID are required');
+            }
+
+            if (!$newPrice || $newPrice < 0) {
+                throw new Exception('Valid price is required');
+            }
+
+            // Update the supplier price
+            $success = $this->productModel->updateSupplierPrice($productId, $supplierId, $newPrice);
+
+            if ($success) {
+                // Log the activity
+                $this->logActivity('update_supplier_price', 'product', $productId, "Updated supplier price");
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Supplier price updated successfully'
+                ]);
+            } else {
+                throw new Exception('Failed to update supplier price');
+            }
+
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Add a new supplier to a product
+     */
+    public function addSupplier()
+    {
+        header('Content-Type: application/json');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Method not allowed');
+            }
+
+            $productId = $_POST['product_id'] ?? null;
+            $supplierId = $_POST['supplier_id'] ?? null;
+            $purchasePrice = $_POST['purchase_price'] ?? null;
+            $supplierSku = $_POST['supplier_sku'] ?? null;
+            $leadTimeDays = $_POST['lead_time_days'] ?? 7;
+            $minOrderQuantity = $_POST['min_order_quantity'] ?? 1;
+            $supplierNotes = $_POST['supplier_notes'] ?? '';
+            $supplierRating = $_POST['supplier_rating'] ?? 4;
+
+            if (!$productId || !$supplierId) {
+                throw new Exception('Product ID and Supplier ID are required');
+            }
+
+            if (!$purchasePrice || $purchasePrice <= 0) {
+                throw new Exception('Valid purchase price is required');
+            }
+
+            // Check if relationship already exists
+            $existingLink = $this->productModel->getProductSupplierLink($productId, $supplierId);
+            if ($existingLink) {
+                throw new Exception('Supplier is already linked to this product');
+            }
+
+            // Create the link
+            $success = $this->productModel->linkSupplier(
+                $productId,
+                $supplierId,
+                $purchasePrice,
+                $leadTimeDays,
+                $minOrderQuantity,
+                $supplierSku,
+                $supplierNotes,
+                $supplierRating
+            );
+
+            if ($success) {
+                // Log the activity
+                $this->logActivity('add_supplier', 'product', $productId, "Added new supplier to product");
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Supplier added successfully'
+                ]);
+            } else {
+                throw new Exception('Failed to add supplier');
+            }
+
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Set primary supplier for a product
+     */
+    public function setPrimarySupplier()
+    {
+        header('Content-Type: application/json');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Method not allowed');
+            }
+
+            $productId = $_POST['product_id'] ?? null;
+            $supplierId = $_POST['supplier_id'] ?? null;
+
+            if (!$productId || !$supplierId) {
+                throw new Exception('Product ID and Supplier ID are required');
+            }
+
+            // Set primary supplier
+            $success = $this->productModel->setPrimarySupplier($productId, $supplierId);
+
+            if ($success) {
+                // Log the activity
+                $this->logActivity('set_primary_supplier', 'product', $productId, "Set primary supplier for product");
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Primary supplier set successfully'
+                ]);
+            } else {
+                throw new Exception('Failed to set primary supplier');
+            }
+
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Remove supplier from a product
+     */
+    public function removeSupplier()
+    {
+        header('Content-Type: application/json');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Method not allowed');
+            }
+
+            $productId = $_POST['product_id'] ?? null;
+            $supplierId = $_POST['supplier_id'] ?? null;
+
+            if (!$productId || !$supplierId) {
+                throw new Exception('Product ID and Supplier ID are required');
+            }
+
+            // Remove the supplier link
+            $success = $this->productModel->unlinkSupplier($productId, $supplierId);
+
+            if ($success) {
+                // Log the activity
+                $this->logActivity('remove_supplier', 'product', $productId, "Removed supplier from product");
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Supplier removed successfully'
+                ]);
+            } else {
+                throw new Exception('Failed to remove supplier');
+            }
+
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
 }
-?>

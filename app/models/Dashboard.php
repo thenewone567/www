@@ -124,7 +124,7 @@ class Dashboard
     {
         $this->db->query("
             SELECT p.product_id, p.product_name, p.sku, 
-                   COALESCE(SUM(s.quantity), 0) as current_Inventory,
+                   COALESCE(SUM(s.quantity), 0) as current_inventory,
                    p.min_Inventory_level, p.reorder_level, c.category_name
             FROM products p
             LEFT JOIN categories c ON p.category_id = c.category_id
@@ -184,7 +184,12 @@ class Dashboard
             SELECT c.category_name, COUNT(p.product_id) as low_Inventory_count
             FROM products p
             LEFT JOIN categories c ON p.category_id = c.category_id
-            WHERE p.current_Inventory <= p.reorder_level AND p.is_active = 1
+            LEFT JOIN (
+                SELECT product_id, COALESCE(SUM(quantity), 0) as current_inventory 
+                FROM inventory 
+                GROUP BY product_id
+            ) inv ON p.product_id = inv.product_id
+            WHERE COALESCE(inv.current_inventory, 0) <= p.reorder_level AND p.is_active = 1
             GROUP BY c.category_id, c.category_name
             ORDER BY low_Inventory_count DESC
         ");

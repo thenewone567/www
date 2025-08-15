@@ -21,7 +21,6 @@
     integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
     crossorigin="anonymous"></script>
 <script src="<?php echo URLROOT; ?>/public/js/currency-formatter.js"></script>
-<script src="<?php echo URLROOT; ?>/js/main.js"></script>
 <script src="<?php echo URLROOT; ?>/public/js/form-enhancements.js"></script>
 <script src="<?php echo URLROOT; ?>/public/js/transaction-verification.js"></script>
 
@@ -32,7 +31,10 @@
     <?php endforeach; ?>
 <?php endif; ?>
 
-
+<!-- Session Management (only for logged-in users) -->
+<?php if (isLoggedIn()): ?>
+    <!-- <script src="<?php echo URLROOT; ?>/assets/js/session-monitor.js"></script> -->
+<?php endif; ?>
 
 </body>
 

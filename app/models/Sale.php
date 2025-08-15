@@ -91,7 +91,7 @@ class Sale
             $this->db->query("
                 SELECT s.Inventory_id, s.quantity, s.location_id, wl.location_name
                 FROM Inventory s
-                LEFT JOIN warehouse_locations wl ON s.location_id = wl.location_id
+                LEFT JOIN locations l ON s.location_id = l.id
                 WHERE s.product_id = :product_id 
                 AND s.quantity > 0
                 ORDER BY 

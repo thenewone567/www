@@ -22,10 +22,14 @@ class Setting
     public function updateSettings($data)
     {
         foreach ($data as $key => $value) {
-            $this->db->query("UPDATE settings SET setting_value = :value WHERE setting_key = :key");
-            $this->db->bind(':value', $value);
+            // Use upsert so new keys are inserted automatically
+            $this->db->query("INSERT INTO settings (setting_key, setting_value) VALUES (:key, :value)
+                              ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
             $this->db->bind(':key', $key);
-            $this->db->execute();
+            $this->db->bind(':value', $value);
+            if (!$this->db->execute()) {
+                return false;
+            }
         }
         return true;
     }

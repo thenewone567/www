@@ -3,7 +3,6 @@ class PurchasesController extends Controller
 {
     public $productModel;
     public $purchaseModel;
-    public $purchaseOrderModel;
     public $supplierModel;
     public $barcodeModel;
 
@@ -14,9 +13,11 @@ class PurchasesController extends Controller
         }
         $this->purchaseModel = $this->model('Purchase');
         $this->productModel = $this->model('Product');
-        $this->purchaseOrderModel = $this->model('PurchaseOrder');
         $this->supplierModel = $this->model('Supplier');
         $this->barcodeModel = $this->model('Barcode');
+
+        // Initialize cart session manager for cart operations
+        require_once APPROOT . DS . 'app' . DS . 'libraries' . DS . 'CartSessionManager.php';
     }
 
     public function index()
@@ -27,11 +28,17 @@ class PurchasesController extends Controller
             flash('purchase_message', 'No purchases found');
         }
 
-        // Get purchase summary statistics
+        // Get purchase summary statistics for backward compatibility
         $summaryStats = $this->purchaseModel->getPurchaseSummaryStats();
+
+        // Get comprehensive purchase summary for KPI cards
+        $purchaseSummary = $this->purchaseModel->getPurchaseSummary();
 
         $data = [
             'purchases' => $purchases,
+            'orders' => $purchases, // Add for backward compatibility with view
+            'summary' => $purchaseSummary, // Add comprehensive summary for KPI cards
+            // Legacy stats for backward compatibility
             'monthly_purchases' => $summaryStats['monthly_purchases'],
             'pending_orders' => $summaryStats['pending_orders'],
             'active_suppliers' => $summaryStats['active_suppliers'],
@@ -42,62 +49,118 @@ class PurchasesController extends Controller
 
     public function add()
     {
+        $cartManager = CartSessionManager::getInstance();
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = sanitizePost($_POST);
+            $postedProducts = isset($_POST['products']) && is_array($_POST['products']) ? $_POST['products'] : [];
             $data = [
-                'supplier_id' => isset($_POST['supplier_id']) ? trim($_POST['supplier_id']) : '',
-                'total_amount' => isset($_POST['total_amount']) ? trim($_POST['total_amount']) : '',
+                'supplier_id' => isset($_POST['supplier_id']) ? trim($_POST['supplier_id']) : '', // optional if multi-supplier
+                'products' => $postedProducts,
+                'expected_date' => isset($_POST['expected_date']) ? trim($_POST['expected_date']) : date('Y-m-d', strtotime('+7 days')),
+                'notes' => isset($_POST['notes']) ? trim($_POST['notes']) : '',
+                'average_price_method' => isset($_POST['average_price_method']) ? 1 : 0,
+                'total_amount' => '0.00', // will be recomputed
                 'invoice_attachment' => '',
-                'products' => isset($_POST['products']) && is_array($_POST['products']) ? $_POST['products'] : [],
                 'supplier_id_err' => '',
                 'total_amount_err' => '',
                 'products_err' => ''
             ];
 
-            // Validate supplier id
-            if (empty($data['supplier_id'])) {
-                $data['supplier_id_err'] = 'Please select a supplier';
+            // Group items by supplier
+            $supplierGroups = [];
+            foreach ($postedProducts as $line) {
+                $pid = $line['product_id'] ?? ($line['id'] ?? null);
+                $qty = (int) ($line['quantity'] ?? $line['qty'] ?? 0);
+                $price = (float) ($line['price'] ?? 0);
+                $sid = $line['supplier_id'] ?? '';
+                if (!$pid || $qty <= 0) {
+                    continue;
+                }
+                if ($sid === '') {
+                    $data['products_err'] = 'Each product must have a supplier.';
+                    break;
+                }
+                if (!isset($supplierGroups[$sid])) {
+                    $supplierGroups[$sid] = ['items' => [], 'total' => 0];
+                }
+                $supplierGroups[$sid]['items'][] = [
+                    'product_id' => $pid,
+                    'quantity' => $qty,
+                    'unit_price' => $price
+                ];
+                $supplierGroups[$sid]['total'] += $qty * $price;
             }
-            // Validate total amount
-            if (empty($data['total_amount'])) {
-                $data['total_amount_err'] = 'Please enter total amount';
-            } elseif (!is_numeric($data['total_amount'])) {
-                $data['total_amount_err'] = 'Total amount must be a number';
+
+            $distinctSuppliers = count($supplierGroups);
+            // Recompute overall total
+            $overallTotal = 0;
+            foreach ($supplierGroups as $g) {
+                $overallTotal += $g['total'];
             }
-            // Validate products
-            if (empty($data['products']) || !is_array($data['products']) || count($data['products']) == 0) {
+            $data['total_amount'] = number_format($overallTotal, 2, '.', '');
+            if ($overallTotal <= 0) {
+                $data['total_amount_err'] = 'Cart total must be greater than zero';
+            }
+            if (empty($postedProducts)) {
                 $data['products_err'] = 'Please add at least one product to the order';
             }
 
-            if (empty($data['supplier_id_err']) && empty($data['total_amount_err']) && empty($data['products_err'])) {
-                // Add data for the purchase
-                $purchaseData = [
-                    'supplier_id' => $data['supplier_id'],
-                    'total_amount' => $data['total_amount'],
-                    'invoice_attachment' => ''
-                ];
+            // Single-supplier convenience: auto-fill supplier_id
+            if ($distinctSuppliers === 1 && empty($data['supplier_id'])) {
+                $data['supplier_id'] = array_key_first($supplierGroups);
+            }
+            // If user selected supplier but cart actually has multiple suppliers, ignore selection (split automatically)
+            if ($distinctSuppliers > 1 && !empty($data['supplier_id'])) {
+                // Not an error; clarify by clearing selection so downstream not enforcing single supplier
+                $data['supplier_id'] = '';
+            }
 
-                $purchase_id = $this->purchaseModel->addPurchase($purchaseData);
-                if ($purchase_id) {
-                    foreach ($data['products'] as $product) {
-                        if (isset($product['id'], $product['quantity'], $product['price'])) {
-                            $purchase_item_data = [
+            if (empty($data['products_err']) && empty($data['total_amount_err']) && empty($data['supplier_id_err'])) {
+                $created = 0;
+                $errors = [];
+                foreach ($supplierGroups as $sid => $group) {
+                    $purchaseData = [
+                        'supplier_id' => $sid,
+                        'total_amount' => number_format($group['total'], 2, '.', ''),
+                        'expected_date' => $data['expected_date'],
+                        'notes' => $data['notes'],
+                        'average_price_method' => $data['average_price_method'],
+                        'created_by' => $_SESSION['user_id'] ?? 0
+                    ];
+                    $purchase_id = $this->purchaseModel->addPurchase($purchaseData);
+                    if ($purchase_id) {
+                        foreach ($group['items'] as $it) {
+                            $this->purchaseModel->addPurchaseItem([
                                 'purchase_id' => $purchase_id,
-                                'product_id' => $product['id'],
-                                'quantity' => $product['quantity'],
-                                'unit_price' => $product['price']
-                            ];
-                            $this->purchaseModel->addPurchaseItem($purchase_item_data);
+                                'product_id' => $it['product_id'],
+                                'quantity' => $it['quantity'],
+                                'unit_price' => $it['unit_price']
+                            ]);
                         }
+                        $created++;
+                    } else {
+                        $errors[] = "Failed to create order for supplier $sid";
                     }
-                    flash('purchase_message', 'Purchase Order Created Successfully');
+                }
+                if ($created > 0) {
+                    $msg = $created === 1 ? 'Purchase Order Created Successfully' : "$created Purchase Orders Created Successfully";
+                    if ($errors) {
+                        $msg .= ' (with errors: ' . implode('; ', $errors) . ')';
+                    }
+                    flash('purchase_message', $msg, $errors ? 'alert alert-warning' : 'alert alert-success');
+                    $cartManager->clearAllCartData();
                     redirect('purchases');
                 } else {
-                    die('Something went wrong while creating the purchase order');
+                    $data['products_err'] = 'Failed to create any purchase orders.';
                 }
-            } else {
-                // Load products and suppliers for the form
-                $products = $this->productModel->getProducts();
+            }
+
+            // If errors, reload form
+            if (!empty($data['products_err']) || !empty($data['total_amount_err']) || !empty($data['supplier_id_err'])) {
+                // Use full product-supplier combinations with rankings instead of relying on primary supplier
+                $products = $this->productModel->getProductsWithAllSuppliers();
+                error_log('[PURCHASES_ADD] (POST reload) getProductsWithAllSuppliers() returned: ' . (is_array($products) ? count($products) : 0));
                 if (!$products) {
                     $products = [];
                 }
@@ -105,15 +168,18 @@ class PurchasesController extends Controller
                 if (!$suppliers) {
                     $suppliers = [];
                 }
-                $data['products'] = $products;
+                $data['products_list'] = $products; // keep original products lines separate
+                $data['products'] = $products; // expected by view for product grid
                 $data['suppliers'] = $suppliers;
                 $this->view('purchases/add', $data);
             }
         } else {
-            $products = $this->productModel->getProducts();
+            // Load all product-supplier combinations (each supplier option is distinct)
+            $products = $this->productModel->getProductsWithAllSuppliers();
+            error_log('[PURCHASES_ADD] (GET) getProductsWithAllSuppliers() returned: ' . (is_array($products) ? count($products) : 0));
             if (!$products) {
                 $products = [];
-                flash('purchase_message', 'No products found');
+                flash('purchase_message', 'No products with active suppliers found');
             }
             $suppliers = $this->supplierModel->getSuppliers();
             if (!$suppliers) {
@@ -125,10 +191,131 @@ class PurchasesController extends Controller
                 'supplier_id_err' => '',
                 'total_amount' => '',
                 'total_amount_err' => '',
+                'products_err' => '', // Missing key added
+                'expected_date' => date('Y-m-d', strtotime('+7 days')), // Missing key added
+                'notes' => '', // Missing key added
+                'average_price_method' => 0, // Default to unchecked
                 'products' => $products,
-                'suppliers' => $suppliers
+                'suppliers' => $suppliers,
+                'session_cart' => array_values($cartManager->getCart())
             ];
             $this->view('purchases/add', $data);
+        }
+    }
+
+    /**
+     * AJAX endpoint: return paginated product-supplier rows for purchases/add
+     * GET params: page, perPage, search, supplier_id, category, priceMin, priceMax
+     */
+    public function productsForAdd()
+    {
+        // Only allow AJAX or local requests
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $perPage = isset($_GET['perPage']) ? (int) $_GET['perPage'] : 25;
+        $filters = [];
+        foreach (['search', 'supplier_id', 'category', 'priceMin', 'priceMax'] as $f) {
+            if (isset($_GET[$f]) && $_GET[$f] !== '') {
+                $filters[$f] = $_GET[$f];
+            }
+        }
+
+        $res = $this->productModel->getProductsForAdd($page, $perPage, $filters);
+        $rows = is_array($res) && isset($res['rows']) ? $res['rows'] : [];
+        $total = is_array($res) && isset($res['total']) ? (int) $res['total'] : count($rows);
+
+        header('Content-Type: application/json');
+        echo json_encode(['page' => $page, 'perPage' => $perPage, 'count' => $total, 'rows' => $rows]);
+        exit;
+    }
+
+    /**
+     * AJAX endpoint: return suppliers for a single product
+     * GET param: product_id
+     */
+    public function productSuppliers()
+    {
+        $productId = isset($_GET['product_id']) ? (int) $_GET['product_id'] : 0;
+        if ($productId <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Invalid product_id']);
+            exit;
+        }
+
+        $suppliers = $this->productModel->getSuppliersForProduct($productId);
+        header('Content-Type: application/json');
+        echo json_encode(['product_id' => $productId, 'suppliers' => $suppliers]);
+        exit;
+    }
+
+    // API: add item to session cart (AJAX)
+    public function apiAddCart()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            die;
+        }
+        $cartManager = CartSessionManager::getInstance();
+        $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+        $pid = $payload['product_id'] ?? null;
+        $qty = max(1, (int) ($payload['quantity'] ?? 1));
+        $price = (float) ($payload['price'] ?? 0);
+        $sid = $payload['supplier_id'] ?? null;
+        if (!$pid) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing product_id']);
+            return;
+        }
+        $cartManager->addToCart($pid, $qty, $price, $sid);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'cart_count' => $cartManager->getCartItemCount(), 'total' => $cartManager->getCartTotal()]);
+    }
+
+    // API: remove item
+    public function apiRemoveCart()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            die;
+        }
+        $cartManager = CartSessionManager::getInstance();
+        $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+        $pid = $payload['product_id'] ?? null;
+        $sid = $payload['supplier_id'] ?? null;
+        if (!$pid) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing product_id']);
+            return;
+        }
+        $cartManager->removeFromCart($pid, $sid);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'cart_count' => $cartManager->getCartItemCount(), 'total' => $cartManager->getCartTotal()]);
+    }
+
+    // API: clear cart
+    public function apiClearCart()
+    {
+        $cartManager = CartSessionManager::getInstance();
+        $cartManager->clearAllCartData();
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+    }
+
+    /**
+     * Clear cart session data
+     */
+    public function clearCart()
+    {
+        $cartManager = CartSessionManager::getInstance();
+        $cartManager->clearAllCartData();
+
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            // AJAX request
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Cart cleared successfully']);
+            exit;
+        } else {
+            flash('purchase_message', 'Cart cleared successfully');
+            redirect('purchases/add');
         }
     }
 
@@ -162,7 +349,7 @@ class PurchasesController extends Controller
     {
         if (!$id || !is_numeric($id)) {
             flash('purchase_message', 'Invalid purchase ID', 'alert alert-danger');
-            redirect('receiving/pending');
+            redirect('inventory/receiving');
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -173,7 +360,7 @@ class PurchasesController extends Controller
             // Validate bulk location selection
             if (empty($bulkLocationId)) {
                 flash('receive_message', 'Please select a bulk location for receiving items', 'alert alert-danger');
-                redirect('receiving/process/' . $id);
+                redirect('inventory/receiving');
                 return;
             }
 
@@ -214,48 +401,111 @@ class PurchasesController extends Controller
                 flash('receive_message', 'No items were received', 'alert alert-warning');
             }
 
-            redirect('receiving/pending');
+            redirect('inventory/receiving');
         } else {
-            redirect('receiving/process/' . $id);
+            redirect('inventory/receiving');
         }
     }
 
-    public function receiveShipment($poId = null)
+    /**
+     * Mark purchase as received and staged at dock
+     */
+    public function markReceived($id = null)
     {
-        if (!$poId) {
-            flash('receive_message', 'Purchase order ID is required', 'alert alert-danger');
-            redirect('receiving/pending');
+        error_log("markReceived method called with ID: $id");
+
+        if (!$id) {
+            error_log("No ID provided to markReceived");
+            flash('purchase_message', 'Purchase ID is required', 'alert alert-danger');
+            redirect('purchases');
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+            error_log("POST request detected, marking purchase $id as received");
 
-            $result = $this->purchaseOrderModel->receivePurchaseOrder($poId, $_POST);
+            // Mark as received and staged
+            $result = $this->purchaseModel->markAsReceivedAndStaged($id);
+
+            error_log("markAsReceivedAndStaged returned: " . ($result ? 'true' : 'false'));
 
             if ($result) {
-                flash('receive_message', 'Shipment received successfully', 'alert alert-success');
-                redirect('receiving/pending');
+                // Set success message
+                flash('purchase_message', 'Purchase order marked as received and staged at dock. Email confirmation sent and receipt generated.', 'alert alert-success');
+
+                // Set flag to show receipt popup
+                $_SESSION['show_receipt_popup'] = true;
+                $_SESSION['redirected_from_received'] = true;
+
+                // Redirect to receiving page as requested
+                error_log("Redirecting to inventory/receiving page");
+                redirect('inventory/receiving');
             } else {
-                flash('receive_message', 'Failed to receive shipment', 'alert alert-danger');
+                error_log("Failed to mark purchase as received");
+                flash('purchase_message', 'Failed to update purchase status', 'alert alert-danger');
+                redirect('purchases/view/' . $id);
+            }
+        } else {
+            // Show confirmation page
+            $purchase = $this->purchaseModel->getPurchaseById($id);
+
+            if (!$purchase) {
+                flash('purchase_message', 'Purchase not found', 'alert alert-danger');
+                redirect('purchases');
+            }
+
+            $data = [
+                'title' => 'Confirm Receipt - PO #' . $purchase->po_number,
+                'purchase' => $purchase
+            ];
+
+            $this->view('purchases/confirm_received', $data);
+        }
+    }
+
+    /**
+     * Display receipt in popup/new window
+     */
+    public function viewReceipt($identifier = null)
+    {
+        if (!$identifier && isset($_SESSION['show_receipt'])) {
+            // Load from session
+            $receiptData = $_SESSION['show_receipt'];
+            require_once APPROOT . '/app/helpers/ReceiptHelper.php';
+            ReceiptHelper::displayReceipt($receiptData['html']);
+            return;
+        }
+
+        if ($identifier) {
+            $purchase = null;
+            $items = null;
+
+            // Try to get purchase by ID first (if numeric), then by PO number
+            if (is_numeric($identifier)) {
+                // It's a purchase ID
+                $purchase = $this->purchaseModel->getPurchaseById($identifier);
+            } else {
+                // It's a PO number
+                $purchase = $this->purchaseModel->getPurchaseByPONumber($identifier);
+            }
+
+            if ($purchase) {
+                $items = $this->purchaseModel->getPurchaseItems($purchase->purchase_id);
+
+                require_once APPROOT . '/app/helpers/ReceiptHelper.php';
+                $receiptHtml = ReceiptHelper::generateReceivingReceipt((array) $purchase, $items);
+                ReceiptHelper::displayReceipt($receiptHtml);
+                return;
             }
         }
 
-        // Get purchase order details for receiving
-        $purchaseOrder = $this->purchaseOrderModel->getPurchaseOrderById($poId);
-        $orderItems = $this->purchaseOrderModel->getPurchaseOrderItems($poId);
-
-        if (!$purchaseOrder) {
-            flash('receive_message', 'Purchase order not found', 'alert alert-danger');
-            redirect('receiving/pending');
-        }
-
-        $data = [
-            'title' => 'Receive Shipment - PO #' . $purchaseOrder->po_number,
-            'purchase_order' => $purchaseOrder,
-            'order_items' => $orderItems
-        ];
-
-        $this->view('purchases/receive_shipment', $data);
+        // If we get here, show error
+        echo "<div style='text-align: center; font-family: Arial, sans-serif; padding: 50px;'>";
+        echo "<h2 style='color: #dc3545;'>Receipt Not Found</h2>";
+        echo "<p>Could not find purchase order with identifier: " . htmlspecialchars($identifier ?? 'N/A') . "</p>";
+        echo "<p>Please check the purchase order number or ID and try again.</p>";
+        echo "<button onclick='window.close()' style='background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;'>Close Window</button>";
+        echo "</div>";
+        echo "<script>setTimeout(function(){ window.close(); }, 5000);</script>";
     }
 
     /**
@@ -263,8 +513,8 @@ class PurchasesController extends Controller
      */
     public function approvals()
     {
-        $pendingApprovals = $this->purchaseOrderModel->getPurchaseOrdersRequiringApproval(1000);
-        $overdueOrders = $this->purchaseOrderModel->getOverduePurchaseOrders(7);
+        $pendingApprovals = $this->purchaseModel->getPurchaseOrdersRequiringApproval(1000);
+        $overdueOrders = $this->purchaseModel->getOverduePurchaseOrders(7);
 
         $data = [
             'title' => 'Purchase Order Approvals',
@@ -353,7 +603,7 @@ class PurchasesController extends Controller
             redirect('purchases/approvals');
         }
 
-        if ($this->purchaseOrderModel->updateStatus($poId, 'sent')) {
+        if ($this->purchaseModel->updateStatus($poId, 'sent')) {
             flash('purchase_message', 'Purchase order approved successfully', 'alert alert-success');
         } else {
             flash('purchase_message', 'Failed to approve purchase order', 'alert alert-danger');
@@ -375,7 +625,7 @@ class PurchasesController extends Controller
                 redirect('purchases/approvals');
             }
 
-            if ($this->purchaseOrderModel->bulkUpdateStatus($orderIds, 'sent')) {
+            if ($this->purchaseModel->bulkUpdateStatus($orderIds, 'sent')) {
                 flash('purchase_message', count($orderIds) . ' purchase orders approved', 'alert alert-success');
             } else {
                 flash('purchase_message', 'Failed to approve purchase orders', 'alert alert-danger');
@@ -391,7 +641,7 @@ class PurchasesController extends Controller
     public function autoApprove()
     {
         $threshold = 1000; // Configure this as needed
-        $approvedCount = $this->purchaseOrderModel->autoApprovePurchaseOrders($threshold);
+        $approvedCount = $this->purchaseModel->autoApprovePurchaseOrders($threshold);
 
         if ($approvedCount > 0) {
             flash('purchase_message', "$approvedCount purchase orders auto-approved", 'alert alert-success');
@@ -409,7 +659,7 @@ class PurchasesController extends Controller
     {
         if (!$purchase_id || !is_numeric($purchase_id)) {
             flash('purchase_message', 'Invalid purchase ID', 'alert alert-danger');
-            redirect('receiving/pending');
+            redirect('inventory/receiving');
             return;
         }
 
@@ -417,7 +667,7 @@ class PurchasesController extends Controller
         $purchase = $this->purchaseModel->getPurchaseById($purchase_id);
         if (!$purchase) {
             flash('purchase_message', 'Purchase not found', 'alert alert-danger');
-            redirect('receiving/pending');
+            redirect('inventory/receiving');
             return;
         }
 
@@ -526,6 +776,33 @@ class PurchasesController extends Controller
             'errors' => $errors,
             'message' => "$generatedCount barcodes generated successfully"
         ]);
+        exit;
+    }
+
+    /**
+     * Search purchase orders for receiving (AJAX endpoint)
+     */
+    public function searchForReceiving()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $searchTerm = trim($_POST['search'] ?? '');
+
+            if (strlen($searchTerm) < 2) {
+                echo json_encode([]);
+                exit;
+            }
+
+            try {
+                // Search for purchase orders that can be received
+                $results = $this->purchaseModel->searchForReceiving($searchTerm);
+                echo json_encode($results ?? []);
+            } catch (Exception $e) {
+                error_log("Error in searchForReceiving: " . $e->getMessage());
+                echo json_encode([]);
+            }
+        } else {
+            echo json_encode([]);
+        }
         exit;
     }
 }

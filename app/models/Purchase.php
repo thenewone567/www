@@ -1,225 +1,510 @@
 <?php
-
 /**
- * Purchase Model
- * Handles purchase operations and integrates with purchase orders system
- * This model provides a simplified interface for basic purchase operations
+ * ⚠️  UNIFIED PURCHASE MODEL - DO NOT CREATE SEPARATE "PurchaseOrder" MODEL ⚠️
+ * 
+ * This is the SINGLE, UNIFIED model for ALL purchase operations in the system.
+ * It handles everything related to purchase orders using the `purchases` table.
+ * 
+ * IMPORTANT FOR AI MODELS & DEVELOPERS:
+ * - Do NOT create a separate PurchaseOrder.php model
+ * - This model contains ALL purchase functionality 
+ * - Use method names starting with "purchase" for new development
+ * - "PurchaseOrder" methods exist only for backward compatibility
+ * 
+ * Database: Uses `purchases` table (NOT `purchase_orders`)
+ * Architecture: Single model approach for maintainability
+ * 
+ * This model handles ALL purchase order operations including:
+ * - Creating and managing purchase orders
+ * - Purchase order receiving workflows  
+ * - Status tracking and updates
+ * - Supplier and product management
+ * - Reporting and analytics
+ * 
+ * Note: This model was consolidated from Purchase.php and PurchaseOrder.php
+ * to eliminate duplication and provide a single source of truth for all
+ * purchase-related operations.
+ * 
+ * @author Hardware Store Team
+ * @version 2.0 (Unified Model)
+ * @date August 10, 2025
  */
 class Purchase
 {
     private $db;
-
-    // Purchase status constants
-    const STATUS_PENDING = 'pending';
-    const STATUS_SENT = 'sent';
-    const STATUS_PARTIALLY_RECEIVED = 'partially_received';
-    const STATUS_RECEIVED = 'received';
-    const STATUS_CANCELLED = 'cancelled';
 
     public function __construct()
     {
         $this->db = new Database();
     }
 
+    // Get all purchase history records
+    public function getHistory()
+    {
+        $this->db->query('SELECT p.purchase_id as id, p.po_number as order_no, s.supplier_name as supplier, p.purchase_date as date, p.status, p.total_amount, p.status as received, p.status as pending, p.status as cancelled, u.username as created_by
+                          FROM purchases p
+                          LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+                          LEFT JOIN users u ON p.created_by = u.user_id
+                          ORDER BY p.purchase_date DESC');
+        $this->db->execute();
+        return $this->db->resultSet();
+    }
+
+    // Get purchases with supplier information (excluding receiving workflow statuses and cancelled orders)
+    public function getPurchasesWithSuppliers()
+    {
+        // Exclude receiving workflow statuses - these should be handled in receiving page
+        // Also exclude cancelled orders - these should be handled in returns page
+        $excludeStatuses = ['ready_to_receive', 'receiving_in_progress', 'received', 'completed', 'partially_received', 'cancelled'];
+        $placeholders = str_repeat('?,', count($excludeStatuses) - 1) . '?';
+
+        $this->db->query("
+            SELECT p.purchase_id, p.purchase_id as id, p.po_number, p.supplier_id, 
+                   p.purchase_date, p.expected_date, p.status, p.total_amount, 
+                   p.notes, p.created_by, p.tracking_number,
+                   s.supplier_name, p.created_by as created_by_name
+            FROM purchases p
+            LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+            WHERE p.purchase_id = (
+                SELECT MAX(p2.purchase_id) 
+                FROM purchases p2 
+                WHERE p2.po_number = p.po_number
+            )
+            AND COALESCE(p.status, 'pending') NOT IN ($placeholders)
+            ORDER BY p.purchase_date DESC
+        ");
+
+        // Bind the exclude statuses
+        foreach ($excludeStatuses as $index => $status) {
+            $this->db->bind($index + 1, $status);
+        }
+
+        $this->db->execute();
+        return $this->db->resultSet();
+    }
+
     /**
-     * Get all purchases with enhanced information and optional filtering
-     * @param array $filters Optional filters (supplier_id, limit)
-     * @return array
+     * Update purchase order status with email notification and receipt generation
      */
-    public function getPurchases($filters = [])
+    public function updateStatus($id, $status)
     {
         try {
-            $whereClause = "WHERE 1=1";
-            $params = [];
-
-            // Add supplier filter
-            if (!empty($filters['supplier_id']) && is_numeric($filters['supplier_id'])) {
-                $whereClause .= " AND p.supplier_id = :supplier_id";
-                $params[':supplier_id'] = $filters['supplier_id'];
+            // Get purchase details before update for email/receipt
+            $purchaseData = null;
+            if ($status === 'received') {
+                $purchaseData = $this->getPurchaseWithSupplierDetails($id);
             }
 
-            // Add status filter
-            if (!empty($filters['status'])) {
-                if (is_array($filters['status'])) {
-                    // Handle array of statuses
-                    $statusPlaceholders = [];
-                    foreach ($filters['status'] as $index => $status) {
-                        $placeholder = ":status_" . $index;
-                        $statusPlaceholders[] = $placeholder;
-                        $params[$placeholder] = $status;
-                    }
-                    $whereClause .= " AND p.status IN (" . implode(',', $statusPlaceholders) . ")";
-                } else {
-                    // Handle single status
-                    $whereClause .= " AND p.status = :status";
-                    $params[':status'] = $filters['status'];
-                }
+            // Update in purchases table
+            $this->db->query('UPDATE purchases SET status = ?, updated_at = NOW() WHERE purchase_id = ?');
+            $this->db->bind(1, $status);
+            $this->db->bind(2, $id);
+            $result = $this->db->execute();
+
+            // Also log the status change
+            $this->logStatusChange($id, $status, 'purchases');
+
+            // Handle received status - trigger email and receipt
+            if ($result && $status === 'received' && $purchaseData) {
+                $this->handleReceivedStatusUpdate($purchaseData);
             }
 
-            // Add date received filter
-            if (!empty($filters['date_received'])) {
-                $whereClause .= " AND DATE(p.updated_at) = :date_received";
-                $params[':date_received'] = $filters['date_received'];
-            }
-
-            // Add date received from filter (for date ranges)
-            if (!empty($filters['date_received_from'])) {
-                $whereClause .= " AND DATE(p.updated_at) >= :date_received_from";
-                $params[':date_received_from'] = $filters['date_received_from'];
-            }
-
-            // Add order by filter
-            $orderClause = "ORDER BY p.purchase_date DESC";
-            if (!empty($filters['order_by'])) {
-                $orderClause = "ORDER BY " . $filters['order_by'];
-            }
-
-            $limitClause = "";
-            if (!empty($filters['limit']) && is_numeric($filters['limit'])) {
-                $limitClause = " LIMIT " . intval($filters['limit']);
-            }
-
-            $sql = "
-                SELECT p.*, s.supplier_name, s.contact_person, s.phone, s.email,
-                       COUNT(pi.purchase_item_id) as item_count,
-                       COALESCE(SUM(pi.quantity), 0) as total_items,
-                       CONCAT('PO-', LPAD(p.purchase_id, 6, '0')) as purchase_number,
-                       p.purchase_date as created_at,
-                       NULL as expected_date,
-                       'normal' as priority
-                FROM purchases p
-                LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
-                LEFT JOIN purchase_items pi ON p.purchase_id = pi.purchase_id
-                {$whereClause}
-                GROUP BY p.purchase_id
-                {$orderClause}
-                {$limitClause}
-            ";
-
-            $this->db->query($sql);
-
-            // Bind parameters
-            foreach ($params as $key => $value) {
-                $this->db->bind($key, $value);
-            }
-
-            $this->db->execute();
-            $result = $this->db->resultSet();
-            return $result ? $result : [];
+            return $result;
         } catch (Exception $e) {
-            error_log("Error in getPurchases: " . $e->getMessage());
-            return [];
+            error_log("Error updating purchase status: " . $e->getMessage());
+            return false;
         }
     }
 
     /**
-     * Get purchase by ID with comprehensive details
+     * Handle received status update - send emails and generate receipt
+     */
+    private function handleReceivedStatusUpdate($purchaseData)
+    {
+        try {
+            // Load helpers
+            require_once APPROOT . '/app/helpers/EmailHelper.php';
+            require_once APPROOT . '/app/helpers/ReceiptHelper.php';
+
+            // Get purchase items for receipt
+            $items = $this->getPurchaseItems($purchaseData->purchase_id);
+
+            // Convert object to array for helpers
+            $purchaseArray = [
+                'purchase_id' => $purchaseData->purchase_id,
+                'po_number' => $purchaseData->po_number,
+                'supplier_name' => $purchaseData->supplier_name ?? 'Unknown Supplier',
+                'supplier_email' => $purchaseData->supplier_email ?? null,
+                'purchase_date' => $purchaseData->purchase_date,
+                'expected_date' => $purchaseData->expected_date,
+                'tracking_number' => $purchaseData->tracking_number,
+                'total_amount' => $purchaseData->total_amount,
+                'notes' => $purchaseData->notes
+            ];
+
+            // Send email confirmations
+            $emailSent = EmailHelper::sendPurchaseReceivedConfirmation(
+                $purchaseArray,
+                $purchaseData->supplier_email ?? null,  // Supplier email
+                'receiving@hardwarestore.com'           // Internal email
+            );
+
+            // Generate receiving receipt
+            $receiptHtml = ReceiptHelper::generateReceivingReceipt($purchaseArray, $items);
+
+            // Save receipt to file system
+            $receiptPath = ReceiptHelper::saveReceiptToFile($receiptHtml, $purchaseData->po_number);
+
+            // Store receipt info in session for display
+            $_SESSION['show_receipt'] = [
+                'html' => $receiptHtml,
+                'po_number' => $purchaseData->po_number,
+                'generated_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Log the actions
+            $logMessage = "Purchase {$purchaseData->po_number} received - ";
+            $logMessage .= $emailSent ? "Email sent" : "Email failed";
+            $logMessage .= $receiptPath ? ", Receipt saved: $receiptPath" : ", Receipt save failed";
+
+            error_log($logMessage);
+
+            return true;
+
+        } catch (Exception $e) {
+            error_log("Error handling received status update: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Get purchase with supplier details for email/receipt
+     */
+    private function getPurchaseWithSupplierDetails($purchaseId)
+    {
+        try {
+            $this->db->query('
+                SELECT p.*, s.supplier_name, s.email as supplier_email
+                FROM purchases p
+                LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+                WHERE p.purchase_id = ?
+            ');
+            $this->db->bind(1, $purchaseId);
+            $this->db->execute();
+
+            return $this->db->single();
+
+        } catch (Exception $e) {
+            error_log("Error getting purchase with supplier details: " . $e->getMessage());
+            return null;
+        }
+    }    /**
+         * Update purchase status to "Received and Staged At Dock" with full workflow
+         */
+    public function markAsReceivedAndStaged($purchaseId, $dockLocationId = null, $receivingAreaId = null, $notes = '', $receivedBy = null)
+    {
+        try {
+            // Update status to a specific received status
+            $status = 'received'; // You can change this to 'received_staged' if you want a specific status
+
+            // Get current user if not provided
+            if (!$receivedBy) {
+                $receivedBy = $_SESSION['user_id'] ?? $_SESSION['username'] ?? 'System';
+            }
+
+            // Update purchase with received status, timestamp, and location assignments
+            $this->db->query('
+                UPDATE purchases 
+                SET status = ?, 
+                    received_at = NOW(), 
+                    updated_at = NOW(),
+                    dock_location_id = ?,
+                    receiving_area_id = ?,
+                    dock_assignment_notes = ?
+                WHERE purchase_id = ?
+            ');
+            $this->db->bind(1, $status);
+            $this->db->bind(2, $dockLocationId);
+            $this->db->bind(3, $receivingAreaId);
+            $this->db->bind(4, $notes);
+            $this->db->bind(5, $purchaseId);
+
+            $result = $this->db->execute();
+
+            if ($result) {
+                // Get purchase details for notifications
+                $purchaseData = $this->getPurchaseWithSupplierDetails($purchaseId);
+
+                if ($purchaseData) {
+                    // Trigger email and receipt workflow
+                    $this->handleReceivedStatusUpdate($purchaseData);
+
+                    // Log the specific action with location details
+                    $locationNotes = "Purchase received and staged at dock";
+                    if ($dockLocationId) {
+                        $locationNotes .= " - Dock assigned";
+                    }
+                    if ($receivingAreaId) {
+                        $locationNotes .= " - Receiving area assigned";
+                    }
+                    if ($notes) {
+                        $locationNotes .= " - Notes: " . $notes;
+                    }
+
+                    $this->logStatusChange(
+                        $purchaseId,
+                        'received_staged',
+                        'purchases',
+                        $locationNotes
+                    );
+                }
+            }
+
+            return $result;
+
+        } catch (Exception $e) {
+            error_log("Error marking purchase as received and staged: " . $e->getMessage());
+            return false;
+        }
+    }
+    public function updateTracking($id, $trackingNumber)
+    {
+        try {
+            // Update in purchases table
+            $this->db->query('UPDATE purchases SET tracking_number = ?, status = ?, updated_at = NOW() WHERE purchase_id = ?');
+            $this->db->bind(1, $trackingNumber);
+            $this->db->bind(2, 'in_transit');
+            $this->db->bind(3, $id);
+            $result = $this->db->execute();
+
+            // Also log the status change
+            $this->logStatusChange($id, 'in_transit', 'purchases', "Tracking number added: $trackingNumber");
+
+            return $result;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get purchase by PO number
+     */
+    public function getPurchaseByPONumber($poNumber)
+    {
+        try {
+            $this->db->query('
+                SELECT p.*, s.supplier_name, s.email as supplier_email
+                FROM purchases p
+                LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+                WHERE p.po_number = ?
+                LIMIT 1
+            ');
+            $this->db->bind(1, $poNumber);
+            $this->db->execute();
+
+            return $this->db->single();
+
+        } catch (Exception $e) {
+            error_log("Error getting purchase by PO number: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get purchase by ID
      * @param int $id Purchase ID
      * @return object|false
      */
     public function getPurchaseById($id)
     {
-        if (!is_numeric($id) || $id <= 0) {
-            return false;
-        }
-
         try {
             $this->db->query("
-                SELECT p.*, s.supplier_name, s.contact_person, s.phone, s.email,
-                       COUNT(pi.purchase_item_id) as item_count,
-                       COALESCE(SUM(pi.quantity * pi.unit_price), 0) as calculated_total
+                SELECT p.*, s.supplier_name
                 FROM purchases p
                 LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
-                LEFT JOIN purchase_items pi ON p.purchase_id = pi.purchase_id
-                WHERE p.purchase_id = :id
-                GROUP BY p.purchase_id
+                WHERE p.purchase_id = ?
             ");
-            $this->db->bind(':id', $id);
+            $this->db->bind(1, $id);
+
             $this->db->execute();
             return $this->db->single();
         } catch (Exception $e) {
-            error_log("Error in getPurchaseById: " . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Get purchase items by purchase ID
-     * @param int $purchaseId Purchase ID
-     * @return array
+     * Update purchase
+     * @param int $id Purchase ID
+     * @param array $data Update data
+     * @return bool
      */
-    public function getPurchaseItems($purchaseId)
+    public function updatePurchase($id, $data)
     {
-        if (!is_numeric($purchaseId) || $purchaseId <= 0) {
-            return [];
-        }
-
         try {
-            $this->db->query("
-                SELECT pi.*, p.product_name, p.sku, p.category_id,
-                       (pi.quantity * pi.unit_price) as total_price,
-                       COALESCE(pi.received_quantity, 0) as received_quantity,
-                       CASE 
-                           WHEN COALESCE(pi.received_quantity, 0) = 0 THEN 'pending'
-                           WHEN COALESCE(pi.received_quantity, 0) < pi.quantity THEN 'partial'
-                           WHEN COALESCE(pi.received_quantity, 0) >= pi.quantity THEN 'received'
-                           ELSE 'pending'
-                       END as item_status
-                FROM purchase_items pi
-                LEFT JOIN products p ON pi.product_id = p.product_id
-                WHERE pi.purchase_id = :purchase_id
-                ORDER BY pi.purchase_item_id
-            ");
-            $this->db->bind(':purchase_id', $purchaseId);
+            // Build dynamic query based on provided data
+            $setClause = [];
+            $params = [];
+            $paramIndex = 1;
+
+            if (isset($data['notes'])) {
+                $setClause[] = 'notes = ?';
+                $params[$paramIndex++] = $data['notes'];
+            }
+
+            if (isset($data['expected_date'])) {
+                $setClause[] = 'expected_date = ?';
+                $params[$paramIndex++] = $data['expected_date'];
+            }
+
+            if (isset($data['status'])) {
+                $setClause[] = 'status = ?';
+                $params[$paramIndex++] = $data['status'];
+            }
+
+            if (isset($data['tracking_number'])) {
+                $setClause[] = 'tracking_number = ?';
+                $params[$paramIndex++] = $data['tracking_number'];
+            }
+
+            if (isset($data['cancellation_reason'])) {
+                $setClause[] = 'cancellation_reason = ?';
+                $params[$paramIndex++] = $data['cancellation_reason'];
+            }
+
+            if (isset($data['cancelled_action'])) {
+                $setClause[] = 'cancelled_action = ?';
+                $params[$paramIndex++] = $data['cancelled_action'];
+            }
+
+            if (isset($data['custom_reason'])) {
+                $setClause[] = 'custom_cancellation_reason = ?';
+                $params[$paramIndex++] = $data['custom_reason'];
+            }
+
+            if (isset($data['cancelled_by'])) {
+                $setClause[] = 'cancelled_by = ?';
+                $params[$paramIndex++] = $data['cancelled_by'];
+            }
+
+            // Always update the timestamp
+            $setClause[] = 'updated_at = NOW()';
+
+            if (empty($setClause)) {
+                return false; // No data to update
+            }
+
+            // Update in purchases table
+            $query = 'UPDATE purchases SET ' . implode(', ', $setClause) . ' WHERE purchase_id = ?';
+            $params[$paramIndex] = $id;
+
+            $this->db->query($query);
+            foreach ($params as $index => $value) {
+                $this->db->bind($index, $value);
+            }
+            $result = $this->db->execute();
+
+            // Log the update
+            $statusToLog = $data['status'] ?? 'updated';
+            $notes = isset($data['tracking_number']) && !empty($data['tracking_number'])
+                ? "Purchase updated with tracking: {$data['tracking_number']}"
+                : 'Purchase updated';
+            $this->logStatusChange($id, $statusToLog, 'purchases', $notes);
+
+            return $result;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    // Alias for backward compatibility with "PurchaseOrder" naming
+    public function updatePurchaseOrder($id, $data)
+    {
+        return $this->updatePurchase($id, $data);
+    }
+
+    /**
+     * Log status changes for audit trail
+     */
+    private function logStatusChange($recordId, $newStatus, $tableName, $notes = '')
+    {
+        try {
+            // Check if audit_log table exists
+            $this->db->query("SHOW TABLES LIKE 'audit_log'");
             $this->db->execute();
-            return $this->db->resultSet();
+            $auditExists = $this->db->single();
+
+            if ($auditExists) {
+                $this->db->query('INSERT INTO audit_log (table_name, record_id, action, details, performed_by, performed_at) VALUES (?, ?, ?, ?, ?, NOW())');
+                $this->db->bind(1, $tableName);
+                $this->db->bind(2, $recordId);
+                $this->db->bind(3, 'status_update');
+                $this->db->bind(4, "Status changed to: $newStatus" . ($notes ? " - $notes" : ''));
+                $this->db->bind(5, $_SESSION['user_id'] ?? 0);
+                $this->db->execute();
+            }
         } catch (Exception $e) {
-            error_log("Error in getPurchaseItems: " . $e->getMessage());
-            return [];
+            // Silently fail audit logging to not break the main operation
+            error_log("Audit log error: " . $e->getMessage());
         }
     }
 
-    /**
-     * Add new purchase with enhanced validation
-     * @param array $data Purchase data
-     * @return int|false Purchase ID on success, false on failure
-     */
-    public function addPurchase($data)
+    // Get cancelled purchases for returns system
+    public function getCancelledPurchases()
     {
-        // Validate required fields
-        $required = ['supplier_id'];
-        foreach ($required as $field) {
-            if (empty($data[$field])) {
-                return false;
-            }
-        }
+        $this->db->query("
+            SELECT p.purchase_id, p.purchase_id as id, CONCAT('PO-', p.purchase_id) as po_number, 
+                   p.supplier_id, p.purchase_date, p.expected_date, p.status, p.total_amount, 
+                   p.notes, p.created_by, p.updated_at, p.tracking_number,
+                   p.cancellation_reason, p.cancelled_action, p.cancelled_by,
+                   NULL as cancelled_date, NULL as created_at,
+                   s.supplier_name, p.created_by as created_by_name
+            FROM purchases p
+            LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+            WHERE p.status = 'cancelled'
+            ORDER BY COALESCE(p.updated_at, p.purchase_date) DESC
+        ");
 
-        // Set default values
-        $data['purchase_date'] = $data['purchase_date'] ?? date('Y-m-d');
-
-        try {
-            $this->db->query("
-                INSERT INTO purchases (supplier_id, purchase_date, total_amount, invoice_attachment)
-                VALUES (:supplier_id, :purchase_date, :total_amount, :invoice_attachment)
-            ");
-
-            $this->db->bind(':supplier_id', $data['supplier_id']);
-            $this->db->bind(':purchase_date', $data['purchase_date']);
-            $this->db->bind(':total_amount', $data['total_amount'] ?? 0.00);
-            $this->db->bind(':invoice_attachment', $data['invoice_attachment'] ?? '');
-
-            if ($this->db->execute()) {
-                return $this->db->lastInsertId();
-            } else {
-                return false;
-            }
-        } catch (Exception $e) {
-            error_log("Error in addPurchase: " . $e->getMessage());
-            return false;
-        }
+        $this->db->execute();
+        return $this->db->resultSet();
     }
 
-    // Add purchase item
+    // Generate PO Number
+    public function generatePONumber()
+    {
+        // Generate PO number with pattern: PO-YYMMDD-HHMMSS
+        // Example: PO-250810-035427
+        $date = date('ymd'); // YY MM DD format (2-digit year, month, day)
+        $time = date('His'); // HH MM SS format (24-hour format)
+        return "PO-{$date}-{$time}";
+    }
+
+    // Create Purchase (Primary method)
+    public function createPurchase($data)
+    {
+        $this->db->query("
+            INSERT INTO purchases (po_number, supplier_id, purchase_date, expected_date, status, total_amount, notes, average_price_method, created_by, updated_at)
+            VALUES (:po_number, :supplier_id, :purchase_date, :expected_date, :status, :total_amount, :notes, :average_price_method, :created_by, NOW())
+        ");
+
+        $this->db->bind(':po_number', $data['po_number']);
+        $this->db->bind(':supplier_id', $data['supplier_id']);
+        // Use centralized date helper to respect configured timezone
+        $this->db->bind(':purchase_date', $data['order_date'] ?? (function_exists('app_current_date') ? app_current_date() : date('Y-m-d')));
+        $this->db->bind(':expected_date', $data['expected_date'] ?? date('Y-m-d', strtotime('+7 days')));
+        $this->db->bind(':status', $data['status'] ?? 'pending');
+        $this->db->bind(':total_amount', $data['total_amount']);
+        $this->db->bind(':notes', $data['notes'] ?? '');
+        $this->db->bind(':average_price_method', $data['average_price_method'] ?? 0);
+        $this->db->bind(':created_by', $data['created_by'] ?? 1);
+
+        if ($this->db->execute()) {
+            return $this->db->lastInsertId();
+        }
+        return false;
+    }
+
+    // Add Purchase Item (Primary method)
     public function addPurchaseItem($data)
     {
         $this->db->query("
@@ -235,69 +520,511 @@ class Purchase
         return $this->db->execute();
     }
 
+    // Get purchase order items (primary method)
+    public function getPurchaseItems($purchaseId)
+    {
+        $this->db->query("
+            SELECT pi.*, p.product_name, p.sku
+            FROM purchase_items pi
+            LEFT JOIN products p ON pi.product_id = p.product_id
+            WHERE pi.purchase_id = ?
+        ");
+
+        $this->db->bind(1, $purchaseId);
+        $this->db->execute();
+        return $this->db->resultSet();
+    }
+
+    // Add purchase method for compatibility with controller
+    public function addPurchase($data)
+    {
+        // Generate PO number
+        $poNumber = $this->generatePONumber();
+
+        // Add po_number to the data
+        $data['po_number'] = $poNumber;
+
+        // Use the existing createPurchase method
+        return $this->createPurchase($data);
+    }
+
+    // Get purchases method for compatibility with controller index page
+    public function getPurchases()
+    {
+        // Use the existing getPurchasesWithSuppliers method
+        return $this->getPurchasesWithSuppliers();
+    }
+
+    // Get purchase summary statistics for dashboard
+    public function getPurchaseSummaryStats()
+    {
+        $stats = [
+            'monthly_purchases' => 0,
+            'pending_orders' => 0,
+            'active_suppliers' => 0,
+            'items_received' => 0
+        ];
+
+        try {
+            // Get monthly purchases (current month)
+            $this->db->query("
+                SELECT COUNT(*) as count 
+                FROM purchases 
+                WHERE YEAR(purchase_date) = YEAR(CURDATE()) 
+                AND MONTH(purchase_date) = MONTH(CURDATE())
+            ");
+            $this->db->execute();
+            $result = $this->db->single();
+            $stats['monthly_purchases'] = $result ? $result->count : 0;
+
+            // Get pending orders count
+            $this->db->query("
+                SELECT COUNT(*) as count 
+                FROM purchases 
+                WHERE status = 'pending'
+            ");
+            $this->db->execute();
+            $result = $this->db->single();
+            $stats['pending_orders'] = $result ? $result->count : 0;
+
+            // Get active suppliers count (suppliers with recent orders)
+            $this->db->query("
+                SELECT COUNT(DISTINCT supplier_id) as count 
+                FROM purchases 
+                WHERE purchase_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            ");
+            $this->db->execute();
+            $result = $this->db->single();
+            $stats['active_suppliers'] = $result ? $result->count : 0;
+
+            // Get items received count (this month)
+            $this->db->query("
+                SELECT COUNT(*) as count 
+                FROM purchases 
+                WHERE status IN ('received', 'completed') 
+                AND YEAR(purchase_date) = YEAR(CURDATE()) 
+                AND MONTH(purchase_date) = MONTH(CURDATE())
+            ");
+            $this->db->execute();
+            $result = $this->db->single();
+            $stats['items_received'] = $result ? $result->count : 0;
+
+        } catch (Exception $e) {
+            // Return default values if there's an error
+            error_log("Error in getPurchaseSummaryStats: " . $e->getMessage());
+        }
+
+        return $stats;
+    }
+
     /**
-     * Update received quantity for a purchase item
+     * Get comprehensive purchase summary for KPI cards
+     * Returns both count and value data for each status
+     * @return array
      */
-    public function updateReceivedQuantity($itemId, $receivedQty)
+    public function getPurchaseSummary()
+    {
+        $summary = [
+            'total_purchases' => 0,
+            'pending' => 0,
+            'sent' => 0,
+            'in_transit' => 0,
+            'received' => 0,
+            'cancelled' => 0,
+            'overdue' => 0,
+            'suppliers' => 0,
+            'total_orders_count' => 0,
+            // Count versions for additional display
+            'pending_count' => 0,
+            'sent_count' => 0,
+            'in_transit_count' => 0,
+            'received_count' => 0,
+            // Debug info
+            'debug_info' => ''
+        ];
+
+        try {
+            // Use the same data source as the table (getPurchases method)
+            $orders = $this->getPurchases();
+
+            if (!$orders || !is_array($orders)) {
+                $summary['debug_info'] = "No orders returned from getPurchases() method";
+                return $summary;
+            }
+
+            $summary['total_orders_count'] = count($orders);
+            $summary['debug_info'] = "Using data from getPurchases(): " . count($orders) . " orders found";
+
+            // Process the orders data to calculate KPIs
+            $statusCounts = [];
+            $statusValues = [];
+            $totalActiveValue = 0;
+            $overdueValue = 0;
+            $suppliers = [];
+
+            foreach ($orders as $order) {
+                $status = strtolower($order->status ?? 'pending');
+                $amount = (float) ($order->total_amount ?? 0);
+
+                // Count by status
+                $statusCounts[$status] = ($statusCounts[$status] ?? 0) + 1;
+                $statusValues[$status] = ($statusValues[$status] ?? 0) + $amount;
+
+                // Track active orders value (exclude received and cancelled)
+                if (!in_array($status, ['received', 'completed', 'cancelled'])) {
+                    $totalActiveValue += $amount;
+                }
+
+                // Check for overdue
+                if (!empty($order->expected_date) && $order->expected_date !== '0000-00-00') {
+                    if (
+                        strtotime($order->expected_date) < strtotime(date('Y-m-d')) &&
+                        !in_array($status, ['received', 'completed', 'cancelled'])
+                    ) {
+                        $overdueValue += $amount;
+                    }
+                }
+
+                // Track suppliers
+                if (!empty($order->supplier_id)) {
+                    $suppliers[$order->supplier_id] = true;
+                }
+            }
+
+            // Map status data to summary
+            $summary['pending'] = $statusValues['pending'] ?? 0;
+            $summary['pending_count'] = $statusCounts['pending'] ?? 0;
+
+            $summary['sent'] = $statusValues['sent'] ?? 0;
+            $summary['sent_count'] = $statusCounts['sent'] ?? 0;
+
+            $summary['in_transit'] = ($statusValues['in_transit'] ?? 0) +
+                ($statusValues['shipped'] ?? 0) +
+                ($statusValues['partially_received'] ?? 0);
+            $summary['in_transit_count'] = ($statusCounts['in_transit'] ?? 0) +
+                ($statusCounts['shipped'] ?? 0) +
+                ($statusCounts['partially_received'] ?? 0);
+
+            $summary['received'] = ($statusValues['received'] ?? 0) + ($statusValues['completed'] ?? 0);
+            $summary['received_count'] = ($statusCounts['received'] ?? 0) + ($statusCounts['completed'] ?? 0);
+
+            $summary['cancelled'] = $statusValues['cancelled'] ?? 0;
+            $summary['overdue'] = $overdueValue;
+            $summary['total_purchases'] = $totalActiveValue;
+            $summary['suppliers'] = count($suppliers);
+
+            $summary['debug_info'] .= " | Status breakdown: " . json_encode($statusCounts);
+
+        } catch (Exception $e) {
+            error_log("Error in getPurchaseSummary: " . $e->getMessage());
+            $summary['debug_info'] = "Error: " . $e->getMessage();
+        }
+
+        return $summary;
+    }
+
+    // Alias for backward compatibility with "PurchaseOrder" naming
+    public function getPurchaseOrderSummary()
+    {
+        return $this->getPurchaseSummary();
+    }
+
+    // ==============================================
+    // RECEIVING & ADVANCED PURCHASE ORDER METHODS
+    // (Merged from PurchaseOrder.php for unified model)
+    // ==============================================
+
+    /**
+     * Get purchase orders specifically for receiving workflow
+     * @param array $filters Optional filters
+     * @param int $limit Optional limit for pagination
+     * @param int $offset Optional offset for pagination
+     * @return array|false
+     */
+    public function getPurchaseOrdersForReceiving($filters = [], $limit = null, $offset = 0)
+    {
+        try {
+            $whereClause = "WHERE 1=1";
+            $params = [];
+
+            // Filter by receiving-related statuses
+            if (!empty($filters['status_in']) && is_array($filters['status_in'])) {
+                $placeholders = str_repeat('?,', count($filters['status_in']) - 1) . '?';
+                $whereClause .= " AND p.status IN ($placeholders)";
+                $params = array_merge($params, $filters['status_in']);
+            }
+
+            // Add supplier filter
+            if (!empty($filters['supplier_id']) && is_numeric($filters['supplier_id'])) {
+                $whereClause .= " AND p.supplier_id = ?";
+                $params[] = $filters['supplier_id'];
+            }
+
+            // Add date range filter
+            if (!empty($filters['date_from'])) {
+                $whereClause .= " AND p.purchase_date >= ?";
+                $params[] = $filters['date_from'];
+            }
+            if (!empty($filters['date_to'])) {
+                $whereClause .= " AND p.purchase_date <= ?";
+                $params[] = $filters['date_to'];
+            }
+
+            $limitClause = "";
+            if ($limit) {
+                $limitClause = "LIMIT " . (int) $offset . ", " . (int) $limit;
+            }
+
+            $sql = "
+                SELECT p.purchase_id, p.purchase_id as id, p.po_number, p.supplier_id, 
+                       p.purchase_date, p.expected_date, p.status, p.total_amount, 
+                       p.notes, p.created_by, p.tracking_number,
+                       s.supplier_name, p.created_by as created_by_name
+                FROM purchases p
+                LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+                $whereClause
+                ORDER BY p.purchase_date DESC
+                $limitClause
+            ";
+
+            $this->db->query($sql);
+
+            // Bind parameters
+            foreach ($params as $index => $value) {
+                $this->db->bind($index + 1, $value);
+            }
+
+            if (!$this->db->execute()) {
+                return false;
+            }
+
+            return $this->db->resultSet() ?: [];
+        } catch (Exception $e) {
+            error_log("Error in getPurchaseOrdersForReceiving: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Search purchase orders for receiving interface
+     */
+    public function searchForReceiving($query)
+    {
+        try {
+            $this->db->query("
+                SELECT p.purchase_id, p.purchase_id as id, p.po_number, p.supplier_id,
+                       p.purchase_date, p.expected_date, p.status, p.total_amount,
+                       p.tracking_number, s.supplier_name
+                FROM purchases p
+                LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+                WHERE p.status IN ('pending', 'sent', 'in_transit', 'ready_to_receive')
+                  AND ((p.po_number LIKE :query1 OR p.po_number = :exact_query1 OR p.po_number LIKE :starts_with1)
+                       OR s.supplier_name LIKE :query2
+                       OR p.tracking_number LIKE :query3
+                       OR p.purchase_id = :exact_query2)
+                ORDER BY 
+                    CASE 
+                        WHEN p.po_number = :exact_query3 THEN 1
+                        WHEN p.po_number LIKE :starts_with2 THEN 2
+                        ELSE 3
+                    END,
+                    p.purchase_date DESC
+                LIMIT 20
+            ");
+
+            $searchTerm = "%{$query}%";
+            $this->db->bind(':query1', $searchTerm);
+            $this->db->bind(':query2', $searchTerm);
+            $this->db->bind(':query3', $searchTerm);
+            $this->db->bind(':exact_query1', $query);
+            $this->db->bind(':exact_query2', $query);
+            $this->db->bind(':exact_query3', $query);
+            $this->db->bind(':starts_with1', $query . '%');
+            $this->db->bind(':starts_with2', $query . '%');
+
+            $this->db->execute();
+            return $this->db->resultSet() ?: [];
+        } catch (Exception $e) {
+            error_log("Error in searchForReceiving: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Update received quantity for purchase order item
+     * @param int $itemId
+     * @param int $quantity
+     * @return bool
+     */
+    public function updateReceivedQuantity($itemId, $quantity)
     {
         try {
             $this->db->query("
                 UPDATE purchase_items 
-                SET received_quantity = received_quantity + :received_qty 
+                SET received_quantity = :quantity, received_date = NOW()
                 WHERE purchase_item_id = :item_id
             ");
+            $this->db->bind(':quantity', $quantity);
             $this->db->bind(':item_id', $itemId);
-            $this->db->bind(':received_qty', $receivedQty);
             return $this->db->execute();
         } catch (Exception $e) {
-            error_log("Error in updateReceivedQuantity: " . $e->getMessage());
+            error_log("Error updating received quantity: " . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Update product Inventory when items are received
+     * Get purchase orders requiring approval
+     * @param float $threshold
+     * @return array
      */
-    public function updateProductInventory($itemId, $receivedQty)
+    public function getPurchaseOrdersRequiringApproval($threshold = 1000)
     {
         try {
-            // Get product ID from purchase item
-            $this->db->query("SELECT product_id FROM purchase_items WHERE purchase_item_id = :item_id");
-            $this->db->bind(':item_id', $itemId);
-            $this->db->execute();
-            $item = $this->db->single();
-
-            if ($item) {
-                // Update product Inventory
-                $this->db->query("
-                    UPDATE products 
-                    SET Inventory_quantity = Inventory_quantity + :received_qty 
-                    WHERE product_id = :product_id
-                ");
-                $this->db->bind(':product_id', $item->product_id);
-                $this->db->bind(':received_qty', $receivedQty);
-                return $this->db->execute();
-            }
-            return false;
+            $this->db->query("
+                SELECT p.purchase_id, p.purchase_id as id, p.po_number, p.supplier_id,
+                       p.purchase_date, p.expected_date, p.status, p.total_amount,
+                       s.supplier_name
+                FROM purchases p
+                LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+                WHERE p.status = 'pending' AND p.total_amount > :threshold
+                ORDER BY p.total_amount DESC
+            ");
+            $this->db->bind(':threshold', $threshold);
+            return $this->db->resultSet() ?: [];
         } catch (Exception $e) {
-            error_log("Error in updateProductInventory: " . $e->getMessage());
-            return false;
+            error_log("Error in getPurchaseOrdersRequiringApproval: " . $e->getMessage());
+            return [];
         }
     }
 
     /**
-     * Update purchase status
+     * Auto-approve purchase orders below threshold
+     * @param float $threshold
+     * @return int Number of approved orders
      */
-    public function updatePurchaseStatus($purchaseId, $status)
+    public function autoApprovePurchaseOrders($threshold = 1000)
     {
         try {
             $this->db->query("
                 UPDATE purchases 
-                SET status = :status 
-                WHERE purchase_id = :purchase_id
+                SET status = 'approved' 
+                WHERE status = 'pending' AND total_amount <= :threshold
             ");
-            $this->db->bind(':purchase_id', $purchaseId);
-            $this->db->bind(':status', $status);
+            $this->db->bind(':threshold', $threshold);
+            $this->db->execute();
+            return $this->db->rowCount();
+        } catch (Exception $e) {
+            error_log("Error in autoApprovePurchaseOrders: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Get overdue purchase orders
+     * @param int $days
+     * @return array
+     */
+    public function getOverduePurchaseOrders($days = 7)
+    {
+        try {
+            $this->db->query("
+                SELECT p.purchase_id, p.purchase_id as id, p.po_number, p.supplier_id,
+                       p.purchase_date, p.expected_date, p.status, p.total_amount,
+                       s.supplier_name,
+                       DATEDIFF(CURDATE(), p.expected_date) as days_pending
+                FROM purchases p
+                LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+                WHERE p.expected_date < DATE_SUB(CURDATE(), INTERVAL :days DAY)
+                  AND p.status NOT IN ('received', 'completed', 'cancelled')
+                ORDER BY days_pending DESC
+            ");
+            $this->db->bind(':days', $days);
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error getting overdue POs: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Bulk status update
+     * @param array $orderIds
+     * @param string $status
+     * @return bool
+     */
+    public function bulkUpdateStatus($orderIds, $status)
+    {
+        $validStatuses = ['pending', 'sent', 'partially_received', 'received', 'cancelled'];
+
+        if (!in_array($status, $validStatuses) || empty($orderIds)) {
+            return false;
+        }
+
+        try {
+            $placeholders = str_repeat('?,', count($orderIds) - 1) . '?';
+            $this->db->query("
+                UPDATE purchases 
+                SET status = ?, updated_at = NOW() 
+                WHERE purchase_id IN ($placeholders)
+            ");
+            $this->db->bind(1, $status);
+
+            foreach ($orderIds as $index => $id) {
+                $this->db->bind($index + 2, $id);
+            }
+
+            return $this->db->execute();
+        } catch (Exception $e) {
+            error_log("Error in bulk status update: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Update purchase order status with additional data
+     */
+    public function updatePurchaseStatus($purchaseId, $updateData)
+    {
+        try {
+            $setClause = [];
+            $params = [];
+            $paramIndex = 1;
+
+            if (isset($updateData['status'])) {
+                $setClause[] = 'status = ?';
+                $params[$paramIndex++] = $updateData['status'];
+            }
+
+            if (isset($updateData['received_date'])) {
+                $setClause[] = 'received_date = ?';
+                $params[$paramIndex++] = $updateData['received_date'];
+            }
+
+            if (isset($updateData['received_by'])) {
+                $setClause[] = 'received_by = ?';
+                $params[$paramIndex++] = $updateData['received_by'];
+            }
+
+            if (isset($updateData['receiving_notes'])) {
+                $setClause[] = 'receiving_notes = ?';
+                $params[$paramIndex++] = $updateData['receiving_notes'];
+            }
+
+            $setClause[] = 'updated_at = NOW()';
+
+            if (empty($setClause)) {
+                return false;
+            }
+
+            $query = 'UPDATE purchases SET ' . implode(', ', $setClause) . ' WHERE purchase_id = ?';
+            $params[$paramIndex] = $purchaseId;
+
+            $this->db->query($query);
+            foreach ($params as $index => $value) {
+                $this->db->bind($index, $value);
+            }
+
             return $this->db->execute();
         } catch (Exception $e) {
             error_log("Error in updatePurchaseStatus: " . $e->getMessage());
@@ -305,15 +1032,64 @@ class Purchase
         }
     }
 
-    // Get suppliers for dropdown
+    /**
+     * Update item receiving details
+     */
+    public function updateItemReceiving($itemId, $updateData)
+    {
+        try {
+            $setClause = [];
+            $params = [];
+            $paramIndex = 1;
+
+            if (isset($updateData['received_quantity'])) {
+                $setClause[] = 'received_quantity = ?';
+                $params[$paramIndex++] = $updateData['received_quantity'];
+            }
+
+            if (isset($updateData['discrepancy_reason'])) {
+                $setClause[] = 'discrepancy_reason = ?';
+                $params[$paramIndex++] = $updateData['discrepancy_reason'];
+            }
+
+            if (isset($updateData['condition_notes'])) {
+                $setClause[] = 'condition_notes = ?';
+                $params[$paramIndex++] = $updateData['condition_notes'];
+            }
+
+            $setClause[] = 'received_date = NOW()';
+
+            if (empty($setClause)) {
+                return false;
+            }
+
+            $query = 'UPDATE purchase_items SET ' . implode(', ', $setClause) . ' WHERE purchase_item_id = ?';
+            $params[$paramIndex] = $itemId;
+
+            $this->db->query($query);
+            foreach ($params as $index => $value) {
+                $this->db->bind($index, $value);
+            }
+
+            return $this->db->execute();
+        } catch (Exception $e) {
+            error_log("Error in updateItemReceiving: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Get all suppliers for dropdown
+     */
     public function getSuppliers()
     {
         $this->db->query("SELECT supplier_id, supplier_name FROM suppliers WHERE is_active = 1 ORDER BY supplier_name");
-        $this->db->execute();
         return $this->db->resultSet();
     }
 
-    // Get products for dropdown
+    /**
+     * Get all products for dropdown
+     */
     public function getProducts()
     {
         $this->db->query("
@@ -322,666 +1098,35 @@ class Purchase
             WHERE is_active = 1 
             ORDER BY product_name
         ");
-        $this->db->execute();
         return $this->db->resultSet();
     }
 
-    // Generate next PO number
-    public function generatePONumber()
-    {
-        $this->db->query("
-            SELECT po_number 
-            FROM purchase_orders 
-            WHERE po_number LIKE 'PO-" . date('Y') . "-%' 
-            ORDER BY po_number DESC 
-            LIMIT 1
-        ");
-
-        $lastPO = $this->db->single();
-
-        if ($lastPO) {
-            preg_match('/PO-\d{4}-(\d+)/', $lastPO->po_number, $matches);
-            $nextNumber = isset($matches[1]) ? intval($matches[1]) + 1 : 1;
-        } else {
-            $nextNumber = 1;
-        }
-
-
-        return 'PO-' . date('Y') . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
-    }
-
     /**
-     * Get purchase statistics for dashboard
-     * @return object|false
+     * Delete purchase order
      */
-    public function getPurchaseStats()
+    public function deletePurchaseOrder($id)
     {
         try {
-            $this->db->query("
-                SELECT 
-                    COUNT(*) as total_orders,
-                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
-                    SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) as sent_orders,
-                    SUM(CASE WHEN status = 'received' THEN 1 ELSE 0 END) as completed_orders,
-                    SUM(CASE WHEN status = 'partially_received' THEN 1 ELSE 0 END) as partial_orders,
-                    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_orders,
-                    COALESCE(SUM(total_amount), 0) as total_amount,
-                    COALESCE(AVG(total_amount), 0) as average_order_value
-                FROM purchase_orders
-                WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-            ");
-            return $this->db->single();
-        } catch (Exception $e) {
-            error_log("Error in getPurchaseStats: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Get recent purchases for quick access
-     * @param int $limit Number of recent purchases to return
-     * @return array
-     */
-    public function getRecentPurchases($limit = 5)
-    {
-        return $this->getPurchases(['limit' => $limit]);
-    }
-
-    /**
-     * Get purchases by status
-     * @param string $status Purchase status
-     * @return array
-     */
-    public function getPurchasesByStatus($status)
-    {
-        return $this->getPurchases(['status' => $status]);
-    }
-
-    /**
-     * Search purchases by PO number or supplier name
-     * @param string $searchTerm Search term
-     * @return array
-     */
-    public function searchPurchases($searchTerm)
-    {
-        if (empty($searchTerm)) {
-            return [];
-        }
-
-        try {
-            $this->db->query("
-                SELECT po.*, s.supplier_name, u.username as created_by_name,
-                       COUNT(poi.poi_id) as item_count
-                FROM purchase_orders po
-                LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id
-                LEFT JOIN users u ON po.created_by = u.user_id
-                LEFT JOIN purchase_order_items poi ON po.po_id = poi.po_id
-                WHERE po.po_number LIKE :search_term 
-                   OR s.supplier_name LIKE :search_term
-                   OR po.notes LIKE :search_term
-                GROUP BY po.po_id
-                ORDER BY po.created_at DESC
-                LIMIT 20
-            ");
-
-            $searchPattern = '%' . $searchTerm . '%';
-            $this->db->bind(':search_term', $searchPattern);
-
-            $result = $this->db->resultSet();
-            return $result ? $result : [];
-        } catch (Exception $e) {
-            error_log("Error in searchPurchases: " . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * Get bulk locations for receiving shipments
-     * Bulk locations start with 'B-' prefix
-     */
-    public function getBulkLocations()
-    {
-        try {
-            $this->db->query("
-                SELECT location_id, location_name, rack, shelf 
-                FROM warehouse_locations 
-                WHERE location_name LIKE 'B-%' 
-                ORDER BY location_name
-            ");
+            $this->db->query("START TRANSACTION");
             $this->db->execute();
 
-            $result = $this->db->resultSet();
-            return $result ? $result : [];
-        } catch (Exception $e) {
-            error_log("Error in getBulkLocations: " . $e->getMessage());
-            return [];
-        }
-    }
+            // Delete purchase order items first
+            $this->db->query("DELETE FROM purchase_items WHERE purchase_id = :id");
+            $this->db->bind(':id', $id);
+            $this->db->execute();
 
-    /**
-     * Get a specific bulk location by ID
-     */
-    public function getBulkLocationById($locationId)
-    {
-        try {
-            $this->db->query("
-                SELECT location_id, location_name, rack, shelf 
-                FROM warehouse_locations 
-                WHERE location_id = :location_id
-            ");
-            $this->db->bind(':location_id', $locationId);
+            // Delete purchase order
+            $this->db->query("DELETE FROM purchases WHERE purchase_id = :id");
+            $this->db->bind(':id', $id);
+            $result = $this->db->execute();
 
-            $result = $this->db->single();
+            $this->db->query("COMMIT");
+            $this->db->execute();
             return $result;
         } catch (Exception $e) {
-            error_log("Error in getBulkLocationById: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Update product Inventory with location tracking when items are received
-     */
-    public function updateProductInventoryWithLocation($itemId, $receivedQty, $locationId)
-    {
-        try {
-            $this->db->beginTransaction();
-
-            // Get product ID from purchase item
-            $this->db->query("SELECT product_id FROM purchase_items WHERE purchase_item_id = :item_id");
-            $this->db->bind(':item_id', $itemId);
+            $this->db->query("ROLLBACK");
             $this->db->execute();
-            $item = $this->db->single();
-
-            if ($item) {
-                // Update main product Inventory
-                $this->db->query("
-                    UPDATE products 
-                    SET Inventory_quantity = Inventory_quantity + :received_qty 
-                    WHERE product_id = :product_id
-                ");
-                $this->db->bind(':product_id', $item->product_id);
-                $this->db->bind(':received_qty', $receivedQty);
-                $this->db->execute();
-
-                // Add Inventory entry with location tracking
-                $this->db->query("
-                    INSERT INTO Inventory (product_id, quantity, location_id, batch_number) 
-                    VALUES (:product_id, :quantity, :location_id, :batch_number)
-                ");
-                $this->db->bind(':product_id', $item->product_id);
-                $this->db->bind(':quantity', $receivedQty);
-                $this->db->bind(':location_id', $locationId);
-                $this->db->bind(':batch_number', 'RCV-' . date('Ymd') . '-' . $itemId);
-                $this->db->execute();
-
-                // Log Inventory movement for audit trail
-                $this->db->query("
-                    INSERT INTO Inventory_movements (product_id, to_location_id, quantity, movement_date) 
-                    VALUES (:product_id, :location_id, :quantity, NOW())
-                ");
-                $this->db->bind(':product_id', $item->product_id);
-                $this->db->bind(':location_id', $locationId);
-                $this->db->bind(':quantity', $receivedQty);
-                $this->db->execute();
-
-                $this->db->commit();
-                return true;
-            }
-
-            $this->db->rollback();
             return false;
-        } catch (Exception $e) {
-            $this->db->rollback();
-            error_log("Error in updateProductInventoryWithLocation: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Get purchase summary statistics for dashboard
-     * @return array
-     */
-    public function getPurchaseSummaryStats()
-    {
-        try {
-            // Get monthly purchases total
-            $this->db->query("
-                SELECT COALESCE(SUM(total_amount), 0) as monthly_total
-                FROM purchases 
-                WHERE YEAR(purchase_date) = YEAR(CURDATE()) 
-                AND MONTH(purchase_date) = MONTH(CURDATE())
-                AND status != 'cancelled'
-            ");
-            $monthlyResult = $this->db->single();
-            $monthlyPurchases = $monthlyResult ? $monthlyResult->monthly_total : 0;
-
-            // Get pending orders count
-            $this->db->query("
-                SELECT COUNT(*) as pending_count
-                FROM purchases 
-                WHERE status IN ('pending', 'sent', 'partially_received')
-            ");
-            $pendingResult = $this->db->single();
-            $pendingOrders = $pendingResult ? $pendingResult->pending_count : 0;
-
-            // Get active suppliers count (suppliers with purchases in last 6 months)
-            $this->db->query("
-                SELECT COUNT(DISTINCT supplier_id) as active_count
-                FROM purchases 
-                WHERE purchase_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-                AND status != 'cancelled'
-            ");
-            $activeResult = $this->db->single();
-            $activeSuppliers = $activeResult ? $activeResult->active_count : 0;
-
-            // Get items received this month
-            $this->db->query("
-                SELECT COALESCE(SUM(pi.received_quantity), 0) as items_received
-                FROM purchase_items pi
-                JOIN purchases p ON pi.purchase_id = p.purchase_id
-                WHERE YEAR(p.purchase_date) = YEAR(CURDATE()) 
-                AND MONTH(p.purchase_date) = MONTH(CURDATE())
-                AND pi.received_quantity > 0
-            ");
-            $itemsResult = $this->db->single();
-            $itemsReceived = $itemsResult ? $itemsResult->items_received : 0;
-
-            return [
-                'monthly_purchases' => number_format($monthlyPurchases, 2),
-                'pending_orders' => $pendingOrders,
-                'active_suppliers' => $activeSuppliers,
-                'items_received' => $itemsReceived
-            ];
-        } catch (Exception $e) {
-            error_log("Error getting purchase summary stats: " . $e->getMessage());
-            return [
-                'monthly_purchases' => '0.00',
-                'pending_orders' => 0,
-                'active_suppliers' => 0,
-                'items_received' => 0
-            ];
-        }
-    }
-
-    /**
-     * Process receipt data and update purchase status
-     * @param array $receiptData Receipt information
-     * @param array $processedItems Array of items being received
-     * @return bool Success status
-     */
-    public function processReceipt($receiptData, $processedItems)
-    {
-        try {
-            // Start transaction
-            $this->db->beginTransaction();
-
-            // Update purchase status and receipt information
-            $this->db->query("
-                UPDATE purchases 
-                SET status = :status, 
-                    receipt_reference = :receipt_reference,
-                    delivery_note = :delivery_note,
-                    notes = :notes,
-                    received_by = :received_by,
-                    updated_at = NOW()
-                WHERE purchase_id = :purchase_id
-            ");
-
-            $status = ($receiptData['action'] === 'complete') ? 'received' : 'partially_received';
-
-            $this->db->bind(':status', $status);
-            $this->db->bind(':receipt_reference', $receiptData['receipt_reference']);
-            $this->db->bind(':delivery_note', $receiptData['delivery_note']);
-            $this->db->bind(':notes', $receiptData['notes']);
-            $this->db->bind(':received_by', $receiptData['received_by']);
-            $this->db->bind(':purchase_id', $receiptData['purchase_id']);
-
-            if (!$this->db->execute()) {
-                throw new Exception("Failed to update purchase record");
-            }
-
-            // Process each received item
-            foreach ($processedItems as $item) {
-                // Update purchase_items with received quantity
-                $this->db->query("
-                    UPDATE purchase_items 
-                    SET received_quantity = COALESCE(received_quantity, 0) + :receive_quantity,
-                        updated_at = NOW()
-                    WHERE purchase_item_id = :purchase_item_id
-                ");
-
-                $this->db->bind(':receive_quantity', $item['receive_quantity']);
-                $this->db->bind(':purchase_item_id', $item['purchase_item_id']);
-
-                if (!$this->db->execute()) {
-                    throw new Exception("Failed to update purchase item");
-                }
-
-                // Update inventory/stock levels
-                // First check if product exists in inventory
-                $this->db->query("
-                    SELECT stock_quantity 
-                    FROM products 
-                    WHERE product_id = :product_id
-                ");
-                $this->db->bind(':product_id', $item['product_id']);
-                $this->db->execute();
-                $product = $this->db->single();
-
-                if ($product) {
-                    // Update product stock quantity
-                    $this->db->query("
-                        UPDATE products 
-                        SET stock_quantity = stock_quantity + :receive_quantity,
-                            updated_at = NOW()
-                        WHERE product_id = :product_id
-                    ");
-
-                    $this->db->bind(':receive_quantity', $item['receive_quantity']);
-                    $this->db->bind(':product_id', $item['product_id']);
-
-                    if (!$this->db->execute()) {
-                        throw new Exception("Failed to update product inventory");
-                    }
-                }
-
-                // Log inventory transaction if inventory_transactions table exists
-                $this->db->query("SHOW TABLES LIKE 'inventory_transactions'");
-                $this->db->execute();
-                if ($this->db->single()) {
-                    $this->db->query("
-                        INSERT INTO inventory_transactions 
-                        (product_id, transaction_type, quantity, reference_type, reference_id, notes, created_at)
-                        VALUES (:product_id, 'receive', :quantity, 'purchase', :purchase_id, :notes, NOW())
-                    ");
-
-                    $this->db->bind(':product_id', $item['product_id']);
-                    $this->db->bind(':quantity', $item['receive_quantity']);
-                    $this->db->bind(':purchase_id', $receiptData['purchase_id']);
-                    $this->db->bind(':notes', 'Received from purchase order');
-
-                    $this->db->execute();
-                }
-            }
-
-            // Commit transaction
-            $this->db->commit();
-            return true;
-
-        } catch (Exception $e) {
-            // Rollback transaction on error
-            $this->db->rollback();
-            error_log("Error processing receipt: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Update item location
-     */
-    public function updateItemLocation($itemId, $locationId)
-    {
-        try {
-            $this->db->query("UPDATE purchase_items SET location_id = :location_id WHERE id = :item_id");
-            $this->db->bind(':location_id', $locationId);
-            $this->db->bind(':item_id', $itemId);
-            return $this->db->execute();
-        } catch (Exception $e) {
-            error_log("Error updating item location: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Update item condition
-     */
-    public function updateItemCondition($itemId, $condition)
-    {
-        try {
-            $this->db->query("UPDATE purchase_items SET condition_status = :condition WHERE id = :item_id");
-            $this->db->bind(':condition', $condition);
-            $this->db->bind(':item_id', $itemId);
-            return $this->db->execute();
-        } catch (Exception $e) {
-            error_log("Error updating item condition: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Count purchases by date range
-     */
-    public function countPurchasesByDateRange($dateFrom, $dateTo)
-    {
-        try {
-            $this->db->query("SELECT COUNT(*) as count FROM purchases 
-                             WHERE order_date BETWEEN :date_from AND :date_to");
-            $this->db->bind(':date_from', $dateFrom);
-            $this->db->bind(':date_to', $dateTo);
-            $result = $this->db->single();
-            return $result ? $result->count : 0;
-        } catch (Exception $e) {
-            error_log("Error counting purchases by date range: " . $e->getMessage());
-            return 0;
-        }
-    }
-
-    /**
-     * Count purchases by status within date range
-     */
-    public function countByStatus($status, $dateFrom, $dateTo)
-    {
-        try {
-            $this->db->query("SELECT COUNT(*) as count FROM purchases 
-                             WHERE status = :status AND order_date BETWEEN :date_from AND :date_to");
-            $this->db->bind(':status', $status);
-            $this->db->bind(':date_from', $dateFrom);
-            $this->db->bind(':date_to', $dateTo);
-            $result = $this->db->single();
-            return $result ? $result->count : 0;
-        } catch (Exception $e) {
-            error_log("Error counting purchases by status: " . $e->getMessage());
-            return 0;
-        }
-    }
-
-    /**
-     * Get detailed receiving report data
-     */
-    public function getDetailedReceivingReport($filters)
-    {
-        try {
-            $sql = "SELECT p.*, s.name as supplier_name, 
-                           COUNT(pi.id) as total_items,
-                           SUM(pi.quantity * pi.unit_price) as total_value,
-                           p.received_date
-                    FROM purchases p
-                    LEFT JOIN suppliers s ON p.supplier_id = s.id
-                    LEFT JOIN purchase_items pi ON p.id = pi.purchase_id
-                    WHERE p.order_date BETWEEN :date_from AND :date_to";
-
-            $params = [
-                ':date_from' => $filters['date_from'],
-                ':date_to' => $filters['date_to']
-            ];
-
-            if (!empty($filters['supplier'])) {
-                $sql .= " AND p.supplier_id = :supplier_id";
-                $params[':supplier_id'] = $filters['supplier'];
-            }
-
-            $sql .= " GROUP BY p.id ORDER BY p.order_date DESC";
-
-            $this->db->query($sql);
-            foreach ($params as $key => $value) {
-                $this->db->bind($key, $value);
-            }
-
-            return $this->db->resultSet();
-        } catch (Exception $e) {
-            error_log("Error getting detailed receiving report: " . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * Get supplier receiving report data
-     */
-    public function getSupplierReceivingReport($filters)
-    {
-        try {
-            $sql = "SELECT s.name as supplier_name,
-                           COUNT(DISTINCT p.id) as total_orders,
-                           COUNT(DISTINCT CASE WHEN p.status = 'received' THEN p.id END) as completed_orders,
-                           COUNT(DISTINCT CASE WHEN p.status IN ('pending', 'sent') THEN p.id END) as pending_orders,
-                           COALESCE(SUM(pi.quantity * pi.unit_price), 0) as total_value,
-                           AVG(CASE WHEN p.received_date IS NOT NULL THEN 
-                               DATEDIFF(p.received_date, p.order_date) END) as avg_processing_time,
-                           CASE WHEN COUNT(DISTINCT p.id) > 0 THEN
-                               (COUNT(DISTINCT CASE WHEN p.status = 'received' THEN p.id END) * 100.0 / COUNT(DISTINCT p.id))
-                           ELSE 0 END as performance_score
-                    FROM suppliers s
-                    LEFT JOIN purchases p ON s.id = p.supplier_id 
-                        AND p.order_date BETWEEN :date_from AND :date_to
-                    LEFT JOIN purchase_items pi ON p.id = pi.purchase_id";
-
-            $params = [
-                ':date_from' => $filters['date_from'],
-                ':date_to' => $filters['date_to']
-            ];
-
-            if (!empty($filters['supplier'])) {
-                $sql .= " WHERE s.id = :supplier_id";
-                $params[':supplier_id'] = $filters['supplier'];
-            }
-
-            $sql .= " GROUP BY s.id, s.name HAVING total_orders > 0 ORDER BY performance_score DESC";
-
-            $this->db->query($sql);
-            foreach ($params as $key => $value) {
-                $this->db->bind($key, $value);
-            }
-
-            return $this->db->resultSet();
-        } catch (Exception $e) {
-            error_log("Error getting supplier receiving report: " . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * Count completed receipts within date range
-     */
-    public function countCompletedReceipts($dateFrom, $dateTo)
-    {
-        try {
-            $this->db->query("SELECT COUNT(*) as count FROM purchases 
-                             WHERE status = 'received' AND received_date BETWEEN :date_from AND :date_to");
-            $this->db->bind(':date_from', $dateFrom);
-            $this->db->bind(':date_to', $dateTo);
-            $result = $this->db->single();
-            return $result ? $result->count : 0;
-        } catch (Exception $e) {
-            error_log("Error counting completed receipts: " . $e->getMessage());
-            return 0;
-        }
-    }
-
-    /**
-     * Get total receiving value within date range
-     */
-    public function getTotalReceivingValue($dateFrom, $dateTo)
-    {
-        try {
-            $this->db->query("SELECT COALESCE(SUM(pi.received_quantity * pi.unit_price), 0) as total_value
-                             FROM purchase_items pi
-                             JOIN purchases p ON pi.purchase_id = p.id
-                             WHERE p.received_date BETWEEN :date_from AND :date_to
-                             AND pi.received_quantity > 0");
-            $this->db->bind(':date_from', $dateFrom);
-            $this->db->bind(':date_to', $dateTo);
-            $result = $this->db->single();
-            return $result ? $result->total_value : 0;
-        } catch (Exception $e) {
-            error_log("Error getting total receiving value: " . $e->getMessage());
-            return 0;
-        }
-    }
-
-    /**
-     * Get all purchases that need receiving (legacy compatibility)
-     */
-    public function getPurchasesForReceiving()
-    {
-        return $this->getPurchases([
-            'status' => ['sent', 'pending', 'partially_received']
-        ]);
-    }
-
-    /**
-     * Get received purchases (legacy compatibility)
-     */
-    public function getReceivedPurchases($filters = [])
-    {
-        $receivedFilters = array_merge($filters, [
-            'status' => ['received', 'completed']
-        ]);
-        return $this->getPurchases($receivedFilters);
-    }
-
-    /**
-     * Update purchase items with bulk location assignment
-     */
-    public function bulkUpdateItemLocations($purchaseId, $locationId)
-    {
-        try {
-            $this->db->query("UPDATE purchase_items SET location_id = :location_id 
-                             WHERE purchase_id = :purchase_id");
-            $this->db->bind(':location_id', $locationId);
-            $this->db->bind(':purchase_id', $purchaseId);
-            return $this->db->execute();
-        } catch (Exception $e) {
-            error_log("Error bulk updating item locations: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Get purchase statistics for reports
-     */
-    public function getReceivingStatistics($dateFrom = null, $dateTo = null)
-    {
-        if (!$dateFrom)
-            $dateFrom = date('Y-m-01');
-        if (!$dateTo)
-            $dateTo = date('Y-m-d');
-
-        try {
-            $this->db->query("SELECT 
-                                COUNT(DISTINCT CASE WHEN status IN ('sent', 'pending') THEN id END) as pending_count,
-                                COUNT(DISTINCT CASE WHEN status = 'partially_received' THEN id END) as partial_count,
-                                COUNT(DISTINCT CASE WHEN status = 'received' THEN id END) as completed_count,
-                                COUNT(DISTINCT CASE WHEN received_date = CURDATE() THEN id END) as completed_today,
-                                COALESCE(SUM(CASE WHEN status = 'received' THEN 
-                                    (SELECT SUM(quantity * unit_price) FROM purchase_items WHERE purchase_id = purchases.id)
-                                END), 0) as total_received_value
-                             FROM purchases 
-                             WHERE order_date BETWEEN :date_from AND :date_to");
-
-            $this->db->bind(':date_from', $dateFrom);
-            $this->db->bind(':date_to', $dateTo);
-
-            return $this->db->single();
-        } catch (Exception $e) {
-            error_log("Error getting receiving statistics: " . $e->getMessage());
-            return (object) [
-                'pending_count' => 0,
-                'partial_count' => 0,
-                'completed_count' => 0,
-                'completed_today' => 0,
-                'total_received_value' => 0
-            ];
         }
     }
 }

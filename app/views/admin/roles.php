@@ -143,7 +143,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         <?php if (isset($data['roles']) && !empty($data['roles'])): ?>
             <?php foreach ($data['roles'] as $role): ?>
                 <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card role-card h-100">
+                    <div class="card-theme role-card h-100">
                         <div
                             class="card-header bg-<?= $role->role_name === 'admin' ? 'danger' : ($role->role_name === 'manager' ? 'warning' : 'primary') ?> text-white">
                             <div class="d-flex justify-content-between align-items-center">
@@ -209,7 +209,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
     <!-- Detailed Roles Table -->
     <div class="row">
         <div class="col-12">
-            <div class="card shadow">
+            <div class="card-theme">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">
                         <i class="fas fa-table"></i> Detailed Role Management
@@ -318,7 +318,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="roleName">Role Name *</label>
-                                <input type="text" class="form-control" id="roleName" name="role_name" required>
+                                <input type="text" class="form-theme" id="roleName" name="role_name" required>
                                 <small class="form-text text-muted">Use lowercase with underscores (e.g.,
                                     sales_manager)</small>
                             </div>
@@ -326,7 +326,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="roleDescription">Description *</label>
-                                <input type="text" class="form-control" id="roleDescription" name="description"
+                                <input type="text" class="form-theme" id="roleDescription" name="description"
                                     required>
                             </div>
                         </div>
@@ -339,8 +339,8 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="button" class="btn-theme btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-theme btn-primary-theme">
                         <i class="fas fa-save"></i> Create Role
                     </button>
                 </div>
@@ -368,13 +368,13 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editRoleName">Role Name *</label>
-                                <input type="text" class="form-control" id="editRoleName" name="role_name" required>
+                                <input type="text" class="form-theme" id="editRoleName" name="role_name" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editRoleDescription">Description *</label>
-                                <input type="text" class="form-control" id="editRoleDescription" name="description"
+                                <input type="text" class="form-theme" id="editRoleDescription" name="description"
                                     required>
                             </div>
                         </div>
@@ -387,8 +387,8 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="button" class="btn-theme btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-theme btn-primary-theme">
                         <i class="fas fa-save"></i> Update Role
                     </button>
                 </div>

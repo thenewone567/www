@@ -8,6 +8,11 @@
  */
 class Database
 {
+  // Get last error message
+  public function getLastError()
+  {
+    return $this->error;
+  }
   private $host = DB_HOST;
   private $user = DB_USER;
   private $pass = DB_PASS;
@@ -16,6 +21,11 @@ class Database
   private $dbh;
   private $stmt;
   private $error;
+
+  public function getDbh()
+  {
+    return $this->dbh;
+  }
 
   public function __construct()
   {

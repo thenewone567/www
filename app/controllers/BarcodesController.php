@@ -82,4 +82,15 @@ class BarcodesController extends Controller
         $generator = new Picqer\Barcode\BarcodeGeneratorHTML();
         echo $generator->getBarcode($barcode_value, $type);
     }
+
+    /**
+     * Comprehensive barcode print interface
+     */
+    public function print()
+    {
+        $data = [
+            'title' => 'Print Barcodes'
+        ];
+        $this->view('barcodes/print', $data);
+    }
 }

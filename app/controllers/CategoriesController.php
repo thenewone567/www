@@ -26,7 +26,7 @@ class CategoriesController extends Controller
 
     public function index()
     {
-        $categories = $this->categoryModel->getCategories();
+        $categories = $this->categoryModel->getCategoriesWithCount();
 
         $data = [
             'categories' => $categories

@@ -34,6 +34,12 @@ function flash($name = '', $message = '', $class = 'alert alert-success')
 
 function isLoggedIn()
 {
+  // Use enhanced session manager if available
+  if (class_exists('SessionManager')) {
+    return SessionManager::isLoggedIn();
+  }
+
+  // Fallback to basic check
   return isset($_SESSION['user_id']);
 }
 
@@ -82,8 +88,6 @@ function formatIndianNumber($number, $decimals = 2)
 
   $isNegative = $number < 0;
   $number = abs($number);
-
-  // Format based on Indian numbering system
   if ($number >= 10000000) {
     // Crores
     $formatted = number_format($number / 10000000, $decimals) . ' Cr';
@@ -112,11 +116,27 @@ function formatWithIndianCommas($number, $decimals = 2)
   $parts = explode('.', $number);
   $integerPart = $parts[0];
   $decimalPart = isset($parts[1]) ? $parts[1] : '';
-
   // Add commas in Indian format
   $length = strlen($integerPart);
   if ($length > 3) {
     $lastThree = substr($integerPart, -3);
+
+    if (!function_exists('company_initials')) {
+      function company_initials()
+      {
+        $name = company_name();
+        $parts = preg_split('/\s+/', trim($name));
+        $letters = '';
+        foreach ($parts as $p) {
+          if ($p !== '') {
+            $letters .= mb_strtoupper(mb_substr($p, 0, 1));
+          }
+          if (strlen($letters) >= 2)
+            break;
+        }
+        return $letters !== '' ? $letters : 'C';
+      }
+    }
     $remaining = substr($integerPart, 0, -3);
     $remaining = preg_replace('/\B(?=(\d{2})+(?!\d))/', ',', $remaining);
     $integerPart = $remaining . ',' . $lastThree;
@@ -292,3 +312,65 @@ function getCostingMethodExample($currentInventory, $currentPrice, $newQuantity,
     ]
   ];
 }
+
+// === Company Branding Helpers (company_name, company_logo, company_initials) ===
+if (!function_exists('company_name')) {
+  function company_name()
+  {
+    static $cached = null;
+    if ($cached !== null)
+      return $cached;
+    try {
+      if (class_exists('Setting')) {
+        $settings = (new Setting())->getSettings();
+        if (!empty($settings['company_name'])) {
+          $cached = $settings['company_name'];
+          return $cached;
+        }
+      }
+    } catch (Exception $e) {
+    }
+    $cached = defined('SITENAME') ? SITENAME : 'Company';
+    return $cached;
+  }
+}
+
+if (!function_exists('company_logo')) {
+  function company_logo()
+  {
+    static $cachedLogo = null;
+    if ($cachedLogo !== null)
+      return $cachedLogo;
+    $fallbacks = [
+      'uploads/logo/mlogo.png',
+      'uploads/logos/mlogo.png'
+    ];
+    try {
+      if (class_exists('Setting')) {
+        $settings = (new Setting())->getSettings();
+        if (!empty($settings['company_logo'])) {
+          $path = $settings['company_logo'];
+          $fsPath = APPROOT . DS . str_replace(['/', '\\'], DS, $path);
+          if (file_exists($fsPath)) {
+            $cachedLogo = $path;
+            return $cachedLogo;
+          }
+          if (preg_match('/^https?:\/\//i', $path)) {
+            $cachedLogo = $path;
+            return $cachedLogo;
+          }
+        }
+      }
+    } catch (Exception $e) {
+    }
+    foreach ($fallbacks as $f) {
+      if (file_exists(APPROOT . DS . str_replace(['/', '\\'], DS, $f))) {
+        $cachedLogo = $f;
+        return $cachedLogo;
+      }
+    }
+    $cachedLogo = '';
+    return $cachedLogo;
+  }
+}
+

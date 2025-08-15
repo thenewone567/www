@@ -5,7 +5,16 @@ $roleId = isset($_SESSION['role_id']) ? $_SESSION['role_id'] : null;
 $sidebarItems = getSidebarItems($userRole, $roleId);
 ?>
 <div class="theme-sidebar border-right" id="sidebar-wrapper">
-    <div class="sidebar-heading"><?php echo SITENAME; ?></div>
+    <div class="sidebar-heading d-flex align-items-center" style="gap:8px;">
+        <?php $logoPath = company_logo();
+        if ($logoPath): ?>
+            <img src="<?php echo URLROOT . '/' . htmlspecialchars($logoPath); ?>" alt="Logo"
+                style="max-height:34px;max-width:48px;object-fit:contain;display:block;">
+        <?php endif; ?>
+        <span style="font-weight:600;font-size:1.05rem;line-height:1.1;letter-spacing:.5px;">
+            <?php echo htmlspecialchars(company_name()); ?>
+        </span>
+    </div>
     <div class="list-group list-group-flush">
         <?php foreach ($sidebarItems as $item): ?>
             <a href="<?php echo URLROOT . '/' . $item['url']; ?>"

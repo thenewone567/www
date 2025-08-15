@@ -1,11 +1,17 @@
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
 
+<?php
+// Defensive programming - ensure data structure is correct
+$categories = isset($data['categories']) && is_array($data['categories']) ? $data['categories'] : [];
+$suppliers = isset($data['suppliers']) && is_array($data['suppliers']) ? $data['suppliers'] : [];
+?>
+
 <div class="container-fluid py-4">
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-0">Add New Product</h1>
-            <p class="text-muted">Create a new product in your inventory</p>
+            <p class="text-muted">Create a new product - pricing and stock will be managed through supplier and receiving workflows</p>
         </div>
         <a href="<?php echo URLROOT; ?>/products" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left mr-2"></i>Back to Products
@@ -32,23 +38,37 @@
     <?php endif; ?>
 
     <!-- Main Form -->
-    <form id="productForm" action="<?php echo URLROOT; ?>/products/add" method="post" enctype="multipart/form-data" data-verify="product" data-verify-redirect="<?php echo URLROOT; ?>/products">
-        <div class="row">
-            <!-- Left Column -->
-            <div class="col-lg-8">
-                <!-- Basic Information Card -->
-                <div class="card mb-4 theme-card-light">
+    <form id="productForm" action="<?php echo URLROOT; ?>/products/add" method="post" enctype="multipart/form-data">
+        <!-- Top Row - Full Width Product Information -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <!-- Product Information Card -->
+                <div class="card-theme mb-4 theme-card-light">
                     <div class="card-header theme-card-header">
                         <h5 class="card-title mb-0">
-                            <i class="fas fa-info-circle text-primary mr-2"></i>Basic Information
+                            <i class="fas fa-info-circle text-primary mr-2"></i>Product Information
                         </h5>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-8 mb-3">
-                                <label for="product_name" class="form-label">Product Name <span class="text-danger">*</span></label>
+                    <div class="card-body py-3">
+                        <!-- Basic Information Row -->
+                        <div class="row mb-2">
+                            <div class="col-md-2 mb-2">
+                                <label for="sku" class="form-label small">SKU/UPC<span class="text-danger">*</span></label>
                                 <input type="text" 
-                                       class="form-control <?php echo (!empty($data['product_name_err'])) ? 'is-invalid' : ''; ?>" 
+                                       class="form-control form-control-sm <?php echo (!empty($data['sku_err'])) ? 'is-invalid' : ''; ?>" 
+                                       id="sku" 
+                                       name="sku" 
+                                       value="<?php echo $data['sku'] ?? ''; ?>" 
+                                       placeholder="Scan your barcode here" 
+                                       required>
+                                <?php if (!empty($data['sku_err'])): ?>
+                                    <div class="invalid-feedback"><?php echo $data['sku_err']; ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label for="product_name" class="form-label small">Product Name <span class="text-danger">*</span></label>
+                                <input type="text" 
+                                       class="form-control form-control-sm <?php echo (!empty($data['product_name_err'])) ? 'is-invalid' : ''; ?>" 
                                        id="product_name" 
                                        name="product_name" 
                                        value="<?php echo $data['product_name'] ?? ''; ?>" 
@@ -58,370 +78,375 @@
                                     <div class="invalid-feedback"><?php echo $data['product_name_err']; ?></div>
                                 <?php endif; ?>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="sku" class="form-label">SKU <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control <?php echo (!empty($data['sku_err'])) ? 'is-invalid' : ''; ?>" 
-                                       id="sku" 
-                                       name="sku" 
-                                       value="<?php echo $data['sku'] ?? ''; ?>" 
-                                       placeholder="Product SKU" 
-                                       required>
-                                <?php if (!empty($data['sku_err'])): ?>
-                                    <div class="invalid-feedback"><?php echo $data['sku_err']; ?></div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="barcode" class="form-label">Barcode/UPC</label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="barcode" 
-                                       name="barcode" 
-                                       value="<?php echo $data['barcode'] ?? ''; ?>" 
-                                       placeholder="123456789012">
-                                <small class="form-text text-muted">For barcode scanning</small>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="model_number" class="form-label">Model Number</label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="model_number" 
-                                       name="model_number" 
-                                       value="<?php echo $data['model_number'] ?? ''; ?>" 
-                                       placeholder="DCD771C2">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Category & Supplier Card -->
-                <div class="card mb-4 theme-card-light">
-                    <div class="card-header theme-card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-tags text-success mr-2"></i>Classification & Supplier
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="category_id" class="form-label">Category <span class="text-danger">*</span></label>
-                                <select class="form-control dropdown-select <?php echo (!empty($data['category_id_err'])) ? 'is-invalid' : ''; ?>" 
-                                        id="category_id" 
-                                        name="category_id" 
-                                        required>
-                                    <option value="">Choose category...</option>
-                                    <?php if (!empty($data['categories'])): ?>
-                                        <?php foreach ($data['categories'] as $category): ?>
-                                            <option value="<?php echo $category->category_id; ?>" 
-                                                    <?php echo (($data['category_id'] ?? '') == $category->category_id) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($category->category_name); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                    <option value="add_new" class="text-primary">➕ Add New Category</option>
-                                </select>
+                            <div class="col-md-4 mb-2">
+                                <label for="category_id" class="form-label small">Category</label>
+                                <div class="input-group input-group-sm">
+                                    <select class="form-control <?php echo (!empty($data['category_id_err'])) ? 'is-invalid' : ''; ?>" 
+                                            id="category_id" 
+                                            name="category_id">
+                                        <option value="">Select category (optional)...</option>
+                                        <?php if (!empty($data['categories'])): ?>
+                                            <?php foreach ($categories as $category): ?>
+                                                <?php if (is_object($category)): ?>
+                                                <option value="<?php echo $category->category_id; ?>"
+                                                        <?php echo (($data['category_id'] ?? '') == $category->category_id) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($category->category_name); ?>
+                                                </option>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                    <div class="input-group-append">
+                                        <a href="<?php echo URLROOT; ?>/categories" class="btn btn-outline-primary btn-sm" title="Manage Categories">
+                                            <i class="fas fa-cog"></i>
+                                        </a>
+                                    </div>
+                                </div>
                                 <?php if (!empty($data['category_id_err'])): ?>
                                     <div class="invalid-feedback"><?php echo $data['category_id_err']; ?></div>
                                 <?php endif; ?>
                             </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label for="supplier_id" class="form-label">Supplier <span class="text-danger">*</span></label>
-                                <select class="form-control dropdown-select <?php echo (!empty($data['supplier_id_err'])) ? 'is-invalid' : ''; ?>" 
-                                        id="supplier_id" 
-                                        name="supplier_id" 
-                                        required>
-                                    <option value="">Choose supplier...</option>
-                                    <?php if (!empty($data['suppliers'])): ?>
-                                        <?php foreach ($data['suppliers'] as $supplier): ?>
-                                            <option value="<?php echo $supplier->supplier_id; ?>" 
-                                                    <?php echo (($data['supplier_id'] ?? '') == $supplier->supplier_id) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($supplier->supplier_name); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                    <option value="add_new" class="text-primary">➕ Add New Supplier</option>
-                                </select>
-                                <?php if (!empty($data['supplier_id_err'])): ?>
-                                    <div class="invalid-feedback"><?php echo $data['supplier_id_err']; ?></div>
-                                <?php endif; ?>
+                        </div>
+                        
+                        <!-- Secondary Information Row -->
+                        <div class="row mb-2">
+                            <div class="col-md-4 mb-2">
+                                <label for="model_number" class="form-label small">Model/Batch Number</label>
+                                <input type="text" 
+                                       class="form-control form-control-sm" 
+                                       id="model_number" 
+                                       name="model_number" 
+                                       value="<?php echo $data['model_number'] ?? ''; ?>" 
+                                       placeholder="e.g., DCD771C2, A1234-X567">
                             </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label for="brand_id" class="form-label">Brand</label>
-                                <select class="form-control dropdown-select" 
-                                        id="brand_id" 
-                                        name="brand_id">
-                                    <option value="">Choose brand...</option>
-                                    <?php if (!empty($data['brands'])): ?>
-                                        <?php foreach ($data['brands'] as $brand): ?>
-                                            <option value="<?php echo $brand->brand_id; ?>" 
-                                                    <?php echo (($data['brand_id'] ?? '') == $brand->brand_id) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($brand->brand_name); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                    <option value="add_new" class="text-primary">➕ Add New Brand</option>
+                            <div class="col-md-4 mb-2">
+                                <label for="product_status" class="form-label small">Status</label>
+                                <select class="form-control form-control-sm" id="product_status" name="product_status">
+                                    <option value="active" <?php echo (($data['product_status'] ?? 'active') == 'active') ? 'selected' : ''; ?>>Active</option>
+                                    <option value="discontinued" <?php echo (($data['product_status'] ?? '') == 'discontinued') ? 'selected' : ''; ?>>Discontinued</option>
+                                    <option value="seasonal" <?php echo (($data['product_status'] ?? '') == 'seasonal') ? 'selected' : ''; ?>>Seasonal</option>
+                                    <option value="special_order" <?php echo (($data['product_status'] ?? '') == 'special_order') ? 'selected' : ''; ?>>Special Order</option>
                                 </select>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label for="product_type" class="form-label small">Product Type</label>
+                                <select class="form-control form-control-sm <?php echo (!empty($data['product_type_err'])) ? 'is-invalid' : ''; ?>" 
+                                        id="product_type" 
+                                        name="product_type">
+                                    <option value="STANDARD" <?php echo (($data['product_type'] ?? 'STANDARD') == 'STANDARD') ? 'selected' : ''; ?>>📦 Standard</option>
+                                    <option value="BULK" <?php echo (($data['product_type'] ?? '') == 'BULK') ? 'selected' : ''; ?>>📦📦 Bulk Item</option>
+                                    <option value="OVERSIZED" <?php echo (($data['product_type'] ?? '') == 'OVERSIZED') ? 'selected' : ''; ?>>📏 Oversized</option>
+                                    <option value="FRAGILE" <?php echo (($data['product_type'] ?? '') == 'FRAGILE') ? 'selected' : ''; ?>>🔸 Fragile</option>
+                                    <option value="HAZMAT" <?php echo (($data['product_type'] ?? '') == 'HAZMAT') ? 'selected' : ''; ?>>⚠️ Hazardous Material</option>
+                                </select>
+                                <?php if (!empty($data['product_type_err'])): ?>
+                                    <div class="invalid-feedback"><?php echo $data['product_type_err']; ?></div>
+                                <?php endif; ?>
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="supplier_code" class="form-label">Supplier Code</label>
-                                <input type="text" 
-                                       class="form-control bg-light" 
-                                       id="supplier_code" 
-                                       name="supplier_code" 
-                                       value="<?php echo $data['supplier_code'] ?? ''; ?>" 
-                                       placeholder="Auto-filled from supplier" 
-                                       readonly>
-                                <small class="form-text text-muted">Automatically filled when supplier is selected</small>
+                        <!-- Dimensions Row -->
+                        <div class="row mb-2">
+                            <div class="col-12 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <label class="form-label small mb-0 mr-3">Dimensions</label>
+                                    <div class="unit-system-toggle">
+                                        <div class="toggle-container">
+                                            <span class="toggle-label" id="metric-label">Metric</span>
+                                            <div class="toggle-switch" onclick="toggleUnitSystem()">
+                                                <div class="toggle-slider" id="unit-slider"></div>
+                                            </div>
+                                            <span class="toggle-label" id="imperial-label">Imperial</span>
+                                        </div>
+                                        <input type="hidden" id="current-unit-system" value="metric">
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="col-md-6 mb-3">
-                                <label for="unit_info" class="form-label">Unit Information</label>
-                                <div class="input-group">
+                            <div class="col-md-3 mb-2">
+                                <label for="width" class="form-label small">Width</label>
+                                <div class="input-group input-group-sm">
                                     <input type="number" 
-                                           class="form-control" 
-                                           id="unit_quantity" 
-                                           name="unit_quantity" 
-                                           value="<?php echo $data['unit_quantity'] ?? ''; ?>" 
-                                           placeholder="Quantity" 
-                                           step="0.001" 
+                                           class="form-theme" 
+                                           id="width" 
+                                           name="width" 
+                                           value="<?php echo $data['width'] ?? ''; ?>" 
+                                           placeholder="Width" 
+                                           step="0.01" 
                                            min="0">
                                     <div class="input-group-append">
-                                        <select class="form-control" name="unit_id" id="unit_id">
+                                        <span class="input-group-text" id="width_unit_display">cm</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="width_unit" id="width_unit" value="cm">
+                            </div>
+                            
+                            <div class="col-md-3 mb-2">
+                                <label for="height" class="form-label small">Height</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" 
+                                           class="form-theme" 
+                                           id="height" 
+                                           name="height" 
+                                           value="<?php echo $data['height'] ?? ''; ?>" 
+                                           placeholder="Height" 
+                                           step="0.01" 
+                                           min="0">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" id="height_unit_display">cm</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="height_unit" id="height_unit" value="cm">
+                            </div>
+                            
+                            <div class="col-md-3 mb-2">
+                                <label for="length" class="form-label small">Length</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" 
+                                           class="form-theme" 
+                                           id="length" 
+                                           name="length" 
+                                           value="<?php echo $data['length'] ?? ''; ?>" 
+                                           placeholder="Length" 
+                                           step="0.01" 
+                                           min="0">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" id="length_unit_display">cm</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="length_unit" id="length_unit" value="cm">
+                            </div>
+                            
+                            <div class="col-md-3 mb-2">
+                                <label for="weight" class="form-label small">Weight</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" 
+                                           class="form-theme" 
+                                           id="weight" 
+                                           name="weight" 
+                                           value="<?php echo $data['weight'] ?? ''; ?>" 
+                                           placeholder="Weight" 
+                                           step="0.01" 
+                                           min="0">
+                                    <div class="input-group-append">
+                                        <select class="form-control form-control-sm" name="weight_unit" id="weight_unit">
                                             <option value="">Unit</option>
-                                            <option value="1" <?php echo (($data['unit_id'] ?? '') == '1') ? 'selected' : ''; ?>>Pieces</option>
-                                            <option value="2" <?php echo (($data['unit_id'] ?? '') == '2') ? 'selected' : ''; ?>>Grams</option>
-                                            <option value="3" <?php echo (($data['unit_id'] ?? '') == '3') ? 'selected' : ''; ?>>Kilograms</option>
-                                            <option value="4" <?php echo (($data['unit_id'] ?? '') == '4') ? 'selected' : ''; ?>>Liters</option>
-                                            <option value="5" <?php echo (($data['unit_id'] ?? '') == '5') ? 'selected' : ''; ?>>Milliliters</option>
-                                            <option value="6" <?php echo (($data['unit_id'] ?? '') == '6') ? 'selected' : ''; ?>>Meters</option>
-                                            <option value="7" <?php echo (($data['unit_id'] ?? '') == '7') ? 'selected' : ''; ?>>Centimeters</option>
-                                            <option value="8" <?php echo (($data['unit_id'] ?? '') == '8') ? 'selected' : ''; ?>>Boxes</option>
-                                            <option value="9" <?php echo (($data['unit_id'] ?? '') == '9') ? 'selected' : ''; ?>>Packets</option>
-                                            <option value="10" <?php echo (($data['unit_id'] ?? '') == '10') ? 'selected' : ''; ?>>Sets</option>
+                                            <option value="g" <?php echo (($data['weight_unit'] ?? '') == 'g') ? 'selected' : ''; ?>>grams</option>
+                                            <option value="kg" <?php echo (($data['weight_unit'] ?? '') == 'kg') ? 'selected' : ''; ?>>kg</option>
+                                            <option value="lb" <?php echo (($data['weight_unit'] ?? '') == 'lb') ? 'selected' : ''; ?>>lbs</option>
+                                            <option value="oz" <?php echo (($data['weight_unit'] ?? '') == 'oz') ? 'selected' : ''; ?>>oz</option>
                                         </select>
                                     </div>
                                 </div>
-                                <small class="form-text text-muted">e.g., 250 grams, 5 pieces</small>
                             </div>
                         </div>
+                        
+                        <!-- Conversion Hint -->
+                        <div class="row mb-2">
+                            <div class="col-12">
+                                <div id="conversion_hint" class="text-center">
+                                    <small class="text-muted"><i class="fas fa-info-circle mr-1"></i>1 cm = 0.39 inches, 1 kg = 2.2 lbs</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Product Information Row -->
+                        <div class="row mb-2">
+                            <div class="col-md-5 mb-2">
+                                <label for="image" class="form-label small">Product Image</label>
+                                <input type="file" 
+                                       class="form-control-file form-control-sm" 
+                                       id="image" 
+                                       name="image" 
+                                       accept="image/*">
+                                <small class="form-text text-muted">JPG, PNG files only</small>
+                                <div id="imagePreview" class="mt-2" style="display: none;">
+                                    <img id="preview" src="" alt="Preview" class="img-thumbnail" style="max-width: 80px;">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Expiry and Warranty Information -->
+                        <div class="row mb-2">
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" 
+                                           class="form-check-input" 
+                                           id="has_expiry" 
+                                           name="has_expiry" 
+                                           value="1"
+                                           <?php echo (!empty($data['has_expiry']) && $data['has_expiry']) ? 'checked' : ''; ?>
+                                           onchange="toggleExpiryFields()">
+                                    <label class="form-check-label small" for="has_expiry">
+                                        <i class="fas fa-calendar-times mr-1"></i>Product has expiry date
+                                    </label>
+                                </div>
+                                
+                                <div id="expiry_months_field" style="display: none;" class="mt-2">
+                                    <label for="expiry_months" class="form-label small">Shelf Life (Months)</label>
+                                    <input type="number" 
+                                           class="form-control form-control-sm" 
+                                           id="expiry_months" 
+                                           name="expiry_months" 
+                                           value="<?php echo $data['expiry_months'] ?? ''; ?>" 
+                                           min="1" 
+                                           max="120"
+                                           placeholder="1-120">
+                                    <small class="form-text text-muted">Total months until expiry</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" 
+                                           class="form-check-input" 
+                                           id="has_warranty" 
+                                           name="has_warranty" 
+                                           value="1"
+                                           <?php echo (!empty($data['has_warranty']) && $data['has_warranty']) ? 'checked' : ''; ?>
+                                           onchange="toggleWarrantyFields()">
+                                    <label class="form-check-label small" for="has_warranty">
+                                        <i class="fas fa-shield-alt mr-1"></i>Product has warranty
+                                    </label>
+                                </div>
+                                
+                                <div id="warranty_months_field" style="display: none;" class="mt-2">
+                                    <label for="warranty_period" class="form-label small">Warranty (Months)</label>
+                                    <input type="number" 
+                                           class="form-control form-control-sm" 
+                                           id="warranty_period" 
+                                           name="warranty_period" 
+                                           value="<?php echo $data['warranty_period'] ?? ''; ?>" 
+                                           min="1" 
+                                           max="120"
+                                           placeholder="1-120">
+                                    <small class="form-text text-muted">Warranty period in months</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-2" id="expiry_example_row" style="display: none;">
+                            <div class="col-md-12 mb-2" id="expiry_example">
+                                <label class="form-label small">Example Expiry</label>
+                                <div class="alert alert-info alert-sm py-1 px-2">
+                                    <small id="expiry_calculation">-</small>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
-
-                <!-- Pricing Card -->
-                <div class="card mb-4 theme-card-light">
+            </div>
+        </div>
+        
+        <!-- Bottom Row - 2 Columns -->
+        <div class="row">
+            <div class="col-lg-6 d-flex">
+                <!-- Tax Information Card -->
+                <div class="card-theme mb-4 theme-card-light flex-fill">
                     <div class="card-header theme-card-header">
                         <h5 class="card-title mb-0">
-                            <i class="fas fa-rupee-sign text-warning mr-2"></i>Pricing Information
+                            <i class="fas fa-receipt text-warning mr-2"></i>Tax Information
                         </h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-3">
                         <div class="row">
-                            <div class="col-md-3 mb-3">
-                                <label for="purchase_price" class="form-label">Purchase Price (₹)</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">₹</span>
-                                    </div>
-                                    <input type="number" 
-                                           class="form-control" 
-                                           id="purchase_price" 
-                                           name="purchase_price" 
-                                           value="<?php echo $data['purchase_price'] ?? ''; ?>" 
-                                           placeholder="0.00" 
-                                           step="0.01" 
-                                           min="0">
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-3 mb-3">
-                                <label for="selling_price" class="form-label">Selling Price (₹)</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">₹</span>
-                                    </div>
-                                    <input type="number" 
-                                           class="form-control" 
-                                           id="selling_price" 
-                                           name="selling_price" 
-                                           value="<?php echo $data['selling_price'] ?? ''; ?>" 
-                                           placeholder="0.00" 
-                                           step="0.01" 
-                                           min="0">
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-3 mb-3">
-                                <label for="profit_margin" class="form-label">Profit Margin (%)</label>
-                                <div class="input-group">
-                                    <input type="number" 
-                                           class="form-control bg-light" 
-                                           id="profit_margin" 
-                                           name="profit_margin" 
-                                           value="<?php echo $data['profit_margin'] ?? ''; ?>" 
-                                           readonly>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text">%</span>
-                                    </div>
-                                </div>
-                                <small class="form-text text-muted">Auto-calculated</small>
-                            </div>
-                            
-                            <div class="col-md-3 mb-3">
-                                <label for="gst_rate" class="form-label">GST Rate</label>
-                                <select class="form-control" id="gst_rate" name="gst_rate">
-                                    <option value="">Select GST</option>
+                            <div class="col-md-6 mb-2">
+                                <label for="gst_rate" class="form-label small">GST Rate <span class="text-danger">*</span></label>
+                                <select class="form-control form-control-sm <?php echo (!empty($data['gst_rate_err'])) ? 'is-invalid' : ''; ?>" 
+                                        id="gst_rate" 
+                                        name="gst_rate" 
+                                        required>
+                                    <option value="">Select GST Rate</option>
                                     <option value="0" <?php echo (($data['gst_rate'] ?? '') == '0') ? 'selected' : ''; ?>>0% (Exempt)</option>
                                     <option value="5" <?php echo (($data['gst_rate'] ?? '') == '5') ? 'selected' : ''; ?>>5% GST</option>
                                     <option value="12" <?php echo (($data['gst_rate'] ?? '') == '12') ? 'selected' : ''; ?>>12% GST</option>
                                     <option value="18" <?php echo (($data['gst_rate'] ?? '') == '18') ? 'selected' : ''; ?>>18% GST</option>
                                     <option value="28" <?php echo (($data['gst_rate'] ?? '') == '28') ? 'selected' : ''; ?>>28% GST</option>
                                 </select>
+                                <?php if (!empty($data['gst_rate_err'])): ?>
+                                    <div class="invalid-feedback"><?php echo $data['gst_rate_err']; ?></div>
+                                <?php endif; ?>
+                                <small class="form-text text-muted">Goods and Services Tax rate</small>
                             </div>
                         </div>
                         
-                        <!-- Quick Markup Buttons -->
-                        <div class="row">
-                            <div class="col-12">
-                                <label class="form-label">Quick Markup:</label>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-outline-primary" onclick="applyMarkup(15)">15%</button>
-                                    <button type="button" class="btn btn-outline-primary" onclick="applyMarkup(25)">25%</button>
-                                    <button type="button" class="btn btn-outline-primary" onclick="applyMarkup(30)">30%</button>
-                                    <button type="button" class="btn btn-outline-primary" onclick="applyMarkup(50)">50%</button>
-                                    <button type="button" class="btn btn-outline-primary" onclick="applyMarkup(100)">100%</button>
-                                </div>
-                            </div>
+                        <div class="alert alert-warning mt-3 mb-0 py-2">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <small><strong>Important:</strong> GST rate should match the tax classification for this product category as per GST regulations.</small>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Right Column -->
-            <div class="col-lg-4">
+            
+            <div class="col-lg-6 d-flex">
                 <!-- Inventory Card -->
-                <div class="card mb-4 theme-card-light">
+                <div class="card-theme mb-4 theme-card-light flex-fill">
                     <div class="card-header theme-card-header">
                         <h5 class="card-title mb-0">
-                            <i class="fas fa-boxes text-info mr-2"></i>Inventory
+                            <i class="fas fa-boxes text-info mr-2"></i>Inventory Management
                         </h5>
                     </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="initial_quantity" class="form-label">Initial Stock</label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   id="initial_quantity" 
-                                   name="initial_quantity" 
-                                   value="<?php echo $data['initial_quantity'] ?? '0'; ?>" 
-                                   min="0" 
-                                   placeholder="0">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="min_Inventory_level" class="form-label">Minimum Level</label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   id="min_Inventory_level" 
-                                   name="min_Inventory_level" 
-                                   value="<?php echo $data['min_Inventory_level'] ?? ''; ?>" 
-                                   min="0" 
-                                   placeholder="0">
-                            <small class="form-text text-muted">Alert when stock is below this level</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="reorder_level" class="form-label">Reorder Level</label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   id="reorder_level" 
-                                   name="reorder_level" 
-                                   value="<?php echo $data['reorder_level'] ?? ''; ?>" 
-                                   min="0" 
-                                   placeholder="0">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="storage_location" class="form-label">Storage Location</label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="storage_location" 
-                                   name="storage_location" 
-                                   value="<?php echo $data['storage_location'] ?? ''; ?>" 
-                                   placeholder="A1-B2-C3">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Product Details Card -->
-                <div class="card mb-4 theme-card-light">
-                    <div class="card-header theme-card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-cog text-secondary mr-2"></i>Details
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="dimensions" class="form-label">Dimensions</label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="dimensions" 
-                                   name="dimensions" 
-                                   value="<?php echo $data['dimensions'] ?? ''; ?>" 
-                                   placeholder="L x W x H (cm)">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="warranty_period" class="form-label">Warranty (months)</label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   id="warranty_period" 
-                                   name="warranty_period" 
-                                   value="<?php echo $data['warranty_period'] ?? ''; ?>" 
-                                   min="0" 
-                                   placeholder="0">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="product_status" class="form-label">Status</label>
-                            <select class="form-control" id="product_status" name="product_status">
-                                <option value="active" <?php echo (($data['product_status'] ?? 'active') == 'active') ? 'selected' : ''; ?>>Active</option>
-                                <option value="discontinued" <?php echo (($data['product_status'] ?? '') == 'discontinued') ? 'selected' : ''; ?>>Discontinued</option>
-                                <option value="seasonal" <?php echo (($data['product_status'] ?? '') == 'seasonal') ? 'selected' : ''; ?>>Seasonal</option>
-                                <option value="special_order" <?php echo (($data['product_status'] ?? '') == 'special_order') ? 'selected' : ''; ?>>Special Order</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="image" class="form-label">Product Image</label>
-                            <input type="file" 
-                                   class="form-control-file" 
-                                   id="image" 
-                                   name="image" 
-                                   accept="image/*">
-                            <small class="form-text text-muted">JPG, PNG files only</small>
-                            <div id="imagePreview" class="mt-2" style="display: none;">
-                                <img id="preview" src="" alt="Preview" class="img-thumbnail" style="max-width: 150px;">
+                    <div class="card-body py-3">
+                        <!-- Inventory Levels Row -->
+                        <div class="row mb-2">
+                            <div class="col-md-4 mb-2">
+                                <label for="min_inventory_level" class="form-label small">Min Level</label>
+                                <input type="number" 
+                                       class="form-control form-control-sm" 
+                                       id="min_inventory_level" 
+                                       name="min_inventory_level" 
+                                       value="<?php echo $data['min_inventory_level'] ?? ''; ?>" 
+                                       min="0" 
+                                       placeholder="0">
+                                <small class="form-text text-muted">Alert threshold</small>
+                            </div>
+                            
+                            <div class="col-md-4 mb-2">
+                                <label for="reorder_level" class="form-label small">Reorder</label>
+                                <input type="number" 
+                                       class="form-control form-control-sm" 
+                                       id="reorder_level" 
+                                       name="reorder_level" 
+                                       value="<?php echo $data['reorder_level'] ?? ''; ?>" 
+                                       min="0" 
+                                       placeholder="0">
+                                <small class="form-text text-muted">When to reorder</small>
+                            </div>
+                            
+                            <div class="col-md-4 mb-2">
+                                <label for="max_inventory_level" class="form-label small">Max Level</label>
+                                <input type="number" 
+                                       class="form-control form-control-sm" 
+                                       id="max_inventory_level" 
+                                       name="max_inventory_level" 
+                                       value="<?php echo $data['max_inventory_level'] ?? ''; ?>" 
+                                       min="0" 
+                                       placeholder="0">
+                                <small class="form-text text-muted">Upper limit</small>
                             </div>
                         </div>
+                        
+                        <div class="alert alert-warning mb-0 py-2">
+                            <i class="fas fa-lightbulb mr-2"></i>
+                            <small><strong>Tip:</strong> Set minimum level for alerts, reorder level for purchasing, and maximum level to prevent overstocking.</small>
+                        </div>
                     </div>
                 </div>
-
+            </div>
+        </div>
+        
+        <!-- Full Width Section for Actions -->
+        <div class="row">
+            <div class="col-12">
                 <!-- Action Buttons -->
-                <div class="card theme-card-light">
-                    <div class="card-body">
-                        <div class="d-flex flex-column">
-                            <button type="submit" class="btn btn-success btn-lg mb-2">
+                <div class="card-theme theme-card-light">
+                    <div class="card-body py-3">
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-success mr-2">
                                 <i class="fas fa-save mr-2"></i>Save Product
                             </button>
-                            <a href="<?php echo URLROOT; ?>/products" class="btn btn-outline-secondary">
+                            <a href="<?php echo URLROOT; ?>/products" class="btn-theme btn-danger-theme">
                                 <i class="fas fa-times mr-2"></i>Cancel
                             </a>
                         </div>
@@ -432,126 +457,181 @@
     </form>
 </div>
 
+<!-- Custom CSS for searchable dropdowns -->
+<style>
+/* Modern Unit System Toggle */
+.unit-system-toggle {
+    margin-left: 15px;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toggle-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6c757d;
+    transition: color 0.3s ease;
+}
+
+.toggle-label.active {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.toggle-label.active.imperial {
+    color: #007bff;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 24px;
+    background: #28a745;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border: 1px solid #28a745;
+}
+
+.toggle-switch:hover {
+    background: #218838;
+}
+
+.toggle-switch.imperial {
+    background: #007bff;
+    border-color: #007bff;
+}
+
+.toggle-switch.imperial:hover {
+    background: #0056b3;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle-switch.imperial .toggle-slider {
+    transform: translateX(26px);
+}
+
+/* Select2 Styles */
+.select2-container--bootstrap4 .select2-selection {
+    border-color: #ced4da;
+    height: calc(1.5em + 0.75rem + 2px);
+    padding: 0.375rem 0.75rem;
+}
+
+.select2-container--bootstrap4 .select2-selection--single {
+    height: calc(1.5em + 0.75rem + 2px) !important;
+}
+
+.select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+    padding-left: 0;
+    padding-right: 20px;
+    height: auto;
+    margin-top: -2px;
+}
+
+.select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow {
+    height: calc(1.5em + 0.75rem);
+}
+
+.select2-container--bootstrap4.select2-container--focus .select2-selection {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.select2-container--bootstrap4 .select2-dropdown {
+    border-color: #ced4da;
+}
+
+.select2-container--bootstrap4 .select2-results__option {
+    padding: 0.375rem 0.75rem;
+}
+
+/* Custom styling for "Add New" options */
+.select2-results__option .text-primary {
+    color: #007bff !important;
+}
+
+/* Ensure proper z-index for Select2 dropdown */
+.select2-container {
+    z-index: 1050;
+}
+
+.select2-dropdown {
+    z-index: 1051;
+}
+
+/* Input group integration */
+.input-group .select2-container {
+    flex: 1 1 auto;
+    width: 1% !important;
+}
+
+.input-group .select2-container .select2-selection {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+</style>
+
 <!-- JavaScript -->
 <script>
+// Initialize everything when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize dropdown functionality
-    initializeDropdowns();
+    console.log('Document ready - Initializing product form');
     
-    // Initialize pricing calculations
-    initializePricing();
-    
-    // Initialize image preview
-    initializeImagePreview();
-    
-    // Initialize form validations
-    initializeValidations();
+    try {
+        // Check for server messages and show alerts
+        checkServerMessages();
+        
+        // Initialize image preview
+        initializeImagePreview();
+        
+        // Initialize form validations
+        initializeValidations();
+        
+        console.log('Initialization completed successfully');
+        
+    } catch (error) {
+        console.error('Error during initialization:', error);
+        alert('Page initialization failed: ' + error.message + '. Please refresh the page.');
+    }
 });
 
-// Simple dropdown initialization without complex libraries
-function initializeDropdowns() {
-    const dropdowns = document.querySelectorAll('.dropdown-select');
-    
-    dropdowns.forEach(dropdown => {
-        dropdown.addEventListener('change', function() {
-            if (this.value === 'add_new') {
-                handleAddNew(this);
-                this.value = ''; // Reset selection
-            }
-            
-            // Handle supplier code update
-            if (this.id === 'supplier_id') {
-                updateSupplierCode(this.value);
-            }
-        });
-    });
-}
-
-function handleAddNew(selectElement) {
-    const type = selectElement.id.replace('_id', '');
-    
-    // Simple prompt for now - can be enhanced with modals later
-    const name = prompt(`Enter new ${type} name:`);
-    if (name && name.trim()) {
-        // Add option to dropdown
-        const option = document.createElement('option');
-        option.value = 'temp_' + Date.now(); // Temporary ID
-        option.text = name.trim();
-        option.selected = true;
-        
-        // Insert before "Add New" option
-        const addNewOption = selectElement.querySelector('option[value="add_new"]');
-        selectElement.insertBefore(option, addNewOption);
-        
-        console.log(`Adding new ${type}: ${name}`);
-    }
-}
-
-function initializePricing() {
-    const purchasePrice = document.getElementById('purchase_price');
-    const sellingPrice = document.getElementById('selling_price');
-    const profitMargin = document.getElementById('profit_margin');
-    
-    function calculateMargin() {
-        const purchase = parseFloat(purchasePrice.value) || 0;
-        const selling = parseFloat(sellingPrice.value) || 0;
-        
-        if (purchase > 0 && selling > 0) {
-            const margin = ((selling - purchase) / purchase * 100);
-            profitMargin.value = margin.toFixed(2);
-            
-            // Color code the margin
-            if (margin >= 30) {
-                profitMargin.style.color = 'green';
-            } else if (margin >= 15) {
-                profitMargin.style.color = 'orange';
-            } else {
-                profitMargin.style.color = 'red';
-            }
-        } else {
-            profitMargin.value = '';
-            profitMargin.style.color = '';
+// Check for PHP success/error messages and show JavaScript alerts
+function checkServerMessages() {
+    // Check for success message
+    const successAlert = document.querySelector('.alert-success');
+    if (successAlert) {
+        const successText = successAlert.textContent.trim();
+        if (successText) {
+            alert('Submission successful! ' + successText);
+            console.log('Success:', successText);
         }
     }
     
-    purchasePrice.addEventListener('input', calculateMargin);
-    sellingPrice.addEventListener('input', calculateMargin);
-    
-    // Initial calculation
-    calculateMargin();
-}
-
-function applyMarkup(percentage) {
-    const purchasePrice = parseFloat(document.getElementById('purchase_price').value) || 0;
-    
-    if (purchasePrice > 0) {
-        const sellingPrice = purchasePrice * (1 + percentage / 100);
-        document.getElementById('selling_price').value = sellingPrice.toFixed(2);
-        
-        // Trigger calculation
-        document.getElementById('selling_price').dispatchEvent(new Event('input'));
-    } else {
-        alert('Please enter a purchase price first');
+    // Check for error message  
+    const errorAlert = document.querySelector('.alert-danger');
+    if (errorAlert) {
+        const errorText = errorAlert.textContent.trim();
+        if (errorText) {
+            alert('Submission failed! Details: ' + errorText);
+            console.error('Error:', errorText);
+        }
     }
-}
-
-function updateSupplierCode(supplierId) {
-    const supplierCodeField = document.getElementById('supplier_code');
-    
-    if (!supplierId || supplierId === 'add_new') {
-        supplierCodeField.value = '';
-        supplierCodeField.placeholder = 'Auto-filled from supplier';
-        return;
-    }
-    
-    // Show loading state
-    supplierCodeField.placeholder = 'Loading...';
-    
-    // Simulate API call
-    setTimeout(() => {
-        supplierCodeField.value = 'SUP' + supplierId.padStart(4, '0');
-        supplierCodeField.placeholder = 'Supplier code loaded';
-    }, 500);
 }
 
 function initializeImagePreview() {
@@ -559,59 +639,264 @@ function initializeImagePreview() {
     const preview = document.getElementById('imagePreview');
     const previewImg = document.getElementById('preview');
     
-    imageInput.addEventListener('change', function() {
-        const file = this.files[0];
-        
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImg.src = e.target.result;
-                preview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        } else {
-            preview.style.display = 'none';
-        }
-    });
+    if (imageInput && preview && previewImg) {
+        imageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+    }
 }
 
 function initializeValidations() {
     const form = document.getElementById('productForm');
     
-    form.addEventListener('submit', function(e) {
-        let isValid = true;
-        
-        // Basic validation
-        const requiredFields = ['product_name', 'sku', 'category_id', 'supplier_id'];
-        
-        requiredFields.forEach(fieldId => {
-            const field = document.getElementById(fieldId);
-            if (field) {
-                const value = field.value.trim();
-                
-                if (!value) {
-                    field.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    field.classList.remove('is-invalid');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Form submission initiated...');
+            alert('Initiating submission...');
+            
+            let isValid = true;
+            
+            // Basic validation for required fields (updated for our simplified form)
+            const requiredFields = ['product_name', 'sku'];
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    const value = field.value.trim();
+                    
+                    if (!value) {
+                        field.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        field.classList.remove('is-invalid');
+                    }
                 }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Submission failed! Please fill in all required fields (Product Name and SKU)');
+                return false;
             }
+            
+            // If validation passes, show confirmation
+            console.log('Validation passed, submitting form...');
+            
+            return true;
         });
         
-        if (!isValid) {
-            e.preventDefault();
-            alert('Please fill in all required fields');
+        // Remove validation styling when user types
+        const inputs = form.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+            });
+        });
+    }
+}
+
+function setupInventoryValidation() {
+    const minLevel = document.getElementById('min_inventory_level');
+    const maxLevel = document.getElementById('max_inventory_level');
+    const reorderLevel = document.getElementById('reorder_level');
+    
+    function validateOnChange() {
+        const minVal = parseFloat(minLevel.value) || 0;
+        const maxVal = parseFloat(maxLevel.value) || 0;
+        const reorderVal = parseFloat(reorderLevel.value) || 0;
+        
+        // Clear previous validation states
+        [minLevel, maxLevel, reorderLevel].forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        
+        // Validate relationships
+        if (maxVal > 0 && minVal > 0 && maxVal <= minVal) {
+            maxLevel.classList.add('is-invalid');
+            minLevel.classList.add('is-invalid');
+        }
+        
+        if (reorderVal > 0 && minVal > 0 && reorderVal <= minVal) {
+            reorderLevel.classList.add('is-invalid');
+        }
+        
+        if (reorderVal > 0 && maxVal > 0 && reorderVal >= maxVal) {
+            reorderLevel.classList.add('is-invalid');
+        }
+    }
+    
+    minLevel.addEventListener('input', validateOnChange);
+    maxLevel.addEventListener('input', validateOnChange);
+    reorderLevel.addEventListener('input', validateOnChange);
+}
+
+// Toggle expiry fields based on checkbox
+function toggleExpiryFields() {
+    const hasExpiry = document.getElementById('has_expiry').checked;
+    const monthsField = document.getElementById('expiry_months_field');
+    const exampleField = document.getElementById('expiry_example');
+    
+    if (hasExpiry) {
+        monthsField.style.display = 'block';
+        exampleField.style.display = 'block';
+        
+        // Set default value if empty
+        const monthsInput = document.getElementById('expiry_months');
+        
+        if (!monthsInput.value) monthsInput.value = '12';
+        
+        calculateExpiryExample();
+    } else {
+        monthsField.style.display = 'none';
+        exampleField.style.display = 'none';
+    }
+}
+
+// Toggle warranty fields based on checkbox
+function toggleWarrantyFields() {
+    const hasWarranty = document.getElementById('has_warranty').checked;
+    const warrantyField = document.getElementById('warranty_months_field');
+    
+    if (hasWarranty) {
+        warrantyField.style.display = 'block';
+        
+        // Set default value if empty
+        const warrantyInput = document.getElementById('warranty_period');
+        if (!warrantyInput.value) warrantyInput.value = '12';
+    } else {
+        warrantyField.style.display = 'none';
+    }
+}
+
+// Modern toggle for unit system
+function toggleUnitSystem() {
+    const currentSystem = document.getElementById('current-unit-system').value;
+    const newSystem = currentSystem === 'metric' ? 'imperial' : 'metric';
+    
+    // Update hidden field
+    document.getElementById('current-unit-system').value = newSystem;
+    
+    // Update toggle appearance
+    const toggleSwitch = document.querySelector('.toggle-switch');
+    const metricLabel = document.getElementById('metric-label');
+    const imperialLabel = document.getElementById('imperial-label');
+    
+    if (newSystem === 'imperial') {
+        toggleSwitch.classList.add('imperial');
+        metricLabel.classList.remove('active');
+        imperialLabel.classList.add('active', 'imperial');
+    } else {
+        toggleSwitch.classList.remove('imperial');
+        metricLabel.classList.add('active');
+        imperialLabel.classList.remove('active', 'imperial');
+    }
+    
+    // Switch the units (excluding weight)
+    switchDimensionSystem(newSystem);
+}
+
+// Initialize toggle on page load
+function initializeUnitToggle() {
+    // Set initial state
+    const metricLabel = document.getElementById('metric-label');
+    if (metricLabel) {
+        metricLabel.classList.add('active');
+    }
+}
+
+// Switch dimension unit system (metric/imperial) - excludes weight
+function switchDimensionSystem(system) {
+    const units = {
+        metric: {
+            dimension: 'cm'
+        },
+        imperial: {
+            dimension: 'in'
+        }
+    };
+    
+    // Update dimension units (width, height, length) - EXCLUDING weight
+    ['width', 'height', 'length'].forEach(dimension => {
+        const unitDisplay = document.getElementById(dimension + '_unit_display');
+        const unitHidden = document.getElementById(dimension + '_unit');
+        
+        if (unitDisplay && unitHidden) {
+            unitDisplay.textContent = units[system].dimension;
+            unitHidden.value = units[system].dimension;
         }
     });
     
-    // Remove validation styling when user types
-    const inputs = form.querySelectorAll('input, select');
-    inputs.forEach(input => {
-        input.addEventListener('input', function() {
-            this.classList.remove('is-invalid');
-        });
-    });
+    // Weight stays independent - no changes to weight unit
+    
+    // Update conversion hint (only for dimensions)
+    const conversionHint = document.getElementById('conversion_hint');
+    if (conversionHint) {
+        if (system === 'imperial') {
+            conversionHint.innerHTML = '<small class="text-muted"><i class="fas fa-info-circle mr-1"></i>Dimensions: 1 inch = 2.54 cm | Weight: Independent unit selection</small>';
+        } else {
+            conversionHint.innerHTML = '<small class="text-muted"><i class="fas fa-info-circle mr-1"></i>Dimensions: 1 cm = 0.39 inches | Weight: Independent unit selection</small>';
+        }
+    }
 }
+
+// Calculate and display expiry example
+function calculateExpiryExample() {
+    const months = parseInt(document.getElementById('expiry_months').value) || 0;
+    const exampleDiv = document.getElementById('expiry_calculation');
+    
+    if (months === 0) {
+        exampleDiv.textContent = 'Please enter shelf life';
+        return;
+    }
+    
+    const today = new Date();
+    const expiryDate = new Date(today.getFullYear(), today.getMonth() + months, today.getDate());
+    
+    const monthsText = months === 1 ? '1 month' : `${months} months`;
+    
+    exampleDiv.innerHTML = `
+        <strong>Shelf Life:</strong> ${monthsText}<br>
+        <strong>If manufactured today:</strong><br>
+        Expires: ${expiryDate.toLocaleDateString('en-IN')}
+    `;
+}
+
+// Initialize expiry functionality on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up event listeners for expiry fields
+    const monthsInput = document.getElementById('expiry_months');
+    
+    if (monthsInput) {
+        monthsInput.addEventListener('input', calculateExpiryExample);
+    }
+    
+    // Check if has_expiry is already checked (for edit forms)
+    const hasExpiryCheckbox = document.getElementById('has_expiry');
+    if (hasExpiryCheckbox && hasExpiryCheckbox.checked) {
+        toggleExpiryFields();
+    }
+    
+    // Check if has_warranty is already checked (for edit forms)
+    const hasWarrantyCheckbox = document.getElementById('has_warranty');
+    if (hasWarrantyCheckbox && hasWarrantyCheckbox.checked) {
+        toggleWarrantyFields();
+    }
+    
+    // Initialize unit system toggle
+    initializeUnitToggle();
+});
+
 </script>
 
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'footer.php'; ?>

@@ -79,6 +79,230 @@ class SalesController extends Controller
         }
     }
 
+    /**
+     * Enhanced product search for sales (URL: /sales/search-products)
+     */
+    public function search_products()
+    {
+        return $this->searchProducts();
+    }
+
+    /**
+     * Search customer by barcode/ID (URL: /sales/search-customer)
+     */
+    public function search_customer()
+    {
+        return $this->searchCustomer();
+    }
+
+    /**
+     * Enhanced product search for sales
+     */
+    private function searchProducts()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            return;
+        }
+
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $query = $input['query'] ?? '';
+            $type = $input['type'] ?? 'all';
+
+            if (empty($query)) {
+                echo json_encode(['success' => true, 'products' => []]);
+                return;
+            }
+
+            $products = [];
+
+            switch ($type) {
+                case 'barcode':
+                    $products = $this->searchProductsByBarcode($query);
+                    break;
+                case 'sku':
+                    $products = $this->searchProductsBySKU($query);
+                    break;
+                case 'name':
+                    $products = $this->searchProductsByName($query);
+                    break;
+                case 'category':
+                    $products = $this->searchProductsByCategory($query);
+                    break;
+                default:
+                    $products = $this->searchProductsAll($query);
+                    break;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'products' => $products,
+                'count' => count($products)
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Sales product search error: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Search failed: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Search customer by barcode/ID
+     */
+    private function searchCustomer()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            return;
+        }
+
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $barcode = $input['barcode'] ?? '';
+
+            if (empty($barcode)) {
+                echo json_encode(['success' => false, 'message' => 'Barcode is required']);
+                return;
+            }
+
+            $customer = $this->customerModel->getCustomerByBarcode($barcode);
+
+            if ($customer) {
+                echo json_encode([
+                    'success' => true,
+                    'customer' => [
+                        'id' => $customer->customer_id,
+                        'name' => $customer->customer_name,
+                        'email' => $customer->email ?? '',
+                        'phone' => $customer->phone ?? '',
+                        'barcode' => $barcode
+                    ]
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Customer not found'
+                ]);
+            }
+
+        } catch (Exception $e) {
+            error_log("Customer search error: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Customer search failed'
+            ]);
+        }
+    }
+
+    // ==================== ENHANCED SEARCH HELPER METHODS ====================
+
+    /**
+     * Search products by barcode
+     */
+    private function searchProductsByBarcode($barcode)
+    {
+        try {
+            // First try exact barcode match
+            $product = $this->barcodeModel->getProductByBarcode($barcode);
+            if ($product) {
+                return [$this->formatProductForSearch($product)];
+            }
+
+            // Then try partial barcode match
+            $products = $this->productModel->searchByBarcodePartial($barcode);
+            return array_map([$this, 'formatProductForSearch'], $products ?: []);
+
+        } catch (Exception $e) {
+            error_log("Barcode search error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Search products by SKU
+     */
+    private function searchProductsBySKU($sku)
+    {
+        try {
+            $products = $this->productModel->searchBySKU($sku);
+            return array_map([$this, 'formatProductForSearch'], $products ?: []);
+        } catch (Exception $e) {
+            error_log("SKU search error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Search products by name
+     */
+    private function searchProductsByName($name)
+    {
+        try {
+            $products = $this->productModel->searchByName($name);
+            return array_map([$this, 'formatProductForSearch'], $products ?: []);
+        } catch (Exception $e) {
+            error_log("Name search error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Search products by category
+     */
+    private function searchProductsByCategory($category)
+    {
+        try {
+            $products = $this->productModel->searchByCategory($category);
+            return array_map([$this, 'formatProductForSearch'], $products ?: []);
+        } catch (Exception $e) {
+            error_log("Category search error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Search products across all fields
+     */
+    private function searchProductsAll($query)
+    {
+        try {
+            $products = $this->productModel->searchProducts($query);
+            return array_map([$this, 'formatProductForSearch'], $products ?: []);
+        } catch (Exception $e) {
+            error_log("All fields search error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Format product data for search results
+     */
+    private function formatProductForSearch($product)
+    {
+        return [
+            'id' => $product->product_id,
+            'name' => $product->product_name,
+            'sku' => $product->sku ?? '',
+            'category' => $product->category_name ?? 'Uncategorized',
+            'price' => floatval($product->unit_price ?? $product->sale_price ?? 0),
+            'inventory' => intval($product->current_Inventory ?? $product->inventory_quantity ?? 0),
+            'image' => $product->image_path ?? null,
+            'barcode' => $product->barcode_value ?? '',
+            'brand' => $product->brand_name ?? '',
+            'unit' => $product->unit_name ?? ''
+        ];
+    }
+
     public function list()
     {
         // Original index functionality moved here

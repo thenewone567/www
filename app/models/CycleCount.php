@@ -111,11 +111,11 @@ class CycleCount
             // Create cycle count items for each product
             foreach ($products as $product) {
                 // Get current Inventory quantity
-                $this->db->query("SELECT COALESCE(SUM(quantity), 0) as current_Inventory 
+                $this->db->query("SELECT COALESCE(SUM(quantity), 0) as current_inventory 
                                  FROM Inventory WHERE product_id = :product_id");
                 $this->db->bind(':product_id', $product->product_id);
                 $InventoryResult = $this->db->single();
-                $expectedQuantity = $InventoryResult ? $InventoryResult->current_Inventory : 0;
+                $expectedQuantity = $InventoryResult ? $InventoryResult->current_inventory : 0;
 
                 // Insert cycle count item
                 $this->db->query("INSERT INTO cycle_count_items 
