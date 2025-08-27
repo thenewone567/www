@@ -107,6 +107,19 @@
      border-style: none;
  }
 
+ /* Prevent layout jumping for interactive elements */
+ .btn:hover,
+ .card:hover,
+ .kpi-card:hover,
+ .hardware-kpi:hover,
+ .theme-card:hover,
+ .content-section:hover,
+ .list-group-item:hover,
+ .dropdown-item:hover,
+ .nav-link:hover {
+     transform: none !important;
+ }
+
  /* === GRID SYSTEM === */
  .container-fluid {
      width: 100%;
@@ -121,6 +134,360 @@
      flex-wrap: wrap;
      margin-right: -15px;
      margin-left: -15px;
+ }
+
+ /* Products table improvements: sticky header and scrollable body */
+ .table-container {
+     max-height: 520px;
+     /* keeps table within card */
+     overflow: auto;
+ }
+
+ /* Products table dropdown and header control fixes
+   - Ensure dropdown menus and header buttons follow unified theme variables
+   - Minimal additions only; keeps dark mode compatibility */
+ .card-theme .dropdown-menu,
+ .table .dropdown-menu,
+ .card-header .dropdown-menu,
+ .kpi-card .dropdown-menu {
+     background: var(--card-bg) !important;
+     color: var(--text-primary) !important;
+     border: 1px solid var(--card-border) !important;
+     box-shadow: var(--card-shadow) !important;
+ }
+
+ .card-header .btn,
+ .card-header .dropdown-toggle,
+ .card-header .btn-outline-secondary,
+ .card-header .btn-outline-primary {
+     color: var(--text-primary) !important;
+     background: transparent !important;
+     border-color: rgba(255, 255, 255, 0.06) !important;
+ }
+
+ /* Ensure dropdown items inherit readable text color */
+ .card-theme .dropdown-menu .dropdown-item,
+ .table .dropdown-menu .dropdown-item {
+     color: var(--text-primary) !important;
+ }
+
+ /* Keep dropdowns above other elements */
+ .card-theme .dropdown-menu,
+ .table .dropdown-menu {
+     z-index: 10550 !important;
+ }
+
+ /* Stronger rules for header controls (Export / Filter) to avoid white backgrounds */
+ .card-theme .card-header .btn,
+ .card-theme .card-header .dropdown-toggle,
+ .card-theme .card-header .btn-outline-secondary,
+ .card-theme .card-header .btn-outline-primary,
+ .card-header .btn,
+ .card-header .dropdown-toggle {
+     background-color: transparent !important;
+     color: var(--text-primary) !important;
+     border-color: rgba(255, 255, 255, 0.06) !important;
+ }
+
+ .card-theme .card-header .btn-outline-secondary:hover,
+ .card-theme .card-header .btn-outline-primary:hover,
+ .card-header .btn-outline-secondary:hover,
+ .card-header .btn-outline-primary:hover {
+     background-color: rgba(255, 255, 255, 0.03) !important;
+ }
+
+ /* Ensure dropdown toggle icons and text are visible in dark theme */
+ .card-theme .card-header .dropdown-toggle .fas,
+ .card-header .dropdown-toggle .fas {
+     color: var(--text-primary) !important;
+ }
+
+ /* Strongest overrides: ensure header dropdowns and export/filter controls NEVER show a white background */
+ .card-theme .card-header .dropdown-menu,
+ .card-theme .card-header .dropdown-toggle,
+ .card-header .dropdown-menu,
+ .card-header .dropdown-toggle {
+     background-color: var(--card-bg) !important;
+     color: var(--text-primary) !important;
+ }
+
+ .card-theme .card-header .dropdown-menu .dropdown-item,
+ .card-header .dropdown-menu .dropdown-item {
+     color: var(--text-primary) !important;
+     background: transparent !important;
+ }
+
+ /* Input group in header should not force white backgrounds */
+ .card-header .input-group .form-control {
+     background: transparent !important;
+     color: var(--text-primary) !important;
+     border-color: rgba(255, 255, 255, 0.04) !important;
+ }
+
+ .table-container table thead th {
+     position: sticky;
+     top: 0;
+     background: var(--card-bg);
+     z-index: 5;
+ }
+
+ /* Compact column rules for the Products management table
+   Reduce horizontal footprint of Stock / Reorder / Price / Margin / Suppliers / Unit columns
+   Use nth-child selectors to avoid touching other tables. Keep text truncated with ellipsis. */
+ table#productsTable th,
+ table#productsTable td {
+     padding: 0.45rem 0.5rem;
+     /* slightly tighter cells */
+     vertical-align: middle;
+ }
+
+ table#productsTable td:nth-child(7),
+ table#productsTable th:nth-child(7),
+ table#productsTable td:nth-child(8),
+ table#productsTable th:nth-child(8),
+ table#productsTable td:nth-child(9),
+ table#productsTable th:nth-child(9),
+ table#productsTable td:nth-child(10),
+ table#productsTable th:nth-child(10),
+ table#productsTable td:nth-child(11),
+ table#productsTable th:nth-child(11),
+ table#productsTable td:nth-child(12),
+ table#productsTable th:nth-child(12) {
+     min-width: 60px;
+     max-width: 110px;
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+ }
+
+ /* Make badges inside the products table more compact */
+ table#productsTable .badge {
+     padding: 0.18rem 0.32rem;
+     font-size: 0.78rem;
+ }
+
+ /* Ensure code elements like SKU don't force extra width */
+ table#productsTable code {
+     display: block;
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     max-width: 100px;
+ }
+
+ /* Compact sizing for the Linked Suppliers table (product view)
+   Targets only the table populated into #linkedSuppliersTbody so we
+   minimize global impact. Keeps theme variables for dark/light modes. */
+ #linkedSuppliersTbody td,
+ #linkedSuppliersTbody th {
+     font-size: 0.875rem;
+     /* slightly smaller than base */
+     padding: 0.4rem 0.6rem;
+     /* tighter cell padding */
+     vertical-align: middle;
+     color: var(--text-primary);
+ }
+
+ #linkedSuppliersTbody .cell-actions {
+     white-space: nowrap;
+ }
+
+ #linkedSuppliersTbody .cell-actions .btn {
+     padding: 0.25rem 0.45rem;
+     font-size: 0.78rem;
+     line-height: 1;
+ }
+
+ /* Compact supplier form styles (moved into unified CSS per project rules) */
+ .supplier-form-compact {
+     max-width: 680px;
+     margin: 0 auto;
+ }
+
+ /* User avatar helper - small, inline avatar used in user lists and activity */
+ .user-avatar {
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     width: 36px;
+     height: 36px;
+     border-radius: 50%;
+     color: var(--text-white);
+     font-weight: 600;
+     margin-right: var(--spacing-sm, 0.5rem);
+     flex: 0 0 auto;
+     text-transform: uppercase;
+ }
+
+ /* Hover / focus / active states for avatar to improve affordance and accessibility */
+ .user-avatar {
+     transition: var(--theme-transition);
+ }
+
+ .user-avatar:hover {
+     transform: translateY(-3px);
+     box-shadow: var(--card-shadow-hover);
+     cursor: pointer;
+ }
+
+ .user-avatar:focus {
+     outline: none;
+     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.12), var(--card-shadow-hover);
+ }
+
+ .user-avatar:active {
+     transform: translateY(0) scale(0.98);
+ }
+
+ .supplier-form-compact .card {
+     padding: .1rem;
+ }
+
+ .supplier-form-compact h2 {
+     font-size: 1rem;
+     margin-bottom: .08rem
+ }
+
+ .supplier-form-compact p {
+     margin-bottom: .2rem;
+     color: var(--text-secondary);
+     font-size: .85rem
+ }
+
+ .supplier-form-compact .form-group {
+     margin-bottom: .08rem
+ }
+
+ .supplier-form-compact label {
+     font-size: .82rem;
+     margin-bottom: .04rem
+ }
+
+ .supplier-form-compact .form-control {
+     padding: .14rem .28rem;
+     font-size: .84rem
+ }
+
+ .supplier-form-compact textarea.form-control {
+     min-height: 36px
+ }
+
+ .supplier-form-compact .form-text {
+     font-size: .72rem
+ }
+
+ .supplier-form-compact .btn-sm {
+     padding: .18rem .32rem;
+     font-size: .78rem
+ }
+
+ .supplier-form-compact .supplier-form {
+     margin-top: 0
+ }
+
+ @media (min-width: 768px) {
+     .supplier-form-compact .form-row .col-md-6 .form-control {
+         max-width: 100%;
+     }
+ }
+
+ #linkedSuppliersTbody .cell-actions .btn .fas,
+ #linkedSuppliersTbody .cell-actions .btn .fa {
+     font-size: 0.85rem;
+ }
+
+ #linkedSuppliersTbody input.form-control-sm {
+     padding: 0.25rem 0.35rem;
+     font-size: 0.85rem;
+     height: auto;
+ }
+
+ #linkedSuppliersTbody .cell-purchase-price {
+     min-width: 110px;
+     text-align: right;
+     white-space: nowrap;
+ }
+
+ @media (max-width: 576px) {
+
+     #linkedSuppliersTbody td,
+     #linkedSuppliersTbody th {
+         font-size: 0.82rem;
+         padding: 0.3rem 0.45rem;
+     }
+
+     #linkedSuppliersTbody .cell-actions .btn {
+         padding: 0.2rem 0.35rem;
+         font-size: 0.72rem;
+     }
+
+     /* Users table specific styles (minimal additions) */
+     .card-theme table#usersTable th,
+     .card-theme table#usersTable td {
+         vertical-align: middle;
+         padding: 0.6rem 0.75rem;
+         color: var(--text-primary);
+     }
+
+     .card-theme #usersTable .badge {
+         font-size: 0.78rem;
+         padding: 0.25rem 0.45rem;
+     }
+
+     /* Ensure users table follows card background and dark theme variables */
+     .card-theme table#usersTable {
+         background: transparent;
+         /* allow card background to show */
+     }
+
+     .card-theme table#usersTable thead th {
+         background: var(--card-bg);
+         color: var(--text-primary);
+         border-color: var(--card-border);
+     }
+
+     .card-theme table#usersTable tbody td {
+         background: var(--card-bg);
+         color: var(--text-primary);
+         border-color: var(--card-border);
+     }
+
+     .card-theme table#usersTable tbody tr:nth-child(odd) td {
+         background: rgba(0, 0, 0, 0.02);
+         /* subtle row stripe (respects dark mode when card-bg differs) */
+     }
+
+     .category-selector .btn {
+         padding: 0.28rem 0.45rem;
+     }
+
+     /* Toggle status button and active category colors should use theme variables */
+     .toggle-status-btn.btn-warning {
+         color: var(--text-white);
+         background-color: var(--warning);
+         border-color: var(--warning);
+     }
+
+     .toggle-status-btn.btn-outline-success {
+         color: var(--success);
+         border-color: var(--success);
+     }
+
+     /* Ensure header filter badges match the button color */
+     .btn-group .badge.badge-primary {
+         background-color: var(--primary);
+         color: var(--text-white);
+     }
+
+     .btn-group .badge.badge-success {
+         background-color: var(--success);
+         color: var(--text-white);
+     }
+
+     .btn-group .badge.badge-warning {
+         background-color: var(--warning);
+         color: var(--text-white);
+     }
  }
 
  .col-1,
@@ -198,6 +565,119 @@
      flex: 0 0 16.666667%;
      max-width: 16.666667%;
  }
+
+ /* === KPI CARD STYLES - shared across the app === */
+ /* Added: Aug 16, 2025 - kept minimal and namespaced */
+ .kpi-card {
+     border-radius: var(--border-radius-lg);
+     overflow: hidden;
+     position: relative;
+     color: inherit;
+     /* inherit from gradient color rules for better control */
+ }
+
+ .kpi-card .kpi-body {
+     padding: 1.1rem 1.25rem;
+     color: inherit;
+ }
+
+ .kpi-count {
+     font-size: 1.65rem;
+     font-weight: 700;
+     line-height: 1;
+     color: inherit;
+ }
+
+ .kpi-value {
+     font-size: 0.95rem;
+     opacity: 0.95;
+     color: inherit;
+ }
+
+ .kpi-icon {
+     opacity: 0.12;
+     font-size: 4.25rem;
+     position: absolute;
+     right: 12px;
+     bottom: 6px;
+     color: inherit;
+ }
+
+ /* Ensure appropriate readable text color for each gradient */
+ .kpi-gradient-warning {
+     background: linear-gradient(135deg, #ffd966 0, #ffc107 100%);
+     color: rgba(0, 0, 0, 0.85);
+ }
+
+ .kpi-gradient-info {
+     background: linear-gradient(135deg, #85d7ff 0, #17a2b8 100%);
+     color: #fff;
+ }
+
+ .kpi-gradient-success {
+     background: linear-gradient(135deg, #b6f6c9 0, #28a745 100%);
+     color: rgba(0, 0, 0, 0.85);
+ }
+
+ .kpi-gradient-primary {
+     background: linear-gradient(135deg, #b6d9ff 0, #007bff 100%);
+     color: #fff;
+ }
+
+ .kpi-small-spark {
+     height: 28px;
+     width: 100%;
+     background: rgba(255, 255, 255, 0.06);
+     border-radius: 4px;
+     margin-top: 6px;
+ }
+
+ /* ------------------------------------------------------------------ */
+ /* Legacy KPI compatibility
+   Many views still use the older `.kpi-card-header`, `.kpi-card-body`,
+   `.kpi-card-value` etc. Provide lightweight shims so they inherit the
+   unified KPI look without requiring mass-template edits. */
+ /* ------------------------------------------------------------------ */
+ .kpi-card .kpi-card-header {
+     display: flex;
+     align-items: center;
+     gap: 0.75rem;
+     padding: 0.75rem 1rem;
+     background: transparent;
+     color: inherit;
+ }
+
+ .kpi-card .kpi-card-icon {
+     font-size: 1.6rem;
+     opacity: 0.12;
+     color: inherit;
+ }
+
+ .kpi-card .kpi-card-title h5,
+ .kpi-card .kpi-card-title h6 {
+     margin: 0;
+     color: inherit;
+ }
+
+ .kpi-card .kpi-card-body {
+     padding: 0.9rem 1rem;
+     background: transparent;
+     color: inherit;
+ }
+
+ .kpi-card .kpi-card-value {
+     font-size: 1.65rem;
+     font-weight: 700;
+     color: inherit;
+ }
+
+ .kpi-card .kpi-card-label {
+     font-size: 0.95rem;
+     opacity: 0.95;
+     color: inherit;
+ }
+
+
 
  .col-3 {
      flex: 0 0 25%;
@@ -325,6 +805,53 @@
 
      .col-md-3 {
          flex: 0 0 25%;
+
+         .page-top-area .btn-lg,
+         .container-fluid .row.align-items-center .btn-lg {
+             padding: 0.38rem 0.75rem;
+             font-size: 0.95rem;
+             line-height: 1;
+             border-radius: var(--border-radius-sm);
+         }
+
+         /* Reduce oversized decorative icons in header/placeholder areas */
+         .container-fluid .fa-6x,
+         .page-top-area .fa-6x,
+         .card .fa-6x {
+             font-size: 3.2rem;
+             /* smaller but still prominent */
+             opacity: 0.7;
+         }
+
+         .container-fluid .fa-3x,
+         .page-top-area .fa-3x {
+             font-size: 1.6rem;
+             opacity: 0.9;
+         }
+
+         /* Tweak small spacing for header icons inside titles */
+         .page-top-area h1 .fa,
+         .container-fluid .row.align-items-center h1 .fa,
+         .container-fluid .row.align-items-center h3 .fa {
+             font-size: 1.05rem;
+             margin-right: 0.5rem;
+             vertical-align: middle;
+         }
+
+         @media (max-width: 768px) {
+
+             .page-top-area .btn-lg,
+             .container-fluid .row.align-items-center .btn-lg {
+                 padding: 0.32rem 0.6rem;
+                 font-size: 0.9rem;
+             }
+
+             .container-fluid .fa-6x,
+             .page-top-area .fa-6x {
+                 font-size: 2.6rem;
+             }
+         }
+
          max-width: 25%;
      }
 
@@ -380,6 +907,17 @@
          max-width: 8.333333%;
      }
 
+     /* 70/30 layout helpers for two-column panes (used by purchases add view) */
+     .col-lg-70 {
+         flex: 0 0 70%;
+         max-width: 70%;
+     }
+
+     .col-lg-30 {
+         flex: 0 0 30%;
+         max-width: 30%;
+     }
+
      .col-lg-2 {
          flex: 0 0 16.666667%;
          max-width: 16.666667%;
@@ -433,6 +971,52 @@
      .col-lg-12 {
          flex: 0 0 100%;
          max-width: 100%;
+     }
+
+     /* Small utilities used by the purchases add view */
+     .sticky-offset-top {
+         top: 20px;
+     }
+
+     .cart-body-scroll {
+         max-height: 360px;
+         overflow: auto;
+     }
+
+     .d-none {
+         display: none !important;
+     }
+
+     .product-avatar-sm {
+         width: 40px;
+         height: 40px;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+     }
+
+     .product-avatar-circle {
+         border-radius: 50%;
+     }
+
+     .text-truncate-max-200 {
+         max-width: 200px;
+         overflow: hidden;
+         text-overflow: ellipsis;
+         white-space: nowrap;
+     }
+
+     .toast-pos-top-right {
+         position: fixed;
+         top: 20px;
+         right: 20px;
+         z-index: 9999;
+     }
+
+     .product-card-hover:hover {
+         transform: none;
+         box-shadow: var(--card-shadow-hover) !important;
+         transition: var(--theme-transition);
      }
  }
 
@@ -500,7 +1084,6 @@
 
  /* === CARD SYSTEM === */
  .card,
- .kpi-card,
  .theme-card {
      position: relative;
      display: flex;
@@ -520,7 +1103,7 @@
  .kpi-card:hover,
  .theme-card:hover {
      box-shadow: var(--card-shadow-hover);
-     transform: translateY(-1px);
+     transform: none;
  }
 
  .card-body {
@@ -638,6 +1221,62 @@
      }
  }
 
+
+ /* Ensure action buttons in tables align horizontally and don't stack */
+ .action-buttons {
+     display: inline-flex;
+     align-items: center;
+     gap: 0.32rem;
+     flex-wrap: wrap;
+     /* allow buttons to wrap to next line on narrow cells */
+ }
+
+ /* Ensure table containers can scroll horizontally when inside a parent with overflow hidden.
+   This is scoped to our table wrapper so we don't change global page wrapper behavior. */
+ .table-container {
+     overflow-x: auto;
+     -webkit-overflow-scrolling: touch;
+ }
+
+ /* Force the inner table to use its natural width so the wrapper can scroll horizontally
+   This prevents parent overflow clipping while keeping the page layout stable. */
+ .table-container table {
+     min-width: -webkit-max-content;
+     min-width: -moz-max-content;
+     min-width: max-content;
+     width: 100%;
+     /* allows responsive shrinking when possible */
+ }
+
+ /* Limit the actions cell so it doesn't force the whole table to widen; allow wrapping inside. */
+ table#productsTable td .action-buttons {
+     max-width: 140px;
+     /* keeps actions compact; adjust if you need more room */
+     justify-content: flex-end;
+ }
+
+ .action-buttons .btn {
+     padding: 0.28rem 0.45rem;
+     font-size: 0.78rem;
+     line-height: 1;
+     min-width: 2.1rem;
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+ }
+
+ .action-buttons .btn i {
+     font-size: 0.92rem;
+ }
+
+ @media (max-width: 480px) {
+     .action-buttons .btn {
+         padding: 0.2rem 0.35rem;
+         font-size: 0.7rem;
+         min-width: 1.8rem;
+     }
+ }
+
  /* Card Variants */
  .card.primary {
      border-left: 4px solid var(--primary);
@@ -683,6 +1322,50 @@
      box-shadow: var(--card-shadow);
  }
 
+ /* Ensure users table follows card background and dark theme variables on all screen sizes */
+ .card-theme table#usersTable th,
+ .card-theme table#usersTable td {
+     vertical-align: middle;
+     padding: 0.6rem 0.75rem;
+     color: var(--text-primary);
+     background: var(--card-bg) !important;
+     border-color: var(--card-border) !important;
+ }
+
+ .card-theme table#usersTable {
+     background: transparent;
+ }
+
+ .card-theme table#usersTable thead th {
+     background: var(--card-bg) !important;
+     color: var(--text-primary);
+     border-color: var(--card-border) !important;
+ }
+
+ .card-theme table#usersTable tbody td {
+     background: var(--card-bg) !important;
+     color: var(--text-primary);
+     border-color: var(--card-border) !important;
+ }
+
+ .card-theme table#usersTable tbody tr:nth-child(odd) td {
+     background: rgba(0, 0, 0, 0.02);
+ }
+
+ /* Stronger selectors to override DataTables / Bootstrap defaults */
+ .card-theme table#usersTable.dataTable tbody td,
+ .card-theme table#usersTable.table.dataTable tbody td,
+ .card-theme table#usersTable.table tbody td {
+     background: var(--card-bg) !important;
+     color: var(--text-primary) !important;
+ }
+
+ .card-theme table#usersTable.dataTable thead th,
+ .card-theme table#usersTable.table.dataTable thead th {
+     background: var(--card-bg) !important;
+     color: var(--text-primary) !important;
+ }
+
  /* Action Card Specific Styles for Professional Look */
  .row.mb-4 .kpi-card .card-body.text-center.p-3 {
      padding: 0.75rem !important;
@@ -721,7 +1404,7 @@
  .btn:hover {
      color: var(--text-primary);
      text-decoration: none;
-     transform: translateY(-1px);
+     transform: none;
  }
 
  .btn:focus,
@@ -846,10 +1529,17 @@
  }
 
  .btn-sm {
-     padding: 0.25rem 0.5rem;
-     font-size: 0.875rem;
+     padding: 0.2rem 0.4rem;
+     /* slightly more compact across the app */
+     font-size: 0.865rem;
      line-height: 1.5;
      border-radius: var(--border-radius-sm);
+ }
+
+ /* More aggressive compaction for action buttons inside the products table */
+ table#productsTable .action-buttons .btn {
+     padding: 0.18rem 0.36rem;
+     font-size: 0.82rem;
  }
 
  /* Button Groups */
@@ -909,7 +1599,7 @@
  }
 
  .btn-action:hover {
-     transform: translateY(-2px);
+     transform: none;
      box-shadow: var(--card-shadow-hover);
      text-decoration: none;
      color: white;
@@ -944,6 +1634,96 @@
  .btn-secondary-theme {
      background-color: var(--secondary);
      color: white;
+ }
+
+ /* Floating Action Button (FAB) for theme toggle */
+ .theme-toggle {
+     position: fixed !important;
+     bottom: 24px !important;
+     right: 24px !important;
+     width: 56px !important;
+     height: 56px !important;
+     border-radius: 50% !important;
+     background: var(--primary) !important;
+     color: var(--text-primary-inverse, white) !important;
+     border: none !important;
+     box-shadow: 0 6px 10px rgba(0, 0, 0, 0.14), 0 1px 18px rgba(0, 0, 0, 0.12), 0 3px 5px rgba(0, 0, 0, 0.2) !important;
+     cursor: pointer !important;
+     transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
+     z-index: 1050 !important;
+     display: flex !important;
+     align-items: center !important;
+     justify-content: center !important;
+     font-size: 1.5rem !important;
+     outline: none !important;
+ }
+
+ /* Icon transition for smooth changes */
+ .theme-toggle i {
+     transition: all 0.3s ease !important;
+     transform: scale(1) !important;
+ }
+
+ /* Force icon animation on class change */
+ .theme-toggle i.fas {
+     animation: iconPulse 0.3s ease !important;
+ }
+
+ @keyframes iconPulse {
+     0% {
+         transform: scale(1);
+     }
+
+     50% {
+         transform: scale(1.2);
+     }
+
+     100% {
+         transform: scale(1);
+     }
+ }
+
+ /* Light theme styles for FAB */
+ :root .theme-toggle {
+     background: var(--primary) !important;
+     color: white !important;
+ }
+
+ /* Dark theme styles for FAB */
+ [data-theme="dark"] .theme-toggle {
+     background: var(--warning, #ffc107) !important;
+     color: var(--dark, #212529) !important;
+     box-shadow: 0 6px 10px rgba(255, 193, 7, 0.14), 0 1px 18px rgba(255, 193, 7, 0.12), 0 3px 5px rgba(255, 193, 7, 0.2) !important;
+ }
+
+ .theme-toggle:hover {
+     transform: none !important;
+     box-shadow: 0 8px 14px rgba(0, 0, 0, 0.18), 0 2px 20px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.25) !important;
+ }
+
+ /* Dark theme hover effect */
+ [data-theme="dark"] .theme-toggle:hover {
+     box-shadow: 0 8px 14px rgba(255, 193, 7, 0.25), 0 2px 20px rgba(255, 193, 7, 0.2), 0 4px 8px rgba(255, 193, 7, 0.3) !important;
+ }
+
+ .theme-toggle:active {
+     transform: scale(0.96) !important;
+     transition: transform 0.1s !important;
+ }
+
+ .theme-toggle:focus {
+     outline: none !important;
+ }
+
+ /* Ensure FAB is always visible on mobile */
+ @media (max-width: 768px) {
+     .theme-toggle {
+         bottom: 20px !important;
+         right: 20px !important;
+         width: 48px !important;
+         height: 48px !important;
+         font-size: 1.3rem !important;
+     }
  }
 
  /* === FORM SYSTEM === */
@@ -2607,7 +3387,7 @@
  }
 
  .hardware-kpi:hover {
-     transform: translateY(-3px);
+     transform: none;
      box-shadow: var(--card-shadow-hover);
  }
 
@@ -2650,7 +3430,6 @@
 
  /* === UNIVERSAL CARD SYSTEM === */
  .card,
- .kpi-card,
  .theme-card {
      background: var(--card-bg);
      border: 1px solid var(--card-border);
@@ -2665,7 +3444,7 @@
  .card:hover,
  .kpi-card:hover,
  .theme-card:hover {
-     transform: translateY(-4px);
+     transform: none;
      box-shadow: 0 8px 25px var(--card-shadow-hover);
      border-color: var(--primary);
  }
@@ -3019,7 +3798,7 @@
 
  .btn-primary:hover {
      background: #0056b3;
-     transform: translateY(-2px);
+     transform: none;
      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
  }
 
@@ -3031,7 +3810,7 @@
 
  .btn-success:hover {
      background: #218838;
-     transform: translateY(-2px);
+     transform: none;
      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
  }
 
@@ -3043,7 +3822,7 @@
 
  .btn-secondary:hover {
      background: #545b62;
-     transform: translateY(-2px);
+     transform: none;
      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
  }
 
@@ -3056,7 +3835,7 @@
  .btn-outline-secondary:hover {
      background: var(--secondary);
      color: white;
-     transform: translateY(-2px);
+     transform: none;
  }
 
  .btn-sm {
@@ -3105,7 +3884,7 @@
  }
 
  .btn-action:hover {
-     transform: translateY(-2px);
+     transform: none;
      box-shadow: 0 4px 8px var(--card-shadow);
  }
 
@@ -3150,7 +3929,7 @@
      outline: none;
      border-color: var(--primary);
      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .15), 0 2px 8px var(--card-shadow);
-     transform: translateY(-1px);
+     transform: none;
  }
 
  .form-control:hover {
@@ -3673,7 +4452,7 @@
 
  .content-section:hover {
      box-shadow: 0 4px 16px var(--card-shadow-hover);
-     transform: translateY(-2px);
+     transform: none;
  }
 
  /* === BADGE ENHANCEMENTS === */
@@ -4113,6 +4892,173 @@
      border-top: 1px solid var(--card-border);
  }
 
+ /* Bootstrap Modal Classes for Compatibility */
+ .modal {
+     position: fixed;
+     top: 0;
+     left: 0;
+     z-index: 1050;
+     display: none;
+     width: 100%;
+     height: 100%;
+     overflow-x: hidden;
+     overflow-y: auto;
+     outline: 0;
+ }
+
+ .modal.fade {
+     transition: opacity 0.15s linear;
+     opacity: 0;
+ }
+
+ .modal.show {
+     display: block !important;
+     opacity: 1;
+ }
+
+ .modal-dialog {
+     position: relative;
+     width: auto;
+     margin: 0.5rem;
+     pointer-events: none;
+ }
+
+ .modal.fade .modal-dialog {
+     transition: transform 0.3s ease-out;
+     transform: translate(0, -50px);
+ }
+
+ .modal.show .modal-dialog {
+     transform: none;
+ }
+
+ .modal-dialog-scrollable {
+     height: calc(100% - 1rem);
+ }
+
+ .modal-dialog-centered {
+     display: flex;
+     align-items: center;
+     min-height: calc(100% - 1rem);
+ }
+
+ .modal-content {
+     position: relative;
+     display: flex;
+     flex-direction: column;
+     width: 100%;
+     pointer-events: auto;
+     background-color: var(--bg-primary);
+     background-clip: padding-box;
+     border: 1px solid rgba(0, 0, 0, 0.2);
+     border-radius: var(--border-radius-lg);
+     box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.5);
+     outline: 0;
+ }
+
+ .modal-backdrop {
+     position: fixed;
+     top: 0;
+     left: 0;
+     z-index: 1040;
+     width: 100vw;
+     height: 100vh;
+     background-color: #000;
+ }
+
+ .modal-backdrop.fade {
+     opacity: 0;
+ }
+
+ .modal-backdrop.show {
+     opacity: 0.5;
+ }
+
+ .modal-header {
+     display: flex;
+     align-items: flex-start;
+     justify-content: space-between;
+     padding: 1rem 1rem;
+     border-bottom: 1px solid var(--border-color, #dee2e6);
+     border-top-left-radius: calc(var(--border-radius-lg) - 1px);
+     border-top-right-radius: calc(var(--border-radius-lg) - 1px);
+ }
+
+ .modal-title {
+     margin-bottom: 0;
+     line-height: 1.5;
+     color: var(--text-primary);
+ }
+
+ .modal-body {
+     position: relative;
+     flex: 1 1 auto;
+     padding: 1rem;
+ }
+
+ .modal-footer {
+     display: flex;
+     flex-wrap: wrap;
+     align-items: center;
+     justify-content: flex-end;
+     padding: 0.75rem;
+     border-top: 1px solid var(--border-color, #dee2e6);
+     border-bottom-right-radius: calc(var(--border-radius-lg) - 1px);
+     border-bottom-left-radius: calc(var(--border-radius-lg) - 1px);
+ }
+
+ .modal-lg {
+     max-width: 800px;
+ }
+
+ .modal-sm {
+     max-width: 300px;
+ }
+
+ .close {
+     float: right;
+     font-size: 1.5rem;
+     font-weight: 700;
+     line-height: 1;
+     color: #000;
+     text-shadow: 0 1px 0 #fff;
+     opacity: 0.5;
+     background: transparent;
+     border: 0;
+     cursor: pointer;
+ }
+
+ .close:hover {
+     color: #000;
+     text-decoration: none;
+     opacity: 0.75;
+ }
+
+ @media (min-width: 576px) {
+     .modal-dialog {
+         max-width: 500px;
+         margin: 1.75rem auto;
+     }
+
+     .modal-dialog-scrollable {
+         height: calc(100% - 3.5rem);
+     }
+
+     .modal-dialog-centered {
+         min-height: calc(100% - 3.5rem);
+     }
+
+     .modal-sm {
+         max-width: 300px;
+     }
+ }
+
+ @media (min-width: 992px) {
+     .modal-lg {
+         max-width: 800px;
+     }
+ }
+
  /* Responsive Design */
  @media (max-width: 576px) {
      .login-container {
@@ -4135,4 +5081,589 @@
 
  [data-theme="dark"] .login-footer {
      color: rgba(255, 255, 255, 0.6);
+ }
+
+ /* ------------------------------------------------------------------ */
+ /* Added: Minimal view-specific classes discovered in app/views/*.php  */
+ /* Keep small and non-invasive — prefer variables and existing utilities */
+ /* ------------------------------------------------------------------ */
+ .cart-section {
+     padding: 0.5rem;
+ }
+
+ .cart-line {
+     display: flex;
+     gap: 0.5rem;
+     align-items: center;
+     padding: 0.5rem 0.25rem;
+     border-bottom: 1px solid var(--card-border);
+ }
+
+ .cart-line .qty {
+     min-width: 48px;
+     text-align: center;
+ }
+
+ .add-to-cart-btn {
+     cursor: pointer;
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     padding: 0.35rem 0.6rem;
+     border-radius: var(--border-radius-sm);
+     transition: var(--theme-transition);
+ }
+
+ .add-to-cart-btn:hover {
+     transform: translateY(-1px);
+ }
+
+ .filter-controls {
+     display: flex;
+     gap: var(--spacing-sm, 0.5rem);
+     flex-wrap: wrap;
+     align-items: center;
+ }
+
+ .filter-section {
+     padding: 0.5rem 0;
+ }
+
+ .item-card,
+ .existing-product-item {
+     display: flex;
+     gap: 0.75rem;
+     padding: 0.6rem;
+     align-items: center;
+     border: 1px solid transparent;
+     border-radius: var(--border-radius);
+     transition: box-shadow 150ms ease, border-color 150ms ease, transform 150ms ease;
+     background: var(--card-bg);
+ }
+
+ /* Product card - default block display for grid layout */
+ .product-card {
+     border: 1px solid transparent;
+     border-radius: var(--border-radius);
+     transition: box-shadow 150ms ease, border-color 150ms ease, transform 150ms ease;
+     background: var(--card-bg);
+ }
+
+ /* Product card in list view - use flex layout */
+ .product-item.list-view .product-card {
+     display: flex;
+     gap: 0.75rem;
+     padding: 0.6rem;
+     align-items: center;
+ }
+
+ .item-card:hover,
+ .product-card:hover {
+     box-shadow: var(--card-shadow-hover);
+     transform: translateY(-2px);
+     border-color: rgba(0, 0, 0, 0.04);
+ }
+
+ /* Override product grid to force responsive behavior */
+ .product-item {
+     width: 50% !important;
+     /* Default: 2 columns */
+     flex: 0 0 50% !important;
+     max-width: 50% !important;
+     min-width: 0 !important;
+     box-sizing: border-box !important;
+ }
+
+ /* SM breakpoint: 4 columns */
+ @media (min-width: 576px) {
+     .product-item {
+         width: 25% !important;
+         flex: 0 0 25% !important;
+         max-width: 25% !important;
+     }
+ }
+
+ /* MD breakpoint: 6 columns */
+ @media (min-width: 768px) {
+     .product-item {
+         width: 16.666667% !important;
+         flex: 0 0 16.666667% !important;
+         max-width: 16.666667% !important;
+     }
+ }
+
+ /* LG and XL breakpoint: 6 columns */
+ @media (min-width: 992px) {
+     .product-item {
+         width: 16.666667% !important;
+         flex: 0 0 16.666667% !important;
+         max-width: 16.666667% !important;
+     }
+ }
+
+ .product-item .card {
+     width: 100% !important;
+     min-width: 0 !important;
+     max-width: 100% !important;
+     box-sizing: border-box !important;
+ }
+
+ .product-avatar-sm {
+     width: 48px;
+     height: 48px;
+     object-fit: cover;
+     border-radius: 6px;
+ }
+
+ .product-avatar-circle {
+     width: 40px;
+     height: 40px;
+     border-radius: 50%;
+     object-fit: cover;
+ }
+
+ .inventory-badge,
+ .location-badge,
+ .margin-badge {
+     display: inline-block;
+     padding: 0.2rem 0.4rem;
+     font-size: 0.75rem;
+     border-radius: 0.35rem;
+     background: var(--bg-secondary);
+     color: var(--text-secondary);
+ }
+
+ .results-counter {
+     font-size: 0.9rem;
+     color: var(--text-secondary);
+ }
+
+ .enhanced-search {
+     display: flex;
+     gap: 0.5rem;
+     align-items: center;
+ }
+
+ .enhanced-table-container {
+     width: 100%;
+     overflow-x: auto;
+ }
+
+ .loading-spinner {
+     display: inline-block;
+     width: 1rem;
+     height: 1rem;
+     border: 2px solid rgba(0, 0, 0, 0.08);
+     border-top-color: var(--primary);
+     border-radius: 50%;
+     animation: spin 0.8s linear infinite;
+ }
+
+ @keyframes spin {
+     to {
+         transform: rotate(360deg);
+     }
+ }
+
+ .sticky-offset-top {
+     position: sticky;
+     top: 1rem;
+ }
+
+ .cart-body-scroll {
+     max-height: 420px;
+     overflow-y: auto;
+ }
+
+ /* 70/30 layout helpers (referenced by purchases add view) */
+ .col-lg-70 {
+     flex: 0 0 70%;
+     max-width: 70%;
+ }
+
+ .col-lg-30 {
+     flex: 0 0 30%;
+     max-width: 30%;
+ }
+
+ /* small KPI card helpers */
+ .kpi-card:not(.kpi-gradient-warning):not(.kpi-gradient-info):not(.kpi-gradient-success):not(.kpi-gradient-primary) {
+     /* Only apply the default card background for KPI cards that do NOT use a gradient class */
+     padding: 0.75rem;
+     border-radius: var(--border-radius);
+     background: var(--card-bg);
+     border: 1px solid var(--card-border);
+ }
+
+ .kpi-card .kpi-card-value {
+     font-size: 1.25rem;
+     font-weight: 700;
+ }
+
+ /* minor helpers used across views */
+ .filter-controls .form-control {
+     min-width: 160px;
+ }
+
+ .flex-fill {
+     flex: 1 1 auto;
+ }
+
+ .results-empty {
+     padding: 2rem;
+     text-align: center;
+     color: var(--text-muted);
+ }
+
+ /* toast position helper used by purchase toasts */
+ .toast-pos-top-right {
+     position: fixed;
+     top: 1rem;
+     right: 1rem;
+     z-index: 1055;
+ }
+
+ /* keep additions compact and theme-friendly */
+ /* End additions */
+
+ /* ------------------------------------------------------------------ */
+ /* Page-specific fixes: Suppliers index (small, safe additions)        */
+ /* These cover alerts, pagination, KPI sub-elements, table helpers,    */
+ /* sortable header hinting, and small button / badge variants used by  */
+ /* the suppliers views.                                                */
+ /* ------------------------------------------------------------------ */
+ .alert {
+     padding: 0.65rem 1rem;
+     border-radius: var(--border-radius-sm);
+     margin-bottom: 0.75rem;
+ }
+
+ .alert-danger {
+     background: rgba(220, 53, 69, 0.08);
+     color: var(--danger);
+     border: 1px solid rgba(220, 53, 69, 0.12);
+ }
+
+ .alert-info {
+     background: rgba(23, 162, 184, 0.06);
+     color: var(--info);
+     border: 1px solid rgba(23, 162, 184, 0.08);
+ }
+
+ .badge-pill {
+     padding-right: 0.6rem;
+     padding-left: 0.6rem;
+     border-radius: 999px;
+ }
+
+ .bg-light {
+     background-color: var(--bg-light) !important;
+ }
+
+ .border-secondary {
+     border-color: var(--card-border) !important;
+ }
+
+ .btn-group-sm>.btn,
+ .btn-group-sm .btn {
+     padding: 0.25rem 0.5rem;
+     font-size: 0.85rem;
+ }
+
+ .btn-outline-danger {
+     color: var(--danger);
+     border: 1px solid rgba(220, 53, 69, 0.15);
+     background: transparent;
+ }
+
+ .btn-outline-success {
+     color: var(--success);
+     border: 1px solid rgba(40, 167, 69, 0.12);
+ }
+
+ .btn-outline-warning {
+     color: var(--warning);
+     border: 1px solid rgba(255, 193, 7, 0.12);
+ }
+
+ .circular-progress {
+     width: 36px;
+     height: 36px;
+     border-radius: 50%;
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+ }
+
+ .fa-spin,
+ .fa-spinner {
+     animation: spin 1s linear infinite;
+ }
+
+ .kpi-card-header {
+     display: flex;
+     gap: 0.5rem;
+     align-items: center;
+     padding: 0.6rem;
+     border-bottom: 1px solid var(--card-border);
+ }
+
+ .kpi-card-icon {
+     font-size: 1.25rem;
+     color: var(--primary);
+ }
+
+ .kpi-card-body {
+     padding: 0.75rem;
+ }
+
+ .kpi-card-label {
+     font-size: 0.8rem;
+     color: var(--text-secondary);
+ }
+
+ .kpi-card-value {
+     font-size: 1.15rem;
+     font-weight: 700;
+ }
+
+ .pagination {
+     display: flex;
+     list-style: none;
+     gap: 0.5rem;
+     padding-left: 0;
+ }
+
+ .page-item {
+     display: inline-block;
+ }
+
+ .page-link {
+     display: inline-block;
+     padding: 0.35rem 0.6rem;
+     border-radius: 0.35rem;
+     border: 1px solid var(--card-border);
+     background: var(--card-bg);
+     color: var(--text-primary);
+ }
+
+ .pagination-sm .page-link {
+     padding: 0.25rem 0.45rem;
+     font-size: 0.875rem;
+ }
+
+ .table-responsive {
+     width: 100%;
+     overflow-x: auto;
+ }
+
+ .sortable {
+     cursor: pointer;
+ }
+
+ .sortable i.fas.fa-sort {
+     opacity: 0.5;
+ }
+
+ .sortable:hover {
+     background: rgba(0, 0, 0, 0.02);
+ }
+
+ .supplier-checkbox {
+     width: 18px;
+     height: 18px;
+     accent-color: var(--primary);
+ }
+
+ .product-row,
+ .products-list {
+     display: block;
+     width: 100%;
+ }
+
+ .score-text {
+     font-weight: 600;
+     color: var(--text-primary);
+ }
+
+ .special {
+     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+ }
+
+ /* end suppliers page additions */
+
+ /* ------------------------------------------------------------------ */
+ /* KPI GRADIENT OVERRIDES (last-resort overrides to ensure gradients)  */
+ /* Placed at end to win over earlier `.card` background resets.         */
+ /* ------------------------------------------------------------------ */
+ .kpi-card.kpi-gradient-warning {
+     background: linear-gradient(135deg, #ffd966 0, #ffc107 100%) !important;
+     color: rgba(0, 0, 0, 0.85) !important;
+ }
+
+ .kpi-card.kpi-gradient-info {
+     background: linear-gradient(135deg, #85d7ff 0, #17a2b8 100%) !important;
+     color: #ffffff !important;
+ }
+
+ .kpi-card.kpi-gradient-success {
+     background: linear-gradient(135deg, #b6f6c9 0, #28a745 100%) !important;
+     color: rgba(0, 0, 0, 0.85) !important;
+ }
+
+ .kpi-card.kpi-gradient-primary {
+     background: linear-gradient(135deg, #b6d9ff 0, #007bff 100%) !important;
+     color: #ffffff !important;
+ }
+
+ .kpi-card .kpi-body {
+     color: inherit !important;
+ }
+
+ .kpi-card .kpi-count,
+ .kpi-card .kpi-value,
+ .kpi-card .kpi-icon {
+     color: inherit !important;
+ }
+
+ /* === LOCATION MANAGEMENT STYLES === */
+ .location-card {
+     transition: all 0.2s ease;
+     border-left: 4px solid var(--primary);
+ }
+
+ .location-card:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+ }
+
+ .location-type-dock {
+     border-left-color: #e74c3c;
+ }
+
+ .location-type-receiving {
+     border-left-color: #3498db;
+ }
+
+ .location-type-storage {
+     border-left-color: #2ecc71;
+ }
+
+ .location-type-bin {
+     border-left-color: #f39c12;
+ }
+
+ .location-card .text-right {
+     min-width: 80px;
+ }
+
+ .location-card .text-right .small {
+     font-size: 0.75rem;
+     line-height: 1.2;
+     margin-bottom: 2px;
+ }
+
+ .location-card .text-right .small i {
+     width: 12px;
+     text-align: center;
+     margin-right: 4px;
+ }
+
+ .clickable-card:hover {
+     transform: translateY(-3px);
+     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+     background-color: rgba(var(--bs-primary-rgb), 0.02);
+ }
+
+ .clickable-card:active {
+     transform: translateY(-1px);
+ }
+
+ .location-grid {
+     display: grid;
+     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+     gap: 1rem;
+     margin-top: 1rem;
+ }
+
+ .location-zone:hover {
+     background-color: #e9ecef !important;
+     cursor: pointer;
+ }
+
+ /* === TIMELINE STYLES === */
+ .timeline {
+     position: relative;
+     padding-left: 30px;
+ }
+
+ .timeline::before {
+     content: '';
+     position: absolute;
+     left: 15px;
+     top: 0;
+     bottom: 0;
+     width: 2px;
+     background: #dee2e6;
+ }
+
+ .timeline-item {
+     position: relative;
+     margin-bottom: 20px;
+ }
+
+ .timeline-marker {
+     position: absolute;
+     left: -23px;
+     top: 0;
+     width: 16px;
+     height: 16px;
+     border-radius: 50%;
+     border: 2px solid #fff;
+ }
+
+ /* Admin action grid - keep action cards in a single horizontal row without scrollbar
+   Cards will shrink to fit; text may wrap within cards if needed. */
+ .admin-action-grid {
+     display: flex;
+     flex-wrap: nowrap;
+     /* keep on one row */
+     gap: var(--spacing-sm, 0.5rem);
+     overflow-x: hidden;
+     /* hide horizontal scrollbar */
+     padding-bottom: 0.25rem;
+ }
+
+ .admin-action-grid>div {
+     /* flexible columns: allow shrinking to fit available space */
+     flex: 1 1 0;
+     min-width: 0;
+     /* important to allow content to shrink */
+     max-width: 1fr;
+ }
+
+ .admin-action-grid .card-theme {
+     height: 100%;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     text-decoration: none;
+ }
+
+ .admin-action-grid .card-theme:focus,
+ .admin-action-grid .card-theme:hover {
+     box-shadow: var(--card-shadow-hover);
+     transform: translateY(-4px);
+ }
+
+ /* Small screen tweaks - reduce padding/font to fit without scroll */
+ @media (max-width: 576px) {
+     .admin-action-grid {
+         gap: var(--spacing-xs, 0.25rem);
+     }
+
+     .admin-action-grid .card-theme {
+         padding: 0.5rem;
+         font-size: 0.9rem;
+     }
  }

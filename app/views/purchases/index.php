@@ -2,6 +2,30 @@
 
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/css/app-unified.css">
 
+
+<script>
+    // Open the receipt view for the PO entered in the Quick Receive field
+    // accepts an optional PO argument (openQuickReceiveReceipt('PO-123'))
+    function openQuickReceiveReceipt(poArg) {
+        const po = (typeof poArg === 'string' && poArg.trim() !== '' ? poArg.trim() : ($('#poSearchInputMain').val() || '').trim());
+        if (!po) {
+            alert('Please enter a PO number to print its receipt.');
+            return;
+        }
+
+        // Build base URL using PHP-provided URLROOT if available, otherwise derive from location
+        let baseUrl = '';
+        <?php if (defined('URLROOT') && preg_match('#^https?://#i', URLROOT)): ?>
+            baseUrl = '<?php echo rtrim(URLROOT, '/'); ?>';
+        <?php else: ?>
+            baseUrl = window.location.protocol + '//' + window.location.host + '<?php echo isset($_SERVER['SCRIPT_NAME']) ? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\') : ''; ?>';
+        <?php endif; ?>
+
+        const url = baseUrl + '/purchases/viewReceipt/' + encodeURIComponent(po);
+        const w = window.open(url, '_blank');
+        try { if (w) { w.focus(); } } catch (e) { }
+    }
+</script>
 <style>
     /* Custom CSS for Enhanced Quick Receive UI */
     .step-item {
@@ -117,6 +141,8 @@
         }
     }
 
+    /* KPI card styles moved to unified CSS: public/css/app-unified.css */
+
     /* Success animation */
     .success-checkmark {
         animation: checkmark 0.6s ease-in-out;
@@ -168,6 +194,35 @@
             margin-bottom: 15px;
         }
     }
+
+    /* Workflow Styling */
+    .border-left-primary {
+        border-left: 4px solid #4e73df !important;
+    }
+
+    .workflow-steps .list-group-item {
+        border: none;
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .workflow-steps .list-group-item:hover {
+        border-left-color: #4e73df;
+        background-color: #f8f9fc;
+    }
+
+    .badge {
+        min-width: 25px;
+        min-height: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .workflow-modal .modal-content {
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
 </style>
 
 <div class="container-fluid theme-container theme-unified">
@@ -185,10 +240,61 @@
                 <a href="<?php echo URLROOT; ?>/purchases/add" class="btn btn-success btn-lg mr-2">
                     <i class="fas fa-plus"></i> New Purchase Order
                 </a>
+                <a href="<?php echo URLROOT; ?>/purchases/history" class="btn btn-info btn-lg mr-2">
+                    <i class="fas fa-history"></i> View History
+                </a>
                 <a href="<?php echo URLROOT; ?>/purchases/quick" class="btn btn-primary btn-lg mr-2">
                     <i class="fas fa-bolt"></i> Quick Order
                 </a>
 
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards for Purchase Order Status -->
+    <div class="row mb-3">
+        <div class="col-3 mb-2">
+            <div class="kpi-card kpi-gradient-warning shadow-sm h-100">
+                <div class="kpi-body">
+                    <div class="kpi-count"><?php echo $data['summary']['pending_count'] ?? 0; ?></div>
+                    <div class="kpi-value small">Pending •
+                        ₹<?php echo number_format($data['summary']['pending'] ?? 0, 0); ?></div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-clock kpi-icon" aria-hidden="true"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-3 mb-2">
+            <div class="kpi-card kpi-gradient-info shadow-sm h-100">
+                <div class="kpi-body">
+                    <div class="kpi-count"><?php echo $data['summary']['sent_count'] ?? 0; ?></div>
+                    <div class="kpi-value small">Sent • ₹<?php echo number_format($data['summary']['sent'] ?? 0, 0); ?>
+                    </div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-paper-plane kpi-icon" aria-hidden="true"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-3 mb-2">
+            <div class="kpi-card kpi-gradient-success shadow-sm h-100">
+                <div class="kpi-body">
+                    <div class="kpi-count"><?php echo $data['summary']['received_count'] ?? 0; ?></div>
+                    <div class="kpi-value small">Received •
+                        ₹<?php echo number_format($data['summary']['received'] ?? 0, 0); ?></div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-check-circle kpi-icon" aria-hidden="true"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-3 mb-2">
+            <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
+                <div class="kpi-body">
+                    <div class="kpi-count"><?php echo $data['summary']['in_transit_count'] ?? 0; ?></div>
+                    <div class="kpi-value small">In Transit •
+                        ₹<?php echo number_format($data['summary']['in_transit'] ?? 0, 0); ?></div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-truck kpi-icon" aria-hidden="true"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -313,6 +419,53 @@
         </div>
     </div>
 
+    <!-- Receiving Workflow Explanation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info border-left-primary">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="alert-heading mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>Receiving Workflow Clarification
+                        </h6>
+                        <p class="mb-2 small">
+                            <strong>Important:</strong> We have separate processes for dock operations and receiving
+                            area operations:
+                        </p>
+                        <div class="row small">
+                            <div class="col-md-6">
+                                <strong class="text-primary">Dock Operations:</strong>
+                                <ul class="list-unstyled mb-0 ml-3">
+                                    <li><i class="fas fa-truck text-warning"></i> PO arrives at dock</li>
+                                    <li><i class="fas fa-map-marker-alt text-info"></i> Dock assignment</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <strong class="text-success">Receiving Area:</strong>
+                                <ul class="list-unstyled mb-0 ml-3">
+                                    <li><i class="fas fa-warehouse text-primary"></i> Products transferred to receiving
+                                    </li>
+                                    <li><i class="fas fa-check-circle text-success"></i> Individual product processing
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="btn-group-vertical">
+                            <a href="<?php echo URLROOT; ?>/inventory/receiving" class="btn btn-primary btn-sm">
+                                <i class="fas fa-warehouse mr-1"></i>Go to Receiving Area
+                            </a>
+                            <button class="btn btn-outline-secondary btn-sm mt-1" onclick="showWorkflowDetails()">
+                                <i class="fas fa-question-circle mr-1"></i>View Full Workflow
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Recent Purchase Orders -->
     <div class="row mb-4">
         <div class="col-12">
@@ -340,6 +493,7 @@
                                     <th>Status</th>
                                     <th>Total</th>
                                     <th>Expected</th>
+                                    <th>Tracking</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -361,29 +515,72 @@
                                                     <?php
                                                     $status = strtolower($purchaseOrder->status ?? '');
                                                     $statusClass = '';
+                                                    $statusDisplay = '';
+
                                                     switch ($status) {
                                                         case 'pending':
                                                             $statusClass = 'badge-warning';
+                                                            $statusDisplay = 'Pending';
                                                             break;
                                                         case 'sent':
                                                             $statusClass = 'badge-info';
+                                                            $statusDisplay = 'Sent to Supplier';
                                                             break;
                                                         case 'in_transit':
                                                             $statusClass = 'badge-primary';
+                                                            $statusDisplay = 'In Transit';
+                                                            break;
+                                                        case 'arrived_at_dock':
+                                                            $statusClass = 'badge-warning';
+                                                            $statusDisplay = 'Arrived at Dock';
+                                                            break;
+                                                        case 'dock_assigned':
+                                                            $statusClass = 'badge-info';
+                                                            $statusDisplay = 'Dock Assigned';
+                                                            break;
+                                                        case 'ready_to_receive':
+                                                            $statusClass = 'badge-primary';
+                                                            $statusDisplay = 'Ready for Receiving';
+                                                            break;
+                                                        case 'receiving_in_progress':
+                                                            $statusClass = 'badge-warning';
+                                                            $statusDisplay = 'Receiving in Progress';
+                                                            break;
+                                                        case 'partially_received':
+                                                            $statusClass = 'badge-info';
+                                                            $statusDisplay = 'Partially Received';
                                                             break;
                                                         case 'received':
                                                             $statusClass = 'badge-success';
+                                                            $statusDisplay = 'Fully Received';
+                                                            break;
+                                                        case 'completed':
+                                                            $statusClass = 'badge-success';
+                                                            $statusDisplay = 'Completed';
                                                             break;
                                                         case 'cancelled':
                                                             $statusClass = 'badge-danger';
+                                                            $statusDisplay = 'Cancelled';
                                                             break;
                                                         default:
                                                             $statusClass = 'badge-secondary';
+                                                            $statusDisplay = ucfirst(str_replace('_', ' ', $status));
+                                                    }
+
+                                                    // Add workflow stage indicator
+                                                    $workflowStage = '';
+                                                    if (in_array($status, ['arrived_at_dock', 'dock_assigned'])) {
+                                                        $workflowStage = '<br><small class="text-muted"><i class="fas fa-truck"></i> Dock Phase</small>';
+                                                    } elseif (in_array($status, ['ready_to_receive', 'receiving_in_progress', 'partially_received'])) {
+                                                        $workflowStage = '<br><small class="text-primary"><i class="fas fa-warehouse"></i> Receiving Phase</small>';
+                                                    } elseif (in_array($status, ['received', 'completed'])) {
+                                                        $workflowStage = '<br><small class="text-success"><i class="fas fa-check-circle"></i> Complete</small>';
                                                     }
                                                     ?>
                                                     <span class="badge <?php echo $statusClass; ?>">
-                                                        <?php echo ucfirst(str_replace('_', ' ', $status)); ?>
+                                                        <?php echo $statusDisplay; ?>
                                                     </span>
+                                                    <?php echo $workflowStage; ?>
                                                 </td>
                                                 <td><?php echo formatCurrency($purchaseOrder->total_amount ?? 0); ?></td>
                                                 <td>
@@ -394,18 +591,30 @@
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
+                                                    <?php if (!empty($purchaseOrder->tracking_number)): ?>
+                                                        <span class="badge badge-info" data-toggle="tooltip"
+                                                            title="<?php echo htmlspecialchars($purchaseOrder->tracking_number); ?>">
+                                                            <i class="fas fa-truck mr-1"></i>
+                                                            <?php echo htmlspecialchars(substr($purchaseOrder->tracking_number, 0, 8)); ?>...
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="text-muted">
+                                                            <i class="fas fa-minus"></i> No tracking
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
                                                     <div class="btn-group btn-group-sm">
                                                         <a href="<?php echo URLROOT; ?>/purchases/details/<?php echo $purchaseOrder->purchase_id ?? 0; ?>"
                                                             class="btn btn-outline-primary btn-sm" data-toggle="tooltip"
                                                             title="View Details">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
-                                                        <?php if ($status === 'pending'): ?>
-                                                            <a href="<?php echo URLROOT; ?>/purchases/edit/<?php echo $purchaseOrder->purchase_id ?? 0; ?>"
-                                                                class="btn btn-outline-secondary btn-sm" data-toggle="tooltip"
-                                                                title="Edit Purchase Order">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
+                                                        <?php if (!empty($purchaseOrder->tracking_number)): ?>
+                                                            <span class="btn btn-success btn-sm" data-toggle="tooltip"
+                                                                title="Tracking: <?php echo htmlspecialchars($purchaseOrder->tracking_number); ?>">
+                                                                <i class="fas fa-check"></i>
+                                                            </span>
                                                         <?php endif; ?>
                                                     </div>
                                                 </td>
@@ -414,7 +623,7 @@
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">
+                                        <td colspan="8" class="text-center text-muted py-4">
                                             <i class="fas fa-inbox fa-2x mb-2"></i><br>
                                             No purchase orders found
                                         </td>
@@ -454,7 +663,7 @@
                 "pageLength": 10,
                 "responsive": true,
                 "columnDefs": [
-                    { "orderable": false, "targets": [6] }, // Disable sorting on Actions column
+                    { "orderable": false, "targets": [7] }, // Disable sorting on Actions column
                 ],
                 "language": {
                     "search": "Search orders:",
@@ -470,6 +679,27 @@
         // Load dock and receiving area options
         console.log('About to call loadLocationOptions');
         loadLocationOptions();
+        // Keep duplicate selects in sync if both are present
+        $(document).on('change', '#dockSelectMain', function () {
+            if ($('#dockSelectInCard').length) {
+                $('#dockSelectInCard').val($(this).val());
+            }
+        });
+        $(document).on('change', '#dockSelectInCard', function () {
+            if ($('#dockSelectMain').length) {
+                $('#dockSelectMain').val($(this).val());
+            }
+        });
+        $(document).on('change', '#receivingAreaSelectMain', function () {
+            if ($('#receivingAreaSelectInCard').length) {
+                $('#receivingAreaSelectInCard').val($(this).val());
+            }
+        });
+        $(document).on('change', '#receivingAreaSelectInCard', function () {
+            if ($('#receivingAreaSelectMain').length) {
+                $('#receivingAreaSelectMain').val($(this).val());
+            }
+        });
     });    // Load dock and receiving area options
     function loadLocationOptions() {
         console.log('Starting to load location options...');
@@ -496,6 +726,10 @@
                         dockOptions += `<option value="${dock.location_id}">${dock.location_name}</option>`;
                     });
                     $('#dockSelectMain').html(dockOptions);
+                    // Also populate in-card dock select if present
+                    if ($('#dockSelectInCard').length) {
+                        $('#dockSelectInCard').html(dockOptions);
+                    }
                     console.log('Dock options set:', dockOptions);
 
                     // Populate receiving area dropdown
@@ -504,6 +738,10 @@
                         areaOptions += `<option value="${area.location_id}">${area.location_name}</option>`;
                     });
                     $('#receivingAreaSelectMain').html(areaOptions);
+                    // Also populate in-card receiving area select if present
+                    if ($('#receivingAreaSelectInCard').length) {
+                        $('#receivingAreaSelectInCard').html(areaOptions);
+                    }
                     console.log('Area options set:', areaOptions);
                 } else {
                     console.error('API returned success: false');
@@ -577,46 +815,77 @@
                                 <div class="row">
                                     <div class="col-md-8">
                                         <h5 class="text-success mb-3">${data.po_number}</h5>
-                                        <div class="row">
-                                            <div class="col-sm-6">
-                                                <p class="mb-2">
-                                                    <strong><i class="fas fa-building text-primary mr-1"></i>Supplier:</strong><br>
-                                                    <span class="text-muted">${data.supplier_name}</span>
-                                                </p>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <p class="mb-2">
-                                                    <strong><i class="fas fa-rupee-sign text-success mr-1"></i>Total Amount:</strong><br>
-                                                    <span class="text-muted h5">₹${parseFloat(data.total_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <p class="mb-0">
-                                            <strong><i class="fas fa-info-circle text-info mr-1"></i>Status:</strong>
-                                            <span class="badge badge-${data.status === 'Pending' ? 'warning' : 'info'}">${data.status}</span>
+                                        <p class="mb-2">
+                                            <strong><i class="fas fa-building text-primary mr-1"></i>Supplier:</strong><br>
+                                            <span class="text-muted">${data.supplier_name}</span>
+                                        </p>
+                                        <p class="mb-2">
+                                            <strong><i class="fas fa-rupee-sign text-success mr-1"></i>Total Amount:</strong><br>
+                                            <span class="text-muted h5">₹${parseFloat(data.total_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                        </p>
+                                        <p class="mb-2">
+                                            <strong><i class="fas fa-user mr-1"></i>Receiver:</strong><br>
+                                            <span class="text-muted"><?php echo htmlspecialchars($_SESSION['user_full_name'] ?? ''); ?></span>
                                         </p>
                                     </div>
                                     <div class="col-md-4 text-center">
                                         <div class="bg-light rounded p-3">
                                             <i class="fas fa-clipboard-check fa-3x text-success mb-2"></i>
-                                            <p class="text-muted mb-0">Ready to assign dock location and receive</p>
+                                            <p class="text-muted mb-0">Steps: Select Dock → Start Unloading → Confirm Received</p>
                                         </div>
                                     </div>
                                 </div>
                                 <hr>
                                 <div class="row">
+                                    <div class="col-md-4 mb-2">
+                                        <label class="small text-muted mb-1">Dock Location</label>
+                                        <select class="form-control" id="dockSelectInCard" style="height: auto; min-height: 38px; line-height: 1.5;">
+                                            <option value="">Select Dock...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="small text-muted mb-1">Receiving Area</label>
+                                        <select class="form-control" id="receivingAreaSelectInCard" style="height: auto; min-height: 38px; line-height: 1.5;">
+                                            <option value="">Select Area...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="small text-muted mb-1">Notes</label>
+                                        <input type="text" class="form-control" id="notesInputInCard" placeholder="Optional notes" style="height: auto; min-height: 38px;">
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
                                     <div class="col-12">
-                                        <button class="btn btn-success btn-lg mr-2" onclick="processWithLocation('${searchTerm}')">
-                                            <i class="fas fa-warehouse mr-2"></i>Assign Location & Receive
+                                        <button class="btn btn-outline-success btn-lg mr-2" id="startUnloadingBtn" onclick="startUnloading('${searchTerm}')">
+                                            <i class="fas fa-box-open mr-2"></i>Start Unloading
                                         </button>
-                                        <button class="btn btn-outline-success btn-lg" onclick="markAsReceivedMain('${searchTerm}', null, null, '')">
-                                            <i class="fas fa-fast-forward mr-2"></i>Quick Receive (Skip Location)
+                                        <span id="unloadingTimer" class="ml-3 text-muted" style="font-weight:bold;"></span>
+                                        <button class="btn btn-success btn-lg ml-2" id="confirmReceivedBtn" disabled onclick="confirmReceived('${searchTerm}')">
+                                            <i class="fas fa-check mr-2"></i>Confirm Received & Stage
                                         </button>
+                                        <!-- Print handled from the receipt view; avoid duplicate print buttons -->
                                     </div>
                                 </div>
                             </div>
                         </div>
                     `);
+                    // Hide the top location selector and prefer the in-card controls
+                    $('#locationSelectionMain').hide();
+                    $('#dockSelectMain').prop('disabled', true);
+                    $('#receivingAreaSelectMain').prop('disabled', true);
+                    // If in-card selects are present but empty, copy options from the main selects
+                    if ($('#dockSelectInCard').length) {
+                        if ($('#dockSelectInCard').children().length <= 1) {
+                            $('#dockSelectInCard').html($('#dockSelectMain').html());
+                        }
+                        $('#dockSelectInCard').prop('disabled', false);
+                    }
+                    if ($('#receivingAreaSelectInCard').length) {
+                        if ($('#receivingAreaSelectInCard').children().length <= 1) {
+                            $('#receivingAreaSelectInCard').html($('#receivingAreaSelectMain').html());
+                        }
+                        $('#receivingAreaSelectInCard').prop('disabled', false);
+                    }
                 } else {
                     resetStepProgress();
                     $('#searchResultsMain').html(`
@@ -662,7 +931,7 @@
         });
     }
 
-    function markAsReceivedMain(poNumber, dockLocationId = null, receivingAreaId = null, notes = '') {
+    const originalMarkAsReceived = function (poNumber, dockLocationId = null, receivingAreaId = null, notes = '') {
         $('#searchResultsMain').html('<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Processing ' + poNumber + '...</div>');
 
         // Prepare data for the API call
@@ -683,7 +952,11 @@
         }
 
         // Make AJAX call to mark purchase order as received
-        $.ajax({
+        // Mark initiation flags before starting
+        quickReceiveAjaxInitiated = true;
+        quickReceiveAjaxActive = true;
+
+        const jq = $.ajax({
             url: '<?php echo URLROOT; ?>/api/quickReceivePurchaseOrder.php',
             method: 'POST',
             contentType: 'application/json',
@@ -715,16 +988,76 @@
                                 <a href="<?php echo URLROOT; ?>/inventory/receiving" class="btn btn-primary btn-sm ml-2">
                                     <i class="fas fa-truck-loading"></i> Go to Receiving
                                 </a>
+                                <!-- Receipt printing is available on the receipt view; not duplicated here -->
                             </div>
                         </div>
                     `);
                     $('#poSearchInputMain').val('');
                     $('#locationSelectionMain').hide();
 
-                    // Optionally refresh the orders table
-                    setTimeout(function () {
-                        location.reload();
-                    }, 3000);
+                    // If a receipt URL was returned, show an Open Receipt button so staff can open/print it.
+                    // We intentionally avoid auto-opening/auto-printing to prevent duplicate print dialogs.
+                    if (data.receipt_url) {
+                        console.log('Quick receive returned receipt_url:', data.receipt_url);
+                        // Append button to the action area inside the success message
+                        $('#searchResultsMain .alert-success .mt-2').append(`
+                            <a href="${data.receipt_url}" target="_blank" class="btn btn-outline-secondary btn-sm ml-2">
+                                <i class="fas fa-print mr-1"></i> Open Receipt
+                            </a>
+                            <button class="btn btn-outline-info btn-sm ml-2" id="emailReceiptBtn">
+                                <i class="fas fa-envelope mr-1"></i> Email Receipt
+                            </button>
+                        `);
+
+                        // Wire up Email Receipt button to call the controller endpoint
+                        $('#emailReceiptBtn').on('click', function () {
+                            $(this).prop('disabled', true).text('Sending...');
+                            $.post('<?php echo URLROOT; ?>/purchases/emailReceipt/' + encodeURIComponent(data.po_number), {}, function (resp) {
+                                try {
+                                    var r = typeof resp === 'object' ? resp : JSON.parse(resp);
+                                    if (r.success) {
+                                        alert('Receipt emailed successfully');
+                                    } else {
+                                        alert('Failed to email receipt: ' + (r.message || 'Unknown error'));
+                                    }
+                                } catch (e) {
+                                    alert('Unexpected response from server');
+                                }
+                                $('#emailReceiptBtn').prop('disabled', false).html('<i class="fas fa-envelope mr-1"></i> Email Receipt');
+                            }).fail(function () {
+                                alert('Failed to contact server to email receipt');
+                                $('#emailReceiptBtn').prop('disabled', false).html('<i class="fas fa-envelope mr-1"></i> Email Receipt');
+                            });
+                        });
+                    }
+
+                    // Attempt to refresh the orders table without a full page reload.
+                    // Do NOT force a location.reload() here because that interrupts opening/printing the receipt.
+                    try {
+                        if ($.fn.dataTable && $.fn.dataTable.isDataTable('#activeOrdersTable')) {
+                            // If the table was initialized with an AJAX source, reload it
+                            try {
+                                $('#activeOrdersTable').DataTable().ajax.reload(null, false);
+                                console.log('Active orders DataTable reloaded via AJAX');
+                            } catch (e) {
+                                console.warn('DataTable reload failed, falling back to manual refresh button', e);
+                                $('#searchResultsMain .alert-success .mt-2').append(`
+                                    <button class="btn btn-outline-secondary btn-sm ml-2" onclick="location.reload()">
+                                        <i class="fas fa-sync mr-1"></i> Refresh Page
+                                    </button>
+                                `);
+                            }
+                        } else {
+                            // No DataTable ajax source available; show a manual refresh control so users can refresh when ready
+                            $('#searchResultsMain .alert-success .mt-2').append(`
+                                <button class="btn btn-outline-secondary btn-sm ml-2" onclick="location.reload()">
+                                    <i class="fas fa-sync mr-1"></i> Refresh Page
+                                </button>
+                            `);
+                        }
+                    } catch (e) {
+                        console.error('Error during post-receive refresh handling:', e);
+                    }
                 } else {
                     $('#searchResultsMain').html(`<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> ${response.message}</div>`);
                 }
@@ -732,9 +1065,14 @@
             error: function (xhr, status, error) {
                 console.error('Receive error:', error);
                 $('#searchResultsMain').html('<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Error processing purchase order. Please try again.</div>');
+            },
+            complete: function () {
+                quickReceiveAjaxActive = false;
             }
         });
-    }
+
+        return jq;
+    };
 
     function showLocationSelection(poNumber) {
         $('#locationSelectionMain').show();
@@ -770,9 +1108,11 @@
 
     function resetMainSearch() {
         $('#poSearchInputMain').val('');
-        $('#locationSelectionMain').hide();
+        $('#locationSelectionMain').show();
         $('#dockSelectMain').val('');
         $('#receivingAreaSelectMain').val('');
+        $('#dockSelectMain').prop('disabled', false);
+        $('#receivingAreaSelectMain').prop('disabled', false);
         $('#notesInputMain').val('');
         $('#searchResultsMain').html('<div class="alert alert-info"><i class="fas fa-info-circle"></i> Enter a PO number above to search for available purchase orders</div>');
         resetStepProgress();
@@ -855,9 +1195,59 @@
         alert('Bulk receive feature allows you to process multiple POs at once. This feature is coming soon!');
     }
 
+    // Unloading timer and controls
+    let unloadingTimerInterval = null;
+    let unloadingStartTime = null;
+
+    function startUnloading(poNumber) {
+        const dock = $('#dockSelectInCard').val();
+        if (!dock) {
+            alert('Please select a dock before starting unloading.');
+            return;
+        }
+
+        $('#startUnloadingBtn').prop('disabled', true).text('Unloading...');
+        $('#confirmReceivedBtn').prop('disabled', false);
+
+        unloadingStartTime = Date.now();
+        $('#unloadingTimer').text('Elapsed: 00:00');
+
+        unloadingTimerInterval = setInterval(function () {
+            const diff = Date.now() - unloadingStartTime;
+            const mins = Math.floor(diff / 60000).toString().padStart(2, '0');
+            const secs = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+            $('#unloadingTimer').text('Elapsed: ' + mins + ':' + secs);
+        }, 1000);
+    }
+
+    function confirmReceived(poNumber) {
+        // stop timer
+        if (unloadingTimerInterval) {
+            clearInterval(unloadingTimerInterval);
+            unloadingTimerInterval = null;
+        }
+
+        const dock = $('#dockSelectInCard').val();
+        const area = $('#receivingAreaSelectInCard').val();
+        const notes = $('#notesInputInCard').val() || '';
+
+        if (!dock && !area) {
+            alert('Please select at least a dock or receiving area to stage the items.');
+            return;
+        }
+
+        // Use the existing receive flow to mark the PO as received and staged
+        markAsReceivedMain(poNumber, dock, area, notes);
+    }
+
+    // Flags used to detect AJAX initiation and activity for quick receive
+    let quickReceiveAjaxInitiated = false;
+    let quickReceiveAjaxActive = false;
+
     // Enhanced markAsReceivedMain function to handle step progression
-    const originalMarkAsReceived = markAsReceivedMain;
     function markAsReceivedMain(poNumber, dockLocationId = null, receivingAreaId = null, notes = '') {
+        // Preserve the enhanced step UI, then delegate to the original implementation which
+        // contains the receipt handling/printing logic.
         updateStepProgress(4);
 
         $('#searchResultsMain').html(`
@@ -870,102 +1260,111 @@
             </div>
         `);
 
-        // Call the original function with enhanced success handling
-        const requestData = {
-            po_number: poNumber
-        };
+        // Delegate the actual receive flow (including printing) to the original function
+        // which performs the AJAX call and handles receipt_url when returned.
+        return originalMarkAsReceived(poNumber, dockLocationId, receivingAreaId, notes);
+    }
 
-        if (dockLocationId) {
-            requestData.dock_location_id = dockLocationId;
-        }
-
-        if (receivingAreaId) {
-            requestData.receiving_area_id = receivingAreaId;
-        }
-
-        if (notes) {
-            requestData.notes = notes;
-        }
-
-        $.ajax({
-            url: '<?php echo URLROOT; ?>/api/quickReceivePurchaseOrder.php',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(requestData),
-            success: function (response) {
-                if (response.success) {
-                    const data = response.data;
-                    let locationInfo = '';
-                    if (data.dock_location) {
-                        locationInfo += `<br><strong>Dock:</strong> ${data.dock_location}`;
-                    }
-                    if (data.receiving_area) {
-                        locationInfo += `<br><strong>Receiving Area:</strong> ${data.receiving_area}`;
-                    }
-                    if (data.notes) {
-                        locationInfo += `<br><strong>Notes:</strong> ${data.notes}`;
-                    }
-
-                    $('#searchResultsMain').html(`
-                        <div class="card border-success">
-                            <div class="card-header bg-success text-white">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-check-circle mr-2 success-checkmark"></i>
-                                    Successfully Received!
-                                </h6>
-                            </div>
-                            <div class="card-body">
+    // Show detailed workflow explanation
+    function showWorkflowDetails() {
+        const workflowModal = `
+            <div class="modal fade" id="workflowModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-route mr-2"></i>Complete Receiving Workflow
+                            </h5>
+                            <button type="button" class="close text-white" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="workflow-steps">
                                 <div class="row">
-                                    <div class="col-md-8">
-                                        <h5 class="text-success mb-3">${data.po_number}</h5>
-                                        <p class="mb-2">
-                                            <i class="fas fa-check-circle text-success mr-2"></i>
-                                            Purchase order has been successfully received and staged.
-                                            ${locationInfo}
-                                        </p>
-                                        <p class="text-muted mb-0">
-                                            <small><i class="fas fa-clock mr-1"></i>Received at: ${new Date().toLocaleString()}</small>
-                                        </p>
+                                    <div class="col-md-6">
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-truck"></i> Dock Operations
+                                        </h6>
+                                        <div class="list-group list-group-flush">
+                                            <div class="list-group-item d-flex align-items-center">
+                                                <span class="badge badge-warning mr-3">1</span>
+                                                <div>
+                                                    <strong>PO Arrives at Dock</strong>
+                                                    <br><small class="text-muted">Status: "Arrived at Dock"</small>
+                                                </div>
+                                            </div>
+                                            <div class="list-group-item d-flex align-items-center">
+                                                <span class="badge badge-info mr-3">2</span>
+                                                <div>
+                                                    <strong>Dock Assignment</strong>
+                                                    <br><small class="text-muted">Status: "Dock Assigned"</small>
+                                                </div>
+                                            </div>
+                                            <div class="list-group-item d-flex align-items-center">
+                                                <span class="badge badge-primary mr-3">3</span>
+                                                <div>
+                                                    <strong>Ready for Transfer</strong>
+                                                    <br><small class="text-muted">Status: "Ready to Receive"</small>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="col-md-4 text-center">
-                                        <div class="bg-light rounded p-3">
-                                            <i class="fas fa-check-circle fa-4x text-success mb-2"></i>
-                                            <p class="text-muted mb-0">Complete!</p>
+                                    <div class="col-md-6">
+                                        <h6 class="text-success">
+                                            <i class="fas fa-warehouse"></i> Receiving Area Operations
+                                        </h6>
+                                        <div class="list-group list-group-flush">
+                                            <div class="list-group-item d-flex align-items-center">
+                                                <span class="badge badge-warning mr-3">4</span>
+                                                <div>
+                                                    <strong>Transfer to Receiving</strong>
+                                                    <br><small class="text-muted">Status: "Receiving in Progress"</small>
+                                                </div>
+                                            </div>
+                                            <div class="list-group-item d-flex align-items-center">
+                                                <span class="badge badge-info mr-3">5</span>
+                                                <div>
+                                                    <strong>Product Processing</strong>
+                                                    <br><small class="text-muted">Individual product scanning/verification</small>
+                                                </div>
+                                            </div>
+                                            <div class="list-group-item d-flex align-items-center">
+                                                <span class="badge badge-success mr-3">6</span>
+                                                <div>
+                                                    <strong>Receiving Complete</strong>
+                                                    <br><small class="text-muted">Status: "Received" or "Completed"</small>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <hr>
-                                <div class="row">
-                                    <div class="col-12">
-                                        <button class="btn btn-primary mr-2" onclick="resetMainSearch()">
-                                            <i class="fas fa-plus mr-2"></i>Process Another PO
-                                        </button>
-                                        <button class="btn btn-outline-info" onclick="window.location.reload()">
-                                            <i class="fas fa-refresh mr-2"></i>Refresh Page
-                                        </button>
-                                    </div>
+                                <div class="mt-4 p-3 bg-light rounded">
+                                    <h6 class="text-info">Key Differences:</h6>
+                                    <ul class="mb-0 small">
+                                        <li><strong>Dock Phase:</strong> Physical delivery handling - trucks, unloading, dock assignment</li>
+                                        <li><strong>Receiving Phase:</strong> Product processing - scanning, verification, inventory updates</li>
+                                        <li><strong>Status Tracking:</strong> Each phase has distinct statuses for clear workflow visibility</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
-                    `);
-                } else {
-                    resetStepProgress();
-                    $('#searchResultsMain').html(`
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle"></i> ${response.message}
+                        <div class="modal-footer">
+                            <a href="<?php echo URLROOT; ?>/inventory/receiving" class="btn btn-primary">
+                                <i class="fas fa-warehouse mr-1"></i>Go to Receiving Area
+                            </a>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         </div>
-                    `);
-                }
-            },
-            error: function (xhr, status, error) {
-                resetStepProgress();
-                console.error('Receive error:', error);
-                $('#searchResultsMain').html(`
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle"></i> Error processing purchase order. Please try again.
                     </div>
-                `);
-            }
-        });
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if present
+        $('#workflowModal').remove();
+
+        // Add modal to body and show
+        $('body').append(workflowModal);
+        $('#workflowModal').modal('show');
     }
 </script>

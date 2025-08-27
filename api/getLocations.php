@@ -5,13 +5,13 @@ header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Include the database configuration
-require_once '../bootstrap.php';
+require_once dirname(__DIR__) . '/bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
     echo json_encode([
         'success' => false,
-        'error' => 'Method not allowed'
+        'error'   => 'Method not allowed'
     ]);
     exit;
 }
@@ -26,15 +26,15 @@ try {
 
     echo json_encode([
         'success' => true,
-        'data' => $locations,
-        'count' => count($locations)
+        'data'    => $locations,
+        'count'   => count($locations)
     ]);
 
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage()
+        'error'   => $e->getMessage()
     ]);
 }
 ?>

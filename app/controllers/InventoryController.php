@@ -40,18 +40,18 @@ class InventoryController extends Controller
         $summary = $this->inventoryModel->getInventorySummary();
         if (!$summary) {
             $summary = (object) [
-                'total_products' => count($products),
+                'total_products'           => count($products),
                 'total_inventory_quantity' => 0,
-                'total_inventory_value' => 0,
-                'low_inventory_items' => 0
+                'total_inventory_value'    => 0,
+                'low_inventory_items'      => 0
             ];
         }
 
         $data = [
-            'title' => 'Enhanced Inventory Management',
-            'products' => $products,
+            'title'      => 'Enhanced Inventory Management',
+            'products'   => $products,
             'categories' => $categories,
-            'summary' => $summary
+            'summary'    => $summary
         ];
 
         $this->view('inventory/index', $data);
@@ -66,12 +66,12 @@ class InventoryController extends Controller
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'product_id' => trim($_POST['product_id']),
-                'quantity_change' => trim($_POST['quantity_change']),
-                'reason' => trim($_POST['reason']),
-                'product_id_err' => '',
+                'product_id'          => trim($_POST['product_id']),
+                'quantity_change'     => trim($_POST['quantity_change']),
+                'reason'              => trim($_POST['reason']),
+                'product_id_err'      => '',
                 'quantity_change_err' => '',
-                'reason_err' => ''
+                'reason_err'          => ''
             ];
 
             // Validate inputs
@@ -134,10 +134,10 @@ class InventoryController extends Controller
                     header('Content-Type: application/json');
                     echo json_encode([
                         'success' => false,
-                        'errors' => [
-                            'product_id' => $data['product_id_err'],
+                        'errors'  => [
+                            'product_id'      => $data['product_id_err'],
                             'quantity_change' => $data['quantity_change_err'],
-                            'reason' => $data['reason_err']
+                            'reason'          => $data['reason_err']
                         ]
                     ]);
                     exit;
@@ -152,15 +152,15 @@ class InventoryController extends Controller
             $adjustments = $this->inventoryModel->getInventoryMovements();
 
             $data = [
-                'title' => 'Inventory Adjustments',
-                'products' => $products,
-                'adjustments' => $adjustments,
-                'product_id' => '',
-                'quantity_change' => '',
-                'reason' => '',
-                'product_id_err' => '',
+                'title'               => 'Inventory Adjustments',
+                'products'            => $products,
+                'adjustments'         => $adjustments,
+                'product_id'          => '',
+                'quantity_change'     => '',
+                'reason'              => '',
+                'product_id_err'      => '',
                 'quantity_change_err' => '',
-                'reason_err' => ''
+                'reason_err'          => ''
             ];
 
             $this->view('inventory/adjustments', $data);
@@ -179,7 +179,7 @@ class InventoryController extends Controller
         }
 
         $data = [
-            'title' => 'Inventory Movements',
+            'title'     => 'Inventory Movements',
             'movements' => $movements
         ];
 
@@ -198,7 +198,7 @@ class InventoryController extends Controller
         }
 
         $data = [
-            'title' => 'Low Inventory Report',
+            'title'                  => 'Low Inventory Report',
             'low_inventory_products' => $lowInventoryProducts
         ];
 
@@ -265,7 +265,7 @@ class InventoryController extends Controller
             echo json_encode([
                 'success' => true,
                 'results' => $products,
-                'count' => count($products),
+                'count'   => count($products),
                 'message' => count($products) . ' products found'
             ]);
         } catch (Exception $e) {
@@ -299,7 +299,7 @@ class InventoryController extends Controller
             echo json_encode([
                 'success' => true,
                 'results' => $locations,
-                'count' => count($locations),
+                'count'   => count($locations),
                 'message' => count($locations) . ' locations found'
             ]);
         } catch (Exception $e) {
@@ -333,7 +333,7 @@ class InventoryController extends Controller
             echo json_encode([
                 'success' => true,
                 'results' => $adjustments,
-                'count' => count($adjustments),
+                'count'   => count($adjustments),
                 'message' => count($adjustments) . ' adjustments found'
             ]);
         } catch (Exception $e) {
@@ -367,7 +367,7 @@ class InventoryController extends Controller
             echo json_encode([
                 'success' => true,
                 'results' => $cycleCounts,
-                'count' => count($cycleCounts),
+                'count'   => count($cycleCounts),
                 'message' => count($cycleCounts) . ' cycle counts found'
             ]);
         } catch (Exception $e) {
@@ -461,11 +461,11 @@ class InventoryController extends Controller
                 echo json_encode([
                     'success' => true,
                     'message' => 'Inventory adjustment applied successfully',
-                    'data' => [
-                        'old_inventory' => $currentInventory,
-                        'new_inventory' => $newInventory,
+                    'data'    => [
+                        'old_inventory'   => $currentInventory,
+                        'new_inventory'   => $newInventory,
                         'adjustment_type' => $adjustmentType,
-                        'quantity' => $quantity
+                        'quantity'        => $quantity
                     ]
                 ]);
             } else {
@@ -529,7 +529,7 @@ class InventoryController extends Controller
                 echo json_encode([
                     'success' => true,
                     'message' => 'Cycle count completed successfully',
-                    'data' => $result['data']
+                    'data'    => $result['data']
                 ]);
             } else {
                 echo json_encode([
@@ -617,7 +617,7 @@ class InventoryController extends Controller
         }
 
         $data = [
-            'title' => 'Inventory Levels',
+            'title'     => 'Inventory Levels',
             'inventory' => $inventory,
             'movements' => $movements,
             'locations' => $locations
@@ -635,13 +635,13 @@ class InventoryController extends Controller
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'product_id' => isset($_POST['product_id']) ? trim($_POST['product_id']) : '',
-                'batch_number' => isset($_POST['batch_number']) ? trim($_POST['batch_number']) : '',
-                'expiry_date' => isset($_POST['expiry_date']) ? trim($_POST['expiry_date']) : '',
-                'quantity' => isset($_POST['quantity']) ? trim($_POST['quantity']) : '',
-                'location_id' => isset($_POST['location_id']) ? trim($_POST['location_id']) : '',
+                'product_id'     => isset($_POST['product_id']) ? trim($_POST['product_id']) : '',
+                'batch_number'   => isset($_POST['batch_number']) ? trim($_POST['batch_number']) : '',
+                'expiry_date'    => isset($_POST['expiry_date']) ? trim($_POST['expiry_date']) : '',
+                'quantity'       => isset($_POST['quantity']) ? trim($_POST['quantity']) : '',
+                'location_id'    => isset($_POST['location_id']) ? trim($_POST['location_id']) : '',
                 'product_id_err' => '',
-                'quantity_err' => ''
+                'quantity_err'   => ''
             ];
 
             // Validate product id
@@ -667,14 +667,14 @@ class InventoryController extends Controller
             }
         } else {
             $data = [
-                'title' => 'Add Inventory',
-                'product_id' => '',
-                'batch_number' => '',
-                'expiry_date' => '',
-                'quantity' => '',
-                'location_id' => '',
+                'title'          => 'Add Inventory',
+                'product_id'     => '',
+                'batch_number'   => '',
+                'expiry_date'    => '',
+                'quantity'       => '',
+                'location_id'    => '',
                 'product_id_err' => '',
-                'quantity_err' => ''
+                'quantity_err'   => ''
             ];
             $this->view('inventory/add_inventory', $data);
         }
@@ -693,12 +693,12 @@ class InventoryController extends Controller
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'product_id' => isset($_POST['product_id']) ? trim($_POST['product_id']) : '',
+                'product_id'       => isset($_POST['product_id']) ? trim($_POST['product_id']) : '',
                 'from_location_id' => isset($_POST['from_location_id']) ? trim($_POST['from_location_id']) : '',
-                'to_location_id' => isset($_POST['to_location_id']) ? trim($_POST['to_location_id']) : '',
-                'quantity' => isset($_POST['quantity']) ? trim($_POST['quantity']) : '',
-                'product_id_err' => '',
-                'quantity_err' => ''
+                'to_location_id'   => isset($_POST['to_location_id']) ? trim($_POST['to_location_id']) : '',
+                'quantity'         => isset($_POST['quantity']) ? trim($_POST['quantity']) : '',
+                'product_id_err'   => '',
+                'quantity_err'     => ''
             ];
 
             // Validate product id
@@ -724,13 +724,13 @@ class InventoryController extends Controller
             }
         } else {
             $data = [
-                'title' => 'Move Inventory',
-                'product_id' => '',
+                'title'            => 'Move Inventory',
+                'product_id'       => '',
                 'from_location_id' => '',
-                'to_location_id' => '',
-                'quantity' => '',
-                'product_id_err' => '',
-                'quantity_err' => ''
+                'to_location_id'   => '',
+                'quantity'         => '',
+                'product_id_err'   => '',
+                'quantity_err'     => ''
             ];
             $this->view('inventory/move_inventory', $data);
         }
@@ -745,8 +745,20 @@ class InventoryController extends Controller
             require_once APPROOT . DS . 'app' . DS . 'Database.php';
             $db = new Database();
 
-            // Get all locations
-            $db->query("SELECT * FROM locations ORDER BY location_type, standardized_address, location_code");
+            // Get all locations with item counts
+            $db->query("SELECT l.*, 
+                       COALESCE(inv.total_items, 0) as item_count,
+                       COALESCE(inv.total_quantity, 0) as total_quantity
+                       FROM locations l
+                       LEFT JOIN (
+                           SELECT location_id, 
+                                  COUNT(*) as total_items,
+                                  SUM(quantity) as total_quantity
+                           FROM inventory 
+                           WHERE quantity > 0
+                           GROUP BY location_id
+                       ) inv ON l.location_id = inv.location_id
+                       ORDER BY l.location_type, l.standardized_address, l.location_code");
             $db->execute();
             $locations = $db->resultSet() ?? [];
 
@@ -772,20 +784,20 @@ class InventoryController extends Controller
             $locations = [];
             $locationsByType = [];
             $stats = (object) [
-                'total_locations' => 0,
-                'dock_locations' => 0,
+                'total_locations'     => 0,
+                'dock_locations'      => 0,
                 'receiving_locations' => 0,
-                'storage_locations' => 0,
-                'bin_locations' => 0
+                'storage_locations'   => 0,
+                'bin_locations'       => 0
             ];
             flash('inventory_message', 'Error loading locations: ' . $e->getMessage(), 'alert alert-danger');
         }
 
         $data = [
-            'title' => 'Warehouse Locations',
-            'locations' => $locations,
+            'title'           => 'Warehouse Locations',
+            'locations'       => $locations,
             'locationsByType' => $locationsByType,
-            'stats' => $stats
+            'stats'           => $stats
         ];
 
         $this->view('inventory/locations', $data);
@@ -800,19 +812,19 @@ class InventoryController extends Controller
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'location_code' => isset($_POST['location_code']) ? trim($_POST['location_code']) : '',
+                'location_code'        => isset($_POST['location_code']) ? trim($_POST['location_code']) : '',
                 'standardized_address' => isset($_POST['standardized_address']) ? trim($_POST['standardized_address']) : '',
-                'location_name' => isset($_POST['location_name']) ? trim($_POST['location_name']) : '',
-                'location_type' => isset($_POST['location_type']) ? trim($_POST['location_type']) : '',
-                'zone' => isset($_POST['zone']) ? trim($_POST['zone']) : '',
-                'aisle' => isset($_POST['aisle']) ? trim($_POST['aisle']) : '',
-                'shelf' => isset($_POST['shelf']) ? trim($_POST['shelf']) : '',
-                'bin' => $this->processBinField($_POST),
-                'capacity_cubic_feet' => isset($_POST['capacity_cubic_feet']) ? floatval($_POST['capacity_cubic_feet']) : 0,
-                'max_weight_kg' => isset($_POST['max_weight_kg']) ? floatval($_POST['max_weight_kg']) : 0,
-                'climate_controlled' => isset($_POST['climate_controlled']) ? 1 : 0,
-                'notes' => isset($_POST['notes']) ? trim($_POST['notes']) : '',
-                'errors' => []
+                'location_name'        => isset($_POST['location_name']) ? trim($_POST['location_name']) : '',
+                'location_type'        => isset($_POST['location_type']) ? trim($_POST['location_type']) : '',
+                'zone'                 => isset($_POST['zone']) ? trim($_POST['zone']) : '',
+                'aisle'                => isset($_POST['aisle']) ? trim($_POST['aisle']) : '',
+                'shelf'                => isset($_POST['shelf']) ? trim($_POST['shelf']) : '',
+                'bin'                  => $this->processBinField($_POST),
+                'capacity_cubic_feet'  => isset($_POST['capacity_cubic_feet']) ? floatval($_POST['capacity_cubic_feet']) : 0,
+                'max_weight_kg'        => isset($_POST['max_weight_kg']) ? floatval($_POST['max_weight_kg']) : 0,
+                'climate_controlled'   => isset($_POST['climate_controlled']) ? 1 : 0,
+                'notes'                => isset($_POST['notes']) ? trim($_POST['notes']) : '',
+                'errors'               => []
             ];
 
             // Basic validation
@@ -942,12 +954,12 @@ class InventoryController extends Controller
 
                 // Prepare common data
                 $commonData = [
-                    'location_type' => trim($_POST['location_type']),
-                    'zone' => trim($_POST['zone']),
+                    'location_type'       => trim($_POST['location_type']),
+                    'zone'                => trim($_POST['zone']),
                     'capacity_cubic_feet' => !empty($_POST['capacity_cubic_feet']) ? (float) $_POST['capacity_cubic_feet'] : 0,
-                    'max_weight_kg' => !empty($_POST['max_weight_kg']) ? (float) $_POST['max_weight_kg'] : 0,
-                    'climate_controlled' => isset($_POST['climate_controlled']) ? 1 : 0,
-                    'notes' => trim($_POST['notes'] ?? '')
+                    'max_weight_kg'       => !empty($_POST['max_weight_kg']) ? (float) $_POST['max_weight_kg'] : 0,
+                    'climate_controlled'  => isset($_POST['climate_controlled']) ? 1 : 0,
+                    'notes'               => trim($_POST['notes'] ?? '')
                 ];
 
                 // Start transaction
@@ -975,9 +987,9 @@ class InventoryController extends Controller
                     $locationData = array_merge($commonData, [
                         'location_code' => $locationCode,
                         'location_name' => $this->generateLocationName($locationCode, $commonData['location_type']),
-                        'aisle' => $parts['aisle'],
-                        'shelf' => $parts['rack'],
-                        'bin' => $parts['column'] . $parts['bin']
+                        'aisle'         => $parts['aisle'],
+                        'shelf'         => $parts['rack'],
+                        'bin'           => $parts['column'] . $parts['bin']
                     ]);
 
                     // Generate standardized address
@@ -1040,11 +1052,11 @@ class InventoryController extends Controller
     {
         if (preg_match('/^S(\d+)-([A-Z])(\d+)-([A-Z])(\d+)$/', $locationCode, $matches)) {
             return [
-                'shop' => (int) $matches[1],
-                'aisle' => $matches[2],
-                'rack' => (int) $matches[3],
+                'shop'   => (int) $matches[1],
+                'aisle'  => $matches[2],
+                'rack'   => (int) $matches[3],
                 'column' => $matches[4],
-                'bin' => (int) $matches[5]
+                'bin'    => (int) $matches[5]
             ];
         }
         return false;
@@ -1257,8 +1269,8 @@ class InventoryController extends Controller
         $locationBarcodes = $barcodeModel->getAllLocationBarcodes();
 
         $data = [
-            'title' => 'Location Barcodes',
-            'locations' => $locations,
+            'title'             => 'Location Barcodes',
+            'locations'         => $locations,
             'location_barcodes' => $locationBarcodes
         ];
 
@@ -1299,7 +1311,7 @@ class InventoryController extends Controller
             }
 
             $data = [
-                'title' => 'Print Location Barcode - ' . $location->location_name,
+                'title'    => 'Print Location Barcode - ' . $location->location_name,
                 'location' => $location,
                 'barcodes' => $barcodes
             ];
@@ -1308,7 +1320,7 @@ class InventoryController extends Controller
             $locationBarcodes = $barcodeModel->getAllLocationBarcodes();
 
             $data = [
-                'title' => 'Print All Location Barcodes',
+                'title'             => 'Print All Location Barcodes',
                 'location_barcodes' => $locationBarcodes
             ];
         }
@@ -1341,10 +1353,10 @@ class InventoryController extends Controller
         }
 
         echo json_encode([
-            'success' => true,
+            'success'   => true,
             'generated' => $generatedCount,
-            'errors' => $errors,
-            'message' => "$generatedCount location barcodes generated successfully"
+            'errors'    => $errors,
+            'message'   => "$generatedCount location barcodes generated successfully"
         ]);
         exit;
     }
@@ -1367,12 +1379,12 @@ class InventoryController extends Controller
 
             if ($location) {
                 echo json_encode([
-                    'success' => true,
+                    'success'  => true,
                     'location' => [
-                        'id' => $location->location_id,
-                        'name' => $location->location_name,
-                        'rack' => $location->rack,
-                        'shelf' => $location->shelf,
+                        'id'      => $location->location_id,
+                        'name'    => $location->location_name,
+                        'rack'    => $location->rack,
+                        'shelf'   => $location->shelf,
                         'barcode' => $location->barcode_value
                     ]
                 ]);
@@ -1391,10 +1403,10 @@ class InventoryController extends Controller
 
         // Get receiving statistics and recent activity
         $receivingStats = [
-            'deliveries_today' => 0,
+            'deliveries_today'     => 0,
             'items_received_today' => 0,
-            'pending_items' => 0,
-            'completed_items' => 0
+            'pending_items'        => 0,
+            'completed_items'      => 0
         ];
 
         $recentActivity = [];
@@ -1425,8 +1437,8 @@ class InventoryController extends Controller
             $result = $db->single();
             $receivingStats['items_received_today'] = $result->count ?? 0;
 
-            // Get pending purchase orders (ready to receive)
-            $db->query("SELECT COUNT(*) as count FROM purchases WHERE status IN ('ready_to_receive', 'receiving_in_progress')");
+            // Get pending purchase orders (ready to receive and need detailed receiving)
+            $db->query("SELECT COUNT(*) as count FROM purchases WHERE status IN ('ready_to_receive', 'receiving_in_progress', 'received', 'at_dock') AND dock_location_id IS NOT NULL");
             if (!$db->execute()) {
                 error_log("Failed to execute pending items query");
             }
@@ -1436,12 +1448,13 @@ class InventoryController extends Controller
             // Get completed items today (same as items received for now)
             $receivingStats['completed_items'] = $receivingStats['items_received_today'];
 
-            // Get recent receiving activity from purchases
+            // Get recent receiving activity from purchases (including dock-received POs)
             $db->query("SELECT p.purchase_id, p.po_number, p.status, p.received_at, p.total_amount,
                                    s.supplier_name, p.created_by as receiver_name
                             FROM purchases p 
                             LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id 
-                            WHERE p.status IN ('received', 'ready_to_receive', 'receiving_in_progress', 'partially_received', 'completed')
+                            WHERE p.status IN ('received', 'ready_to_receive', 'receiving_in_progress', 'partially_received', 'completed', 'at_dock')
+                            AND (p.dock_location_id IS NOT NULL OR p.status IN ('receiving_in_progress', 'ready_to_receive'))
                             ORDER BY COALESCE(p.received_at, p.updated_at) DESC 
                             LIMIT 10");
             if (!$db->execute()) {
@@ -1457,7 +1470,7 @@ class InventoryController extends Controller
         }
 
         $data = [
-            'title' => 'Receiving Operations',
+            'title'          => 'Receiving Operations',
             'receivingStats' => $receivingStats,
             'recentActivity' => $recentActivity
         ];
@@ -1540,28 +1553,28 @@ class InventoryController extends Controller
 
             $response = [
                 'success' => true,
-                'po' => [
-                    'po_number' => $purchase->po_number,
+                'po'      => [
+                    'po_number'     => $purchase->po_number,
                     'supplier_name' => $purchase->supplier_name ?? 'Unknown Supplier',
                     'expected_date' => $purchase->expected_date,
-                    'total_amount' => $purchase->total_amount,
-                    'status' => $purchase->status,
+                    'total_amount'  => $purchase->total_amount,
+                    'status'        => $purchase->status,
                     'purchase_date' => $purchase->purchase_date,
-                    'notes' => $purchase->notes ?? ''
+                    'notes'         => $purchase->notes ?? ''
                 ],
-                'items' => []
+                'items'   => []
             ];
 
             foreach ($items as $item) {
                 $response['items'][] = [
-                    'purchase_item_id' => $item->purchase_item_id,
-                    'product_id' => $item->product_id,
-                    'product_name' => $item->product_name ?? 'Unknown Product',
-                    'sku' => $item->sku ?? '',
-                    'barcode' => $item->barcode ?? '',
+                    'purchase_item_id'  => $item->purchase_item_id,
+                    'product_id'        => $item->product_id,
+                    'product_name'      => $item->product_name ?? 'Unknown Product',
+                    'sku'               => $item->sku ?? '',
+                    'barcode'           => $item->barcode ?? '',
                     'expected_quantity' => $item->quantity,
-                    'unit_price' => $item->unit_price ?? 0,
-                    'total_price' => ($item->quantity * ($item->unit_price ?? 0)),
+                    'unit_price'        => $item->unit_price ?? 0,
+                    'total_price'       => ($item->quantity * ($item->unit_price ?? 0)),
                     'received_quantity' => $item->received_quantity ?? 0
                 ];
             }
@@ -1692,14 +1705,14 @@ class InventoryController extends Controller
                 error_log("Submission successful! Received {$receivedQuantity} units of {$item->product_name}");
 
                 echo json_encode([
-                    'status' => 'success',
+                    'status'  => 'success',
                     'message' => "Successfully received {$receivedQuantity} units of {$item->product_name}",
-                    'item' => [
-                        'purchase_item_id' => $purchaseItemId,
-                        'product_name' => $item->product_name,
-                        'sku' => $item->sku,
+                    'item'    => [
+                        'purchase_item_id'  => $purchaseItemId,
+                        'product_name'      => $item->product_name,
+                        'sku'               => $item->sku,
                         'received_quantity' => $receivedQuantity,
-                        'condition' => $condition
+                        'condition'         => $condition
                     ]
                 ]);
 
@@ -1736,7 +1749,7 @@ class InventoryController extends Controller
             $locations = $db->resultSet() ?? [];
 
             echo json_encode([
-                'success' => true,
+                'success'   => true,
                 'locations' => $locations
             ]);
 

@@ -341,15 +341,15 @@ class ProductSupplier
 
         $searchCondition = '';
         if (!empty($search)) {
-            $searchCondition = " AND (p.product_name LIKE :search OR p.sku LIKE :search OR s.supplier_name LIKE :search OR s.email LIKE :search)";
+            $searchCondition = " AND (p.product_name LIKE :search OR p.sku LIKE :search OR s.supplier_name LIKE :search OR s.email LIKE :search OR c.category_name LIKE :search)";
         }
 
         $this->db->query("
             SELECT 
-                ps.ps_id as link_id,
+                ps.ps_id as id,
                 ps.product_id,
                 ps.supplier_id,
-                ps.purchase_price as supplier_cost_price,
+                ps.purchase_price as supplier_price,
                 ps.lead_time_days,
                 ps.min_order_quantity,
                 ps.is_primary,
@@ -357,20 +357,15 @@ class ProductSupplier
                 ps.notes,
                 ps.created_at,
                 p.product_name,
-                p.sku as product_sku,
+                COALESCE(p.sku, 'N/A') as sku,
+                p.category_id,
+                COALESCE(c.category_name, 'Uncategorized') as category_name,
                 s.supplier_name,
-                s.email as supplier_email,
-                CASE 
-                    WHEN ps.is_primary = 1 THEN 'primary'
-                    ELSE 'secondary'
-                END as link_type,
-                CASE 
-                    WHEN ps.is_active = 1 THEN 'active'
-                    ELSE 'inactive'
-                END as link_status
+                s.email as supplier_email
             FROM product_suppliers ps
             INNER JOIN products p ON ps.product_id = p.product_id
             INNER JOIN suppliers s ON ps.supplier_id = s.supplier_id
+            LEFT JOIN categories c ON p.category_id = c.category_id
             WHERE 1=1 {$searchCondition}
             ORDER BY ps.created_at DESC
             LIMIT :limit OFFSET :offset
@@ -379,11 +374,21 @@ class ProductSupplier
         if (!empty($search)) {
             $this->db->bind(':search', '%' . $search . '%');
         }
-        $this->db->bind(':limit', $perPage);
-        $this->db->bind(':offset', $offset);
-        $this->db->execute();
+        $this->db->bind(':limit', (int) $perPage, PDO::PARAM_INT);
+        $this->db->bind(':offset', (int) $offset, PDO::PARAM_INT);
 
-        return $this->db->resultSet();
+        // Add debug logging
+        error_log("ProductSupplier::getProductSuppliersWithDetails - Params: page=$page, perPage=$perPage, search='$search', offset=$offset");
+
+        if (!$this->db->execute()) {
+            error_log("ProductSupplier::getProductSuppliersWithDetails - Query execution failed");
+            return [];
+        }
+
+        $results = $this->db->resultSet();
+        error_log("ProductSupplier::getProductSuppliersWithDetails - Results count: " . count($results));
+
+        return $results;
     }
 
     /**
@@ -395,7 +400,7 @@ class ProductSupplier
     {
         $searchCondition = '';
         if (!empty($search)) {
-            $searchCondition = " AND (p.product_name LIKE :search OR p.sku LIKE :search OR s.supplier_name LIKE :search OR s.email LIKE :search)";
+            $searchCondition = " AND (p.product_name LIKE :search OR p.sku LIKE :search OR s.supplier_name LIKE :search OR s.email LIKE :search OR c.category_name LIKE :search)";
         }
 
         $this->db->query("
@@ -403,6 +408,7 @@ class ProductSupplier
             FROM product_suppliers ps
             INNER JOIN products p ON ps.product_id = p.product_id
             INNER JOIN suppliers s ON ps.supplier_id = s.supplier_id
+            LEFT JOIN categories c ON p.category_id = c.category_id
             WHERE 1=1 {$searchCondition}
         ");
 

@@ -3,11 +3,11 @@
 <?php
 // Defensive programming - ensure data structure is correct
 $stats = isset($data['stats']) && is_object($data['stats']) ? $data['stats'] : (object) [
-    'total_locations' => 0,
-    'dock_locations' => 0,
+    'total_locations'     => 0,
+    'dock_locations'      => 0,
     'receiving_locations' => 0,
-    'storage_locations' => 0,
-    'bin_locations' => 0
+    'storage_locations'   => 0,
+    'bin_locations'       => 0
 ];
 
 $locations = isset($data['locations']) && is_array($data['locations']) ? $data['locations'] : [];
@@ -32,11 +32,11 @@ function parseLocationCode($code)
     if (preg_match('/^([sw])(\d+)-([a-zA-Z])(\d+)-([a-zA-Z])(\d+)$/i', $code, $matches)) {
         return [
             'section' => $matches[2],
-            'aisle' => strtoupper($matches[3]),
-            'rack' => $matches[4],
-            'column' => strtoupper($matches[5]),
-            'bin' => $matches[6],
-            'format' => 'section_aisle_column'
+            'aisle'   => strtoupper($matches[3]),
+            'rack'    => $matches[4],
+            'column'  => strtoupper($matches[5]),
+            'bin'     => $matches[6],
+            'format'  => 'section_aisle_column'
         ];
     }
 
@@ -44,11 +44,11 @@ function parseLocationCode($code)
     if (preg_match('/^S(\d+)-([A-Z])(\d+)-([A-Z])(\d+)$/i', $code, $matches)) {
         return [
             'section' => $matches[1],
-            'aisle' => $matches[2],
-            'rack' => $matches[3],
-            'column' => $matches[4],
-            'bin' => $matches[5],
-            'format' => 'shop_format'
+            'aisle'   => $matches[2],
+            'rack'    => $matches[3],
+            'column'  => $matches[4],
+            'bin'     => $matches[5],
+            'format'  => 'shop_format'
         ];
     }
 
@@ -56,11 +56,11 @@ function parseLocationCode($code)
     if (preg_match('/^([A-Z])(\d+)-([A-Z])(\d+)-(\d+)$/i', $code, $matches)) {
         return [
             'section' => '1', // Default section
-            'aisle' => $matches[1],
-            'rack' => $matches[2],
-            'column' => $matches[3],
-            'bin' => $matches[5],
-            'format' => 'legacy'
+            'aisle'   => $matches[1],
+            'rack'    => $matches[2],
+            'column'  => $matches[3],
+            'bin'     => $matches[5],
+            'format'  => 'legacy'
         ];
     }
 
@@ -80,9 +80,9 @@ function formatLocationDisplay($location)
 
     if (!$parsed) {
         return [
-            'code' => $location->location_code,
+            'code'        => $location->location_code,
             'description' => $location->location_name,
-            'badge' => getBadgeType($location)
+            'badge'       => getBadgeType($location)
         ];
     }
 
@@ -92,26 +92,26 @@ function formatLocationDisplay($location)
             $formattedCode = "S{$parsed['section']}-{$parsed['aisle']}{$parsed['rack']}-{$parsed['column']}{$parsed['bin']}";
             $description = "Section {$parsed['section']}, Aisle {$parsed['aisle']}, Rack {$parsed['rack']}, Bin {$parsed['column']}{$parsed['bin']}";
             return [
-                'code' => $formattedCode,
+                'code'        => $formattedCode,
                 'description' => $description,
-                'badge' => 'Shop'
+                'badge'       => 'Shop'
             ];
 
         case 'legacy':
             $formattedCode = "S{$parsed['section']}-{$parsed['aisle']}{$parsed['rack']}-{$parsed['column']}{$parsed['bin']}";
             $description = "Section {$parsed['section']}, Aisle {$parsed['aisle']}, Rack {$parsed['rack']}, Bin {$parsed['column']}{$parsed['bin']}";
             return [
-                'code' => $formattedCode,
+                'code'        => $formattedCode,
                 'description' => $description,
-                'badge' => 'Shop'
+                'badge'       => 'Shop'
             ];
 
         case 'simple':
         default:
             return [
-                'code' => $parsed['simple'],
+                'code'        => $parsed['simple'],
                 'description' => $location->location_name,
-                'badge' => getBadgeType($location)
+                'badge'       => getBadgeType($location)
             ];
     }
 }
@@ -145,51 +145,8 @@ function getBadgeType($location)
 }
 ?>
 
-<style>
-    .location-card {
-        transition: all 0.2s ease;
-        border-left: 4px solid var(--primary-color);
-    }
-
-    .location-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .location-type-dock {
-        border-left-color: #e74c3c;
-    }
-
-    .location-type-receiving {
-        border-left-color: #3498db;
-    }
-
-    .location-type-storage {
-        border-left-color: #2ecc71;
-    }
-
-    .location-type-bin {
-        border-left-color: #f39c12;
-    }
-
-    .location-badge {
-        font-size: 0.85em;
-        padding: 0.25rem 0.5rem;
-    }
-
-    .stats-card {
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-        border: none;
-        border-radius: 12px;
-    }
-
-    .location-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-</style>
+<!-- Unified CSS -->
+<link rel="stylesheet" href="<?= URLROOT ?>/css/app-unified.css">
 
 <div class="container-fluid px-4">
     <div class="row">
@@ -217,7 +174,7 @@ function getBadgeType($location)
 
             <!-- Statistics Cards -->
             <div class="row mb-4">
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="col mb-3">
                     <div class="card-theme stats-card h-100">
                         <div class="card-body text-center">
                             <div class="text-primary mb-2">
@@ -228,7 +185,7 @@ function getBadgeType($location)
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="col mb-3">
                     <div class="card-theme stats-card h-100">
                         <div class="card-body text-center">
                             <div class="text-danger mb-2">
@@ -239,7 +196,7 @@ function getBadgeType($location)
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="col mb-3">
                     <div class="card-theme stats-card h-100">
                         <div class="card-body text-center">
                             <div class="text-info mb-2">
@@ -250,7 +207,7 @@ function getBadgeType($location)
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="col mb-3">
                     <div class="card-theme stats-card h-100">
                         <div class="card-body text-center">
                             <div class="text-success mb-2">
@@ -261,7 +218,7 @@ function getBadgeType($location)
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="col mb-3">
                     <div class="card-theme stats-card h-100">
                         <div class="card-body text-center">
                             <div class="text-warning mb-2">
@@ -314,20 +271,43 @@ function getBadgeType($location)
                                     <?php foreach ($locations as $location): ?>
                                         <?php if (is_object($location)): ?>
                                             <?php $displayInfo = formatLocationDisplay($location); ?>
-                                            <div
-                                                class="card-theme location-card location-type-<?php echo $location->location_type; ?>">
+                                            <div class="card-theme location-card location-type-<?php echo $location->location_type; ?> clickable-card"
+                                                data-location-id="<?php echo $location->location_id; ?>"
+                                                data-location-code="<?php echo htmlspecialchars($displayInfo['code']); ?>"
+                                                data-location-name="<?php echo htmlspecialchars($location->location_name); ?>"
+                                                style="cursor: pointer;"
+                                                onclick="showLocationItems(<?php echo $location->location_id; ?>, '<?php echo htmlspecialchars($displayInfo['code']); ?>', '<?php echo htmlspecialchars($location->location_name); ?>')">
+                                                >
                                                 <div class="card-body">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
-                                                        <h6 class="card-title mb-0">
-                                                            <strong><?php echo htmlspecialchars($displayInfo['code']); ?></strong>
-                                                        </h6>
-                                                        <span
-                                                            class="badge location-badge
-                                                        <?php echo $location->location_type == 'dock' ? 'badge-danger' :
-                                                            ($location->location_type == 'receiving' ? 'badge-info' :
-                                                                ($location->location_type == 'storage' ? 'badge-success' : 'badge-warning')); ?>">
-                                                            <?php echo htmlspecialchars($displayInfo['badge']); ?>
-                                                        </span>
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="card-title mb-0">
+                                                                <strong><?php echo htmlspecialchars($displayInfo['code']); ?></strong>
+                                                            </h6>
+                                                        </div>
+                                                        <div class="text-right">
+                                                            <span
+                                                                class="badge location-badge mb-1
+                                                            <?php echo $location->location_type == 'dock' ? 'badge-danger' :
+                                                                ($location->location_type == 'receiving' ? 'badge-info' :
+                                                                    ($location->location_type == 'storage' ? 'badge-success' : 'badge-warning')); ?>">
+                                                                <?php echo htmlspecialchars($displayInfo['badge']); ?>
+                                                            </span>
+                                                            <?php if (isset($location->item_count) && $location->item_count > 0): ?>
+                                                                <div class="small text-muted">
+                                                                    <i class="fas fa-boxes"></i>
+                                                                    <?php echo number_format($location->item_count); ?> items
+                                                                </div>
+                                                                <div class="small text-muted">
+                                                                    <i class="fas fa-cubes"></i>
+                                                                    <?php echo number_format($location->total_quantity ?? 0); ?> qty
+                                                                </div>
+                                                            <?php else: ?>
+                                                                <div class="small text-muted">
+                                                                    <i class="fas fa-inbox"></i> Empty
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
                                                     </div>
                                                     <p class="card-text text-muted mb-2">
                                                         <?php
@@ -374,10 +354,10 @@ function getBadgeType($location)
                         <!-- Individual Type Tabs -->
                         <?php
                         $types = [
-                            'dock' => ['icon' => 'truck', 'color' => 'danger'],
+                            'dock'      => ['icon' => 'truck', 'color' => 'danger'],
                             'receiving' => ['icon' => 'inbox', 'color' => 'info'],
-                            'storage' => ['icon' => 'warehouse', 'color' => 'success'],
-                            'bin' => ['icon' => 'box', 'color' => 'warning']
+                            'storage'   => ['icon' => 'warehouse', 'color' => 'success'],
+                            'bin'       => ['icon' => 'box', 'color' => 'warning']
                         ];
                         ?>
 
@@ -390,16 +370,39 @@ function getBadgeType($location)
                                         <?php foreach ($typeLocations as $location): ?>
                                             <?php if (is_object($location)): ?>
                                                 <?php $displayInfo = formatLocationDisplay($location); ?>
-                                                <div
-                                                    class="card-theme location-card location-type-<?php echo $location->location_type; ?>">
+                                                <div class="card-theme location-card location-type-<?php echo $location->location_type; ?> clickable-card"
+                                                    data-location-id="<?php echo $location->location_id; ?>"
+                                                    data-location-code="<?php echo htmlspecialchars($displayInfo['code']); ?>"
+                                                    data-location-name="<?php echo htmlspecialchars($location->location_name); ?>"
+                                                    style="cursor: pointer;"
+                                                    onclick="showLocationItems(<?php echo $location->location_id; ?>, '<?php echo htmlspecialchars($displayInfo['code']); ?>', '<?php echo htmlspecialchars($location->location_name); ?>')">
                                                     <div class="card-body">
                                                         <div class="d-flex justify-content-between align-items-start mb-2">
-                                                            <h6 class="card-title mb-0">
-                                                                <strong><?php echo htmlspecialchars($displayInfo['code']); ?></strong>
-                                                            </h6>
-                                                            <span class="badge badge-<?php echo $config['color']; ?> location-badge">
-                                                                <?php echo htmlspecialchars($displayInfo['badge']); ?>
-                                                            </span>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="card-title mb-0">
+                                                                    <strong><?php echo htmlspecialchars($displayInfo['code']); ?></strong>
+                                                                </h6>
+                                                            </div>
+                                                            <div class="text-right">
+                                                                <span
+                                                                    class="badge badge-<?php echo $config['color']; ?> location-badge mb-1">
+                                                                    <?php echo htmlspecialchars($displayInfo['badge']); ?>
+                                                                </span>
+                                                                <?php if (isset($location->item_count) && $location->item_count > 0): ?>
+                                                                    <div class="small text-muted">
+                                                                        <i class="fas fa-boxes"></i>
+                                                                        <?php echo number_format($location->item_count); ?> items
+                                                                    </div>
+                                                                    <div class="small text-muted">
+                                                                        <i class="fas fa-cubes"></i>
+                                                                        <?php echo number_format($location->total_quantity ?? 0); ?> qty
+                                                                    </div>
+                                                                <?php else: ?>
+                                                                    <div class="small text-muted">
+                                                                        <i class="fas fa-inbox"></i> Empty
+                                                                    </div>
+                                                                <?php endif; ?>
+                                                            </div>
                                                         </div>
                                                         <p class="card-text text-muted mb-2">
                                                             <?php
@@ -444,6 +447,61 @@ function getBadgeType($location)
                         <?php endforeach; ?>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Location Items Modal -->
+<div class="modal fade" id="locationItemsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content theme-card">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-boxes mr-2"></i>
+                    Items in <span id="modalLocationCode"></span>
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="locationItemsLoading" class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                    <p class="mt-2 text-muted">Loading items...</p>
+                </div>
+                <div id="locationItemsContent" style="display: none;">
+                    <div class="mb-3">
+                        <strong>Location:</strong> <span id="modalLocationName"></span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>SKU</th>
+                                    <th class="text-right">Quantity</th>
+                                    <th class="text-right">Unit Price</th>
+                                    <th class="text-right">Total Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="locationItemsTableBody">
+                                <!-- Items will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="locationItemsSummary" class="mt-3 p-3 bg-light rounded">
+                        <!-- Summary will be loaded here -->
+                    </div>
+                </div>
+                <div id="locationItemsEmpty" style="display: none;" class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Items Found</h5>
+                    <p class="text-muted">This location currently has no inventory items.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -722,6 +780,132 @@ function getBadgeType($location)
 </div>
 
 <script>
+    // Function to show location items modal
+    function showLocationItems(locationId, locationCode, locationName) {
+        console.log('showLocationItems called with:', locationId, locationCode, locationName);
+
+        // Check if modal exists
+        const modal = document.getElementById('locationItemsModal');
+        if (!modal) {
+            console.error('Modal not found!');
+            alert('Modal not found. Please refresh the page.');
+            return;
+        }
+
+        // Check if jQuery is available
+        if (typeof $ === 'undefined') {
+            console.error('jQuery not loaded!');
+            alert('jQuery not loaded. Please refresh the page.');
+            return;
+        }
+
+        // Show the modal
+        $('#locationItemsModal').modal('show');
+
+        // Update modal title and content
+        document.getElementById('modalLocationCode').textContent = locationCode;
+        document.getElementById('modalLocationName').textContent = locationName;
+
+        // Show loading state
+        document.getElementById('locationItemsLoading').style.display = 'block';
+        document.getElementById('locationItemsContent').style.display = 'none';
+        document.getElementById('locationItemsEmpty').style.display = 'none';
+
+        // Fetch location items
+        const apiUrl = '<?= URLROOT ?>/api/getLocationItems.php';
+        console.log('Fetching from:', apiUrl);
+
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ location_id: locationId })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    populateLocationItems(data.data);
+                } else {
+                    throw new Error(data.message || 'Failed to load location items');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading location items: ' + error.message);
+                $('#locationItemsModal').modal('hide');
+            });
+    }
+
+    // Function to populate location items in modal
+    function populateLocationItems(data) {
+        document.getElementById('locationItemsLoading').style.display = 'none';
+
+        if (data.items.length === 0) {
+            document.getElementById('locationItemsEmpty').style.display = 'block';
+            return;
+        }
+
+        document.getElementById('locationItemsContent').style.display = 'block';
+
+        // Populate items table
+        const tableBody = document.getElementById('locationItemsTableBody');
+        tableBody.innerHTML = '';
+
+        data.items.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <strong>${escapeHtml(item.product_name)}</strong>
+                    ${item.category_name !== 'Uncategorized' ? '<br><small class="text-muted">' + escapeHtml(item.category_name) + '</small>' : ''}
+                </td>
+                <td>${escapeHtml(item.sku)}</td>
+                <td class="text-right"><strong>${item.quantity.toLocaleString()}</strong></td>
+                <td class="text-right">$${item.selling_price.toFixed(2)}</td>
+                <td class="text-right"><strong>$${item.total_selling_value.toFixed(2)}</strong></td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        // Populate summary
+        const summary = data.summary;
+        document.getElementById('locationItemsSummary').innerHTML = `
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h5 class="mb-0">${summary.total_items}</h5>
+                        <small class="text-muted">Product Types</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h5 class="mb-0">${summary.total_quantity.toLocaleString()}</h5>
+                        <small class="text-muted">Total Quantity</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h5 class="mb-0">$${summary.total_cost_value.toFixed(2)}</h5>
+                        <small class="text-muted">Cost Value</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h5 class="mb-0">$${summary.total_selling_value.toFixed(2)}</h5>
+                        <small class="text-muted">Selling Value</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         // Form mode switching
         const singleMode = document.getElementById('single_mode');

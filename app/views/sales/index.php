@@ -25,151 +25,137 @@
         </div>
     </div>
 
-    <!-- Sales Action Cards - All 6 in One Line -->
+    <!-- Sales Action Cards - unified markup -->
     <div class="row mb-4">
-        <!-- New Sale Section -->
         <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
-            <div class="kpi-card">
-                <div class="card-header bg-success-theme text-white">
-                    <h6 class="mb-0"><i class="fas fa-plus-circle"></i> New Sale</h6>
-                </div>
-                <div class="card-body text-center p-2">
-                    <div class="d-grid gap-2">
-                        <a href="<?php echo URLROOT; ?>/sales/add" class="btn btn-success btn-sm">
+            <div class="kpi-card kpi-gradient-success shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">Start Sale</div>
+                    <div class="kpi-value small">New Sale</div>
+                    <div class="d-grid gap-2 mt-2">
+                        <a href="<?php echo URLROOT; ?>/sales/add" class="btn btn-light btn-sm">
                             <i class="fas fa-plus"></i> Start Sale
                         </a>
                     </div>
+                    <i class="fas fa-plus-circle kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Sales History Section -->
         <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
-            <div class="kpi-card">
-                <div class="card-header bg-primary-theme text-white">
-                    <h6 class="mb-0"><i class="fas fa-list"></i> Sales History</h6>
-                </div>
-                <div class="card-body text-center p-2">
-                    <div class="d-grid gap-2">
-                        <a href="<?php echo URLROOT; ?>/sales/list" class="btn btn-primary btn-sm">
-                            <i class="fas fa-list"></i> All Sales
+            <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">All Sales</div>
+                    <div class="kpi-value small">Sales History</div>
+                    <div class="d-grid gap-2 mt-2">
+                        <a href="<?php echo URLROOT; ?>/sales/list" class="btn btn-light btn-sm">
+                            <i class="fas fa-list"></i> View
                         </a>
                     </div>
+                    <i class="fas fa-list kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Point of Sale Section -->
         <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
-            <div class="kpi-card">
-                <div class="card-header bg-info-theme text-white">
-                    <h6 class="mb-0"><i class="fas fa-cash-register"></i> POS</h6>
-                </div>
-                <div class="card-body text-center p-2">
-                    <div class="d-grid gap-2">
-                        <a href="<?php echo URLROOT; ?>/pos" class="btn btn-info btn-sm">
+            <div class="kpi-card kpi-gradient-info shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">Open POS</div>
+                    <div class="kpi-value small">Point of Sale</div>
+                    <div class="d-grid gap-2 mt-2">
+                        <a href="<?php echo URLROOT; ?>/pos" class="btn btn-light btn-sm">
                             <i class="fas fa-cash-register"></i> Open POS
                         </a>
                     </div>
+                    <i class="fas fa-cash-register kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Customers Section -->
         <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
-            <div class="kpi-card">
-                <div class="card-header bg-warning-theme text-white">
-                    <h6 class="mb-0"><i class="fas fa-users"></i> Customers</h6>
-                </div>
-                <div class="card-body text-center p-2">
-                    <div class="d-grid gap-2">
-                        <a href="<?php echo URLROOT; ?>/customers" class="btn btn-warning btn-sm">
-                            <i class="fas fa-list"></i> View All
+            <div class="kpi-card kpi-gradient-warning shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">Customers</div>
+                    <div class="kpi-value small">Manage Customers</div>
+                    <div class="d-grid gap-2 mt-2">
+                        <a href="<?php echo URLROOT; ?>/customers" class="btn btn-light btn-sm">
+                            <i class="fas fa-users"></i> View
                         </a>
                     </div>
+                    <i class="fas fa-users kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Invoices Section -->
         <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
-            <div class="kpi-card">
-                <div class="card-header bg-danger-theme text-white">
-                    <h6 class="mb-0"><i class="fas fa-file-invoice"></i> Invoices</h6>
-                </div>
-                <div class="card-body text-center p-2">
-                    <div class="d-grid gap-2">
-                        <a href="<?php echo URLROOT; ?>/invoices" class="btn btn-danger btn-sm">
-                            <i class="fas fa-list"></i> All Invoices
+            <div class="kpi-card kpi-gradient-danger shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">Invoices</div>
+                    <div class="kpi-value small">All Invoices</div>
+                    <div class="d-grid gap-2 mt-2">
+                        <a href="<?php echo URLROOT; ?>/invoices" class="btn btn-light btn-sm">
+                            <i class="fas fa-file-invoice"></i> View
                         </a>
                     </div>
+                    <i class="fas fa-file-invoice kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Sales Reports Section -->
         <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
-            <div class="kpi-card">
-                <div class="card-header bg-secondary-theme text-white">
-                    <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Reports</h6>
-                </div>
-                <div class="card-body text-center p-2">
-                    <div class="d-grid gap-2">
-                        <a href="<?php echo URLROOT; ?>/reports/sales" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-chart-line"></i> Reports
+            <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">Reports</div>
+                    <div class="kpi-value small">Sales Reports</div>
+                    <div class="d-grid gap-2 mt-2">
+                        <a href="<?php echo URLROOT; ?>/reports/sales" class="btn btn-light btn-sm">
+                            <i class="fas fa-chart-line"></i> View
                         </a>
                     </div>
+                    <i class="fas fa-chart-bar kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Today's Sales Summary - KPI Row -->
+    <!-- Today's Sales Summary - unified KPI row -->
     <div class="row mb-4 kpi-row">
         <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6 mb-3">
-            <div class="kpi-card">
-                <div class="card-header bg-success-theme text-white">
-                    <h6 class="mb-0"><i class="fas fa-dollar-sign"></i> Today's Revenue</h6>
-                </div>
-                <div class="card-body text-center p-2">
-                    <h5 class="text-success mb-1">$--</h5>
-                    <small class="text-muted">vs yesterday</small>
+            <div class="kpi-card kpi-gradient-success shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">$--</div>
+                    <div class="kpi-value small">Today's Revenue • vs yesterday</div>
+                    <i class="fas fa-dollar-sign kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6 mb-3">
-            <div class="kpi-card">
-                <div class="card-header bg-primary-theme text-white">
-                    <h6 class="mb-0"><i class="fas fa-receipt"></i> Transactions</h6>
-                </div>
-                <div class="card-body text-center p-2">
-                    <h5 class="text-primary mb-1">--</h5>
-                    <small class="text-muted">today</small>
+            <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">--</div>
+                    <div class="kpi-value small">Transactions • today</div>
+                    <i class="fas fa-receipt kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6 mb-3">
-            <div class="kpi-card">
-                <div class="card-header bg-info-theme text-white">
-                    <h6 class="mb-0"><i class="fas fa-chart-line"></i> Average Sale</h6>
-                </div>
-                <div class="card-body text-center p-2">
-                    <h5 class="text-info mb-1">$--</h5>
-                    <small class="text-muted">per transaction</small>
+            <div class="kpi-card kpi-gradient-info shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">$--</div>
+                    <div class="kpi-value small">Average Sale • per transaction</div>
+                    <i class="fas fa-chart-line kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6 mb-3">
-            <div class="kpi-card">
-                <div class="card-header bg-warning-theme text-white">
-                    <h6 class="mb-0"><i class="fas fa-box"></i> Items Sold</h6>
-                </div>
-                <div class="card-body text-center p-2">
-                    <h5 class="text-warning mb-1">--</h5>
-                    <small class="text-muted">today</small>
+            <div class="kpi-card kpi-gradient-warning shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">--</div>
+                    <div class="kpi-value small">Items Sold • today</div>
+                    <i class="fas fa-box kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>

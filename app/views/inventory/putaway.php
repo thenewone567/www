@@ -1,5 +1,8 @@
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
 
+<!-- Unified CSS -->
+<link rel="stylesheet" href="<?= URLROOT ?>/css/app-unified.css">
+
 <?php
 // User Role & Permission System
 $userRole = $_SESSION['user_role'] ?? 'Associate';
@@ -20,11 +23,11 @@ $systemRole = $roleIdMapping[$roleId] ?? 'viewer';
 
 // Check permissions for putaway
 $permissions = [
-    'admin' => ['can_putaway' => true],
+    'admin'             => ['can_putaway' => true],
     'warehouse_manager' => ['can_putaway' => true],
-    'receiving_clerk' => ['can_putaway' => true],
-    'inventory_clerk' => ['can_putaway' => true],
-    'viewer' => ['can_putaway' => false]
+    'receiving_clerk'   => ['can_putaway' => true],
+    'inventory_clerk'   => ['can_putaway' => true],
+    'viewer'            => ['can_putaway' => false]
 ];
 
 $userPermissions = $permissions[$systemRole] ?? $permissions['viewer'];
@@ -37,9 +40,9 @@ if (!$userPermissions['can_putaway']) {
 
 // Get real putaway statistics from database
 $putawayStats = [
-    'pending_putaway' => 0,
-    'putaway_today' => 0,
-    'efficiency_rate' => 0,
+    'pending_putaway'  => 0,
+    'putaway_today'    => 0,
+    'efficiency_rate'  => 0,
     'active_locations' => 0
 ];
 
@@ -349,43 +352,6 @@ try {
     </div>
 </div>
 </div>
-
-<style>
-    .timeline {
-        position: relative;
-        padding-left: 30px;
-    }
-
-    .timeline::before {
-        content: '';
-        position: absolute;
-        left: 15px;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: #dee2e6;
-    }
-
-    .timeline-item {
-        position: relative;
-        margin-bottom: 20px;
-    }
-
-    .timeline-marker {
-        position: absolute;
-        left: -23px;
-        top: 0;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        border: 2px solid #fff;
-    }
-
-    .location-zone:hover {
-        background-color: #e9ecef !important;
-        cursor: pointer;
-    }
-</style>
 
 <script>
     // Handle item scanning

@@ -9,6 +9,14 @@ class PurchasesController extends Controller
     public function __construct()
     {
         if (!isLoggedIn()) {
+            // If this is an AJAX request, return JSON 401 instead of redirecting to login HTML
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                header('Content-Type: application/json');
+                http_response_code(401);
+                echo json_encode(['error' => 'Unauthenticated']);
+                exit;
+            }
+
             redirect('users/login');
         }
         $this->purchaseModel = $this->model('Purchase');
@@ -35,14 +43,14 @@ class PurchasesController extends Controller
         $purchaseSummary = $this->purchaseModel->getPurchaseSummary();
 
         $data = [
-            'purchases' => $purchases,
-            'orders' => $purchases, // Add for backward compatibility with view
-            'summary' => $purchaseSummary, // Add comprehensive summary for KPI cards
+            'purchases'         => $purchases,
+            'orders'            => $purchases, // Add for backward compatibility with view
+            'summary'           => $purchaseSummary, // Add comprehensive summary for KPI cards
             // Legacy stats for backward compatibility
             'monthly_purchases' => $summaryStats['monthly_purchases'],
-            'pending_orders' => $summaryStats['pending_orders'],
-            'active_suppliers' => $summaryStats['active_suppliers'],
-            'items_received' => $summaryStats['items_received']
+            'pending_orders'    => $summaryStats['pending_orders'],
+            'active_suppliers'  => $summaryStats['active_suppliers'],
+            'items_received'    => $summaryStats['items_received']
         ];
         $this->view('purchases/index', $data);
     }
@@ -55,16 +63,16 @@ class PurchasesController extends Controller
             $_POST = sanitizePost($_POST);
             $postedProducts = isset($_POST['products']) && is_array($_POST['products']) ? $_POST['products'] : [];
             $data = [
-                'supplier_id' => isset($_POST['supplier_id']) ? trim($_POST['supplier_id']) : '', // optional if multi-supplier
-                'products' => $postedProducts,
-                'expected_date' => isset($_POST['expected_date']) ? trim($_POST['expected_date']) : date('Y-m-d', strtotime('+7 days')),
-                'notes' => isset($_POST['notes']) ? trim($_POST['notes']) : '',
+                'supplier_id'          => isset($_POST['supplier_id']) ? trim($_POST['supplier_id']) : '', // optional if multi-supplier
+                'products'             => $postedProducts,
+                'expected_date'        => isset($_POST['expected_date']) ? trim($_POST['expected_date']) : date('Y-m-d', strtotime('+7 days')),
+                'notes'                => isset($_POST['notes']) ? trim($_POST['notes']) : '',
                 'average_price_method' => isset($_POST['average_price_method']) ? 1 : 0,
-                'total_amount' => '0.00', // will be recomputed
-                'invoice_attachment' => '',
-                'supplier_id_err' => '',
-                'total_amount_err' => '',
-                'products_err' => ''
+                'total_amount'         => '0.00', // will be recomputed
+                'invoice_attachment'   => '',
+                'supplier_id_err'      => '',
+                'total_amount_err'     => '',
+                'products_err'         => ''
             ];
 
             // Group items by supplier
@@ -86,7 +94,7 @@ class PurchasesController extends Controller
                 }
                 $supplierGroups[$sid]['items'][] = [
                     'product_id' => $pid,
-                    'quantity' => $qty,
+                    'quantity'   => $qty,
                     'unit_price' => $price
                 ];
                 $supplierGroups[$sid]['total'] += $qty * $price;
@@ -121,21 +129,21 @@ class PurchasesController extends Controller
                 $errors = [];
                 foreach ($supplierGroups as $sid => $group) {
                     $purchaseData = [
-                        'supplier_id' => $sid,
-                        'total_amount' => number_format($group['total'], 2, '.', ''),
-                        'expected_date' => $data['expected_date'],
-                        'notes' => $data['notes'],
+                        'supplier_id'          => $sid,
+                        'total_amount'         => number_format($group['total'], 2, '.', ''),
+                        'expected_date'        => $data['expected_date'],
+                        'notes'                => $data['notes'],
                         'average_price_method' => $data['average_price_method'],
-                        'created_by' => $_SESSION['user_id'] ?? 0
+                        'created_by'           => $_SESSION['user_id'] ?? 0
                     ];
                     $purchase_id = $this->purchaseModel->addPurchase($purchaseData);
                     if ($purchase_id) {
                         foreach ($group['items'] as $it) {
                             $this->purchaseModel->addPurchaseItem([
                                 'purchase_id' => $purchase_id,
-                                'product_id' => $it['product_id'],
-                                'quantity' => $it['quantity'],
-                                'unit_price' => $it['unit_price']
+                                'product_id'  => $it['product_id'],
+                                'quantity'    => $it['quantity'],
+                                'unit_price'  => $it['unit_price']
                             ]);
                         }
                         $created++;
@@ -162,7 +170,11 @@ class PurchasesController extends Controller
                 $products = $this->productModel->getProductsWithAllSuppliers();
                 error_log('[PURCHASES_ADD] (POST reload) getProductsWithAllSuppliers() returned: ' . (is_array($products) ? count($products) : 0));
                 if (!$products) {
-                    $products = [];
+                    // Fallback: return paginated products without requiring supplier links
+                    $fallback = $this->productModel->getProductsPaginated(0, 100);
+                    $products = $fallback ? array_map(function ($r) {
+                        return (object) $r;
+                    }, $fallback) : [];
                 }
                 $suppliers = $this->supplierModel->getSuppliers();
                 if (!$suppliers) {
@@ -178,8 +190,17 @@ class PurchasesController extends Controller
             $products = $this->productModel->getProductsWithAllSuppliers();
             error_log('[PURCHASES_ADD] (GET) getProductsWithAllSuppliers() returned: ' . (is_array($products) ? count($products) : 0));
             if (!$products) {
-                $products = [];
-                flash('purchase_message', 'No products with active suppliers found');
+                // Fallback to a permissive product list so the UI is usable
+                $fallback = $this->productModel->getProductsPaginated(0, 100);
+                $products = $fallback ? array_map(function ($r) {
+                    return (object) $r;
+                }, $fallback) : [];
+                if (empty($products)) {
+                    flash('purchase_message', 'No products found');
+                } else {
+                    // Informational flash when falling back
+                    flash('purchase_message', 'Showing products without active supplier links (fallback).');
+                }
             }
             $suppliers = $this->supplierModel->getSuppliers();
             if (!$suppliers) {
@@ -187,17 +208,17 @@ class PurchasesController extends Controller
                 flash('purchase_message', 'No suppliers found');
             }
             $data = [
-                'supplier_id' => '',
-                'supplier_id_err' => '',
-                'total_amount' => '',
-                'total_amount_err' => '',
-                'products_err' => '', // Missing key added
-                'expected_date' => date('Y-m-d', strtotime('+7 days')), // Missing key added
-                'notes' => '', // Missing key added
+                'supplier_id'          => '',
+                'supplier_id_err'      => '',
+                'total_amount'         => '',
+                'total_amount_err'     => '',
+                'products_err'         => '', // Missing key added
+                'expected_date'        => date('Y-m-d', strtotime('+7 days')), // Missing key added
+                'notes'                => '', // Missing key added
                 'average_price_method' => 0, // Default to unchecked
-                'products' => $products,
-                'suppliers' => $suppliers,
-                'session_cart' => array_values($cartManager->getCart())
+                'products'             => $products,
+                'suppliers'            => $suppliers,
+                'session_cart'         => array_values($cartManager->getCart())
             ];
             $this->view('purchases/add', $data);
         }
@@ -223,8 +244,26 @@ class PurchasesController extends Controller
         $rows = is_array($res) && isset($res['rows']) ? $res['rows'] : [];
         $total = is_array($res) && isset($res['total']) ? (int) $res['total'] : count($rows);
 
+        $usedFallback = false;
+        // If no rows found, fallback to a more permissive product list (include products without active suppliers)
+        if ($total === 0) {
+            // Use paginated product query (no supplier join) as a safe fallback so the UI can show products
+            $offset = ($page - 1) * $perPage;
+            $search = isset($filters['search']) ? $filters['search'] : '';
+            $fallbackRows = $this->productModel->getProductsPaginated($offset, $perPage, $search);
+            $fallbackTotal = $this->productModel->getTotalProductsCount($search);
+            $rows = $fallbackRows ? array_map(function ($r) {
+                return (object) $r;
+            }, $fallbackRows) : [];
+            $total = (int) $fallbackTotal;
+            $usedFallback = true;
+        }
+
         header('Content-Type: application/json');
-        echo json_encode(['page' => $page, 'perPage' => $perPage, 'count' => $total, 'rows' => $rows]);
+        $out = ['page' => $page, 'perPage' => $perPage, 'count' => $total, 'rows' => $rows];
+        if ($usedFallback)
+            $out['fallback'] = true;
+        echo json_encode($out);
         exit;
     }
 
@@ -336,10 +375,24 @@ class PurchasesController extends Controller
         // Get purchase items
         $purchaseItems = $this->purchaseModel->getPurchaseItems($id);
 
+        // Get receiving status if receiving table exists
+        $receivingStatus = null;
+        try {
+            $db = new Database();
+            $db->query("SELECT status, received_date, notes FROM receiving WHERE purchase_id = :purchase_id ORDER BY created_at DESC LIMIT 1");
+            $db->bind(':purchase_id', $id);
+            $db->execute();
+            $receivingStatus = $db->single();
+        } catch (Exception $e) {
+            // Receiving table might not exist or no receiving record
+            error_log("Could not fetch receiving status: " . $e->getMessage());
+        }
+
         $data = [
-            'title' => 'Purchase Details - #' . $id,
-            'purchase' => $purchase,
-            'purchase_items' => $purchaseItems
+            'title'            => 'Purchase Details - #' . $id,
+            'purchase'         => $purchase,
+            'purchase_items'   => $purchaseItems,
+            'receiving_status' => $receivingStatus
         ];
 
         $this->view('purchases/details', $data);
@@ -454,7 +507,7 @@ class PurchasesController extends Controller
             }
 
             $data = [
-                'title' => 'Confirm Receipt - PO #' . $purchase->po_number,
+                'title'    => 'Confirm Receipt - PO #' . $purchase->po_number,
                 'purchase' => $purchase
             ];
 
@@ -492,7 +545,37 @@ class PurchasesController extends Controller
                 $items = $this->purchaseModel->getPurchaseItems($purchase->purchase_id);
 
                 require_once APPROOT . '/app/helpers/ReceiptHelper.php';
-                $receiptHtml = ReceiptHelper::generateReceivingReceipt((array) $purchase, $items);
+                // Ensure the receipt shows the current user's profile name when regenerating the receipt
+                $purchaseArr = (array) $purchase;
+                if (empty($purchaseArr['received_by'])) {
+                    // Prefer explicit session full name
+                    $displayName = $_SESSION['user_full_name'] ?? null;
+
+                    // If not present, try to look it up from users table using session user_id
+                    if (empty($displayName) && !empty($_SESSION['user_id'])) {
+                        try {
+                            $db = new Database();
+                            // Users table stores 'full_name' — select that or fall back to username
+                            $db->query('SELECT COALESCE(full_name, username) as full_name FROM users WHERE user_id = ? LIMIT 1');
+                            $db->bind(1, $_SESSION['user_id']);
+                            $db->execute();
+                            $row = $db->single();
+                            if ($row && !empty($row->full_name)) {
+                                $displayName = $row->full_name;
+                            }
+                        } catch (Exception $e) {
+                            error_log('Failed to fetch user full name: ' . $e->getMessage());
+                        }
+                    }
+
+                    // Fallback to username if still not present
+                    if (empty($displayName)) {
+                        $displayName = $_SESSION['username'] ?? null;
+                    }
+
+                    $purchaseArr['received_by'] = $displayName;
+                }
+                $receiptHtml = ReceiptHelper::generateReceivingReceipt($purchaseArr, $items);
                 ReceiptHelper::displayReceipt($receiptHtml);
                 return;
             }
@@ -509,6 +592,122 @@ class PurchasesController extends Controller
     }
 
     /**
+     * Generate or download a PDF version of the receiving receipt for a PO
+     */
+    public function downloadReceiptPdf($identifier = null)
+    {
+        if (!$identifier) {
+            flash('purchase_message', 'Missing purchase identifier', 'alert alert-danger');
+            redirect('purchases');
+        }
+
+        // Resolve purchase by id or po number
+        if (is_numeric($identifier)) {
+            $purchase = $this->purchaseModel->getPurchaseById($identifier);
+        } else {
+            $purchase = $this->purchaseModel->getPurchaseByPONumber($identifier);
+        }
+
+        if (!$purchase) {
+            flash('purchase_message', 'Purchase not found', 'alert alert-danger');
+            redirect('purchases');
+        }
+
+        $items = $this->purchaseModel->getPurchaseItems($purchase->purchase_id);
+        require_once APPROOT . '/app/helpers/ReceiptHelper.php';
+
+        // Ensure display name is available for the receipt
+        $purchaseArr = (array) $purchase;
+        if (empty($purchaseArr['received_by'])) {
+            $purchaseArr['received_by'] = $_SESSION['display_name'] ?? $_SESSION['user_full_name'] ?? $_SESSION['username'] ?? null;
+        }
+
+        $receiptHtml = ReceiptHelper::generateReceivingReceipt($purchaseArr, $items);
+
+        // Attempt to save as PDF
+        $pdfPath = ReceiptHelper::saveReceiptPdf($receiptHtml, $purchase->po_number ?? 'po_' . $purchase->purchase_id);
+
+        if ($pdfPath && file_exists($pdfPath)) {
+            // Send headers for download
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: attachment; filename="' . basename($pdfPath) . '"');
+            header('Content-Length: ' . filesize($pdfPath));
+            readfile($pdfPath);
+            exit();
+        }
+
+        // If PDF generation not available, show HTML receipt and instruct user to save/print to PDF manually
+        ReceiptHelper::displayReceipt($receiptHtml);
+    }
+
+    /**
+     * Trigger sending of the receiving receipt via email (supplier/internal)
+     * Expects POST with optional 'to' param to override recipient
+     */
+    public function emailReceipt($identifier = null)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+
+        if (!$identifier) {
+            echo json_encode(['success' => false, 'message' => 'Missing purchase identifier']);
+            exit;
+        }
+
+        // Resolve purchase
+        if (is_numeric($identifier)) {
+            $purchase = $this->purchaseModel->getPurchaseById($identifier);
+        } else {
+            $purchase = $this->purchaseModel->getPurchaseByPONumber($identifier);
+        }
+
+        if (!$purchase) {
+            echo json_encode(['success' => false, 'message' => 'Purchase not found']);
+            exit;
+        }
+
+        $items = $this->purchaseModel->getPurchaseItems($purchase->purchase_id);
+        require_once APPROOT . '/app/helpers/ReceiptHelper.php';
+        require_once APPROOT . '/app/helpers/EmailHelper.php';
+
+        $purchaseArr = (array) $purchase;
+        if (empty($purchaseArr['received_by'])) {
+            $purchaseArr['received_by'] = $_SESSION['display_name'] ?? $_SESSION['user_full_name'] ?? $_SESSION['username'] ?? null;
+        }
+
+        $receiptHtml = ReceiptHelper::generateReceivingReceipt($purchaseArr, $items);
+        $pdfPath = ReceiptHelper::saveReceiptPdf($receiptHtml, $purchase->po_number ?? 'po_' . $purchase->purchase_id);
+
+        $attachments = [];
+        if ($pdfPath && file_exists($pdfPath)) {
+            $attachments[] = $pdfPath;
+        }
+
+        // Determine recipients - prefer supplier email from purchase data
+        $supplierEmail = $purchase->supplier_email ?? null;
+        $internalEmail = $_POST['internal_email'] ?? null; // optional override
+        // If POST supplied 'to', send only to that address
+        $overrideTo = $_POST['to'] ?? null;
+
+        $sent = false;
+        if ($overrideTo && filter_var($overrideTo, FILTER_VALIDATE_EMAIL)) {
+            $sent = EmailHelper::sendRawEmail($overrideTo, 'Receiving Receipt - PO ' . ($purchase->po_number ?? ''), ReceiptHelper::generateReceivingReceipt($purchaseArr, $items), $attachments);
+        } else {
+            $sent = EmailHelper::sendPurchaseReceivedConfirmation($purchaseArr, $supplierEmail, $internalEmail, $attachments);
+        }
+
+        if ($sent) {
+            echo json_encode(['success' => true, 'message' => 'Email sent']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to send email']);
+        }
+        exit;
+    }
+
+    /**
      * Purchase order approval workflow
      */
     public function approvals()
@@ -517,9 +716,9 @@ class PurchasesController extends Controller
         $overdueOrders = $this->purchaseModel->getOverduePurchaseOrders(7);
 
         $data = [
-            'title' => 'Purchase Order Approvals',
+            'title'             => 'Purchase Order Approvals',
             'pending_approvals' => $pendingApprovals,
-            'overdue_orders' => $overdueOrders
+            'overdue_orders'    => $overdueOrders
         ];
 
         $this->view('purchases/approvals', $data);
@@ -567,15 +766,15 @@ class PurchasesController extends Controller
             $total += $qty * $price;
             $items[] = [
                 'product_id' => $product->product_id,
-                'qty' => $qty,
-                'price' => $price
+                'qty'        => $qty,
+                'price'      => $price
             ];
         }
         // Insert purchase order
         $purchase_id = $this->purchaseModel->addPurchase([
-            'supplier_id' => $supplier_id,
+            'supplier_id'  => $supplier_id,
             'total_amount' => $total,
-            'created_by' => $_SESSION['user_id'] ?? 0
+            'created_by'   => $_SESSION['user_id'] ?? 0
         ]);
         if (!$purchase_id) {
             echo json_encode(['success' => false, 'message' => 'Failed to create purchase order.']);
@@ -585,9 +784,9 @@ class PurchasesController extends Controller
         foreach ($items as $item) {
             $this->purchaseModel->addPurchaseItem([
                 'purchase_id' => $purchase_id,
-                'product_id' => $item['product_id'],
-                'quantity' => $item['qty'],
-                'unit_price' => $item['price']
+                'product_id'  => $item['product_id'],
+                'quantity'    => $item['qty'],
+                'unit_price'  => $item['price']
             ]);
         }
         echo json_encode(['success' => true, 'message' => 'Purchase order created successfully.']);
@@ -684,7 +883,7 @@ class PurchasesController extends Controller
                 if ($barcodeValue) {
                     $existingBarcode = [
                         'barcode_value' => $barcodeValue,
-                        'type' => 'CODE128'
+                        'type'          => 'CODE128'
                     ];
                 }
             } else {
@@ -693,19 +892,19 @@ class PurchasesController extends Controller
 
             if ($existingBarcode) {
                 $barcodeData[] = [
-                    'product_id' => $item->product_id,
-                    'product_name' => $item->product_name,
-                    'sku' => $item->sku ?? '',
-                    'barcode_value' => $existingBarcode['barcode_value'],
-                    'barcode_type' => $existingBarcode['type'] ?? 'CODE128',
+                    'product_id'        => $item->product_id,
+                    'product_name'      => $item->product_name,
+                    'sku'               => $item->sku ?? '',
+                    'barcode_value'     => $existingBarcode['barcode_value'],
+                    'barcode_type'      => $existingBarcode['type'] ?? 'CODE128',
                     'quantity_received' => $item->quantity_received ?? $item->quantity,
-                    'location' => $item->location_name ?? 'Main Warehouse'
+                    'location'          => $item->location_name ?? 'Main Warehouse'
                 ];
             }
         }
 
         $data = [
-            'title' => 'Print Barcodes - Purchase #' . $purchase_id,
+            'title'    => 'Print Barcodes - Purchase #' . $purchase_id,
             'purchase' => $purchase,
             'barcodes' => $barcodeData
         ];
@@ -771,10 +970,10 @@ class PurchasesController extends Controller
         }
 
         echo json_encode([
-            'success' => true,
+            'success'   => true,
             'generated' => $generatedCount,
-            'errors' => $errors,
-            'message' => "$generatedCount barcodes generated successfully"
+            'errors'    => $errors,
+            'message'   => "$generatedCount barcodes generated successfully"
         ]);
         exit;
     }
@@ -802,6 +1001,214 @@ class PurchasesController extends Controller
             }
         } else {
             echo json_encode([]);
+        }
+        exit;
+    }
+
+    public function history()
+    {
+        $purchases = $this->purchaseModel->getHistory();
+        if (!$purchases) {
+            $purchases = [];
+            flash('purchase_message', 'No purchase history found', 'alert alert-info');
+        }
+
+        $data = [
+            'purchases' => $purchases,
+            'title'     => 'Purchase Order History'
+        ];
+        $this->view('purchases/history', $data);
+    }
+
+    /**
+     * Edit purchase order
+     */
+    public function edit($id = null)
+    {
+        if (!$id || !is_numeric($id)) {
+            flash('purchase_message', 'Invalid purchase ID', 'alert alert-danger');
+            redirect('purchases');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = sanitizePost($_POST);
+
+            $data = [
+                'status'              => trim($_POST['status'] ?? ''),
+                'tracking_number'     => trim($_POST['tracking_number'] ?? ''),
+                'expected_date'       => trim($_POST['expected_date'] ?? ''),
+                'notes'               => trim($_POST['notes'] ?? ''),
+                'cancellation_reason' => trim($_POST['cancellation_reason'] ?? ''),
+                'cancelled_action'    => trim($_POST['cancelled_action'] ?? ''),
+                'custom_reason'       => trim($_POST['custom_reason'] ?? '')
+            ];
+
+            // Handle cancellation fields
+            if ($data['status'] === 'cancelled') {
+                if (!empty($data['cancellation_reason'])) {
+                    $data['cancelled_by'] = $_SESSION['user_id'] ?? null;
+                    $data['cancelled_at'] = date('Y-m-d H:i:s');
+
+                    if ($data['cancellation_reason'] === 'other' && !empty($data['custom_reason'])) {
+                        $data['cancellation_reason'] = $data['custom_reason'];
+                    }
+                }
+            }
+
+            // Update purchase order
+            $result = $this->purchaseModel->updatePurchase($id, $data);
+
+            if ($result) {
+                // Handle tracking number update with automatic status change
+                if (!empty($data['tracking_number'])) {
+                    $this->purchaseModel->updateTracking($id, $data['tracking_number']);
+                }
+
+                flash('purchase_message', 'Purchase order updated successfully', 'alert alert-success');
+                redirect('purchases');
+            } else {
+                flash('purchase_message', 'Failed to update purchase order', 'alert alert-danger');
+            }
+        }
+
+        // GET request - show edit form
+        $purchase = $this->purchaseModel->getPurchaseById($id);
+        if (!$purchase) {
+            flash('purchase_message', 'Purchase not found', 'alert alert-danger');
+            redirect('purchases');
+        }
+
+        $data = [
+            'title' => 'Edit Purchase Order',
+            'order' => $purchase
+        ];
+
+        $this->view('purchases/edit', $data);
+    }
+
+    /**
+     * AJAX method to update tracking number only
+     */
+    public function updateTrackingAjax()
+    {
+        // Set content type header
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+
+        $id = $_POST['purchase_id'] ?? null;
+        $trackingNumber = trim($_POST['tracking_number'] ?? '');
+
+        if (!$id || !is_numeric($id)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid purchase ID']);
+            exit;
+        }
+
+        if (empty($trackingNumber)) {
+            echo json_encode(['success' => false, 'message' => 'Tracking number is required']);
+            exit;
+        }
+
+        $result = $this->purchaseModel->updateTracking($id, $trackingNumber);
+
+        if ($result) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Tracking number updated successfully',
+                'status'  => 'in_transit'
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to update tracking number']);
+        }
+        exit;
+    }
+
+    /**
+     * AJAX method to soft delete a purchase order
+     */
+    public function softDeleteAjax()
+    {
+        // Set content type header
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+
+        $id = $_POST['purchase_id'] ?? null;
+        $reason = trim($_POST['reason'] ?? '');
+
+        if (!$id || !is_numeric($id)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid purchase ID']);
+            exit;
+        }
+
+        if (empty($reason)) {
+            echo json_encode(['success' => false, 'message' => 'Deletion reason is required']);
+            exit;
+        }
+
+        $result = $this->purchaseModel->softDeletePurchase($id, $reason);
+
+        if ($result) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Purchase order deleted successfully'
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to delete purchase order. Only pending orders can be deleted.']);
+        }
+        exit;
+    }
+
+    /**
+     * AJAX method to cancel a purchase order with email notification
+     */
+    public function cancelPurchaseAjax()
+    {
+        // Set content type header first
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+
+        try {
+            $id = $_POST['purchase_id'] ?? null;
+            $reason = trim($_POST['reason'] ?? '');
+
+            if (!$id || !is_numeric($id)) {
+                echo json_encode(['success' => false, 'message' => 'Invalid purchase ID']);
+                exit;
+            }
+
+            if (empty($reason)) {
+                echo json_encode(['success' => false, 'message' => 'Cancellation reason is required']);
+                exit;
+            }
+
+            $result = $this->purchaseModel->cancelPurchaseOrder($id, $reason);
+
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Purchase order cancelled successfully. Cancellation notifications have been sent.'
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to cancel purchase order. Only pending orders can be cancelled.']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error in cancelPurchaseAjax: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Server error occurred while cancelling purchase order.'
+            ]);
         }
         exit;
     }

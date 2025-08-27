@@ -55,174 +55,134 @@ function buildPaginationUrl($page, $perPage = null)
 </div>
 
 <div class="container-fluid mt-0 pt-3">
-    <!-- Enhanced KPI Summary Cards -->
+    <!-- Enhanced KPI Summary Cards (unified .kpi-card markup) -->
     <div class="row mb-4">
         <div class="col-lg-2 col-md-4 mb-3">
-            <div class="kpi-card h-100 primary">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="kpi-card-title">
-                        <h5>Total Suppliers</h5>
-                    </div>
-                </div>
-                <div class="kpi-card-body text-center">
-                    <div class="kpi-card-value">
+            <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
+                <div class="kpi-body">
+                    <div class="kpi-count">
                         <?php echo isset($data['total_suppliers']) ? $data['total_suppliers'] : '0'; ?>
                     </div>
-                    <div class="kpi-card-label">Registered</div>
+                    <div class="kpi-value small">Registered •
+                        <?php echo isset($data['total_suppliers']) ? $data['total_suppliers'] : '0'; ?>
+                    </div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-users kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-2 col-md-4 mb-3">
-            <div class="kpi-card h-100 success">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="kpi-card-title">
-                        <h5>Active</h5>
-                    </div>
-                </div>
-                <div class="kpi-card-body text-center">
-                    <div class="kpi-card-value">
+            <div class="kpi-card kpi-gradient-success shadow-sm h-100">
+                <div class="kpi-body">
+                    <div class="kpi-count">
                         <?php echo isset($data['active_suppliers']) ? $data['active_suppliers'] : '0'; ?>
                     </div>
-                    <div class="kpi-card-label">Suppliers</div>
+                    <div class="kpi-value small">Active •
+                        <?php echo isset($data['active_suppliers']) ? $data['active_suppliers'] : '0'; ?>
+                    </div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-check-circle kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-2 col-md-4 mb-3">
-            <div class="kpi-card h-100 info">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-truck"></i>
-                    </div>
-                    <div class="kpi-card-title">
-                        <h5>Avg Delivery</h5>
-                    </div>
-                </div>
-                <div class="kpi-card-body text-center">
-                    <div class="kpi-card-value">
+            <div class="kpi-card kpi-gradient-info shadow-sm h-100">
+                <div class="kpi-body">
+                    <div class="kpi-count">
                         <?php echo isset($data['avg_delivery_days']) ? number_format($data['avg_delivery_days'], 1) : '0'; ?>
                     </div>
-                    <div class="kpi-card-label">Days</div>
+                    <div class="kpi-value small">Avg Delivery • Days</div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-truck kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-2 col-md-4 mb-3">
-            <div class="kpi-card h-100 warning">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="kpi-card-title">
-                        <h5>On-Time Rate</h5>
-                    </div>
-                </div>
-                <div class="kpi-card-body text-center">
-                    <div class="kpi-card-value">
+            <div class="kpi-card kpi-gradient-warning shadow-sm h-100">
+                <div class="kpi-body">
+                    <div class="kpi-count">
                         <?php echo isset($data['avg_on_time_rate']) ? number_format($data['avg_on_time_rate'], 1) : '0'; ?>%
                     </div>
-                    <div class="kpi-card-label">Average</div>
+                    <div class="kpi-value small">On-Time Rate • Average</div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-clock kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-2 col-md-4 mb-3">
-            <div class="kpi-card h-100 warning special">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-crown"></i>
-                    </div>
-                    <div class="kpi-card-title">
-                        <h5>Gold Tier</h5>
-                    </div>
-                </div>
-                <div class="kpi-card-body text-center">
-                    <div class="kpi-card-value">
+            <div class="kpi-card kpi-gradient-success shadow-sm h-100 special">
+                <div class="kpi-body">
+                    <div class="kpi-count">
                         <?php echo isset($data['gold_tier_suppliers']) ? $data['gold_tier_suppliers'] : '0'; ?>
                     </div>
-                    <div class="kpi-card-label">Suppliers</div>
+                    <div class="kpi-value small">Gold Tier • Suppliers</div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-crown kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-2 col-md-4 mb-3">
-            <div class="kpi-card h-100 secondary special">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="kpi-card-title">
-                        <h5>Total Value</h5>
-                    </div>
-                </div>
-                <div class="kpi-card-body text-center">
-                    <div class="kpi-card-value">
+            <div class="kpi-card kpi-gradient-primary shadow-sm h-100 secondary special">
+                <div class="kpi-body">
+                    <div class="kpi-count">
                         ₹<?php echo isset($data['total_order_value']) ? number_format($data['total_order_value'] / 100000, 1) : '0'; ?>L
                     </div>
-                    <div class="kpi-card-label">Order Value</div>
+                    <div class="kpi-value small">Total Value • Order Value</div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-chart-line kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
     </div> <!-- end of KPI row -->
 
-    <!-- Quick Stats Cards -->
+    <!-- Quick Stats Cards (unified look) -->
     <div class="row mb-4">
         <div class="col-md-3 mb-3">
-            <div class="kpi-card primary">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-handshake"></i>
-                    </div>
-                    <div class="kpi-card-value">
+            <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">
                         ₹<?php echo isset($data['total_order_value']) ? number_format($data['total_order_value'] / 100000, 1) : '2.45'; ?>L
                     </div>
-                    <div class="kpi-card-label">Total Supplier Value</div>
+                    <div class="kpi-value small">Total Supplier Value</div>
+                    <i class="fas fa-handshake kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="kpi-card success">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-percentage"></i>
-                    </div>
-                    <div class="kpi-card-value">
+            <div class="kpi-card kpi-gradient-success shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">
                         <?php echo isset($data['avg_on_time_rate']) ? number_format($data['avg_on_time_rate'], 1) : '85.2'; ?>%
                     </div>
-                    <div class="kpi-card-label">Average On-Time Rate</div>
+                    <div class="kpi-value small">Average On-Time Rate</div>
+                    <i class="fas fa-percentage kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="kpi-card warning">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="kpi-card-value">
+            <div class="kpi-card kpi-gradient-warning shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">
                         <?php echo isset($data['poor_performers_count']) ? $data['poor_performers_count'] : '3'; ?>
                     </div>
-                    <div class="kpi-card-label">Suppliers Need Attention</div>
+                    <div class="kpi-value small">Suppliers Need Attention</div>
+                    <i class="fas fa-exclamation-triangle kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="kpi-card info">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-sync-alt"></i>
-                    </div>
-                    <div class="kpi-card-value">
+            <div class="kpi-card kpi-gradient-info shadow-sm h-100">
+                <div class="kpi-body text-center">
+                    <div class="kpi-count">
                         <?php echo isset($data['active_suppliers']) ? $data['active_suppliers'] : '8'; ?>
                     </div>
-                    <div class="kpi-card-label">Active Partnerships</div>
+                    <div class="kpi-value small">Active Partnerships</div>
+                    <i class="fas fa-sync-alt kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
@@ -231,17 +191,18 @@ function buildPaginationUrl($page, $perPage = null)
     <!-- Top Performers Section -->
     <div class="row mb-4">
         <div class="col-lg-4 mb-3">
-            <div class="kpi-card shadow h-100 success">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-trophy"></i>
-                    </div>
-                    <div class="kpi-card-title">
-                        <h6>Top Performers</h6>
-                    </div>
-                </div>
-                <div class="kpi-card-body p-0">
+            <div class="kpi-card kpi-gradient-success shadow h-100">
+                <div class="kpi-body p-0">
                     <div class="list-group list-group-flush">
+                        <div class="list-group-item bg-transparent border-0 px-3 py-2">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="fas fa-trophy fa-lg mr-2"></i>
+                                    <strong>Top Performers</strong>
+                                </div>
+                                <small class="text-white-50">Top 3</small>
+                            </div>
+                        </div>
                         <?php if (!empty($data['top_performers'])): ?>
                             <?php foreach (array_slice($data['top_performers'], 0, 3) as $index => $supplier): ?>
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
@@ -268,17 +229,18 @@ function buildPaginationUrl($page, $perPage = null)
         </div>
 
         <div class="col-lg-4 mb-3">
-            <div class="kpi-card shadow h-100 warning">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="kpi-card-title">
-                        <h6>Needs Attention</h6>
-                    </div>
-                </div>
-                <div class="kpi-card-body p-0">
+            <div class="kpi-card kpi-gradient-warning shadow h-100">
+                <div class="kpi-body p-0">
                     <div class="list-group list-group-flush">
+                        <div class="list-group-item bg-transparent border-0 px-3 py-2">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="fas fa-exclamation-triangle fa-lg mr-2"></i>
+                                    <strong>Needs Attention</strong>
+                                </div>
+                                <small class="text-white-50">Action Required</small>
+                            </div>
+                        </div>
                         <?php if (!empty($data['poor_performers'])): ?>
                             <?php foreach (array_slice($data['poor_performers'], 0, 3) as $supplier): ?>
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
@@ -304,17 +266,18 @@ function buildPaginationUrl($page, $perPage = null)
         </div>
 
         <div class="col-lg-4 mb-3">
-            <div class="kpi-card shadow h-100 info">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="kpi-card-title">
-                        <h6>Recent Deliveries</h6>
-                    </div>
-                </div>
-                <div class="kpi-card-body p-0">
+            <div class="kpi-card kpi-gradient-info shadow h-100">
+                <div class="kpi-body p-0">
                     <div class="list-group list-group-flush">
+                        <div class="list-group-item bg-transparent border-0 px-3 py-2">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="fas fa-clock fa-lg mr-2"></i>
+                                    <strong>Recent Deliveries</strong>
+                                </div>
+                                <small class="text-white-50">Latest</small>
+                            </div>
+                        </div>
                         <?php if (!empty($data['recent_deliveries'])): ?>
                             <?php foreach (array_slice($data['recent_deliveries'], 0, 3) as $delivery): ?>
                                 <div class="list-group-item">
@@ -355,12 +318,14 @@ function buildPaginationUrl($page, $perPage = null)
     <div class="row mb-4">
         <div class="col-12">
             <div class="kpi-card">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fas fa-list"></i>
-                    </div>
-                    <div class="kpi-card-title">
-                        <h5>Supplier Management</h5>
+                <div class="kpi-body d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="mr-3">
+                            <i class="fas fa-list fa-lg text-muted"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">Supplier Management</h5>
+                        </div>
                     </div>
                     <div class="d-flex align-items-center">
                         <form method="GET" action="<?php echo URLROOT; ?>/suppliers" class="mr-3" id="searchForm">
@@ -508,6 +473,24 @@ function buildPaginationUrl($page, $perPage = null)
                                             <i class="fas fa-sort text-muted"></i>
                                         <?php endif; ?>
                                     </th>
+                                    <th width="12%" id="sort-added_by" class="sortable" data-sort="added_by">
+                                        Added By
+                                        <?php if (isset($data['current_sort']) && $data['current_sort'] === 'added_by'): ?>
+                                            <i
+                                                class="fas fa-sort-<?php echo $data['current_order'] === 'DESC' ? 'down' : 'up'; ?>"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-sort text-muted"></i>
+                                        <?php endif; ?>
+                                    </th>
+                                    <th width="12%" id="sort-created_at" class="sortable" data-sort="created_at">
+                                        Added At
+                                        <?php if (isset($data['current_sort']) && $data['current_sort'] === 'created_at'): ?>
+                                            <i
+                                                class="fas fa-sort-<?php echo $data['current_order'] === 'DESC' ? 'down' : 'up'; ?>"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-sort text-muted"></i>
+                                        <?php endif; ?>
+                                    </th>
                                     <th width="14%">Actions</th>
                                 </tr>
                             </thead>
@@ -607,6 +590,12 @@ function buildPaginationUrl($page, $perPage = null)
                                                         class="fas fa-<?php echo $status === 'active' ? 'check-circle' : ($status === 'pending' ? 'clock' : 'times-circle'); ?> mr-1"></i>
                                                     <?php echo ucfirst($status); ?>
                                                 </span>
+                                            </td>
+                                            <td class="text-middle">
+                                                <?php echo htmlspecialchars($supplier->added_by_username ?? '-'); ?>
+                                            </td>
+                                            <td class="text-middle">
+                                                <?php echo !empty($supplier->created_at) ? date('M d, Y H:i', strtotime($supplier->created_at)) : '-'; ?>
                                             </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm">
@@ -1061,10 +1050,14 @@ function buildPaginationUrl($page, $perPage = null)
             }, 3000);
         }
 
-        // Initialize tooltips
-        $(document).ready(function () {
-            $('[data-toggle="tooltip"]').tooltip();
-        });
+        // Initialize tooltips if jQuery + Bootstrap are available
+        (function () {
+            if (window.jQuery && typeof window.jQuery === 'function' && window.jQuery.fn && window.jQuery.fn.tooltip) {
+                window.jQuery(function () {
+                    window.jQuery('[data-toggle="tooltip"]').tooltip();
+                });
+            }
+        })();
 
         // Column Sorting functionality
         function sortTable(column) {
@@ -1090,15 +1083,43 @@ function buildPaginationUrl($page, $perPage = null)
             window.location.href = currentUrl.toString();
         }
 
-        // Initialize sorting event listeners
-        $(document).ready(function () {
-            // Add click event listeners to sortable columns
-            $('.sortable').on('click', function (e) {
-                e.preventDefault();
-                const sortColumn = $(this).data('sort');
-                sortTable(sortColumn);
-            });
+        // Initialize sorting event listeners (vanilla JS - works regardless of jQuery load timing)
+        (function () {
+            // Apply pointer cursor to any sortable headers and keep it updated for dynamic changes
+            function applyPointer() {
+                document.querySelectorAll('.sortable').forEach(function (el) {
+                    el.style.cursor = 'pointer';
+                });
+            }
+
+            applyPointer();
+
+            // Observe DOM changes and re-apply pointer style when new sortable elements are inserted
+            try {
+                const observer = new MutationObserver(function () {
+                    applyPointer();
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+            } catch (e) {
+                // MutationObserver may not be available in very old browsers; that's fine
+            }
+
+            // Delegated click handler: walks up the DOM to find a `.sortable` ancestor
+            document.addEventListener('click', function (e) {
+                var el = e.target;
+                while (el && el !== document) {
+                    if (el.classList && el.classList.contains('sortable')) {
+                        e.preventDefault();
+                        var sortColumn = (el.dataset && el.dataset.sort) ? el.dataset.sort : el.getAttribute('data-sort');
+                        if (sortColumn) {
+                            sortTable(sortColumn);
+                        }
+                        break;
+                    }
+                    el = el.parentNode;
+                }
         });
+        })();
     </script>
 
     <!-- Link Products Modal -->
@@ -1265,12 +1286,20 @@ function buildPaginationUrl($page, $perPage = null)
             loadExistingProducts(supplierId);
 
             // Show modal and load products
-            $('#LinkProductsModal').modal('show');
-
-            // Focus on search input after modal is shown
-            $('#LinkProductsModal').on('shown.bs.modal', function () {
-                document.getElementById('product_search').focus();
-            });
+            var linkModal = document.getElementById('LinkProductsModal');
+            if (linkModal) {
+                // Use Bootstrap modal if available via jQuery, else use simple show
+                if (window.jQuery && window.jQuery.fn && window.jQuery.fn.modal) {
+                    window.jQuery('#LinkProductsModal').modal('show');
+                    window.jQuery('#LinkProductsModal').on('shown.bs.modal', function () {
+                        var ps = document.getElementById('product_search'); if (ps) ps.focus();
+                    });
+                } else {
+                    linkModal.style.display = 'block';
+                    // basic focus after a short delay
+                    setTimeout(function () { var ps = document.getElementById('product_search'); if (ps) ps.focus(); }, 200);
+                }
+            }
 
             loadProductsForLinking();
         }
@@ -1503,9 +1532,10 @@ function buildPaginationUrl($page, $perPage = null)
                 return;
             }
 
-            // Validate purchase price
+            // Submission guard and validation
+            console.log('Initiating submission...');
             const purchasePrice = document.getElementById('supplier_purchase_price').value;
-            if (!purchasePrice || parseFloat(purchasePrice) <= 0) {
+            if (!purchasePrice || isNaN(purchasePrice) || parseFloat(purchasePrice) <= 0) {
                 showNotification('Please enter a valid purchase price', 'error');
                 document.getElementById('supplier_purchase_price').focus();
                 return;
@@ -1524,39 +1554,30 @@ function buildPaginationUrl($page, $perPage = null)
             formData.append('supplier_notes', document.getElementById('supplier_product_notes').value || '');
             formData.append('supplier_rating', document.getElementById('supplier_product_rating').value || '4');
 
-            fetch(`${window.URLROOT}/suppliers/linkProduct`, {
+            fetch(`${window.URLROOT}/index.php?url=suppliers/linkProduct`, {
                 method: 'POST',
                 body: formData
             })
-                .then(response => {
-                    console.log('Link product response status:', response.status);
-                    console.log('Link product response headers:', response.headers);
-
-                    // Check if response is JSON
-                    const contentType = response.headers.get('content-type');
-                    if (!contentType || !contentType.includes('application/json')) {
-                        console.error('Response is not JSON:', contentType);
-                        return response.text().then(text => {
-                            console.error('Response text:', text);
-                            throw new Error('Server returned non-JSON response: ' + text.substring(0, 200));
-                        });
-                    }
-
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
                     console.log('Link product response data:', data);
                     if (data.success) {
-                        $('#LinkProductsModal').modal('hide');
+                        alert('Submission successful!');
+                        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.modal) {
+                            window.jQuery('#LinkProductsModal').modal('hide');
+                        } else {
+                            var m = document.getElementById('LinkProductsModal'); if (m) m.style.display = 'none';
+                        }
                         showNotification('Product linked successfully', 'success');
-                        // Optionally reload the page to show updated data
                         setTimeout(() => location.reload(), 1500);
                     } else {
+                        alert('Submission failed! Details: ' + (data.error || 'unknown'));
                         showNotification(data.error || 'Failed to link product', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error linking product:', error);
+                    alert('Submission failed! Details: ' + error.message);
                     showNotification('An error occurred while linking product', 'error');
                 });
         }
@@ -1569,7 +1590,7 @@ function buildPaginationUrl($page, $perPage = null)
                 formData.append('product_id', productId);
                 formData.append('supplier_id', supplierId);
 
-                fetch(`${window.URLROOT}/suppliers/unlinkProduct`, {
+                fetch(`${window.URLROOT}/index.php?url=suppliers/unlinkProduct`, {
                     method: 'POST',
                     body: formData
                 })
@@ -1611,7 +1632,7 @@ function buildPaginationUrl($page, $perPage = null)
                 if (notification.parentNode) {
                     notification.parentNode.removeChild(notification);
                 }
-            }, 3000);
+        }, 3000);
         }
     </script>
 

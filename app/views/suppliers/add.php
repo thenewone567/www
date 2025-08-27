@@ -1,55 +1,78 @@
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
-<a href="<?php echo URLROOT; ?>/suppliers" class="btn btn-light"><i class="fa fa-arrow-left"></i> Back</a>
-<div class="card card-body theme-card-light mt-5">
-    <h2>Add Supplier</h2>
-    <p>Create a new supplier with this form</p>
-    <form action="<?php echo URLROOT; ?>/suppliers/add" method="post">
-        <div class="form-group">
-            <label for="supplier_name">Supplier Name: <sup>*</sup></label>
-            <input type="text" name="supplier_name"
-                class="form-control form-control-lg <?php echo (!empty($data['supplier_name_err'])) ? 'is-invalid' : ''; ?>"
-                value="<?php echo $data['supplier_name']; ?>">
-            <span class="invalid-feedback"><?php echo $data['supplier_name_err']; ?></span>
-        </div>
-        <div class="form-group">
-            <label for="contact_person">Contact Person Name:</label>
-            <input type="text" name="contact_person" class="form-control form-control-lg"
-                value="<?php echo $data['contact_person'] ?? ''; ?>" placeholder="e.g., John Doe">
-        </div>
-        <div class="form-group">
-            <label for="phone">Phone Number:</label>
-            <input type="tel" name="phone" class="form-control form-control-lg"
-                value="<?php echo $data['phone'] ?? ''; ?>" placeholder="e.g., +91 98765 43210">
-        </div>
-        <div class="form-group">
-            <label for="email">Email Address:</label>
-            <input type="email" name="email"
-                class="form-control form-control-lg <?php echo (!empty($data['email_err'])) ? 'is-invalid' : ''; ?>"
-                value="<?php echo $data['email'] ?? ''; ?>" placeholder="e.g., supplier@company.com">
-            <span class="invalid-feedback"><?php echo $data['email_err'] ?? ''; ?></span>
-        </div>
-        <div class="form-group">
-            <label for="address">Address:</label>
-            <textarea name="address" class="form-control form-control-lg" rows="3"
-                placeholder="Complete business address"><?php echo $data['address'] ?? ''; ?></textarea>
-        </div>
-        <div class="form-group">
-            <label for="gst_number">GST Number:</label>
-            <input type="text" name="gst_number"
-                class="form-control form-control-lg <?php echo (!empty($data['gst_number_err'])) ? 'is-invalid' : ''; ?>"
-                value="<?php echo $data['gst_number'] ?? ''; ?>" placeholder="e.g., 22AAAAA0000A1Z5" maxlength="15">
-            <span class="invalid-feedback"><?php echo $data['gst_number_err'] ?? ''; ?></span>
-            <small class="form-text text-muted">15-digit GST identification number (optional)</small>
-        </div>
-        <div class="form-group">
-            <label for="default_delivery_days">Default Delivery Time (Days):</label>
-            <input type="number" name="default_delivery_days" class="form-control form-control-lg"
-                value="<?php echo $data['default_delivery_days'] ?? '7'; ?>" min="1" max="365" placeholder="e.g., 7">
-            <small class="form-text text-muted">Default number of days this supplier takes to deliver orders (can be
-                customized per product)</small>
-        </div>
-        <input type="submit" class="btn btn-success" value="Submit">
-    </form>
+<a href="<?php echo URLROOT; ?>/suppliers" class="btn btn-light btn-sm mb-2"><i class="fa fa-arrow-left"></i> Back</a>
+
+<div class="supplier-form-compact">
+    <div class="card card-body theme-card-light supplier-form mt-3">
+        <h2>Add Supplier</h2>
+        <p>Create a new supplier with this form</p>
+
+        <form action="<?php echo URLROOT; ?>/suppliers/add" method="post">
+            <div class="row">
+                <!-- Left column: main inputs -->
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label for="supplier_name">Supplier Name <sup>*</sup></label>
+                        <input type="text" name="supplier_name"
+                            class="form-control form-control-sm <?php echo (!empty($data['supplier_name_err'])) ? 'is-invalid' : ''; ?>"
+                            value="<?php echo $data['supplier_name']; ?>">
+                        <span class="invalid-feedback"><?php echo $data['supplier_name_err']; ?></span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="contact_person">Contact Person</label>
+                            <input type="text" name="contact_person" class="form-control form-control-sm"
+                                value="<?php echo $data['contact_person'] ?? ''; ?>" placeholder="John Doe">
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="phone">Phone</label>
+                            <input type="tel" name="phone" class="form-control form-control-sm"
+                                value="<?php echo $data['phone'] ?? ''; ?>" placeholder="+91 98765 43210">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="email">Email</label>
+                            <input type="email" name="email"
+                                class="form-control form-control-sm <?php echo (!empty($data['email_err'])) ? 'is-invalid' : ''; ?>"
+                                value="<?php echo $data['email'] ?? ''; ?>" placeholder="supplier@company.com">
+                            <span class="invalid-feedback"><?php echo $data['email_err'] ?? ''; ?></span>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="gst_number">GST Number</label>
+                            <input type="text" name="gst_number"
+                                class="form-control form-control-sm <?php echo (!empty($data['gst_number_err'])) ? 'is-invalid' : ''; ?>"
+                                value="<?php echo $data['gst_number'] ?? ''; ?>" placeholder="22AAAAA0000A1Z5"
+                                maxlength="15">
+                            <span class="invalid-feedback"><?php echo $data['gst_number_err'] ?? ''; ?></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right column: address & actions -->
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <textarea name="address" class="form-control form-control-sm" rows="5"
+                            placeholder="Business address"><?php echo $data['address'] ?? ''; ?></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="default_delivery_days">Default Delivery Time (Days)</label>
+                        <input type="number" name="default_delivery_days" class="form-control form-control-sm"
+                            value="<?php echo $data['default_delivery_days'] ?? '7'; ?>" min="1" max="365"
+                            placeholder="7">
+                        <small class="form-text text-muted">Default days to deliver</small>
+                    </div>
+
+                    <div class="form-group mt-2">
+                        <input type="submit" class="btn btn-success btn-sm btn-block" value="Save Supplier">
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>

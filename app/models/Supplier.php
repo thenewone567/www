@@ -80,20 +80,30 @@ class Supplier
 
         // Valid sort columns mapping
         $validSortColumns = [
-            'supplier_id' => 's.supplier_id',
-            'supplier_name' => 's.supplier_name',
-            'contact_person' => 's.contact_person',
-            'email' => 's.email',
-            'phone' => 's.phone',
-            'reliability_score' => 's.reliability_score',
+            'supplier_id'           => 's.supplier_id',
+            'supplier_name'         => 's.supplier_name',
+            'contact_person'        => 's.contact_person',
+            'email'                 => 's.email',
+            'phone'                 => 's.phone',
+            'reliability_score'     => 's.reliability_score',
             'average_delivery_days' => 's.average_delivery_days',
-            'supplier_tier' => 's.supplier_tier',
-            'status' => 's.status',
-            'created_at' => 's.created_at'
+            'supplier_tier'         => 's.supplier_tier',
+            'status'                => 's.status',
+            'added_by'              => 'u.username',
+            'created_at'            => 's.created_at'
         ];
 
         $orderColumn = isset($validSortColumns[$sortBy]) ? $validSortColumns[$sortBy] : 's.supplier_name';
         $orderDirection = (strtoupper($sortOrder) === 'DESC') ? 'DESC' : 'ASC';
+
+        // Provide semantic ordering for certain non-alphabetic fields
+        if ($sortBy === 'supplier_tier') {
+            // Gold -> Silver -> Bronze/Standard
+            $orderColumn = "(CASE WHEN s.supplier_tier = 'Gold' THEN 1 WHEN s.supplier_tier = 'Silver' THEN 2 WHEN s.supplier_tier = 'Bronze' THEN 3 WHEN s.supplier_tier = 'Standard' THEN 3 ELSE 4 END)";
+        } elseif ($sortBy === 'status') {
+            // Active -> Pending -> Inactive
+            $orderColumn = "(CASE WHEN s.status = 'active' OR s.status IS NULL THEN 1 WHEN s.status = 'pending' THEN 2 WHEN s.status = 'inactive' THEN 3 ELSE 4 END)";
+        }
 
         $whereClause = implode(' AND ', $whereConditions);
 
@@ -263,8 +273,8 @@ class Supplier
         $result = $this->db->single();
         return [
             'on_time' => $result ? $result->on_time : 0,
-            'early' => $result ? $result->early : 0,
-            'late' => $result ? $result->late : 0
+            'early'   => $result ? $result->early : 0,
+            'late'    => $result ? $result->late : 0
         ];
     }
 
@@ -281,7 +291,7 @@ class Supplier
         $this->db->execute();
         $result = $this->db->single();
         return [
-            'gold' => $result ? $result->gold : 0,
+            'gold'   => $result ? $result->gold : 0,
             'silver' => $result ? $result->silver : 0,
             'bronze' => $result ? $result->bronze : 0
         ];
@@ -496,25 +506,25 @@ class Supplier
         // Track which fields are being changed
         $changedFields = [];
         $fieldMapping = [
-            'supplier_name' => 'supplier_name',
-            'contact_person' => 'contact_person',
-            'phone' => 'phone',
-            'email' => 'email',
-            'address' => 'address',
-            'gst_number' => 'gst_number',
-            'default_delivery_days' => 'default_delivery_days',
+            'supplier_name'           => 'supplier_name',
+            'contact_person'          => 'contact_person',
+            'phone'                   => 'phone',
+            'email'                   => 'email',
+            'address'                 => 'address',
+            'gst_number'              => 'gst_number',
+            'default_delivery_days'   => 'default_delivery_days',
             'preferred_payment_terms' => 'preferred_payment_terms',
-            'credit_limit' => 'credit_limit',
-            'current_outstanding' => 'current_outstanding',
-            'is_verified' => 'is_verified',
-            'verification_date' => 'verification_date',
-            'notes' => 'notes'
+            'credit_limit'            => 'credit_limit',
+            'current_outstanding'     => 'current_outstanding',
+            'is_verified'             => 'is_verified',
+            'verification_date'       => 'verification_date',
+            'notes'                   => 'notes'
         ];
 
         foreach ($fieldMapping as $formField => $dbField) {
             if (isset($data[$formField]) && $data[$formField] !== $currentSupplier->$dbField) {
                 $changedFields[] = [
-                    'field' => $dbField,
+                    'field'     => $dbField,
                     'old_value' => $currentSupplier->$dbField,
                     'new_value' => $data[$formField]
                 ];
@@ -935,10 +945,10 @@ class Supplier
         $onhold = $onhold_result ? $onhold_result->onhold : 0;
 
         return [
-            'total' => $total,
-            'active' => $active,
+            'total'   => $total,
+            'active'  => $active,
             'pending' => $pending,
-            'onhold' => $onhold
+            'onhold'  => $onhold
         ];
     }
 

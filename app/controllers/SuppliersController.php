@@ -1112,6 +1112,8 @@ class SuppliersController extends Controller
             $productId = $_POST['product_id'] ?? null;
             $supplierId = $_POST['supplier_id'] ?? null;
             $purchasePrice = $_POST['purchase_price'] ?? null;
+            // Support update flow when ps_id or link_id is provided
+            $psId = $_POST['ps_id'] ?? $_POST['link_id'] ?? null;
             $supplierSku = $_POST['supplier_sku'] ?? '';
             $leadTimeDays = $_POST['lead_time_days'] ?? 7;
             $minOrderQuantity = $_POST['min_order_quantity'] ?? 1;
@@ -1119,9 +1121,40 @@ class SuppliersController extends Controller
             $supplierRating = $_POST['supplier_rating'] ?? 4;
 
             // Debug: Log received data
-            error_log("LinkProduct received: product_id=$productId, supplier_id=$supplierId, price=$purchasePrice");
+            error_log("LinkProduct received: product_id=$productId, supplier_id=$supplierId, price=$purchasePrice, ps_id=$psId");
 
-            if (!$productId || !$supplierId || !$purchasePrice) {
+            // If ps_id is provided, treat this as an update to an existing product_supplier link
+            if ($psId) {
+                // purchase_price must be provided (can be zero)
+                if (!isset($_POST['purchase_price'])) {
+                    throw new Exception('Purchase price is required for update');
+                }
+                if (!is_numeric($purchasePrice) || $purchasePrice < 0) {
+                    throw new Exception('Purchase price must be a non-negative number');
+                }
+
+                $updateData = [
+                    'ps_id' => $psId,
+                    'purchase_price' => $purchasePrice,
+                    'supplier_sku' => $supplierSku,
+                    'lead_time_days' => $leadTimeDays,
+                    'min_order_quantity' => $minOrderQuantity,
+                    'notes' => $supplierNotes,
+                    'supplier_rating' => $supplierRating,
+                    'is_active' => 1
+                ];
+
+                $result = $this->productSupplierModel->updateProductSupplier($updateData);
+                if ($result) {
+                    echo json_encode(['success' => true, 'message' => 'Link updated successfully']);
+                } else {
+                    throw new Exception('Failed to update product-supplier link');
+                }
+                return;
+            }
+
+            // Creation flow: validate inputs (purchase price must be positive for creation)
+            if (empty($productId) || empty($supplierId) || !isset($_POST['purchase_price'])) {
                 throw new Exception('Product ID, Supplier ID, and purchase price are required');
             }
 
@@ -1132,7 +1165,9 @@ class SuppliersController extends Controller
             // Check if link already exists
             if ($this->supplierModel->isProductLinked($supplierId, $productId)) {
                 throw new Exception('This product is already linked to this supplier');
-            }            // Create the link
+            }
+
+            // Create the link
             $linkData = [
                 'supplier_id' => $supplierId,
                 'product_id' => $productId,
@@ -1140,12 +1175,12 @@ class SuppliersController extends Controller
                 'supplier_sku' => $supplierSku,
                 'lead_time_days' => $leadTimeDays,
                 'min_order_quantity' => $minOrderQuantity,
-                'supplier_notes' => $supplierNotes,
+                'notes' => $supplierNotes,
                 'supplier_rating' => $supplierRating,
                 'is_active' => 1
             ];
 
-            $result = $this->supplierModel->linkProduct($linkData);
+            $result = $this->productSupplierModel->addProductSupplier($linkData);
 
             if ($result) {
                 echo json_encode([
@@ -1153,7 +1188,12 @@ class SuppliersController extends Controller
                     'message' => 'Product linked successfully'
                 ]);
             } else {
-                throw new Exception('Failed to link product - database operation returned false');
+                // Get more detailed error information
+                $db = new Database();
+                $lastError = $db->getLastError();
+                error_log("Failed to create supplier link. Data: " . print_r($linkData, true));
+                error_log("Database error: " . $lastError);
+                echo json_encode(['success' => false, 'error' => 'Failed to create supplier link - database error: ' . $lastError]);
             }
 
         } catch (Exception $e) {

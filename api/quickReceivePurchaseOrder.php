@@ -95,6 +95,35 @@ try {
             $receivingAreaName = $area ? $area->location_name : '';
         }
 
+        // Provide a fully-qualified URL to view/print the generated receiving receipt. Uses PO number as identifier.
+        $poIdentifier = urlencode($purchase->po_number ?? 'PO-' . $purchase->purchase_id);
+
+        // If URLROOT is defined and already absolute, use it. otherwise build from server vars.
+        $baseUrl = '';
+        if (defined('URLROOT') && preg_match('#^https?://#i', URLROOT)) {
+            $baseUrl = rtrim(URLROOT, '/');
+        } else {
+            // Determine scheme
+            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+            $scheme = $isHttps ? 'https' : 'http';
+
+            // Host
+            $host = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? 'localhost');
+
+            // Determine base path: prefer a relative URLROOT if set, else infer from script location
+            $basePath = '';
+            if (defined('URLROOT') && !empty(URLROOT) && strpos(URLROOT, '/') === 0) {
+                $basePath = rtrim(URLROOT, '/');
+            } else {
+                $scriptName = $_SERVER['SCRIPT_NAME'] ?? '/';
+                $basePath = rtrim(dirname($scriptName), '/');
+            }
+
+            $baseUrl = $scheme . '://' . $host . $basePath;
+        }
+
+        $receiptUrl = $baseUrl . '/purchases/viewReceipt/' . $poIdentifier;
+
         echo json_encode([
             'success' => true,
             'message' => 'Purchase Order successfully marked as received and staged at dock',
@@ -104,7 +133,8 @@ try {
                 'total_amount' => $purchase->total_amount ?? 0,
                 'dock_location' => $dockName,
                 'receiving_area' => $receivingAreaName,
-                'notes' => $notes
+                'notes' => $notes,
+                'receipt_url' => $receiptUrl
             ]
         ]);
     } else {

@@ -34,6 +34,7 @@ class Role
     public function getAllRoles()
     {
         $this->db->query('SELECT * FROM roles ORDER BY role_name');
+        $this->db->execute();
         return $this->db->resultSet();
     }
 
@@ -46,6 +47,7 @@ class Role
     {
         $this->db->query('SELECT * FROM roles WHERE role_id = :role_id');
         $this->db->bind(':role_id', $roleId);
+        $this->db->execute();
         return $this->db->single();
     }
 
@@ -112,6 +114,7 @@ class Role
     {
         $this->db->query('SELECT COUNT(*) as count FROM users WHERE role_id = :role_id');
         $this->db->bind(':role_id', $roleId);
+        $this->db->execute();
         $result = $this->db->single();
         return $result->count > 0;
     }
@@ -123,6 +126,7 @@ class Role
     public function getTotalRoles()
     {
         $this->db->query('SELECT COUNT(*) as count FROM roles');
+        $this->db->execute();
         $result = $this->db->single();
         return $result ? (int) $result->count : 0;
     }
@@ -135,12 +139,12 @@ class Role
     {
         return [
             [
-                'role_name' => 'Super Admin',
+                'role_name'   => 'Super Admin',
                 'description' => 'Full system access',
                 'permissions' => ['all']
             ],
             [
-                'role_name' => 'Manager',
+                'role_name'   => 'Manager',
                 'description' => 'Store manager with most permissions',
                 'permissions' => [
                     'view_dashboard',
@@ -154,7 +158,7 @@ class Role
                 ]
             ],
             [
-                'role_name' => 'Cashier',
+                'role_name'   => 'Cashier',
                 'description' => 'Sales and basic customer management',
                 'permissions' => [
                     'view_dashboard',
@@ -163,7 +167,7 @@ class Role
                 ]
             ],
             [
-                'role_name' => 'Inventory Clerk',
+                'role_name'   => 'Inventory Clerk',
                 'description' => 'Inventory and product management',
                 'permissions' => [
                     'view_dashboard',

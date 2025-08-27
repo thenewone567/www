@@ -26,7 +26,7 @@ try {
 
     $productId = $input['product_id'] ?? null;
     $supplierId = $input['supplier_id'] ?? null;
-    $price = $input['price'] ?? null;
+    $price = isset($input['price']) ? $input['price'] : null;
     $qualityRating = $input['quality_rating'] ?? null;
     $notes = $input['notes'] ?? '';
 
@@ -61,9 +61,21 @@ try {
         ');
     }
 
+    // Validate price: require numeric positive value
+    if ($price === null || $price === '' || !is_numeric($price) || floatval($price) <= 0) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Valid price is required and must be greater than 0'
+        ]);
+        exit;
+    }
+
+    $price = floatval($price);
+
     $database->bind(':product_id', $productId);
     $database->bind(':supplier_id', $supplierId);
-    $database->bind(':price', $price ?: null);
+    $database->bind(':price', $price);
     $database->bind(':quality_rating', $qualityRating ?: null);
     $database->bind(':notes', $notes);
 

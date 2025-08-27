@@ -67,9 +67,3 @@ Whenever you are generating or modifying code related to a data submission proce
   - Test all affected functionality
   - Document breaking changes
   - Ensure backward compatibility where possible
-
-## Development Rules
-
-- Do not use commands which give an error: "Parse error: syntax error, unexpected token "\", expecting end of file in Command line code"
-- Always reference the unified CSS file: `public/css/app-unified.css`
-- Keep CSS architecture clean and maintainable

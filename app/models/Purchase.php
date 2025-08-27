@@ -53,9 +53,10 @@ class Purchase
     // Get purchases with supplier information (excluding receiving workflow statuses and cancelled orders)
     public function getPurchasesWithSuppliers()
     {
+        // Show purchase orders that are in the procurement/ordering phase
         // Exclude receiving workflow statuses - these should be handled in receiving page
-        // Also exclude cancelled orders - these should be handled in returns page
-        $excludeStatuses = ['ready_to_receive', 'receiving_in_progress', 'received', 'completed', 'partially_received', 'cancelled'];
+        // Keep 'arrived_at_dock' and 'dock_assigned' visible here as they're still dock operations
+        $excludeStatuses = ['receiving_in_progress', 'partially_received', 'received', 'completed', 'cancelled', 'deleted'];
         $placeholders = str_repeat('?,', count($excludeStatuses) - 1) . '?';
 
         $this->db->query("
@@ -129,25 +130,21 @@ class Purchase
             // Get purchase items for receipt
             $items = $this->getPurchaseItems($purchaseData->purchase_id);
 
-            // Convert object to array for helpers
+            // Convert object to array for helpers and include received_by name when available
+            // Prefer display_name session key (used elsewhere in the app), fallback to other session keys
+            $receivedByName = $_SESSION['display_name'] ?? $_SESSION['user_full_name'] ?? $_SESSION['user_username'] ?? $_SESSION['username'] ?? null;
             $purchaseArray = [
-                'purchase_id' => $purchaseData->purchase_id,
-                'po_number' => $purchaseData->po_number,
-                'supplier_name' => $purchaseData->supplier_name ?? 'Unknown Supplier',
-                'supplier_email' => $purchaseData->supplier_email ?? null,
-                'purchase_date' => $purchaseData->purchase_date,
-                'expected_date' => $purchaseData->expected_date,
+                'purchase_id'     => $purchaseData->purchase_id,
+                'po_number'       => $purchaseData->po_number,
+                'supplier_name'   => $purchaseData->supplier_name ?? 'Unknown Supplier',
+                'supplier_email'  => $purchaseData->supplier_email ?? null,
+                'purchase_date'   => $purchaseData->purchase_date,
+                'expected_date'   => $purchaseData->expected_date,
                 'tracking_number' => $purchaseData->tracking_number,
-                'total_amount' => $purchaseData->total_amount,
-                'notes' => $purchaseData->notes
+                'total_amount'    => $purchaseData->total_amount,
+                'notes'           => $purchaseData->notes,
+                'received_by'     => $receivedByName
             ];
-
-            // Send email confirmations
-            $emailSent = EmailHelper::sendPurchaseReceivedConfirmation(
-                $purchaseArray,
-                $purchaseData->supplier_email ?? null,  // Supplier email
-                'receiving@hardwarestore.com'           // Internal email
-            );
 
             // Generate receiving receipt
             $receiptHtml = ReceiptHelper::generateReceivingReceipt($purchaseArray, $items);
@@ -155,10 +152,27 @@ class Purchase
             // Save receipt to file system
             $receiptPath = ReceiptHelper::saveReceiptToFile($receiptHtml, $purchaseData->po_number);
 
+            // Attempt to generate PDF and attach to emails (if Dompdf present)
+            $pdfPath = ReceiptHelper::saveReceiptPdf($receiptHtml, $purchaseData->po_number);
+
+            // Prepare attachments array if PDF generated
+            $attachments = [];
+            if ($pdfPath && file_exists($pdfPath)) {
+                $attachments[] = $pdfPath;
+            }
+
+            // Send email confirmations (include attachments if available)
+            $emailSent = EmailHelper::sendPurchaseReceivedConfirmation(
+                $purchaseArray,
+                $purchaseData->supplier_email ?? null,  // Supplier email
+                'receiving@hardwarestore.com',           // Internal email
+                $attachments
+            );
+
             // Store receipt info in session for display
             $_SESSION['show_receipt'] = [
-                'html' => $receiptHtml,
-                'po_number' => $purchaseData->po_number,
+                'html'         => $receiptHtml,
+                'po_number'    => $purchaseData->po_number,
                 'generated_at' => date('Y-m-d H:i:s')
             ];
 
@@ -267,6 +281,194 @@ class Purchase
             return false;
         }
     }
+
+    /**
+     * Mark PO as arrived at dock (first step in receiving workflow)
+     */
+    public function markAsArrivedAtDock($purchaseId, $dockLocationId = null, $notes = '')
+    {
+        try {
+            $this->db->query('
+                UPDATE purchases 
+                SET status = ?, 
+                    dock_arrival_time = NOW(),
+                    updated_at = NOW(),
+                    dock_location_id = ?,
+                    dock_assignment_notes = ?
+                WHERE purchase_id = ?
+            ');
+            $this->db->bind(1, 'arrived_at_dock');
+            $this->db->bind(2, $dockLocationId);
+            $this->db->bind(3, $notes);
+            $this->db->bind(4, $purchaseId);
+
+            $result = $this->db->execute();
+
+            if ($result) {
+                $this->logStatusChange(
+                    $purchaseId,
+                    'arrived_at_dock',
+                    'purchases',
+                    "PO arrived at dock" . ($notes ? " - Notes: $notes" : "")
+                );
+            }
+
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error marking PO as arrived at dock: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Assign dock location to PO (second step in dock workflow)
+     */
+    public function assignDockLocation($purchaseId, $dockLocationId, $notes = '')
+    {
+        try {
+            $this->db->query('
+                UPDATE purchases 
+                SET status = ?, 
+                    dock_location_id = ?,
+                    dock_assignment_notes = ?,
+                    updated_at = NOW()
+                WHERE purchase_id = ?
+            ');
+            $this->db->bind(1, 'dock_assigned');
+            $this->db->bind(2, $dockLocationId);
+            $this->db->bind(3, $notes);
+            $this->db->bind(4, $purchaseId);
+
+            $result = $this->db->execute();
+
+            if ($result) {
+                $this->logStatusChange(
+                    $purchaseId,
+                    'dock_assigned',
+                    'purchases',
+                    "Dock location assigned" . ($notes ? " - Notes: $notes" : "")
+                );
+            }
+
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error assigning dock location: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Mark PO as ready to transfer to receiving area
+     */
+    public function markReadyToReceive($purchaseId, $notes = '')
+    {
+        try {
+            $this->db->query('
+                UPDATE purchases 
+                SET status = ?, 
+                    updated_at = NOW()
+                WHERE purchase_id = ?
+            ');
+            $this->db->bind(1, 'ready_to_receive');
+            $this->db->bind(2, $purchaseId);
+
+            $result = $this->db->execute();
+
+            if ($result) {
+                $this->logStatusChange(
+                    $purchaseId,
+                    'ready_to_receive',
+                    'purchases',
+                    "PO ready for receiving area transfer" . ($notes ? " - Notes: $notes" : "")
+                );
+            }
+
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error marking PO as ready to receive: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Start receiving process in receiving area
+     */
+    public function startReceivingProcess($purchaseId, $receivingAreaId = null, $notes = '')
+    {
+        try {
+            $this->db->query('
+                UPDATE purchases 
+                SET status = ?, 
+                    receiving_area_id = ?,
+                    receiving_start_time = NOW(),
+                    updated_at = NOW()
+                WHERE purchase_id = ?
+            ');
+            $this->db->bind(1, 'receiving_in_progress');
+            $this->db->bind(2, $receivingAreaId);
+            $this->db->bind(3, $purchaseId);
+
+            $result = $this->db->execute();
+
+            if ($result) {
+                $this->logStatusChange(
+                    $purchaseId,
+                    'receiving_in_progress',
+                    'purchases',
+                    "Receiving process started in receiving area" . ($notes ? " - Notes: $notes" : "")
+                );
+            }
+
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error starting receiving process: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Complete receiving process (final step)
+     */
+    public function completeReceiving($purchaseId, $notes = '')
+    {
+        try {
+            $this->db->query('
+                UPDATE purchases 
+                SET status = ?, 
+                    received_at = NOW(),
+                    receiving_complete_time = NOW(),
+                    updated_at = NOW()
+                WHERE purchase_id = ?
+            ');
+            $this->db->bind(1, 'received');
+            $this->db->bind(2, $purchaseId);
+
+            $result = $this->db->execute();
+
+            if ($result) {
+                // Get purchase details for notifications
+                $purchaseData = $this->getPurchaseWithSupplierDetails($purchaseId);
+
+                if ($purchaseData) {
+                    // Trigger email and receipt workflow
+                    $this->handleReceivedStatusUpdate($purchaseData);
+                }
+
+                $this->logStatusChange(
+                    $purchaseId,
+                    'received',
+                    'purchases',
+                    "Receiving process completed" . ($notes ? " - Notes: $notes" : "")
+                );
+            }
+
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error completing receiving process: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function updateTracking($id, $trackingNumber)
     {
         try {
@@ -319,9 +521,10 @@ class Purchase
     {
         try {
             $this->db->query("
-                SELECT p.*, s.supplier_name
+                SELECT p.*, s.supplier_name, u.username as created_by_username, u.full_name as created_by_fullname
                 FROM purchases p
                 LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+                LEFT JOIN users u ON p.created_by = u.user_id
                 WHERE p.purchase_id = ?
             ");
             $this->db->bind(1, $id);
@@ -560,9 +763,9 @@ class Purchase
     {
         $stats = [
             'monthly_purchases' => 0,
-            'pending_orders' => 0,
-            'active_suppliers' => 0,
-            'items_received' => 0
+            'pending_orders'    => 0,
+            'active_suppliers'  => 0,
+            'items_received'    => 0
         ];
 
         try {
@@ -625,22 +828,22 @@ class Purchase
     public function getPurchaseSummary()
     {
         $summary = [
-            'total_purchases' => 0,
-            'pending' => 0,
-            'sent' => 0,
-            'in_transit' => 0,
-            'received' => 0,
-            'cancelled' => 0,
-            'overdue' => 0,
-            'suppliers' => 0,
+            'total_purchases'    => 0,
+            'pending'            => 0,
+            'sent'               => 0,
+            'in_transit'         => 0,
+            'received'           => 0,
+            'cancelled'          => 0,
+            'overdue'            => 0,
+            'suppliers'          => 0,
             'total_orders_count' => 0,
             // Count versions for additional display
-            'pending_count' => 0,
-            'sent_count' => 0,
-            'in_transit_count' => 0,
-            'received_count' => 0,
+            'pending_count'      => 0,
+            'sent_count'         => 0,
+            'in_transit_count'   => 0,
+            'received_count'     => 0,
             // Debug info
-            'debug_info' => ''
+            'debug_info'         => ''
         ];
 
         try {
@@ -1126,6 +1329,181 @@ class Purchase
         } catch (Exception $e) {
             $this->db->query("ROLLBACK");
             $this->db->execute();
+            return false;
+        }
+    }
+
+    /**
+     * Sync purchase order status with receiving status
+     * Automatically updates purchase status based on receiving table
+     */
+    public function syncStatusWithReceiving($purchaseId)
+    {
+        try {
+            // Get the latest receiving status
+            $this->db->query("SELECT status, received_date FROM receiving WHERE purchase_id = :purchase_id ORDER BY created_at DESC LIMIT 1");
+            $this->db->bind(':purchase_id', $purchaseId);
+            $this->db->execute();
+            $receiving = $this->db->single();
+
+            if ($receiving) {
+                $newStatus = '';
+                switch ($receiving->status) {
+                    case 'received':
+                        $newStatus = 'received';
+                        break;
+                    case 'partially_received':
+                        $newStatus = 'partially_received';
+                        break;
+                    case 'pending':
+                        // Don't change purchase status if receiving is still pending
+                        return true;
+                }
+
+                if ($newStatus) {
+                    // Update purchase status
+                    $this->db->query("UPDATE purchases SET status = :status, received_at = :received_at WHERE purchase_id = :purchase_id");
+                    $this->db->bind(':status', $newStatus);
+                    $this->db->bind(':received_at', $receiving->received_date);
+                    $this->db->bind(':purchase_id', $purchaseId);
+
+                    if ($this->db->execute()) {
+                        error_log("Purchase {$purchaseId} status synced to: {$newStatus}");
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+
+        } catch (Exception $e) {
+            error_log("Error syncing purchase status: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Soft delete a purchase order (only if status is 'pending')
+     * @param int $id Purchase ID
+     * @param string $reason Deletion reason
+     * @return bool
+     */
+    public function softDeletePurchase($id, $reason)
+    {
+        try {
+            // First check if the purchase exists and has pending status
+            $this->db->query("SELECT purchase_id, status FROM purchases WHERE purchase_id = ?");
+            $this->db->bind(1, $id);
+            $this->db->execute();
+            $purchase = $this->db->single();
+
+            if (!$purchase) {
+                return false;
+            }
+
+            if ($purchase->status !== 'pending') {
+                return false; // Can only delete pending orders
+            }
+
+            // Update the purchase with deleted status and reason
+            $this->db->query("
+                UPDATE purchases 
+                SET status = 'deleted', 
+                    cancellation_reason = ?, 
+                    updated_at = NOW() 
+                WHERE purchase_id = ?
+            ");
+            $this->db->bind(1, $reason);
+            $this->db->bind(2, $id);
+
+            if ($this->db->execute()) {
+                // Log the deletion
+                $this->logStatusChange($id, 'deleted', 'purchases', "Purchase order soft deleted. Reason: $reason");
+                return true;
+            }
+
+            return false;
+
+        } catch (Exception $e) {
+            error_log("Error soft deleting purchase: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Cancel a purchase order with email notification
+     * @param int $id Purchase ID
+     * @param string $reason Cancellation reason
+     * @return bool
+     */
+    public function cancelPurchaseOrder($id, $reason)
+    {
+        try {
+            // First check if the purchase exists and has pending status
+            $this->db->query("SELECT p.*, s.supplier_name, s.email as supplier_email FROM purchases p LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id WHERE p.purchase_id = ?");
+            $this->db->bind(1, $id);
+            $this->db->execute();
+            $purchase = $this->db->single();
+
+            if (!$purchase) {
+                return false;
+            }
+
+            if ($purchase->status !== 'pending') {
+                return false; // Can only cancel pending orders
+            }
+
+            // Update the purchase with cancelled status and reason
+            $this->db->query("
+                UPDATE purchases 
+                SET status = 'cancelled', 
+                    cancellation_reason = ?, 
+                    cancelled_by = ?,
+                    updated_at = NOW() 
+                WHERE purchase_id = ?
+            ");
+            $this->db->bind(1, $reason);
+            $this->db->bind(2, $_SESSION['user_id'] ?? 0);
+            $this->db->bind(3, $id);
+
+            if ($this->db->execute()) {
+                // Log the cancellation
+                $this->logStatusChange($id, 'cancelled', 'purchases', "Purchase order cancelled. Reason: $reason");
+
+                // Send cancellation email notification
+                try {
+                    require_once APPROOT . DS . 'app' . DS . 'helpers' . DS . 'EmailHelper.php';
+
+                    $purchaseData = [
+                        'po_number'     => $purchase->po_number,
+                        'supplier_name' => $purchase->supplier_name,
+                        'purchase_date' => $purchase->purchase_date,
+                        'total_amount'  => $purchase->total_amount
+                    ];
+
+                    // Try to send email to supplier and internal team
+                    $supplierEmail = $purchase->supplier_email;
+                    $internalEmail = 'admin@hardwarestore.com'; // Configure as needed
+
+                    EmailHelper::sendPurchaseCancellationNotification(
+                        $purchaseData,
+                        $reason,
+                        $supplierEmail,
+                        $internalEmail
+                    );
+
+                } catch (Exception $e) {
+                    // Log email error but don't fail the cancellation
+                    error_log("Email notification failed for cancelled PO #$id: " . $e->getMessage());
+                }
+
+                return true;
+            }
+
+            return false;
+
+        } catch (Exception $e) {
+            error_log("Error cancelling purchase: " . $e->getMessage());
             return false;
         }
     }

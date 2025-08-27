@@ -3,134 +3,8 @@ $pageTitle = 'Admin Panel';
 require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php';
 ?>
 
-<style>
-    .admin-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 1.5rem 0;
-        margin-bottom: 2rem;
-    }
-
-    .admin-nav {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .admin-nav .nav-link {
-        color: #495057;
-        font-weight: 500;
-        padding: 0.75rem 1.5rem;
-        margin: 0 0.25rem;
-        border-radius: 5px;
-        transition: all 0.2s;
-    }
-
-    .admin-nav .nav-link:hover {
-        background: #e9ecef;
-        color: #007bff;
-    }
-
-    .admin-nav .nav-link.active {
-        background: #007bff;
-        color: white;
-    }
-
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        color: white;
-        margin-right: 10px;
-    }
-
-    .permission-group {
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        background: #f8f9fa;
-    }
-
-    .permission-group h6 {
-        color: #495057;
-    }
-
-    .activity-badge {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-    }
-
-    .admin-section {
-        display: none;
-    }
-
-    .admin-section.active {
-        display: block;
-    }
-
-    .nav-pills .nav-link {
-        border-radius: 50px;
-        margin: 0 5px;
-    }
-
-    .nav-pills .nav-link.active {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-
-    /* Additional Admin Dashboard Styles */
-    .admin-section {
-        min-height: 500px;
-    }
-
-    .nav-tabs .nav-link {
-        border: 1px solid transparent;
-        border-top-left-radius: 0.25rem;
-        border-top-right-radius: 0.25rem;
-    }
-
-    .nav-tabs .nav-link:hover {
-        border-color: #e9ecef #e9ecef #dee2e6;
-    }
-
-    .nav-tabs .nav-link.active {
-        background-color: #fff;
-        border-color: #dee2e6 #dee2e6 #fff;
-    }
-
-    .stat-card {
-        transition: transform 0.2s;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-2px);
-    }
-
-    .quick-action-btn {
-        transition: all 0.2s;
-    }
-
-    .quick-action-btn:hover {
-        transform: scale(1.05);
-    }
-
-    @media (max-width: 768px) {
-        .admin-tabs {
-            flex-direction: column;
-        }
-        
-        .admin-tabs .nav-link {
-            text-align: center;
-            margin-bottom: 5px;
-        }
-    }
-</style>
+<!-- Styles removed in favor of unified stylesheet: `public/css/app-unified.css` -->
+<!-- Use existing utility classes (card-theme, btn-theme, text-*, nav-*, etc.) from the unified CSS file -->
 
 <div class="container-fluid page-top-area mb-4">
     <div class="row align-items-center">
@@ -143,45 +17,65 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
     </div>
 </div>
 
-<!-- Navigation Tabs -->
+<!-- Navigation: Icon-card grid (uses unified CSS utilities) -->
 <div class="container-fluid mb-4">
-    <ul class="nav nav-pills nav-fill" id="adminTabs" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" id="dashboard-tab" data-toggle="pill" href="#dashboard" role="tab">
-                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+    <div class="row align-items-stretch admin-action-grid">
+        <div class="col-6 col-md-4 col-lg-3 mb-3">
+            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center active" id="dashboard-tab" data-toggle="pill" href="#dashboard" role="tab" aria-controls="dashboard" aria-selected="true">
+                <div class="text-primary mb-2"><i class="fas fa-tachometer-alt fa-2x"></i></div>
+                <div class="font-weight-bold">Dashboard</div>
+                <small class="text-muted">Overview</small>
             </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="<?= URLROOT ?>/admin/priceManagement">
-                <i class="fas fa-dollar-sign mr-2"></i>Price Management
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3 mb-3">
+            <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link" href="<?= URLROOT ?>/admin/priceManagement" role="button">
+                <div class="text-success mb-2"><i class="fas fa-dollar-sign fa-2x"></i></div>
+                <div class="font-weight-bold">Price Management</div>
+                <small class="text-muted">Pricing rules & audits</small>
             </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="users-tab" data-toggle="pill" href="#users" role="tab">
-                <i class="fas fa-users mr-2"></i>Users
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3 mb-3">
+            <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link" href="<?= URLROOT ?>/admin/users" role="link">
+                <div class="text-primary mb-2"><i class="fas fa-users fa-2x"></i></div>
+                <div class="font-weight-bold">Users</div>
+                <small class="text-muted">Manage accounts</small>
             </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="roles-tab" data-toggle="pill" href="#roles" role="tab">
-                <i class="fas fa-user-tag mr-2"></i>Roles
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3 mb-3">
+            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center" id="roles-tab" data-toggle="pill" href="#roles" role="tab" aria-controls="roles" aria-selected="false">
+                <div class="text-info mb-2"><i class="fas fa-user-tag fa-2x"></i></div>
+                <div class="font-weight-bold">Roles</div>
+                <small class="text-muted">Role definitions</small>
             </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="permissions-tab" data-toggle="pill" href="#permissions" role="tab">
-                <i class="fas fa-user-shield mr-2"></i>Permissions
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3 mb-3">
+            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center" id="permissions-tab" data-toggle="pill" href="#permissions" role="tab" aria-controls="permissions" aria-selected="false">
+                <div class="text-warning mb-2"><i class="fas fa-user-shield fa-2x"></i></div>
+                <div class="font-weight-bold">Permissions</div>
+                <small class="text-muted">Access control</small>
             </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="logs-tab" data-toggle="pill" href="#logs" role="tab">
-                <i class="fas fa-history mr-2"></i>Activity Logs
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3 mb-3">
+            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center" id="logs-tab" data-toggle="pill" href="#logs" role="tab" aria-controls="logs" aria-selected="false">
+                <div class="text-muted mb-2"><i class="fas fa-history fa-2x"></i></div>
+                <div class="font-weight-bold">Activity Logs</div>
+                <small class="text-muted">Audit trail</small>
             </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="settings-tab" data-toggle="pill" href="#settings" role="tab">
-                <i class="fas fa-cog mr-2"></i>Settings
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3 mb-3">
+            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center" id="settings-tab" data-toggle="pill" href="#settings" role="tab" aria-controls="settings" aria-selected="false">
+                <div class="text-dark mb-2"><i class="fas fa-cog fa-2x"></i></div>
+                <div class="font-weight-bold">Settings</div>
+                <small class="text-muted">System prefs</small>
             </a>
-        </li>
-    </ul>
+        </div>
+    </div>
 </div>
 
 <div class="container-fluid">
@@ -264,20 +158,34 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <div class="card-body" style="max-height: 400px; overflow-y: auto;">
                             <?php if (isset($data['recent_activity']) && !empty($data['recent_activity'])): ?>
                                 <?php foreach ($data['recent_activity'] as $activity): ?>
+                                    <?php
+                                        // Safe coercions to avoid passing null to htmlspecialchars()/strtotime()
+                                        $actor = htmlspecialchars((string)($activity->user_name ?? 'System'));
+                                        $action = htmlspecialchars((string)($activity->action ?? ''));
+                                        $details = htmlspecialchars((string)($activity->details ?? ''));
+                                        $createdAt = $activity->created_at ?? null;
+                                        $createdLabel = 'Unknown';
+                                        if (!empty($createdAt)) {
+                                            $ts = strtotime($createdAt);
+                                            if ($ts !== false && $ts !== -1) {
+                                                $createdLabel = date('M j, g:i A', $ts);
+                                            }
+                                        }
+                                    ?>
                                     <div class="border-left border-primary bg-light p-3 mb-2 rounded-right">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
-                                                <strong><?= htmlspecialchars($activity->user_name ?? 'System') ?></strong>
+                                                <strong><?= $actor ?></strong>
                                                 <span class="text-muted">performed</span>
-                                                <strong><?= htmlspecialchars($activity->action) ?></strong>
+                                                <strong><?= $action ?></strong>
                                             </div>
                                             <small class="text-muted">
-                                                <?= date('M j, g:i A', strtotime($activity->created_at)) ?>
+                                                <?= $createdLabel ?>
                                             </small>
                                         </div>
-                                        <?php if (!empty($activity->details)): ?>
+                                        <?php if (!empty($details)): ?>
                                             <div class="mt-1">
-                                                <small class="text-muted"><?= htmlspecialchars($activity->details) ?></small>
+                                                <small class="text-muted"><?= $details ?></small>
                                             </div>
                                         <?php endif; ?>
                                     </div>

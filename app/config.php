@@ -13,3 +13,6 @@ define('URLROOT', 'http://localhost');
 define('SITENAME', 'Home Hardware');
 // App Version
 define('APPVERSION', '1.0.0');
+
+// Mobile API Security
+define('JWT_SECRET', 'your-super-secret-jwt-key-change-this-in-production-2024-hardware-store');

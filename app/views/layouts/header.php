@@ -43,13 +43,6 @@
                     </div>
 
                     <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
-                        <!-- Theme Toggle Button -->
-                        <li class="nav-item">
-                            <button id="theme-toggle" class="btn btn-outline-secondary btn-sm mr-2" type="button"
-                                title="Toggle theme">
-                                <i id="theme-icon" class="fas fa-sun"></i>
-                            </button>
-                        </li>
                         <!-- Admin Settings button removed from header -->
                         <li class="nav-item">
                             <!-- Notifications Dropdown -->

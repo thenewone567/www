@@ -92,6 +92,14 @@ class ProductsController extends Controller
         $products = $this->productModel->getProductsPaginated($offset, $per_page, $search);
         $total_products = $this->productModel->getTotalProductsCount($search);
 
+        // Debug: log products count and pagination info to help diagnose empty table issues
+        try {
+            $logLine = sprintf("%s - ProductsController::index - returned_products=%d total_products=%d page=%d per_page=%d search=%s\n", date('Y-m-d H:i:s'), is_array($products) ? count($products) : 0, $total_products, $page, $per_page, $search);
+            file_put_contents(APPROOT . DS . '..' . DS . 'debug_products.log', $logLine, FILE_APPEND);
+        } catch (Exception $e) {
+            // ignore logging errors
+        }
+
         // Calculate pagination info
         $total_pages = ceil($total_products / $per_page);
         $start_record = $total_products > 0 ? $offset + 1 : 0;
@@ -413,8 +421,8 @@ class ProductsController extends Controller
                 'product_type' => $product->product_type ?? 'STANDARD',
                 'has_expiry' => $product->has_expiry ?? 0,
                 'expiry_months' => $product->expiry_months ?? 0,
-                'min_Inventory_level' => $product->min_Inventory_level,
-                'max_Inventory_level' => $product->max_Inventory_level,
+                'min_Inventory_level' => $product->min_Inventory_level ?? $product->min_inventory_level ?? 0,
+                'max_Inventory_level' => $product->max_Inventory_level ?? $product->max_inventory_level ?? 0,
                 'reorder_level' => $product->reorder_level,
                 'purchase_price' => $product->purchase_price ?? 0,
                 'selling_price' => $product->selling_price ?? 0,

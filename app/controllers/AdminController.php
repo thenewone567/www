@@ -11,12 +11,28 @@ class AdminController extends Controller
             session_start();
         }
 
+        // Check if this is an AJAX/API request
+        $isAjaxRequest = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+        $isApiCall = strpos($_SERVER['REQUEST_URI'] ?? '', '/admin/') !== false &&
+            in_array($_SERVER['REQUEST_METHOD'] ?? '', ['POST', 'PUT', 'DELETE', 'PATCH']);
+
         if (!isLoggedIn()) {
+            if ($isAjaxRequest || $isApiCall) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Authentication required']);
+                exit();
+            }
             redirect('users/login');
         }
 
         // Check if user has admin permissions
         if (!$this->hasAdminPermissions()) {
+            if ($isAjaxRequest || $isApiCall) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Access denied. Admin permissions required.']);
+                exit();
+            }
             flash('error_message', 'Access denied. Admin permissions required.', 'alert alert-danger');
             redirect('dashboard');
         }
@@ -55,10 +71,10 @@ class AdminController extends Controller
         $systemHealth = $this->getSystemHealth();
 
         $data = [
-            'title' => 'Admin Panel',
-            'stats' => $stats,
+            'title'           => 'Admin Panel',
+            'stats'           => $stats,
             'recent_activity' => $recentActivity,
-            'system_health' => $systemHealth
+            'system_health'   => $systemHealth
         ];
 
         $this->view('admin/dashboard', $data);
@@ -69,7 +85,8 @@ class AdminController extends Controller
      */
     public function users()
     {
-        $users = $this->userModel->getAllUsersWithRoles();
+        // Use the new method that gets users from all three tables
+        $users = $this->userModel->getAllUsersWithCategories();
         $roles = $this->roleModel->getAllRoles();
 
         $data = [
@@ -82,14 +99,166 @@ class AdminController extends Controller
     }
 
     /**
+     * User categorization interface - shows three separate tables
+     */
+    public function userCategorization()
+    {
+        // Get all users with their categories
+        $allUsers = $this->userModel->getAllUsersWithRoles();
+
+        // Initialize arrays for each category
+        $officials = [];
+        $customers = [];
+        $contractors = [];
+        $counts = ['official' => 0, 'customer' => 0, 'contractor' => 0];
+
+        // Separate users by category
+        if ($allUsers && is_array($allUsers)) {
+            foreach ($allUsers as $user) {
+                $category = isset($user->user_category) ? $user->user_category : 'official'; // Default to official if no category set
+
+                switch ($category) {
+                    case 'customer':
+                        $customers[] = $user;
+                        $counts['customer']++;
+                        break;
+                    case 'contractor':
+                        $contractors[] = $user;
+                        $counts['contractor']++;
+                        break;
+                    default:
+                        $officials[] = $user;
+                        $counts['official']++;
+                        break;
+                }
+            }
+        }
+
+        $data = [
+            'title'       => 'User Management by Category',
+            'officials'   => $officials,
+            'customers'   => $customers,
+            'contractors' => $contractors,
+            'counts'      => $counts,
+            'roles'       => $this->roleModel->getAllRoles()
+        ];
+
+        $this->view('admin/user_categorization', $data);
+    }
+
+    /**
+     * AJAX endpoint to toggle a user's status (activate/deactivate)
+     */
+    public function toggleUserStatus()
+    {
+        // Only accept POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            return;
+        }
+
+        // Parse input
+        $userId = intval($_POST['user_id'] ?? 0);
+        $status = strtolower(trim($_POST['status'] ?? ''));
+        $sourceTable = $_POST['source_table'] ?? 'users';
+
+        if ($userId <= 0 || !in_array($status, ['active', 'inactive'])) {
+            echo json_encode(['success' => false, 'message' => 'Invalid parameters']);
+            return;
+        }
+
+        // Prevent changing the currently logged-in admin's own status
+        if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $userId && $sourceTable === 'users') {
+            echo json_encode(['success' => false, 'message' => 'Cannot change your own status']);
+            return;
+        }
+
+        // Get user from correct table
+        $target = $this->userModel->getUserByIdAndTable($userId, $sourceTable);
+        if (!$target) {
+            echo json_encode(['success' => false, 'message' => 'User not found']);
+            return;
+        }
+
+        // For users table only: Ensure target is not an admin
+        if ($sourceTable === 'users') {
+            $targetRole = strtolower($target->role_name ?? '');
+            if (in_array($targetRole, ['admin', 'super admin', 'administrator'])) {
+                echo json_encode(['success' => false, 'message' => 'Cannot change status of admin users']);
+                return;
+            }
+        }
+
+        // Update status in appropriate table
+        $ok = false;
+        switch ($sourceTable) {
+            case 'users':
+                $ok = $this->userModel->setStatus($userId, $status);
+                break;
+            case 'customers':
+                $ok = $this->userModel->setCustomerStatus($userId, $status);
+                break;
+            case 'contractors':
+                $ok = $this->userModel->setContractorStatus($userId, $status);
+                break;
+        }
+
+        if ($ok) {
+            // log activity if available
+            if (method_exists($this->userModel, 'logActivity')) {
+                $this->userModel->logActivity($_SESSION['user_id'] ?? 0, 'user_status_changed', "Set {$target->name} ({$sourceTable}) to {$status}");
+            }
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to update status']);
+        }
+    }
+
+    /**
+     * Save user categories (AJAX endpoint)
+     */
+    public function saveUserCategories()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            return;
+        }
+
+        $categories = $_POST['categories'] ?? [];
+
+        if (empty($categories)) {
+            echo json_encode(['success' => false, 'message' => 'No categories provided']);
+            return;
+        }
+
+        $successCount = 0;
+        $totalCount = count($categories);
+
+        foreach ($categories as $userId => $category) {
+            if ($this->userModel->setUserCategory((int) $userId, $category)) {
+                $successCount++;
+            }
+        }
+
+        if ($successCount === $totalCount) {
+            echo json_encode(['success' => true, 'message' => "Successfully updated $successCount user categories"]);
+        } else {
+            echo json_encode(['success' => false, 'message' => "Updated $successCount of $totalCount categories"]);
+        }
+    }
+
+    /**
      * Add new user
      */
     public function addUser()
     {
-        // Set JSON content type for AJAX responses
-        header('Content-Type: application/json');
-
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Ensure clean output for AJAX responses
+            ob_clean();
+            header('Content-Type: application/json');
+
             try {
                 // Check if POST data exists
                 if (empty($_POST)) {
@@ -99,12 +268,12 @@ class AdminController extends Controller
                 $_POST = sanitizePost($_POST);
 
                 $data = [
-                    'name' => trim($_POST['name'] ?? ''),
+                    'name'     => trim($_POST['name'] ?? ''),
                     'username' => trim($_POST['username'] ?? ''),
-                    'email' => trim($_POST['email'] ?? ''),
+                    'email'    => trim($_POST['email'] ?? ''),
                     'password' => trim($_POST['password'] ?? ''),
-                    'role_id' => intval($_POST['role_id'] ?? 0),
-                    'status' => $_POST['status'] ?? 'active'
+                    'role_id'  => intval($_POST['role_id'] ?? 0),
+                    'status'   => $_POST['status'] ?? 'active'
                 ];
 
                 // Enhanced validation
@@ -152,10 +321,10 @@ class AdminController extends Controller
                         echo json_encode([
                             'success' => true,
                             'message' => 'User created successfully',
-                            'user' => [
-                                'name' => $data['name'],
+                            'user'    => [
+                                'name'     => $data['name'],
                                 'username' => $data['username'],
-                                'email' => $data['email']
+                                'email'    => $data['email']
                             ]
                         ]);
                     } else {
@@ -168,7 +337,7 @@ class AdminController extends Controller
                 error_log("AddUser exception: " . $e->getMessage());
                 echo json_encode(['success' => false, 'message' => 'Server error occurred']);
             }
-            return;
+            exit();
         }
 
         // GET request - show add user form
@@ -180,6 +349,252 @@ class AdminController extends Controller
             flash('error_message', 'Error loading roles: ' . $e->getMessage(), 'alert alert-danger');
             redirect('admin/users');
         }
+    }
+
+    /**
+     * Add Official User (Employee)
+     */
+    public function addOfficial()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            ob_clean();
+            header('Content-Type: application/json');
+
+            try {
+                $_POST = sanitizePost($_POST);
+
+                $data = [
+                    'name'       => trim($_POST['name'] ?? ''),
+                    'username'   => trim($_POST['username'] ?? ''),
+                    'email'      => trim($_POST['email'] ?? ''),
+                    'password'   => trim($_POST['password'] ?? ''),
+                    'role_id'    => intval($_POST['role_id'] ?? 0),
+                    'status'     => $_POST['status'] ?? 'active',
+                    'phone'      => trim($_POST['phone'] ?? ''),
+                    'department' => trim($_POST['department'] ?? ''),
+                    'hire_date'  => $_POST['hire_date'] ?? date('Y-m-d')
+                ];
+
+                $errors = $this->validateOfficialData($data);
+
+                if (empty($errors)) {
+                    $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+
+                    if ($this->userModel->addUser($data)) {
+                        echo json_encode([
+                            'success'  => true,
+                            'message'  => 'Official user created successfully',
+                            'redirect' => 'admin/users'
+                        ]);
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'Failed to create official user']);
+                    }
+                } else {
+                    echo json_encode(['success' => false, 'message' => implode(', ', $errors)]);
+                }
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => 'Server error occurred']);
+            }
+            exit();
+        }
+
+        // GET request - show form
+        $roles = $this->roleModel->getAllRoles();
+        // Filter to show only official roles (not Customer/Contractor)
+        $officialRoles = array_filter($roles, function ($role) {
+            return !in_array($role->role_name, ['Customer', 'Contractor']);
+        });
+
+        $data = [
+            'title' => 'Add Official User',
+            'roles' => $officialRoles
+        ];
+        $this->view('admin/add_official', $data);
+    }
+
+    /**
+     * Add Customer
+     */
+    public function addCustomer()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            ob_clean();
+            header('Content-Type: application/json');
+
+            try {
+                $_POST = sanitizePost($_POST);
+
+                // Customer data
+                $customerData = [
+                    'company_name'   => trim($_POST['company_name'] ?? ''),
+                    'contact_person' => trim($_POST['contact_person'] ?? ''),
+                    'email'          => trim($_POST['email'] ?? ''),
+                    'phone'          => trim($_POST['phone'] ?? ''),
+                    'address'        => trim($_POST['address'] ?? ''),
+                    'city'           => trim($_POST['city'] ?? ''),
+                    'state'          => trim($_POST['state'] ?? ''),
+                    'zip_code'       => trim($_POST['zip_code'] ?? ''),
+                    'discount_type'  => $_POST['discount_type'] ?? 'percentage',
+                    'discount_value' => floatval($_POST['discount_value'] ?? 0),
+                    'credit_limit'   => floatval($_POST['credit_limit'] ?? 0),
+                    'payment_terms'  => intval($_POST['payment_terms'] ?? 30),
+                    'is_active'      => 1
+                ];
+
+                $errors = $this->validateCustomerData($customerData);
+
+                if (empty($errors)) {
+                    $customerModel = new Customer();
+                    if ($customerModel->addCustomer($customerData)) {
+                        echo json_encode([
+                            'success'  => true,
+                            'message'  => 'Customer created successfully',
+                            'redirect' => 'admin/users'
+                        ]);
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'Failed to create customer']);
+                    }
+                } else {
+                    echo json_encode(['success' => false, 'message' => implode(', ', $errors)]);
+                }
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => 'Server error occurred']);
+            }
+            exit();
+        }
+
+        // GET request - show form
+        $data = [
+            'title' => 'Add Customer'
+        ];
+        $this->view('admin/add_customer', $data);
+    }
+
+    /**
+     * Add Contractor
+     */
+    public function addContractor()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            ob_clean();
+            header('Content-Type: application/json');
+
+            try {
+                $_POST = sanitizePost($_POST);
+
+                // Contractor data
+                $contractorData = [
+                    'company_name'     => trim($_POST['company_name'] ?? ''),
+                    'contact_person'   => trim($_POST['contact_person'] ?? ''),
+                    'email'            => trim($_POST['email'] ?? ''),
+                    'phone'            => trim($_POST['phone'] ?? ''),
+                    'address'          => trim($_POST['address'] ?? ''),
+                    'city'             => trim($_POST['city'] ?? ''),
+                    'state'            => trim($_POST['state'] ?? ''),
+                    'zip_code'         => trim($_POST['zip_code'] ?? ''),
+                    'specialty'        => trim($_POST['specialty'] ?? ''),
+                    'license_number'   => trim($_POST['license_number'] ?? ''),
+                    'commission_type'  => $_POST['commission_type'] ?? 'percentage',
+                    'commission_value' => floatval($_POST['commission_value'] ?? 0),
+                    'payment_terms'    => intval($_POST['payment_terms'] ?? 30),
+                    'is_active'        => 1
+                ];
+
+                $errors = $this->validateContractorData($contractorData);
+
+                if (empty($errors)) {
+                    $contractorModel = new Contractor();
+                    if ($contractorModel->addContractor($contractorData)) {
+                        echo json_encode([
+                            'success'  => true,
+                            'message'  => 'Contractor created successfully',
+                            'redirect' => 'admin/users'
+                        ]);
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'Failed to create contractor']);
+                    }
+                } else {
+                    echo json_encode(['success' => false, 'message' => implode(', ', $errors)]);
+                }
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => 'Server error occurred']);
+            }
+            exit();
+        }
+
+        // GET request - show form
+        $data = [
+            'title' => 'Add Contractor'
+        ];
+        $this->view('admin/add_contractor', $data);
+    }
+
+    /**
+     * Validation helpers
+     */
+    private function validateOfficialData($data)
+    {
+        $errors = [];
+        if (empty($data['name']))
+            $errors[] = 'Name is required';
+        if (empty($data['username']))
+            $errors[] = 'Username is required';
+        if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Valid email is required';
+        }
+        if (empty($data['password']) || strlen($data['password']) < 6) {
+            $errors[] = 'Password must be at least 6 characters';
+        }
+        if (empty($data['role_id']))
+            $errors[] = 'Role is required';
+
+        // Check duplicates
+        if (!empty($data['email']) && $this->userModel->findUserByEmail($data['email'])) {
+            $errors[] = 'Email already exists';
+        }
+        if (!empty($data['username']) && $this->userModel->findUserByUsername($data['username'])) {
+            $errors[] = 'Username already exists';
+        }
+
+        return $errors;
+    }
+
+    private function validateCustomerData($data)
+    {
+        $errors = [];
+        if (empty($data['contact_person']))
+            $errors[] = 'Contact person is required';
+        if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Valid email format required';
+        }
+        if (empty($data['phone']))
+            $errors[] = 'Phone number is required';
+        if ($data['discount_value'] < 0 || $data['discount_value'] > 100) {
+            $errors[] = 'Discount value must be between 0 and 100';
+        }
+
+        return $errors;
+    }
+
+    private function validateContractorData($data)
+    {
+        $errors = [];
+        if (empty($data['company_name']))
+            $errors[] = 'Company name is required';
+        if (empty($data['contact_person']))
+            $errors[] = 'Contact person is required';
+        if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Valid email is required';
+        }
+        if (empty($data['phone']))
+            $errors[] = 'Phone number is required';
+        if (empty($data['specialty']))
+            $errors[] = 'Specialty is required';
+        if ($data['commission_value'] < 0 || $data['commission_value'] > 100) {
+            $errors[] = 'Commission value must be between 0 and 100';
+        }
+
+        return $errors;
     }
 
     /**
@@ -196,11 +611,12 @@ class AdminController extends Controller
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'user_id' => $userId,
-                'name' => trim($_POST['name']),
-                'email' => trim($_POST['email']),
-                'role_id' => intval($_POST['role_id']),
-                'status' => $_POST['status'] ?? 'active'
+                'user_id'      => $userId,
+                'name'         => trim($_POST['name']),
+                'email'        => trim($_POST['email']),
+                'role_id'      => intval($_POST['role_id']),
+                'status'       => $_POST['status'] ?? 'active',
+                'source_table' => $_POST['source_table'] ?? $_GET['source'] ?? 'users'
             ];
 
             // Validation
@@ -212,10 +628,12 @@ class AdminController extends Controller
                 $errors[] = 'Valid email is required';
             }
 
-            // Check if email already exists for other users
-            $existingUser = $this->userModel->findUserByEmail($data['email']);
-            if ($existingUser && $existingUser->user_id != $userId) {
-                $errors[] = 'Email already exists';
+            // Check if email already exists for other users (only for officials)
+            if ($data['source_table'] === 'users') {
+                $existingUser = $this->userModel->findUserByEmail($data['email']);
+                if ($existingUser && $existingUser->user_id != $userId) {
+                    $errors[] = 'Email already exists';
+                }
             }
 
             if (empty($errors)) {
@@ -237,7 +655,8 @@ class AdminController extends Controller
         }
 
         // GET request - return user data
-        $user = $this->userModel->getUserById($userId);
+        $sourceTable = $_GET['source'] ?? 'users';
+        $user = $this->userModel->getUserByIdAndTable($userId, $sourceTable);
         if ($user) {
             echo json_encode($user);
         } else {
@@ -254,8 +673,8 @@ class AdminController extends Controller
         $permissions = $this->getAvailablePermissions();
 
         $data = [
-            'title' => 'Role Management',
-            'roles' => $roles,
+            'title'       => 'Role Management',
+            'roles'       => $roles,
             'permissions' => $permissions
         ];
 
@@ -271,7 +690,7 @@ class AdminController extends Controller
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'role_name' => trim($_POST['role_name']),
+                'role_name'   => trim($_POST['role_name']),
                 'description' => trim($_POST['description']),
                 'permissions' => $_POST['permissions'] ?? []
             ];
@@ -320,8 +739,8 @@ class AdminController extends Controller
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'role_id' => $roleId,
-                'role_name' => trim($_POST['role_name']),
+                'role_id'     => $roleId,
+                'role_name'   => trim($_POST['role_name']),
                 'description' => trim($_POST['description']),
                 'permissions' => $_POST['permissions'] ?? []
             ];
@@ -370,12 +789,12 @@ class AdminController extends Controller
         $totalPages = ceil($totalActivities / $perPage);
 
         $data = [
-            'title' => 'Activity Logs',
-            'activities' => $activities,
+            'title'            => 'Activity Logs',
+            'activities'       => $activities,
             'total_activities' => $totalActivities,
-            'current_page' => $page,
-            'total_pages' => $totalPages,
-            'current_user' => $_SESSION['user_name'] ?? 'Unknown'
+            'current_page'     => $page,
+            'total_pages'      => $totalPages,
+            'current_user'     => $_SESSION['user_name'] ?? 'Unknown'
         ];
 
         $this->view('admin/activity_logs', $data);
@@ -391,10 +810,10 @@ class AdminController extends Controller
 
             // Handle settings update
             $settings = [
-                'auto_approve_threshold' => floatval($_POST['auto_approve_threshold'] ?? 1000),
+                'auto_approve_threshold'  => floatval($_POST['auto_approve_threshold'] ?? 1000),
                 'low_Inventory_threshold' => intval($_POST['low_Inventory_threshold'] ?? 10),
-                'session_timeout' => intval($_POST['session_timeout'] ?? 3600),
-                'backup_frequency' => $_POST['backup_frequency'] ?? 'daily'
+                'session_timeout'         => intval($_POST['session_timeout'] ?? 3600),
+                'backup_frequency'        => $_POST['backup_frequency'] ?? 'daily'
             ];
 
             if ($this->updateSystemSettings($settings)) {
@@ -407,7 +826,7 @@ class AdminController extends Controller
         $currentSettings = $this->getSystemSettings();
 
         $data = [
-            'title' => 'System Settings',
+            'title'    => 'System Settings',
             'settings' => $currentSettings
         ];
 
@@ -420,40 +839,40 @@ class AdminController extends Controller
     private function getAvailablePermissions()
     {
         return [
-            'users' => [
-                'label' => 'User Management',
+            'users'     => [
+                'label'       => 'User Management',
                 'permissions' => ['create', 'read', 'update', 'delete']
             ],
-            'sales' => [
-                'label' => 'Sales',
+            'sales'     => [
+                'label'       => 'Sales',
                 'permissions' => ['create', 'read', 'update', 'delete']
             ],
             'purchases' => [
-                'label' => 'Purchases',
+                'label'       => 'Purchases',
                 'permissions' => ['create', 'read', 'update', 'delete', 'approve']
             ],
             'inventory' => [
-                'label' => 'Inventory',
+                'label'       => 'Inventory',
                 'permissions' => ['create', 'read', 'update', 'delete']
             ],
             'customers' => [
-                'label' => 'Customers',
+                'label'       => 'Customers',
                 'permissions' => ['create', 'read', 'update', 'delete']
             ],
             'suppliers' => [
-                'label' => 'Suppliers',
+                'label'       => 'Suppliers',
                 'permissions' => ['create', 'read', 'update', 'delete']
             ],
-            'reports' => [
-                'label' => 'Reports',
+            'reports'   => [
+                'label'       => 'Reports',
                 'permissions' => ['read', 'export']
             ],
-            'settings' => [
-                'label' => 'Settings',
+            'settings'  => [
+                'label'       => 'Settings',
                 'permissions' => ['read', 'update']
             ],
-            'admin' => [
-                'label' => 'Admin Panel',
+            'admin'     => [
+                'label'       => 'Admin Panel',
                 'permissions' => ['access']
             ]
         ];
@@ -465,9 +884,9 @@ class AdminController extends Controller
     private function getSystemStats()
     {
         return [
-            'total_users' => $this->userModel->getTotalUsers(),
-            'active_users' => $this->userModel->getActiveUsers(),
-            'total_roles' => $this->roleModel->getTotalRoles(),
+            'total_users'   => $this->userModel->getTotalUsers(),
+            'active_users'  => $this->userModel->getActiveUsers(),
+            'total_roles'   => $this->roleModel->getTotalRoles(),
             'recent_logins' => $this->userModel->getRecentLoginsCount(7)
         ];
     }
@@ -479,9 +898,9 @@ class AdminController extends Controller
     {
         return [
             'database_status' => $this->checkDatabaseConnection(),
-            'disk_space' => $this->getDiskUsage(),
-            'php_version' => phpversion(),
-            'memory_usage' => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB'
+            'disk_space'      => $this->getDiskUsage(),
+            'php_version'     => phpversion(),
+            'memory_usage'    => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB'
         ];
     }
 
@@ -516,10 +935,10 @@ class AdminController extends Controller
         // This would typically be stored in database
         // For now, return defaults
         return [
-            'auto_approve_threshold' => 1000,
+            'auto_approve_threshold'  => 1000,
             'low_Inventory_threshold' => 10,
-            'session_timeout' => 3600,
-            'backup_frequency' => 'daily'
+            'session_timeout'         => 3600,
+            'backup_frequency'        => 'daily'
         ];
     }
 
@@ -557,8 +976,8 @@ class AdminController extends Controller
         $availablePages = $this->getAvailablePages();
 
         $data = [
-            'title' => 'User Permissions Management',
-            'users' => $users,
+            'title'           => 'User Permissions Management',
+            'users'           => $users,
             'available_pages' => $availablePages
         ];
 
@@ -571,60 +990,60 @@ class AdminController extends Controller
     private function getAvailablePages()
     {
         return [
-            'dashboard' => [
-                'label' => 'Dashboard',
+            'dashboard'     => [
+                'label'       => 'Dashboard',
                 'description' => 'Main dashboard access'
             ],
-            'sales' => [
-                'label' => 'Sales Management',
+            'sales'         => [
+                'label'       => 'Sales Management',
                 'description' => 'Manage sales, invoices, and transactions'
             ],
-            'purchases' => [
-                'label' => 'Purchase Management',
+            'purchases'     => [
+                'label'       => 'Purchase Management',
                 'description' => 'Manage purchases and suppliers'
             ],
-            'inventory' => [
-                'label' => 'Inventory Management',
+            'inventory'     => [
+                'label'       => 'Inventory Management',
                 'description' => 'Manage products, and inventory'
             ],
-            'customers' => [
-                'label' => 'Customer Management',
+            'customers'     => [
+                'label'       => 'Customer Management',
                 'description' => 'Manage customer information'
             ],
-            'suppliers' => [
-                'label' => 'Supplier Management',
+            'suppliers'     => [
+                'label'       => 'Supplier Management',
                 'description' => 'Manage supplier information'
             ],
-            'products' => [
-                'label' => 'Product Management',
+            'products'      => [
+                'label'       => 'Product Management',
                 'description' => 'Manage product catalog'
             ],
-            'reports' => [
-                'label' => 'Reports',
+            'reports'       => [
+                'label'       => 'Reports',
                 'description' => 'Access to various reports'
             ],
-            'settings' => [
-                'label' => 'System Settings',
+            'settings'      => [
+                'label'       => 'System Settings',
                 'description' => 'System configuration and settings'
             ],
-            'users' => [
-                'label' => 'User Management',
+            'users'         => [
+                'label'       => 'User Management',
                 'description' => 'Manage user accounts (Admin only)'
             ],
-            'cycle_counts' => [
-                'label' => 'Cycle Counts',
+            'cycle_counts'  => [
+                'label'       => 'Cycle Counts',
                 'description' => 'Inventory cycle counting'
             ],
-            'returns' => [
-                'label' => 'Returns Management',
+            'returns'       => [
+                'label'       => 'Returns Management',
                 'description' => 'Handle product returns'
             ],
-            'expenses' => [
-                'label' => 'Expense Management',
+            'expenses'      => [
+                'label'       => 'Expense Management',
                 'description' => 'Track business expenses'
             ],
             'notifications' => [
-                'label' => 'Notifications',
+                'label'       => 'Notifications',
                 'description' => 'System notifications'
             ]
         ];
@@ -648,10 +1067,12 @@ class AdminController extends Controller
 
         // Get filter parameters from URL
         $filters = [
-            'category' => $_GET['category'] ?? '',
-            'price_range' => $_GET['price_range'] ?? '',
-            'stock_status' => $_GET['stock_status'] ?? '',
-            'margin_filter' => $_GET['margin_filter'] ?? ''
+            'category'      => $_GET['category'] ?? '',
+            'price_range'   => $_GET['price_range'] ?? '',
+            'stock_status'  => $_GET['stock_status'] ?? '',
+            'stock_filter'  => $_GET['stock_filter'] ?? '',
+            'margin_filter' => $_GET['margin_filter'] ?? '',
+            'sales_filter'  => $_GET['sales_filter'] ?? ''
         ];
 
         // Get products with pricing information
@@ -661,10 +1082,10 @@ class AdminController extends Controller
         $stats = $this->getPriceManagementStats($productModel);
 
         $data = [
-            'title' => 'Price Management',
+            'title'    => 'Price Management',
             'products' => $products,
-            'stats' => $stats,
-            'filters' => $filters
+            'stats'    => $stats,
+            'filters'  => $filters
         ];
 
         $this->view('admin/price_management', $data);
@@ -675,11 +1096,13 @@ class AdminController extends Controller
      */
     public function updateProductPrice()
     {
+        // Ensure clean output
+        ob_clean();
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-            return;
+            exit();
         }
 
         try {
@@ -705,8 +1128,8 @@ class AdminController extends Controller
                 }
 
                 echo json_encode([
-                    'success' => true,
-                    'message' => $autoSave ? 'Price auto-saved' : 'Price updated successfully',
+                    'success'   => true,
+                    'message'   => $autoSave ? 'Price auto-saved' : 'Price updated successfully',
                     'new_price' => number_format($newPrice, 2)
                 ]);
             } else {
@@ -715,6 +1138,7 @@ class AdminController extends Controller
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
+        exit();
     }
 
     /**
@@ -722,11 +1146,13 @@ class AdminController extends Controller
      */
     public function getPriceHistory()
     {
+        // Ensure clean output
+        ob_clean();
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-            return;
+            exit();
         }
 
         try {
@@ -741,11 +1167,12 @@ class AdminController extends Controller
 
             echo json_encode([
                 'success' => true,
-                'data' => $priceHistory
+                'data'    => $priceHistory
             ]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
+        exit();
     }
 
     /**
@@ -753,11 +1180,13 @@ class AdminController extends Controller
      */
     public function bulkPriceUpdate()
     {
+        // Ensure clean output
+        ob_clean();
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-            return;
+            exit();
         }
 
         try {
@@ -801,13 +1230,14 @@ class AdminController extends Controller
             }
 
             echo json_encode([
-                'success' => true,
-                'message' => "Successfully updated {$updatedCount} product prices",
+                'success'       => true,
+                'message'       => "Successfully updated {$updatedCount} product prices",
                 'updated_count' => $updatedCount
             ]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
+        exit();
     }
 
     /**
@@ -876,11 +1306,13 @@ class AdminController extends Controller
      */
     public function importPrices()
     {
+        // Ensure clean output
+        ob_clean();
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-            return;
+            exit();
         }
 
         try {
@@ -931,13 +1363,14 @@ class AdminController extends Controller
             }
 
             echo json_encode([
-                'success' => true,
-                'message' => "Successfully updated {$updatedCount} product prices",
+                'success'       => true,
+                'message'       => "Successfully updated {$updatedCount} product prices",
                 'updated_count' => $updatedCount
             ]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
+        exit();
     }
 
     /**
@@ -948,18 +1381,18 @@ class AdminController extends Controller
         try {
             $stats = $productModel->getPriceManagementStats();
             return [
-                'total_products' => $stats['total_products'] ?? 0,
-                'average_margin' => $stats['average_margin'] ?? 0,
+                'total_products'      => $stats['total_products'] ?? 0,
+                'average_margin'      => $stats['average_margin'] ?? 0,
                 'low_margin_products' => $stats['low_margin_products'] ?? 0,
-                'recent_updates' => $stats['recent_updates'] ?? 0
+                'total_gross_margin'  => $stats['total_gross_margin'] ?? 0
             ];
         } catch (Exception $e) {
             // Return default stats if there's an error
             return [
-                'total_products' => 0,
-                'average_margin' => 0,
+                'total_products'      => 0,
+                'average_margin'      => 0,
                 'low_margin_products' => 0,
-                'recent_updates' => 0
+                'total_gross_margin'  => 0
             ];
         }
     }

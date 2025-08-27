@@ -19,15 +19,15 @@ function getSidebarItems($userRole = null, $roleId = null)
         // Admins (role_id 1 or role_name 'admin' or 'super admin')
         'admin' => [
             ['url' => 'dashboard', 'icon' => 'fa-solid fa-gauge', 'label' => 'Dashboard'],
-            ['url' => 'sales', 'icon' => 'fa-solid fa-chart-line', 'label' => 'Sales'],
-            ['url' => 'purchases', 'icon' => 'fa-solid fa-cart-plus', 'label' => 'Purchases'],
+            ['url' => 'products', 'icon' => 'fa-solid fa-box', 'label' => 'Products'],
             ['url' => 'suppliers', 'icon' => 'fa-solid fa-truck', 'label' => 'Suppliers'],
             ['url' => 'suppliers/link', 'icon' => 'fa-solid fa-link', 'label' => 'Link Suppliers'],
-            ['url' => 'products', 'icon' => 'fa-solid fa-box', 'label' => 'Products'],
-            ['url' => 'barcodes', 'icon' => 'fa-solid fa-barcode', 'label' => 'Barcode Management'],
+            ['url' => 'purchases', 'icon' => 'fa-solid fa-cart-plus', 'label' => 'Purchases'],
+            ['url' => 'sales', 'icon' => 'fa-solid fa-chart-line', 'label' => 'Sales'],
             ['url' => 'returns', 'icon' => 'fa-solid fa-undo', 'label' => 'Returns'],
             ['url' => 'inventory', 'icon' => 'fa-solid fa-warehouse', 'label' => 'Inventory Management'],
             ['url' => 'import', 'icon' => 'fa-solid fa-file-import', 'label' => 'Bulk Import'],
+            ['url' => 'barcodes', 'icon' => 'fa-solid fa-barcode', 'label' => 'Barcode Management'],
             ['url' => 'expenses', 'icon' => 'fa-solid fa-wallet', 'label' => 'Expenses'],
             ['url' => 'reports', 'icon' => 'fa-solid fa-file-alt', 'label' => 'Reports'],
             ['url' => 'company-profile', 'icon' => 'fa-solid fa-building', 'label' => 'Company Profile'],
@@ -37,15 +37,15 @@ function getSidebarItems($userRole = null, $roleId = null)
         // Manager (role_id 2)
         'manager' => [
             ['url' => 'dashboard', 'icon' => 'fa-solid fa-gauge', 'label' => 'Dashboard'],
-            ['url' => 'sales', 'icon' => 'fa-solid fa-chart-line', 'label' => 'Sales'],
-            ['url' => 'purchases', 'icon' => 'fa-solid fa-cart-plus', 'label' => 'Purchases'],
+            ['url' => 'products', 'icon' => 'fa-solid fa-box', 'label' => 'Products'],
             ['url' => 'suppliers', 'icon' => 'fa-solid fa-truck', 'label' => 'Suppliers'],
             ['url' => 'suppliers/link', 'icon' => 'fa-solid fa-link', 'label' => 'Link Suppliers'],
-            ['url' => 'products', 'icon' => 'fa-solid fa-box', 'label' => 'Products'],
-            ['url' => 'barcodes', 'icon' => 'fa-solid fa-barcode', 'label' => 'Barcode Management'],
+            ['url' => 'purchases', 'icon' => 'fa-solid fa-cart-plus', 'label' => 'Purchases'],
+            ['url' => 'sales', 'icon' => 'fa-solid fa-chart-line', 'label' => 'Sales'],
             ['url' => 'returns', 'icon' => 'fa-solid fa-undo', 'label' => 'Returns'],
             ['url' => 'inventory', 'icon' => 'fa-solid fa-warehouse', 'label' => 'Inventory Management'],
             ['url' => 'import', 'icon' => 'fa-solid fa-file-import', 'label' => 'Bulk Import'],
+            ['url' => 'barcodes', 'icon' => 'fa-solid fa-barcode', 'label' => 'Barcode Management'],
             ['url' => 'reports', 'icon' => 'fa-solid fa-file-alt', 'label' => 'Reports'],
             ['url' => 'company-profile', 'icon' => 'fa-solid fa-building', 'label' => 'Company Profile'],
         ],
@@ -53,25 +53,27 @@ function getSidebarItems($userRole = null, $roleId = null)
         // Supervisor (role_id 3) - oversight capabilities
         'supervisor' => [
             ['url' => 'dashboard', 'icon' => 'fa-solid fa-gauge', 'label' => 'Dashboard'],
-            ['url' => 'sales', 'icon' => 'fa-solid fa-chart-line', 'label' => 'Sales'],
-            ['url' => 'suppliers/link', 'icon' => 'fa-solid fa-link', 'label' => 'Link Suppliers'],
             ['url' => 'products', 'icon' => 'fa-solid fa-box', 'label' => 'Products'],
-            ['url' => 'barcodes', 'icon' => 'fa-solid fa-barcode', 'label' => 'Barcode Management'],
+            ['url' => 'suppliers', 'icon' => 'fa-solid fa-truck', 'label' => 'Suppliers'],
+            ['url' => 'suppliers/link', 'icon' => 'fa-solid fa-link', 'label' => 'Link Suppliers'],
+            ['url' => 'purchases', 'icon' => 'fa-solid fa-cart-plus', 'label' => 'Purchases'],
+            ['url' => 'sales', 'icon' => 'fa-solid fa-chart-line', 'label' => 'Sales'],
             ['url' => 'returns', 'icon' => 'fa-solid fa-undo', 'label' => 'Returns'],
             ['url' => 'inventory', 'icon' => 'fa-solid fa-warehouse', 'label' => 'Inventory Management'],
+            ['url' => 'barcodes', 'icon' => 'fa-solid fa-barcode', 'label' => 'Barcode Management'],
             ['url' => 'reports', 'icon' => 'fa-solid fa-file-alt', 'label' => 'Reports'],
         ],
 
         // Cashier (role_id 4) - customer facing
         'cashier' => [
-            ['url' => 'sales', 'icon' => 'fa-solid fa-chart-line', 'label' => 'Sales'],
             ['url' => 'products', 'icon' => 'fa-solid fa-box', 'label' => 'Products'],
+            ['url' => 'sales', 'icon' => 'fa-solid fa-chart-line', 'label' => 'Sales'],
         ],
 
         // Inventory Clerk (role_id 5) - inventory focused
         'Inventory clerk' => [
-            ['url' => 'inventory', 'icon' => 'fa-solid fa-warehouse', 'label' => 'Inventory Management'],
             ['url' => 'products', 'icon' => 'fa-solid fa-box', 'label' => 'Products'],
+            ['url' => 'inventory', 'icon' => 'fa-solid fa-warehouse', 'label' => 'Inventory Management'],
             ['url' => 'barcodes', 'icon' => 'fa-solid fa-barcode', 'label' => 'Barcode Management'],
         ],
 

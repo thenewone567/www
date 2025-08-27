@@ -56,6 +56,8 @@ class ThemeController {
     createThemeToggle() {
         // Check if toggle already exists in the navbar
         const existingToggle = document.getElementById('theme-toggle');
+        console.log('Existing navbar toggle found:', existingToggle);
+
         if (existingToggle) {
             // Use existing button from navbar
             existingToggle.addEventListener('click', () => this.toggleTheme());
@@ -64,28 +66,54 @@ class ThemeController {
         }
 
         // Fallback: create floating toggle if navbar button doesn't exist
+        console.log('Creating floating theme toggle button');
         const toggle = document.createElement('button');
+        // give the floating toggle the canonical id so queries find it consistently
+        toggle.id = 'theme-toggle';
         toggle.className = 'theme-toggle';
         toggle.setAttribute('aria-label', 'Toggle theme');
         toggle.setAttribute('title', 'Toggle between light and dark theme');
 
         const icon = document.createElement('i');
-        icon.className = this.currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        // Set icon to reflect current theme: sun for light, moon for dark
+        icon.className = this.currentTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        console.log('Initial icon class:', icon.className, 'for theme:', this.currentTheme);
         toggle.appendChild(icon);
 
-        toggle.addEventListener('click', () => this.toggleTheme());
+        toggle.addEventListener('click', () => {
+            console.log('Floating toggle clicked, current theme:', this.currentTheme);
+            this.toggleTheme();
+        });
 
         // Add to body
         document.body.appendChild(toggle);
+        console.log('Floating toggle added to body with id=#theme-toggle');
+
+        // Update icon immediately after creation
+        this.updateToggleIcon(icon, this.currentTheme);
     }
 
     updateToggleIcon(iconElement, theme) {
         if (iconElement) {
-            iconElement.className = theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+            // Set icon to reflect current theme: sun for light, moon for dark
+            const newIconClass = theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+            console.log('Updating icon from', iconElement.className, 'to', newIconClass, 'for theme:', theme);
+
+            // Force a visual refresh by briefly removing and re-adding the class
+            iconElement.className = '';
+            // Use requestAnimationFrame to ensure the change is visible
+            requestAnimationFrame(() => {
+                iconElement.className = newIconClass;
+                // Force reflow
+                iconElement.offsetHeight;
+            });
+        } else {
+            console.log('No icon element found to update');
         }
     }
 
     applyTheme(theme) {
+        console.log('Applying theme:', theme);
         // Remove existing theme classes
         document.documentElement.removeAttribute('data-theme');
 
@@ -97,6 +125,9 @@ class ThemeController {
         // Update toggle icon - check both navbar and floating toggle
         const navbarIcon = document.querySelector('#theme-toggle i');
         const floatingIcon = document.querySelector('.theme-toggle i');
+
+        console.log('Found navbar icon:', navbarIcon);
+        console.log('Found floating icon:', floatingIcon);
 
         if (navbarIcon) {
             this.updateToggleIcon(navbarIcon, theme);
@@ -116,7 +147,9 @@ class ThemeController {
     }
 
     toggleTheme() {
+        console.log('Toggle theme called, current:', this.currentTheme);
         this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+        console.log('New theme:', this.currentTheme);
         this.applyTheme(this.currentTheme);
     }
 

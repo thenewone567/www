@@ -9,7 +9,16 @@ class Controller
 
   public function __construct()
   {
-    if (isLoggedIn()) {
+    // If this is an AJAX request and the user is not logged in, return JSON 401
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    if (!$isAjax && isLoggedIn()) {
+      $this->notificationModel = $this->model('Notification');
+    } elseif ($isAjax && !isLoggedIn()) {
+      header('Content-Type: application/json');
+      http_response_code(401);
+      echo json_encode(['success' => false, 'error' => 'Authentication required']);
+      exit();
+    } elseif (isLoggedIn()) {
       $this->notificationModel = $this->model('Notification');
     }
   }

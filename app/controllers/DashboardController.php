@@ -32,6 +32,9 @@ class DashboardController extends Controller
         // Customer Analytics Data
         $newCustomers = $this->dashboardModel->getNewCustomers(30);
 
+        // Product Activities Data
+        $productActivities = $this->getRecentProductActivities(10);
+
         // Financial Data
         $grossMargin = $this->dashboardModel->getGrossMargin(30);
 
@@ -62,6 +65,9 @@ class DashboardController extends Controller
 
             // Customer Analytics
             'new_customers' => $newCustomers,
+
+            // Product Activities
+            'product_activities' => is_array($productActivities) ? $productActivities : [],
 
             // Financial Metrics
             'gross_margin' => $grossMargin,
@@ -97,5 +103,47 @@ class DashboardController extends Controller
 
         echo json_encode(['success' => true, 'data' => $data]);
         exit;
+    }
+
+    /**
+     * Get recent product activities for dashboard
+     */
+    private function getRecentProductActivities($limit = 10)
+    {
+        try {
+            $db = new Database();
+
+            // Query to get recent product activities from activity_logs table
+            $db->query("
+                SELECT 
+                    al.log_id as id,
+                    al.action,
+                    COALESCE(p.product_name, 'Unknown Product') as product_name,
+                    COALESCE(u.username, 'System') as user_name,
+                    CONCAT(al.action, ' - ', COALESCE(p.product_name, CONCAT('Product ID: ', CAST(al.target_id AS CHAR)))) as details,
+                    al.log_timestamp as created_at,
+                    CASE 
+                        WHEN al.action LIKE '%add%' OR al.action LIKE '%create%' THEN 'success'
+                        WHEN al.action LIKE '%delete%' OR al.action LIKE '%remove%' THEN 'warning'
+                        WHEN al.action LIKE '%error%' OR al.action LIKE '%fail%' THEN 'error'
+                        ELSE 'success'
+                    END as status
+                FROM activity_logs al
+                LEFT JOIN users u ON al.user_id = u.user_id
+                LEFT JOIN products p ON al.target_type = 'product' AND al.target_id = p.product_id
+                WHERE al.target_type = 'product' OR al.action LIKE '%product%'
+                ORDER BY al.log_timestamp DESC
+                LIMIT :limit
+            ");
+
+            $db->bind(':limit', $limit);
+            $results = $db->resultSet();
+
+            return $results ? $results : [];
+
+        } catch (Exception $e) {
+            error_log('Error fetching recent product activities for dashboard: ' . $e->getMessage());
+            return [];
+        }
     }
 }

@@ -12,6 +12,33 @@ class ReceiptHelper
     public static function generateReceivingReceipt($purchaseData, $items = [])
     {
         $receiptNumber = self::generateReceiptNumber();
+        // Determine displayed receiver name: prefer passed purchaseData value, then common session name keys, then purchase supplier, then System
+        $receivedByName = '';
+        if (!empty($purchaseData['received_by'])) {
+            $receivedByName = $purchaseData['received_by'];
+        } elseif (!empty($_SESSION['display_name'])) {
+            $receivedByName = $_SESSION['display_name'];
+        } elseif (!empty($_SESSION['user_full_name'])) {
+            $receivedByName = $_SESSION['user_full_name'];
+        } elseif (!empty($_SESSION['user_username'])) {
+            $receivedByName = $_SESSION['user_username'];
+        } elseif (!empty($_SESSION['user_name'])) {
+            $receivedByName = $_SESSION['user_name'];
+        } elseif (!empty($_SESSION['username'])) {
+            $receivedByName = $_SESSION['username'];
+        } elseif (!empty($purchaseData['supplier_name'])) {
+            $receivedByName = $purchaseData['supplier_name'];
+        } else {
+            $receivedByName = 'System';
+        }
+
+        // Optional logo (public/uploads/logo.png)
+        $logoHtml = '';
+        $logoPath = APPROOT . '/public/uploads/logo.png';
+        if (file_exists($logoPath)) {
+            $logoUrl = (defined('URLROOT') ? rtrim(URLROOT, '/') : '') . '/public/uploads/logo.png';
+            $logoHtml = "<div style='text-align:center; margin-bottom:10px;'><img src='" . htmlspecialchars($logoUrl) . "' alt='Logo' style='max-height:60px;'/></div>";
+        }
 
         $html = "
         <!DOCTYPE html>
@@ -20,8 +47,10 @@ class ReceiptHelper
             <meta charset='UTF-8'>
             <title>Receiving Receipt - " . htmlspecialchars($purchaseData['po_number']) . "</title>
             <style>
+                /* A4 sizing for print */
+                @page { size: A4; margin: 10mm; }
                 body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-                .receipt-container { max-width: 800px; margin: 0 auto; border: 1px solid #ccc; }
+                .receipt-container { width: 210mm; min-height: 297mm; margin: 0 auto; border: 1px solid #ccc; box-sizing: border-box; background: #fff; }
                 .header { background-color: #2c3e50; color: white; padding: 20px; text-align: center; }
                 .company-info { text-align: center; padding: 15px; background-color: #ecf0f1; }
                 .receipt-info { padding: 20px; background-color: #f8f9fa; }
@@ -50,6 +79,8 @@ class ReceiptHelper
                     <p>Receipt #: " . $receiptNumber . "</p>
                 </div>
                 
+                " . $logoHtml . "
+
                 <div class='company-info'>
                     <h3>Hardware Store Inventory Management</h3>
                     <p>123 Hardware Street, Industrial District<br>
@@ -60,7 +91,7 @@ class ReceiptHelper
                     <div style='display: flex; justify-content: space-between;'>
                         <div>
                             <strong>Receipt Date:</strong> " . date('Y-m-d H:i:s') . "<br>
-                            <strong>Received By:</strong> " . htmlspecialchars($_SESSION['username'] ?? 'System') . "<br>
+                            <strong>Received By:</strong> " . htmlspecialchars($receivedByName) . "<br>
                             <strong>Status:</strong> Received and Staged at Dock
                         </div>
                         <div style='text-align: right;'>
@@ -102,25 +133,32 @@ class ReceiptHelper
                     <h3>Receiving Summary</h3>
                     <p><strong>Status Change:</strong> Purchase order status updated to 'Received and Staged at Dock'</p>
                     <p><strong>Location:</strong> Receiving Dock - Staging Area</p>
-                    <p><strong>Next Action:</strong> Items will be processed in the Receiving Page for inventory update</p>
                     <p><strong>Notes:</strong> " . htmlspecialchars($purchaseData['notes'] ?? 'No additional notes') . "</p>
                 </div>
                 
                 <div class='signatures'>
                     <div class='signature-box'>
                         <div class='signature-line'></div>
-                        <p style='text-align: center; margin: 5px 0;'><strong>Received By</strong><br>Print Name & Sign</p>
+                        <div style='text-align: center; margin: 5px 0;'>
+                            <strong>Received By</strong>
+                            <div style='margin-top:8px; font-weight:600;'>" . htmlspecialchars($receivedByName) . "</div>
+                            <div style='font-size:12px; color:#666;'>Print Name & Sign</div>
+                        </div>
                     </div>
                     <div class='signature-box' style='float: right;'>
                         <div class='signature-line'></div>
-                        <p style='text-align: center; margin: 5px 0;'><strong>Supervisor</strong><br>Print Name & Sign</p>
+                        <div style='text-align: center; margin: 5px 0;'>
+                            <strong>Delivered By</strong>
+                            <div style='margin-top:8px; font-weight:600;'>&nbsp;</div>
+                            <div style='font-size:12px; color:#666;'>Print Name & Sign</div>
+                        </div>
                     </div>
                     <div style='clear: both;'></div>
                 </div>
                 
                 <div class='footer'>
                     <p>This is an automated receiving receipt generated by the Hardware Store Inventory Management System.<br>
-                    Receipt generated on " . date('Y-m-d H:i:s') . " | System User: " . htmlspecialchars($_SESSION['username'] ?? 'System') . "</p>
+                    Receipt generated on " . date('Y-m-d H:i:s') . " | User: " . htmlspecialchars($receivedByName) . "</p>
                 </div>
             </div>
             
@@ -245,5 +283,48 @@ class ReceiptHelper
 
         echo $receiptHtml;
         exit();
+    }
+
+    /**
+     * Save receipt as PDF using Dompdf if available.
+     * Returns the generated file path on success, or false on failure.
+     */
+    public static function saveReceiptPdf($receiptHtml, $poNumber)
+    {
+        try {
+            // Create receipts dir
+            $receiptsDir = APPROOT . '/storage/receipts/' . date('Y/m');
+            if (!is_dir($receiptsDir)) {
+                mkdir($receiptsDir, 0755, true);
+            }
+
+            $filename = "receipt_" . preg_replace('/[^A-Za-z0-9_-]/', '_', $poNumber) . "_" . date('YmdHis') . ".pdf";
+            $filepath = $receiptsDir . '/' . $filename;
+
+            // If Dompdf is installed, use it
+            if (class_exists('\Dompdf\\Dompdf')) {
+                // Instantiate and use Dompdf only when it's available
+                $dompdfClass = '\\Dompdf\\Dompdf';
+                $dompdf = new $dompdfClass();
+                // Ensure HTML has UTF-8 meta
+                $dompdf->loadHtml($receiptHtml);
+                $dompdf->setPaper('A4', 'portrait');
+                $dompdf->render();
+                $output = $dompdf->output();
+                file_put_contents($filepath, $output);
+                error_log("PDF receipt saved: $filepath");
+                return $filepath;
+            }
+
+            // Fallback: try to write a .html file and return that path (caller can convert externally)
+            $htmlFallback = $receiptsDir . '/fallback_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $poNumber) . '_' . date('YmdHis') . '.html';
+            file_put_contents($htmlFallback, $receiptHtml);
+            error_log("Dompdf not installed; saved HTML fallback: $htmlFallback");
+            return false;
+
+        } catch (Exception $e) {
+            error_log('Failed to save receipt PDF: ' . $e->getMessage());
+            return false;
+        }
     }
 }

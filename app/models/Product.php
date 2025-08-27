@@ -7,9 +7,17 @@ class Product
 
     private $db;
 
-    public function __construct()
+    /**
+     * Allow optional Database injection for easier testing
+     * @param mixed $db Optional Database-like object
+     */
+    public function __construct($db = null)
     {
-        $this->db = new Database;
+        if ($db !== null) {
+            $this->db = $db;
+        } else {
+            $this->db = new Database;
+        }
     }
 
     public function getProducts()
@@ -178,7 +186,12 @@ class Product
                 COALESCE(sc.max_supplier_price, 0) as max_supplier_price,
                 COALESCE(sc.avg_supplier_price, 0) as avg_supplier_price,
                 COALESCE(SUM(s.quantity), 0) as current_inventory,
+                -- unit_price is the latest recorded purchase unit price (if any)
                 COALESCE(lp.unit_price, 50.00) as unit_price,
+                -- primary_purchase_price: best available supplier price or last purchase price
+                COALESCE(sc.min_supplier_price, lp.unit_price, 50.00) as primary_purchase_price,
+                -- selling_price: derived display price (fallback to unit_price * 1.3)
+                COALESCE(sc.min_supplier_price, lp.unit_price, 50.00) * 1.3 as selling_price,
                 CASE 
                     WHEN COALESCE(SUM(s.quantity), 0) <= p.min_inventory_level THEN 'Low Inventory'
                     WHEN COALESCE(SUM(s.quantity), 0) <= p.reorder_level THEN 'Reorder'
@@ -346,7 +359,7 @@ class Product
             LEFT JOIN categories c ON p.category_id = c.category_id
             LEFT JOIN (
                 SELECT product_id, AVG(unit_price) as unit_price
-                FROM purchase_order_items
+                FROM purchase_items
                 GROUP BY product_id
             ) lp ON p.product_id = lp.product_id
             {$where}
@@ -363,7 +376,7 @@ class Product
             LEFT JOIN categories c ON p.category_id = c.category_id
             LEFT JOIN (
                 SELECT product_id, AVG(unit_price) as unit_price
-                FROM purchase_order_items
+                FROM purchase_items
                 GROUP BY product_id
             ) lp ON p.product_id = lp.product_id
             {$where}
@@ -391,7 +404,8 @@ class Product
         $this->db->execute();
         $rows = $this->db->resultSet();
         $rowsObj = $rows ? array_map(function ($r) {
-            return (object) $r; }, $rows) : [];
+            return (object) $r;
+        }, $rows) : [];
         return ['rows' => $rowsObj, 'total' => $total];
     }
 
@@ -447,7 +461,7 @@ class Product
                 ps.is_primary,
                 ps.supplier_sku AS supplier_product_code,
                 COALESCE((SELECT SUM(inv.quantity) FROM inventory inv WHERE inv.product_id = p.product_id), 0) AS current_inventory,
-                (SELECT MAX(po.order_date) FROM purchase_order_items poi JOIN purchase_orders po ON poi.purchase_order_id = po.purchase_order_id WHERE poi.product_id = p.product_id AND po.status IN ('completed','received')) AS last_ordered_date
+                (SELECT MAX(pur.purchase_date) FROM purchase_items poi JOIN purchases pur ON poi.purchase_id = pur.purchase_id WHERE poi.product_id = p.product_id AND pur.status IN ('completed','received')) AS last_ordered_date
             FROM products p
             JOIN product_suppliers ps ON p.product_id = ps.product_id AND ps.is_active = 1
             JOIN suppliers s ON ps.supplier_id = s.supplier_id AND s.deleted_at IS NULL
@@ -456,7 +470,7 @@ class Product
             LEFT JOIN units u ON p.unit_id = u.unit_id
             LEFT JOIN (
                 SELECT product_id, AVG(unit_price) as unit_price
-                FROM purchase_order_items
+                FROM purchase_items
                 GROUP BY product_id
             ) lp ON p.product_id = lp.product_id
             WHERE p.is_active = 1
@@ -1468,16 +1482,24 @@ class Product
                 p.product_id,
                 p.product_name,
                 p.sku,
+                p.category_id,
+                c.category_name,
                 ps.supplier_id,
                 s.supplier_name,
                 ps.purchase_price AS supplier_price,
                 ps.lead_time_days,
                 ps.min_order_quantity,
-                ps.is_primary
+                ps.is_primary,
+                COALESCE(SUM(inv.quantity), 0) AS current_inventory
             FROM products p
             JOIN product_suppliers ps ON p.product_id = ps.product_id AND ps.is_active = 1
             JOIN suppliers s ON ps.supplier_id = s.supplier_id AND s.deleted_at IS NULL
+            LEFT JOIN categories c ON p.category_id = c.category_id
+            LEFT JOIN inventory inv ON p.product_id = inv.product_id
             WHERE p.is_active = 1
+            GROUP BY p.product_id, p.product_name, p.sku, p.category_id, c.category_name, 
+                     ps.supplier_id, s.supplier_name, ps.purchase_price, ps.lead_time_days, 
+                     ps.min_order_quantity, ps.is_primary
             ORDER BY p.product_name ASC, ps.purchase_price ASC
             LIMIT 2000
         SQL
@@ -1634,6 +1656,7 @@ class Product
     public function getPriceManagementStats()
     {
         try {
+            // First, get basic product stats
             $this->db->query("
                 SELECT 
                     COUNT(*) as total_products,
@@ -1649,33 +1672,158 @@ class Product
                             WHEN price > 0 AND cost > 0 AND ((price - cost) / price) * 100 < 15 
                             THEN 1 
                         END
-                    ) as low_margin_products,
-                    COUNT(
-                        CASE 
-                            WHEN updated_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) 
-                            THEN 1 
-                        END
-                    ) as recent_updates
+                    ) as low_margin_products
                 FROM products 
                 WHERE deleted_at IS NULL
             ");
 
-            $result = $this->db->single();
+            $basicStats = $this->db->single();
+
+            // Calculate total gross margin (weighted by sales volume)
+            $this->db->query("
+                SELECT 
+                    SUM(COALESCE(sales_data.monthly_revenue, 0)) as total_revenue,
+                    SUM(COALESCE(sales_data.monthly_cost, 0)) as total_cost
+                FROM products p
+                LEFT JOIN (
+                    SELECT 
+                        si.product_id,
+                        SUM(si.quantity * si.unit_price) / 3 as monthly_revenue,
+                        SUM(si.quantity * p2.cost) / 3 as monthly_cost
+                    FROM sale_items si
+                    JOIN sales s ON si.sale_id = s.sale_id
+                    JOIN products p2 ON si.product_id = p2.product_id
+                    WHERE s.sale_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
+                    AND p2.cost > 0
+                    GROUP BY si.product_id
+                ) sales_data ON p.product_id = sales_data.product_id
+                WHERE p.deleted_at IS NULL
+            ");
+
+            $grossMarginData = $this->db->single();
+
+            $totalRevenue = floatval($grossMarginData->total_revenue ?? 0);
+            $totalCost = floatval($grossMarginData->total_cost ?? 0);
+            $totalGrossMargin = 0;
+
+            if ($totalRevenue > 0) {
+                $totalGrossMargin = (($totalRevenue - $totalCost) / $totalRevenue) * 100;
+            }
 
             return [
-                'total_products' => intval($result->total_products ?? 0),
-                'average_margin' => floatval($result->average_margin ?? 0),
-                'low_margin_products' => intval($result->low_margin_products ?? 0),
-                'recent_updates' => intval($result->recent_updates ?? 0)
+                'total_products'      => intval($basicStats->total_products ?? 0),
+                'average_margin'      => floatval($basicStats->average_margin ?? 0),
+                'low_margin_products' => intval($basicStats->low_margin_products ?? 0),
+                'total_gross_margin'  => $totalGrossMargin
             ];
         } catch (Exception $e) {
             error_log('Error getting price management stats: ' . $e->getMessage());
             return [
-                'total_products' => 0,
-                'average_margin' => 0,
+                'total_products'      => 0,
+                'average_margin'      => 0,
                 'low_margin_products' => 0,
-                'recent_updates' => 0
+                'total_gross_margin'  => 0
             ];
+        }
+    }
+
+    /**
+     * Get products for the price management page with optional filters
+     * Expected filters: category (string), price_range (e.g. "0-10", "500+"),
+     * stock_status (in-stock, low-stock, out-of-stock), margin_filter (low, medium, high)
+     * Returns array of objects with fields used by the view (product_id, name, description, sku,
+     * category, price, cost, stock_quantity, image_path, price_updated_at)
+     */
+    /**
+     * $filters supports:
+     * - category (string name) OR category_id (int)
+     * - price_range ("0-10" or "500+")
+     * - stock_status (in-stock, low-stock, out-of-stock)
+     * - margin_filter (low, medium, high)
+     * - offset (int)
+     * - limit (int)
+     */
+    public function getProductsForPriceManagement($filters = [])
+    {
+        try {
+            // Build filters
+            $where = "WHERE p.is_active = 1 AND p.deleted_at IS NULL";
+            $params = [];
+
+            // Category filter
+            if (!empty($filters['category'])) {
+                $where .= " AND c.category_name LIKE :category";
+                $params[':category'] = '%' . $filters['category'] . '%';
+            }
+
+            // Price range filter
+            if (!empty($filters['price_range'])) {
+                $pr = $filters['price_range'];
+                if (strpos($pr, '+') !== false) {
+                    $min = (float) rtrim($pr, '+');
+                    $where .= " AND COALESCE(p.selling_price,0) >= :price_min";
+                    $params[':price_min'] = $min;
+                } elseif (strpos($pr, '-') !== false) {
+                    list($min, $max) = explode('-', $pr);
+                    $where .= " AND COALESCE(p.selling_price,0) BETWEEN :price_min AND :price_max";
+                    $params[':price_min'] = (float) $min;
+                    $params[':price_max'] = (float) $max;
+                }
+            }
+
+            // Pagination
+            $offset = isset($filters['offset']) ? max(0, (int) $filters['offset']) : 0;
+            $limit = isset($filters['limit']) ? max(1, (int) $filters['limit']) : 200;
+
+            // Fixed query with correct column names and sales data
+            $sql = "
+                SELECT
+                    p.product_id,
+                    p.product_name AS name,
+                    p.sku,
+                    COALESCE(c.category_name, 'Uncategorized') AS category_name,
+                    COALESCE(p.selling_price, 0) AS price,
+                    COALESCE(p.purchase_price, 0) AS cost,
+                    p.image_path,
+                    p.updated_at AS price_updated_at,
+                    COALESCE((SELECT SUM(quantity) FROM inventory WHERE product_id = p.product_id), 0) AS stock_quantity,
+                    COALESCE(sales_data.total_sold, 0) AS total_sold,
+                    COALESCE(sales_data.sales_rank, 9999) AS sales_rank,
+                    COALESCE(sales_data.total_revenue, 0) AS total_revenue
+                FROM products p
+                LEFT JOIN categories c ON p.category_id = c.category_id
+                LEFT JOIN (
+                    SELECT 
+                        si.product_id,
+                        SUM(si.quantity) as total_sold,
+                        SUM(si.quantity * si.unit_price) as total_revenue,
+                        DENSE_RANK() OVER (ORDER BY SUM(si.quantity) DESC) as sales_rank
+                    FROM sale_items si
+                    JOIN sales s ON si.sale_id = s.sale_id
+                    WHERE s.sale_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
+                    GROUP BY si.product_id
+                ) sales_data ON p.product_id = sales_data.product_id
+                {$where}
+                ORDER BY p.product_name ASC
+                LIMIT :offset, :limit
+            ";
+
+            $this->db->query($sql);
+
+            // Bind parameters
+            foreach ($params as $key => $value) {
+                $this->db->bind($key, $value);
+            }
+            $this->db->bind(':offset', $offset, \PDO::PARAM_INT);
+            $this->db->bind(':limit', $limit, \PDO::PARAM_INT);
+
+            $this->db->execute();
+            $rows = $this->db->resultSet();
+
+            return $rows ? $rows : [];
+        } catch (Exception $e) {
+            error_log('Error getting products for price management: ' . $e->getMessage());
+            return [];
         }
     }
 
