@@ -1,5 +1,5 @@
 <!-- Unified CSS -->
-<link rel="stylesheet" href="<?= URLROOT ?>/css/app-unified.css">
+<link rel="stylesheet" href="<?= URLROOT ?>/public/css/app-unified.css">
 
 <?php
 $pageTitle = 'Price Management';

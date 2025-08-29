@@ -398,6 +398,53 @@
 
  #linkedSuppliersTbody input.form-control-sm {
      padding: 0.25rem 0.35rem;
+
+     /* ------------------------------------------------------------------ */
+     /* Styles moved from app/views/admin/viewUser.php - profile info panel */
+     /* Kept minimal and using theme variables to avoid global impact. */
+     .profile-body .info-row {
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         padding: 10px 0;
+         border-bottom: 1px solid var(--card-border);
+     }
+
+     .profile-body .info-row:last-child {
+         border-bottom: none;
+     }
+
+     .profile-body .info-label {
+         font-weight: 600;
+         color: var(--text-primary);
+         display: flex;
+         align-items: center;
+         gap: 8px;
+     }
+
+     .profile-body .info-value {
+         color: var(--text-secondary);
+         font-weight: 500;
+     }
+
+     .profile-header {
+         padding: 30px 20px;
+     }
+
+     .profile-avatar {
+         margin-bottom: 15px;
+     }
+
+     .profile-body {
+         padding: 25px;
+     }
+
+     .profile-actions {
+         background-color: var(--bg-secondary);
+         padding: 20px 25px;
+     }
+
+     /* ------------------------------------------------------------------ */
      font-size: 0.85rem;
      height: auto;
  }
@@ -1640,7 +1687,7 @@
  .theme-toggle {
      position: fixed !important;
      bottom: 24px !important;
-     right: 24px !important;
+     left: 24px !important;
      width: 56px !important;
      height: 56px !important;
      border-radius: 50% !important;
@@ -1719,7 +1766,7 @@
  @media (max-width: 768px) {
      .theme-toggle {
          bottom: 20px !important;
-         right: 20px !important;
+         left: 20px !important;
          width: 48px !important;
          height: 48px !important;
          font-size: 1.3rem !important;
@@ -1760,6 +1807,154 @@
  .form-control[readonly] {
      background-color: var(--bg-secondary);
      opacity: 1;
+ }
+
+ /* === SEARCH BAR SYSTEM === */
+ .search-container {
+     position: relative;
+     display: inline-block;
+     width: 100%;
+     max-width: 400px;
+ }
+
+ .search-input {
+     padding-right: 80px !important;
+     /* Space for icons */
+     width: 100%;
+ }
+
+ .search-icon-btn {
+     position: absolute;
+     right: 40px;
+     top: 50%;
+     transform: translateY(-50%);
+     background: none;
+     border: none;
+     color: var(--text-muted);
+     cursor: pointer;
+     padding: 8px;
+     border-radius: var(--border-radius-sm);
+     transition: var(--transition);
+     z-index: 5;
+ }
+
+ .search-icon-btn:hover {
+     color: var(--primary);
+     background-color: rgba(0, 123, 255, 0.1);
+ }
+
+ .search-icon-btn i {
+     font-size: 0.9rem;
+ }
+
+ .clear-search-btn {
+     position: absolute;
+     right: 8px;
+     top: 50%;
+     transform: translateY(-50%);
+     background: none;
+     border: none;
+     color: var(--text-muted);
+     cursor: pointer;
+     padding: 8px;
+     border-radius: var(--border-radius-sm);
+     transition: var(--transition);
+     z-index: 5;
+     text-decoration: none;
+     display: inline-block;
+ }
+
+ .clear-search-btn:hover {
+     color: var(--danger);
+     background-color: rgba(220, 53, 69, 0.1);
+ }
+
+ .search-input:focus+.search-icon-btn,
+ .search-input:focus+.search-icon-btn+.clear-search-btn {
+     color: var(--primary);
+ }
+
+ .search-container:focus-within .search-icon-btn {
+     color: var(--primary);
+ }
+
+ .search-container:focus-within .clear-search-btn {
+     color: var(--danger);
+ }
+
+ /* === PAGINATION CONTROLS === */
+ .pagination-controls {
+     display: flex;
+     align-items: center;
+     justify-content: flex-end;
+     gap: 0.5rem;
+ }
+
+ .pagination-controls .form-control-sm {
+     border-radius: var(--border-radius);
+     border: 1px solid var(--card-border);
+     background-color: var(--card-bg);
+     color: var(--text-primary);
+ }
+
+ .pagination-controls .form-control-sm:focus {
+     border-color: var(--primary);
+     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+ }
+
+ .pagination-controls label {
+     white-space: nowrap;
+ }
+
+ /* Mobile responsive pagination */
+ @media (max-width: 768px) {
+     .pagination-controls {
+         flex-direction: column;
+         align-items: stretch;
+         gap: 0.75rem;
+     }
+
+     .pagination-controls .d-flex {
+         justify-content: center;
+     }
+ }
+
+ /* === PAGINATION LINKS === */
+ .pagination {
+     margin-bottom: 0;
+ }
+
+ .pagination .page-link {
+     color: var(--primary);
+     border-color: var(--card-border);
+     background-color: var(--card-bg);
+     border-radius: var(--border-radius-sm) !important;
+     margin: 0 1px;
+     border: 1px solid var(--card-border);
+ }
+
+ .pagination .page-link:hover {
+     color: var(--primary);
+     background-color: rgba(0, 123, 255, 0.1);
+     border-color: var(--primary);
+ }
+
+ .pagination .page-item.active .page-link {
+     background-color: var(--primary);
+     border-color: var(--primary);
+     color: white;
+ }
+
+ .pagination .page-item.disabled .page-link {
+     color: var(--text-muted);
+     background-color: var(--bg-secondary);
+     border-color: var(--card-border);
+ }
+
+ .card-footer {
+     background-color: var(--card-bg);
+     border-top: 1px solid var(--card-border);
+     padding: 0.75rem 1.25rem;
  }
 
  .form-group {
@@ -4469,6 +4664,32 @@
      transition: var(--theme-transition);
  }
 
+ /* Compact badge variant for dense table cells (tracking numbers, status chips) */
+ .badge-compact {
+     padding: 0.15em 0.4em;
+     /* slightly smaller than default badge */
+     font-size: 85%;
+     font-weight: 600;
+     line-height: 1;
+     vertical-align: middle;
+     border-radius: calc(var(--border-radius-sm) * 0.9);
+ }
+
+ /* Force compact behavior inside the active orders table to avoid full-width pills */
+ #activeOrdersTable .badge-compact {
+     display: inline-block !important;
+     padding: 0.18rem 0.5rem !important;
+     font-size: 0.85rem !important;
+     max-width: 220px;
+     /* prevent overflow while allowing reasonably long tracking numbers */
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     text-align: left;
+ }
+
+
+
  .badge-primary {
      background: var(--primary);
      color: white;
@@ -5057,6 +5278,189 @@
      .modal-lg {
          max-width: 800px;
      }
+
+     .modal-larger {
+         max-width: 1000px;
+         width: 75vw;
+     }
+ }
+
+ @media (max-width: 991px) {
+     .modal-larger {
+         max-width: 90vw;
+         width: 85vw;
+         margin: 0.5rem;
+     }
+ }
+
+ /* Enhanced modal styling for larger modals */
+ .modal-larger .modal-body {
+     padding: 0.75rem;
+     max-height: none;
+     overflow: visible;
+ }
+
+ .modal-larger .modal-dialog {
+     margin: 0.75rem auto;
+ }
+
+ /* Compact modal spacing */
+ .modal-larger .row.mb-4 {
+     margin-bottom: 1rem !important;
+ }
+
+ .modal-larger .row.mb-3 {
+     margin-bottom: 0.75rem !important;
+ }
+
+ .modal-larger .theme-card {
+     margin-bottom: 0.75rem;
+ }
+
+ .modal-larger .form-group {
+     margin-bottom: 0.75rem;
+ }
+
+ .modal-larger .card-body {
+     padding: 0.75rem;
+ }
+
+ .modal-larger .alert {
+     padding: 0.5rem 0.75rem;
+     margin-bottom: 0.75rem;
+ }
+
+ /* Creative compact form controls */
+ .modal-larger .form-control {
+     padding: 0.375rem 0.75rem;
+     font-size: 0.875rem;
+ }
+
+ .modal-larger .form-control-lg {
+     padding: 0.5rem 1rem;
+     font-size: 0.95rem;
+ }
+
+ .modal-larger .input-group-text {
+     padding: 0.375rem 0.75rem;
+ }
+
+ /* Creative compact design elements */
+ .modal-larger .creation-mode-selector {
+     display: flex;
+     gap: 0.75rem;
+     justify-content: center;
+     flex-wrap: wrap;
+ }
+
+ .modal-larger .mode-card {
+     padding: 0.75rem;
+     border-radius: 8px;
+     transition: all 0.2s ease;
+     border: 2px solid transparent;
+     text-align: center;
+     min-width: 140px;
+ }
+
+ .modal-larger .mode-card:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+ }
+
+ .modal-larger .form-check-inline {
+     margin-right: 0.5rem;
+ }
+
+ .modal-larger .format-example {
+     padding: 0.5rem;
+     background: rgba(0, 0, 0, 0.02);
+     border-radius: 6px;
+     margin-bottom: 0.5rem;
+ }
+
+ /* Compact card headers */
+ .modal-larger .card-header {
+     padding: 0.5rem 0.75rem;
+ }
+
+ .modal-larger .card-header h6 {
+     font-size: 0.9rem;
+ }
+
+ /* Reduce alert spacing */
+ .modal-larger .alert {
+     padding: 0.5rem 0.75rem;
+     margin-bottom: 0.75rem;
+     font-size: 0.85rem;
+ }
+
+ /* Compact form labels */
+ .modal-larger .form-label {
+     font-size: 0.8rem;
+     margin-bottom: 0.25rem;
+     font-weight: 600;
+ }
+
+ /* Creative button spacing */
+ .modal-larger .modal-footer {
+     padding: 0.75rem;
+     border-top: 1px solid var(--border-color, #dee2e6);
+ }
+
+ .modal-larger .modal-footer .btn {
+     padding: 0.5rem 1.5rem;
+     font-size: 0.9rem;
+ }
+
+ /* Creative range preview styling */
+ .modal-larger #range_preview {
+     font-family: 'Courier New', monospace;
+     font-size: 0.8rem;
+     line-height: 1.3;
+     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+     border: 1px solid #dee2e6;
+     border-radius: 6px;
+ }
+
+ /* Compact nested cards in range form */
+ .modal-larger .theme-card .theme-card {
+     margin-bottom: 0.5rem;
+ }
+
+ .modal-larger .theme-card .theme-card .card-header {
+     padding: 0.4rem 0.6rem;
+ }
+
+ .modal-larger .theme-card .theme-card .card-body {
+     padding: 0.6rem;
+ }
+
+ /* Creative form control focus states */
+ .modal-larger .form-control:focus {
+     border-color: var(--primary);
+     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+     transform: scale(1.01);
+     transition: all 0.2s ease;
+ }
+
+ /* Ultra-compact row spacing */
+ .modal-larger .row {
+     margin-left: -0.25rem;
+     margin-right: -0.25rem;
+ }
+
+ .modal-larger .row>[class*="col-"] {
+     padding-left: 0.25rem;
+     padding-right: 0.25rem;
+ }
+
+ /* Creative icon spacing */
+ .modal-larger .fas {
+     vertical-align: middle;
+ }
+
+ .modal-larger .form-label .fas {
+     margin-right: 0.3rem;
  }
 
  /* Responsive Design */
@@ -5584,6 +5988,143 @@
      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
      gap: 1rem;
      margin-top: 1rem;
+ }
+
+ /* Statistics cards for locations page */
+ .stats-card {
+     transition: var(--theme-transition);
+     border: 1px solid var(--card-border);
+     border-radius: var(--border-radius);
+     background: var(--card-bg);
+     color: var(--text-primary);
+ }
+
+ .stats-card:hover {
+     box-shadow: var(--card-shadow-hover);
+     transform: translateY(-2px);
+ }
+
+ .stats-card .card-body {
+     padding: 1.5rem;
+ }
+
+ .stats-card h4 {
+     font-size: 2rem;
+     font-weight: 700;
+     color: var(--text-primary);
+ }
+
+ .stats-card .text-muted {
+     color: var(--text-secondary) !important;
+     font-size: 0.875rem;
+     font-weight: 500;
+ }
+
+ /* 5-column grid for stats cards */
+ .stats-grid-5 {
+     display: grid;
+     grid-template-columns: repeat(5, 1fr);
+     gap: 1rem;
+     margin-bottom: 1rem;
+ }
+
+ @media (max-width: 768px) {
+     .stats-grid-5 {
+         grid-template-columns: repeat(2, 1fr);
+     }
+ }
+
+ @media (max-width: 480px) {
+     .stats-grid-5 {
+         grid-template-columns: 1fr;
+     }
+ }
+
+ /* Enhanced Location Modal Styles */
+ .creation-mode-selector {
+     display: flex;
+     gap: 1rem;
+     justify-content: center;
+ }
+
+ .mode-option {
+     margin-right: 0 !important;
+ }
+
+ .mode-option input[type="radio"] {
+     display: none;
+ }
+
+ .mode-card {
+     border: 2px solid var(--card-border);
+     border-radius: var(--border-radius);
+     padding: 1.5rem;
+     text-align: center;
+     background: var(--card-bg);
+     transition: var(--theme-transition);
+     cursor: pointer;
+     min-width: 180px;
+ }
+
+ .mode-option input[type="radio"]:checked+label .mode-card {
+     border-color: var(--primary);
+     background: rgba(0, 123, 255, 0.1);
+     transform: translateY(-2px);
+     box-shadow: var(--card-shadow-hover);
+ }
+
+ .mode-card:hover {
+     border-color: var(--primary);
+     transform: translateY(-2px);
+     box-shadow: var(--card-shadow-hover);
+ }
+
+ .mode-card h6 {
+     color: var(--text-primary);
+     margin-bottom: 0.5rem;
+ }
+
+ .border-left-info {
+     border-left: 4px solid var(--info) !important;
+ }
+
+ .format-example {
+     padding: 0.5rem 0;
+ }
+
+ .format-example .badge {
+     font-size: 0.875rem;
+     margin-right: 0.5rem;
+ }
+
+ .form-label {
+     font-weight: 600;
+     color: var(--text-primary);
+     margin-bottom: 0.5rem;
+ }
+
+ .form-label i {
+     color: var(--primary);
+ }
+
+ .input-group-text {
+     background: var(--bg-secondary);
+     border-color: var(--card-border);
+     color: var(--text-secondary);
+ }
+
+ .custom-control-label {
+     color: var(--text-primary);
+     font-weight: 500;
+ }
+
+ .modal-header.bg-primary {
+     background: linear-gradient(135deg, var(--primary) 0%, #0056b3 100%) !important;
+ }
+
+ .modal-footer.bg-light {
+     background: var(--bg-secondary) !important;
+     border-top: 1px solid var(--card-border);
  }
 
  .location-zone:hover {

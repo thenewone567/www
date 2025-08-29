@@ -144,25 +144,66 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                         $initial = strtoupper(substr((string) $initialSource, 0, 1));
                                         $roleNameLower = strtolower((string) ($user->role_name ?? ''));
                                         // Normalize status - supports 'active'/'inactive' or numeric flags (1/0)
-                                        $rawStatus = $user->status ?? ($user->is_active ?? '');
-                                        $isActive = ($rawStatus === 'active' || $rawStatus == 1);
+                                        // Handle different status field names for different user types
+                                        $rawStatus = '';
+                                        if (isset($user->status)) {
+                                            $rawStatus = $user->status;
+                                        } elseif (isset($user->is_active)) {
+                                            $rawStatus = $user->is_active;
+                                        } elseif (isset($user->customer_status)) {
+                                            $rawStatus = $user->customer_status;
+                                        }
+                                        $isActive = ($rawStatus === 'active' || $rawStatus == 1 || $rawStatus === true);
 
                                         // Get user category - now properly set from source table
                                         $userCategory = $user->user_category ?? 'official';
 
-                                        // Note: No need for role-based mapping anymore since categories 
-                                        // are now determined by which table the user comes from:
-                                        // - users table = official
-                                        // - customers table = customer  
-                                        // - contractors table = contractor
+                                        // Determine canonical source table for this row. Prefer explicit
+                                        // $user->source_table when available; otherwise derive from category.
+                                        $sourceTable = strtolower(trim((string) ($user->source_table ?? '')));
+                                        if (!in_array($sourceTable, ['users', 'customers', 'contractors'], true)) {
+                                            $cat = strtolower((string) $userCategory);
+                                            if ($cat === 'customer') {
+                                                $sourceTable = 'customers';
+                                            } elseif ($cat === 'contractor') {
+                                                $sourceTable = 'contractors';
+                                            } else {
+                                                $sourceTable = 'users';
+                                            }
+                                        }
+
                                         ?>
                                         <tr class="user-row" data-category="<?= strtolower($userCategory) ?>"
-                                            data-user-id="<?= $user->user_id ?>">
+                                            data-user-id="<?= htmlspecialchars($user->user_id) ?>"
+                                            data-source-table="<?= htmlspecialchars($sourceTable) ?>"
+                                            data-composite-id="<?= htmlspecialchars($sourceTable . ':' . $user->user_id) ?>">
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div
-                                                        class="user-avatar bg-<?= $roleNameLower === 'admin' ? 'danger' : ($roleNameLower === 'manager' ? 'warning' : 'primary') ?>">
-                                                        <?= htmlspecialchars($initial) ?>
+                                                    <?php
+                                                    // Avatar logic - check for user profile picture
+                                                    $username = $user->username ?? $user->user_name ?? '';
+                                                    $avatarPath = null;
+                                                    $defaultAvatar = URLROOT . '/storage/uploads/users/avatar.png';
+
+                                                    // Try to find user avatar by username
+                                                    if (!empty($username)) {
+                                                        $avatarExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                                                        foreach ($avatarExtensions as $ext) {
+                                                            $filePath = 'storage/uploads/users/' . $username . '.' . $ext;
+                                                            if (file_exists($filePath)) {
+                                                                $avatarPath = URLROOT . '/' . $filePath;
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+
+                                                    $finalAvatarPath = $avatarPath ?: $defaultAvatar;
+                                                    ?>
+                                                    <div class="user-avatar"
+                                                        style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; margin-right: 10px; background: #f8f9fa;">
+                                                        <img src="<?= htmlspecialchars($finalAvatarPath) ?>" alt="Avatar"
+                                                            style="width: 100%; height: 100%; object-fit: cover;"
+                                                            onerror="this.onerror=null; this.src='<?= htmlspecialchars($defaultAvatar) ?>';">
                                                     </div>
                                                     <div>
                                                         <div class="font-weight-bold">
@@ -183,8 +224,10 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                             <td>
                                                 <span class="d-none"><?= strtolower($userCategory) ?></span>
                                                 <?php
-                                                $sourceTable = $user->source_table ?? 'users';
-                                                $canChangeCategory = ($sourceTable === 'users'); // Only users from users table can change category
+                                                // Use a stable per-row source table variable for actions.
+                                                // Avoid overwriting the canonical $sourceTable used above.
+                                                $rowSourceTable = $sourceTable;
+                                                $canChangeCategory = ($rowSourceTable === 'users'); // Only users from users table can change category
                                                 ?>
 
                                                 <?php if ($canChangeCategory): ?>
@@ -264,8 +307,12 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                             </td>
                                             <td>
                                                 <div class="btn-group" role="group">
+                                                    <button type="button" class="btn btn-sm btn-outline-success"
+                                                        onclick="viewUserProfile(<?= $user->user_id ?>)" title="View Profile">
+                                                        <i class="fas fa-user"></i>
+                                                    </button>
                                                     <button type="button" class="btn btn-sm btn-outline-primary"
-                                                        onclick="editUser(<?= $user->user_id ?>, '<?= $user->source_table ?? 'users' ?>')"
+                                                        onclick="editUser(<?= htmlspecialchars($user->user_id) ?>, '<?= htmlspecialchars($rowSourceTable) ?>')"
                                                         title="Edit User">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
@@ -276,9 +323,9 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                                     </button>
                                                     <button type="button"
                                                         class="btn btn-sm <?= $isActive ? 'btn-warning' : 'btn-outline-success' ?> toggle-status-btn"
-                                                        data-user-id="<?= $user->user_id ?>"
-                                                        data-source-table="<?= $user->source_table ?? 'users' ?>"
-                                                        data-current-status="<?= $isActive ? '1' : '0' ?>"
+                                                        data-user-id="<?= htmlspecialchars($user->user_id) ?>"
+                                                        data-source-table="<?= htmlspecialchars($rowSourceTable) ?>"
+                                                        data-current-status="<?= $isActive ? 'active' : 'inactive' ?>"
                                                         title="<?= $isActive ? 'Deactivate' : 'Activate' ?>">
                                                         <i class="fas fa-<?= $isActive ? 'pause' : 'play' ?>"></i>
                                                     </button>
@@ -876,8 +923,9 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
             e.preventDefault();
             const userId = $(this).data('user-id');
             const sourceTable = $(this).data('source-table');
+            const compositeId = $(this).data('composite-id');
             const currentStatus = $(this).data('current-status');
-            toggleUserStatus(userId, currentStatus, sourceTable);
+            toggleUserStatus(userId, currentStatus, sourceTable, compositeId);
         });
 
         // Edit user form
@@ -929,6 +977,15 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
             });
         });
     });
+
+    function viewUserProfile(userId) {
+        if (userId) {
+            // Navigate to user details page in the same tab
+            window.location.href = '<?= URLROOT ?>/admin/viewUser/' + encodeURIComponent(userId);
+        } else {
+            alert('User ID not available for this user');
+        }
+    }
 
     function editUser(userId, sourceTable = 'users') {
         $.ajax({
@@ -1001,7 +1058,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         $('#permissionsModal').modal('show');
     }
 
-    function toggleUserStatus(userId, currentStatus, sourceTable = 'users') {
+    function toggleUserStatus(userId, currentStatus, sourceTable = 'users', compositeId = null) {
         // Accept numeric flags (1/0) or string ('active'/'inactive')
         const normalized = ('' + currentStatus).trim();
         const isActive = normalized === '1' || normalized.toLowerCase() === 'active';
@@ -1018,18 +1075,20 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
             action: action
         });
 
-        // Visual debug removed to respect unified UI; check console for details
-
         if (confirm(`Are you sure you want to ${action} this user?`)) {
             console.log('Initiating submission...');
+            const payload = {
+                user_id: userId,
+                source_table: sourceTable,
+                status: newStatus
+            };
+            // Prefer sending composite_id for unambiguous server-side parsing
+            if (compositeId) payload.composite_id = compositeId;
+
             $.ajax({
                 url: '<?= URLROOT ?>/admin/toggleUserStatus',
                 method: 'POST',
-                data: {
-                    user_id: userId,
-                    source_table: sourceTable,
-                    status: newStatus
-                },
+                data: payload,
                 dataType: 'json',
                 success: function (response) {
                     console.log('Submission successful!', response);

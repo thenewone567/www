@@ -161,7 +161,6 @@ class User
         0 as role_id,
         credit_limit
         FROM customers 
-        WHERE status = 'active' 
         ORDER BY customer_id DESC");
 
       if ($this->db->execute()) {
@@ -214,7 +213,6 @@ class User
           COALESCE(commission_rate, 0) as commission_rate,
           COALESCE(total_commission_earned, 0) as total_commission_earned
           FROM contractors 
-          WHERE is_active = 1 
           ORDER BY contractor_id DESC");
 
         if ($this->db->execute()) {
@@ -603,10 +601,10 @@ class User
   {
     try {
       // First try to find in the users table (officials)
-      $this->db->query("SELECT u.*, r.name as role_name 
-                        FROM users u 
-                        LEFT JOIN roles r ON u.role_id = r.role_id 
-                        WHERE u.user_id = :user_id");
+      $this->db->query("SELECT u.*, r.role_name as role_name 
+        FROM users u 
+        LEFT JOIN roles r ON u.role_id = r.role_id 
+        WHERE u.user_id = :user_id");
       $this->db->bind(':user_id', $userId);
       $this->db->execute();
       $user = $this->db->single();
@@ -782,25 +780,43 @@ class User
   public function getUserByIdAndTable($userId, $sourceTable)
   {
     try {
+      // Diagnostic logging to help debug lookup failures
+      try {
+        $logPath = __DIR__ . '/../../storage/logs/app.log';
+        $dbg = sprintf("[%s] getUserByIdAndTable called. userId=%s, sourceTable=%s\n", date('Y-m-d H:i:s'), var_export($userId, true), var_export($sourceTable, true));
+        @file_put_contents($logPath, $dbg, FILE_APPEND | LOCK_EX);
+      } catch (Exception $e) {
+        // swallow
+      }
       switch ($sourceTable) {
         case 'users':
-          $this->db->query("SELECT u.*, r.name as role_name 
-                            FROM users u 
-                            LEFT JOIN roles r ON u.role_id = r.role_id 
+          $this->db->query("SELECT u.*, r.role_name as role_name
+                            FROM users u
+                            LEFT JOIN roles r ON u.role_id = r.role_id
                             WHERE u.user_id = :user_id");
           $this->db->bind(':user_id', $userId);
           $this->db->execute();
           $user = $this->db->single();
 
           if ($user) {
+            // Log successful find
+            try {
+              @file_put_contents($logPath, sprintf("[%s] getUserByIdAndTable: found user in users for userId=%s\n", date('Y-m-d H:i:s'), var_export($userId, true)), FILE_APPEND | LOCK_EX);
+            } catch (Exception $e) {
+            }
             $user->user_category = 'official';
             $user->source_table = 'users';
             return $user;
           }
+          // Log miss
+          try {
+            @file_put_contents($logPath, sprintf("[%s] getUserByIdAndTable: no user in users for userId=%s\n", date('Y-m-d H:i:s'), var_export($userId, true)), FILE_APPEND | LOCK_EX);
+          } catch (Exception $e) {
+          }
           break;
 
         case 'customers':
-          $this->db->query("SELECT 
+          $this->db->query("SELECT
             customer_id as user_id,
             customer_name as name,
             customer_name as username,
@@ -811,13 +827,17 @@ class User
             6 as role_id,
             'customer' as user_category,
             'customers' as source_table
-            FROM customers 
+            FROM customers
             WHERE customer_id = :user_id");
           $this->db->bind(':user_id', $userId);
           $this->db->execute();
           $customer = $this->db->single();
 
           if ($customer) {
+            try {
+              @file_put_contents($logPath, sprintf("[%s] getUserByIdAndTable: found user in customers for userId=%s\n", date('Y-m-d H:i:s'), var_export($userId, true)), FILE_APPEND | LOCK_EX);
+            } catch (Exception $e) {
+            }
             // Parse contact_info JSON to extract email and phone
             $contactInfo = json_decode($customer->contact_info, true);
             if ($contactInfo && is_array($contactInfo)) {
@@ -831,10 +851,14 @@ class User
             }
             return $customer;
           }
+          try {
+            @file_put_contents($logPath, sprintf("[%s] getUserByIdAndTable: no user in customers for userId=%s\n", date('Y-m-d H:i:s'), var_export($userId, true)), FILE_APPEND | LOCK_EX);
+          } catch (Exception $e) {
+          }
           break;
 
         case 'contractors':
-          $this->db->query("SELECT 
+          $this->db->query("SELECT
             contractor_id as user_id,
             contractor_name as name,
             contractor_name as username,
@@ -846,18 +870,30 @@ class User
             7 as role_id,
             'contractor' as user_category,
             'contractors' as source_table
-            FROM contractors 
+            FROM contractors
             WHERE contractor_id = :user_id");
           $this->db->bind(':user_id', $userId);
           $this->db->execute();
           $contractor = $this->db->single();
 
           if ($contractor) {
+            try {
+              @file_put_contents($logPath, sprintf("[%s] getUserByIdAndTable: found user in contractors for userId=%s\n", date('Y-m-d H:i:s'), var_export($userId, true)), FILE_APPEND | LOCK_EX);
+            } catch (Exception $e) {
+            }
             return $contractor;
+          }
+          try {
+            @file_put_contents($logPath, sprintf("[%s] getUserByIdAndTable: no user in contractors for userId=%s\n", date('Y-m-d H:i:s'), var_export($userId, true)), FILE_APPEND | LOCK_EX);
+          } catch (Exception $e) {
           }
           break;
       }
 
+      try {
+        @file_put_contents($logPath, sprintf("[%s] getUserByIdAndTable: finished lookup, no record found for userId=%s (sourceTable=%s)\n", date('Y-m-d H:i:s'), var_export($userId, true), var_export($sourceTable, true)), FILE_APPEND | LOCK_EX);
+      } catch (Exception $e) {
+      }
       return false;
     } catch (Exception $e) {
       error_log('getUserByIdAndTable error: ' . $e->getMessage());
@@ -900,6 +936,82 @@ class User
       return $this->db->execute();
     } catch (Exception $e) {
       error_log('setContractorStatus error: ' . $e->getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Update user profile across different tables (users, customers, contractors)
+   * @param int $userId
+   * @param array $data
+   * @param string $sourceTable
+   * @return bool
+   */
+  public function updateUserProfile($userId, $data, $sourceTable = 'users')
+  {
+    try {
+      switch ($sourceTable) {
+        case 'users':
+          $this->db->query("UPDATE users SET 
+            full_name = :name,
+            email = :email,
+            job_title = :job_title,
+            address = :address,
+            birthday = :birthday,
+            education = :education
+            " . (isset($data['profile_picture']) ? ", profile_picture = :profile_picture" : "") . "
+            WHERE user_id = :user_id");
+
+          $this->db->bind(':name', $data['name'] ?? null);
+          $this->db->bind(':email', $data['email'] ?? null);
+          $this->db->bind(':job_title', $data['job_title'] ?? null);
+          $this->db->bind(':address', $data['address'] ?? null);
+          $this->db->bind(':birthday', $data['birthday'] ?? null);
+          $this->db->bind(':education', $data['education'] ?? null);
+          if (isset($data['profile_picture'])) {
+            $this->db->bind(':profile_picture', $data['profile_picture']);
+          }
+          $this->db->bind(':user_id', $userId);
+          break;
+
+        case 'customers':
+          // For customers, update the contact_info JSON and customer_name
+          $contactInfo = [
+            'email'          => $data['email'] ?? '',
+            'phone'          => $data['phone'] ?? '',
+            'contact_person' => $data['name'] ?? ''
+          ];
+
+          $this->db->query("UPDATE customers SET 
+            customer_name = :name,
+            contact_info = :contact_info
+            WHERE customer_id = :user_id");
+
+          $this->db->bind(':name', $data['name'] ?? null);
+          $this->db->bind(':contact_info', json_encode($contactInfo));
+          $this->db->bind(':user_id', $userId);
+          break;
+
+        case 'contractors':
+          $this->db->query("UPDATE contractors SET 
+            contractor_name = :name,
+            email = :email,
+            phone = :phone
+            WHERE contractor_id = :user_id");
+
+          $this->db->bind(':name', $data['name'] ?? null);
+          $this->db->bind(':email', $data['email'] ?? null);
+          $this->db->bind(':phone', $data['phone'] ?? null);
+          $this->db->bind(':user_id', $userId);
+          break;
+
+        default:
+          return false;
+      }
+
+      return $this->db->execute();
+    } catch (Exception $e) {
+      error_log('updateUserProfile error: ' . $e->getMessage());
       return false;
     }
   }

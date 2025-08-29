@@ -1,4 +1,32 @@
-<!-- Profile page content - accessed from within dashboard -->
+<!-- Profile page c                    <div class="profile-avatar">
+                        <?php
+                        // Use the session profile picture if available, otherwise construct from username
+                        $profilePicture = $_SESSION['profile_picture'] ?? '';
+
+                        // If no session picture, try to construct from username
+                        if (empty($profilePicture) && !empty($data['user']->username)) {
+                            // Try common image extensions
+                            $extensions = ['jpg', 'jpeg', 'png', 'gif'];
+                            foreach ($extensions as $ext) {
+                                $testPath = URLROOT . '/storage/uploads/users/' . $data['user']->username . '.' . $ext;
+                                $filePath = 'storage/uploads/users/' . $data['user']->username . '.' . $ext;
+                                if (file_exists($filePath)) {
+                                    $profilePicture = $testPath;
+                                    break;
+                                }
+                            }
+                        }
+                        ?>
+                        <?php if (!empty($profilePicture)): ?>
+                            <img src="<?php echo htmlspecialchars($profilePicture); ?>" alt="Profile Picture"
+                                class="rounded-circle"
+                                style="width: 80px; height: 80px; object-fit: cover; border: 2px solid #fff;">
+                        <?php else: ?>
+                            <img src="<?php echo URLROOT; ?>/storage/uploads/users/avatar.png" alt="Default Avatar"
+                                class="rounded-circle"
+                                style="width: 80px; height: 80px; object-fit: cover; border: 2px solid #fff;">
+                        <?php endif; ?>
+                    </div>cessed from within dashboard -->
 <div class="container-fluid theme-container">
     <!-- Page Header -->
     <div class="row align-items-center mb-4">
@@ -23,11 +51,13 @@
                                 class="rounded-circle"
                                 style="width: 80px; height: 80px; object-fit: cover; border: 2px solid #fff;">
                         <?php else: ?>
-                            <i class="fas fa-user"></i>
+                            <img src="<?php echo URLROOT; ?>/storage/uploads/users/avatar.png" alt="Default Avatar"
+                                class="rounded-circle"
+                                style="width: 80px; height: 80px; object-fit: cover; border: 2px solid #fff;">
                         <?php endif; ?>
                     </div>
                     <h2 class="mb-0">
-                        <?php echo !empty($data['user']->full_name) ? htmlspecialchars($data['user']->full_name) : htmlspecialchars($data['user']->username); ?>
+                        <?php echo htmlspecialchars($data['user']->full_name); ?>
                     </h2>
                     <p class="mb-0 opacity-75">
                         <span class="badge badge-light">
@@ -42,10 +72,6 @@
 
                     <h5 class="mb-4"><i class="fas fa-info-circle text-primary"></i> Profile Information</h5>
 
-                    <div class="info-row">
-                        <span class="info-label"><i class="fas fa-user text-muted"></i> Username</span>
-                        <span class="info-value"><?php echo htmlspecialchars($data['user']->username); ?></span>
-                    </div>
                     <div class="info-row">
                         <span class="info-label"><i class="fas fa-id-badge text-muted"></i> User ID</span>
                         <span class="info-value"><?php echo $data['user']->user_id; ?></span>

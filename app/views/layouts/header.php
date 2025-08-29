@@ -70,30 +70,47 @@
                         </li>
                         <!-- User Dropdown -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fa-solid fa-user"></i>
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
+                                id="navbarDropdownUser" role="button" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                                <?php
+                                // Get user profile picture if available
+                                $profilePicture = $_SESSION['profile_picture'] ?? '';
+                                if (!empty($profilePicture)): ?>
+                                    <img src="<?php echo htmlspecialchars($profilePicture); ?>" alt="Profile" class="mr-2"
+                                        style="width: 32px; height: 32px; object-fit: cover; border: 2px solid #fff; border-radius: 50%;">
+                                <?php else: ?>
+                                    <img src="<?php echo URLROOT; ?>/storage/uploads/users/avatar.png" alt="Default Avatar"
+                                        class="mr-2"
+                                        style="width: 32px; height: 32px; object-fit: cover; border: 2px solid #fff; border-radius: 50%;">
+                                <?php endif; ?>
                                 <?php if (isset($_SESSION['display_name'])): ?>
-                                    <span class="ml-1"><?php echo $_SESSION['display_name']; ?></span>
+                                    <span><?php echo $_SESSION['display_name']; ?></span>
                                 <?php elseif (isset($_SESSION['user_name'])): ?>
-                                    <span class="ml-1"><?php echo ucfirst($_SESSION['user_name']); ?></span>
+                                    <span><?php echo ucfirst($_SESSION['user_name']); ?></span>
                                 <?php endif; ?>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownUser">
                                 <?php if ((isset($_SESSION['display_name']) || isset($_SESSION['user_name'])) && isset($_SESSION['user_role'])): ?>
                                     <h6 class="dropdown-header">
-                                        <i class="fas fa-user-circle"></i>
                                         <?php echo $_SESSION['display_name'] ?? ucfirst($_SESSION['user_name']); ?>
-                                        <br><small class="text-muted">Role:
-                                            <?php echo $_SESSION['user_role']; ?></small>
                                     </h6>
                                     <div class="dropdown-divider"></div>
                                 <?php endif; ?>
-                                <a class="dropdown-item" href="<?php echo URLROOT; ?>/users/profile">Profile</a>
-                                <a class="dropdown-item" href="<?php echo URLROOT; ?>/users/changePassword">Change
-                                    Password</a>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-shield-alt mr-2"></i>Role: <?php echo $_SESSION['user_role']; ?>
+                                </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="<?php echo URLROOT; ?>/users/logout">Logout</a>
+                                <a class="dropdown-item" href="<?php echo URLROOT; ?>/users/profile">
+                                    <i class="fas fa-user mr-2"></i>Profile
+                                </a>
+                                <a class="dropdown-item" href="<?php echo URLROOT; ?>/users/changePassword">
+                                    <i class="fas fa-key mr-2"></i>Change Password
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="<?php echo URLROOT; ?>/users/logout">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </a>
                             </div>
                         </li>
                     </ul>

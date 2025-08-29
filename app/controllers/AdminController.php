@@ -1,5 +1,5 @@
 <?php
-class AdminController extends Controller
+class AdminController extends BaseController
 {
     public $userModel;
     public $roleModel;
@@ -99,6 +99,109 @@ class AdminController extends Controller
     }
 
     /**
+     * View individual user details
+     */
+    public function viewUser($userId = null)
+    {
+        if (!$userId) {
+            flash('user_message', 'User ID not provided', 'alert alert-danger');
+            redirect('admin/users');
+        }
+
+        // Get user data from any of the tables (users, customers, contractors)
+        $user = $this->userModel->getUserById($userId);
+
+        if (!$user) {
+            flash('user_message', 'User not found', 'alert alert-danger');
+            redirect('admin/users');
+        }
+
+        $data = [
+            'title' => 'User Details - ' . ($user->name ?? $user->username),
+            'user'  => $user
+        ];
+
+        $this->renderLayout('admin/viewUser', $data);
+    }
+
+    /**
+     * Edit user profile - Admin can edit any user's profile
+     */
+    public function editUserProfile($userId = null)
+    {
+        if (!$userId) {
+            flash('user_message', 'User ID not provided', 'alert alert-danger');
+            redirect('admin/users');
+        }
+
+        // Get user data from any of the tables (users, customers, contractors)
+        $user = $this->userModel->getUserById($userId);
+
+        if (!$user) {
+            flash('user_message', 'User not found', 'alert alert-danger');
+            redirect('admin/users');
+        }
+
+        // Check for POST
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = sanitizePost($_POST);
+
+            // Handle profile picture upload
+            $profilePicturePath = '';
+            if (isset($_FILES['profile_picture_file']) && $_FILES['profile_picture_file']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = 'storage/uploads/users/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                $ext = pathinfo($_FILES['profile_picture_file']['name'], PATHINFO_EXTENSION);
+                $username = $user->username ?? $user->user_name ?? 'user_' . $userId;
+                $filename = trim($username) . '.' . $ext;
+                $targetPath = $uploadDir . $filename;
+
+                // Remove old profile picture if it exists
+                if (file_exists($targetPath)) {
+                    unlink($targetPath);
+                }
+
+                if (move_uploaded_file($_FILES['profile_picture_file']['tmp_name'], $targetPath)) {
+                    $profilePicturePath = URLROOT . '/' . $targetPath;
+                }
+            }
+
+            $data = [
+                'name'            => trim($_POST['name']),
+                'email'           => trim($_POST['email'] ?? ''),
+                'job_title'       => trim($_POST['job_title'] ?? ''),
+                'address'         => trim($_POST['address'] ?? ''),
+                'birthday'        => trim($_POST['birthday'] ?? ''),
+                'education'       => trim($_POST['education'] ?? ''),
+                'profile_picture' => $profilePicturePath
+            ];
+
+            // Only update profile picture if a new one was uploaded
+            if (empty($profilePicturePath)) {
+                unset($data['profile_picture']);
+            }
+
+            // Update user in the appropriate table based on source_table
+            $sourceTable = $user->source_table ?? 'users';
+            if ($this->userModel->updateUserProfile($userId, $data, $sourceTable)) {
+                flash('profile_message', 'Profile updated successfully', 'alert alert-success');
+                redirect('admin/viewUser/' . $userId);
+            } else {
+                flash('profile_message', 'Something went wrong', 'alert alert-danger');
+            }
+        }
+
+        $data = [
+            'title' => 'Edit User Profile - ' . ($user->name ?? $user->username),
+            'user'  => $user
+        ];
+
+        $this->renderLayout('admin/editUserProfile', $data);
+    }
+
+    /**
      * User categorization interface - shows three separate tables
      */
     public function userCategorization()
@@ -154,6 +257,9 @@ class AdminController extends Controller
         // Only accept POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
+            if (ob_get_length())
+                ob_clean();
+            header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Method not allowed']);
             return;
         }
@@ -163,13 +269,76 @@ class AdminController extends Controller
         $status = strtolower(trim($_POST['status'] ?? ''));
         $sourceTable = $_POST['source_table'] ?? 'users';
 
+        // Composite id support: expected format 'table:123'
+        $composite = trim((string) ($_POST['composite_id'] ?? ''));
+        if ($composite !== '') {
+            $parts = explode(':', $composite, 2);
+            if (count($parts) === 2) {
+                $maybeTable = strtolower(trim($parts[0]));
+                $maybeId = intval($parts[1]);
+                if ($maybeId > 0) {
+                    $userId = $maybeId;
+                    $sourceTable = $maybeTable;
+                }
+            }
+        }
+
+        // Normalize source table value to expected names
+        $sourceTable = strtolower(trim((string) $sourceTable));
+        // Map common singular/plural variants and accidental values
+        $tableMap = [
+            'user'        => 'users',
+            'users'       => 'users',
+            'customer'    => 'customers',
+            'customers'   => 'customers',
+            'contractor'  => 'contractors',
+            'contractors' => 'contractors'
+        ];
+
+        if (isset($tableMap[$sourceTable])) {
+            $sourceTable = $tableMap[$sourceTable];
+        }
+
+        // If sourceTable still not one of the allowed tables, attempt to find which table the user belongs to
+        $allowed = ['users', 'customers', 'contractors'];
+        if (!in_array($sourceTable, $allowed, true)) {
+            // Try a cross-table lookup for this user id
+            try {
+                $found = $this->userModel->getUserById($userId);
+                if ($found && !empty($found->source_table)) {
+                    $sourceTable = $found->source_table;
+                } else {
+                    // Log the bad incoming source_table for debugging
+                    error_log("Toggle Status Warning: unexpected source_table received: '" . ($_POST['source_table'] ?? '') . "' for userId={$userId}");
+                }
+            } catch (Exception $e) {
+                error_log('Toggle Status lookup error: ' . $e->getMessage());
+            }
+        }
+
+        // Detailed request logging to help debug payload issues (write to app.log)
+        try {
+            $logPath = __DIR__ . '/../../storage/logs/app.log';
+            $entry = sprintf("[%s] toggleUserStatus called. POST: %s, RAW_INPUT: %s\n", date('Y-m-d H:i:s'), json_encode($_POST), file_get_contents('php://input'));
+            // append safely
+            @file_put_contents($logPath, $entry, FILE_APPEND | LOCK_EX);
+        } catch (Exception $e) {
+            // swallow logging errors to avoid breaking API
+        }
+
         if ($userId <= 0 || !in_array($status, ['active', 'inactive'])) {
+            if (ob_get_length())
+                ob_clean();
+            header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Invalid parameters']);
             return;
         }
 
         // Prevent changing the currently logged-in admin's own status
         if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $userId && $sourceTable === 'users') {
+            if (ob_get_length())
+                ob_clean();
+            header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Cannot change your own status']);
             return;
         }
@@ -177,14 +346,40 @@ class AdminController extends Controller
         // Get user from correct table
         $target = $this->userModel->getUserByIdAndTable($userId, $sourceTable);
         if (!$target) {
+            // Try cross-table resolution in case the incoming source_table is incorrect
+            try {
+                $resolved = $this->userModel->getUserById($userId);
+                if ($resolved && !empty($resolved->source_table) && $resolved->source_table !== $sourceTable) {
+                    // Log the resolution and retry with the correct table
+                    $oldTable = $sourceTable;
+                    $sourceTable = $resolved->source_table;
+                    $logPath = __DIR__ . '/../../storage/logs/app.log';
+                    @file_put_contents($logPath, sprintf("[%s] toggleUserStatus: resolved source_table from '%s' to '%s' for userId=%s\n", date('Y-m-d H:i:s'), $oldTable, $sourceTable, var_export($userId, true)), FILE_APPEND | LOCK_EX);
+                    $target = $this->userModel->getUserByIdAndTable($userId, $sourceTable);
+                }
+            } catch (Exception $e) {
+                // swallow
+            }
+        }
+
+        if (!$target) {
+            error_log("Toggle Status Error: User not found - userId=$userId, sourceTable=$sourceTable");
+            if (ob_get_length())
+                ob_clean();
+            header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'User not found']);
             return;
         }
+
+        error_log("Toggle Status Debug: Found user - " . json_encode($target));
 
         // For users table only: Ensure target is not an admin
         if ($sourceTable === 'users') {
             $targetRole = strtolower($target->role_name ?? '');
             if (in_array($targetRole, ['admin', 'super admin', 'administrator'])) {
+                if (ob_get_length())
+                    ob_clean();
+                header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'message' => 'Cannot change status of admin users']);
                 return;
             }
@@ -207,10 +402,18 @@ class AdminController extends Controller
         if ($ok) {
             // log activity if available
             if (method_exists($this->userModel, 'logActivity')) {
-                $this->userModel->logActivity($_SESSION['user_id'] ?? 0, 'user_status_changed', "Set {$target->name} ({$sourceTable}) to {$status}");
+                // Determine a safe display name for logging (support users/customers/contractors)
+                $targetName = $target->name ?? $target->full_name ?? $target->username ?? ($target->customer_name ?? 'unknown');
+                $this->userModel->logActivity($_SESSION['user_id'] ?? 0, 'user_status_changed', "Set {$targetName} ({$sourceTable}) to {$status}");
             }
+            if (ob_get_length())
+                ob_clean();
+            header('Content-Type: application/json');
             echo json_encode(['success' => true]);
         } else {
+            if (ob_get_length())
+                ob_clean();
+            header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Failed to update status']);
         }
     }

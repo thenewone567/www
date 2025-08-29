@@ -51,10 +51,10 @@ class UserProfileHandler
                 $this->resizeImage($targetPath, 300, 300);
 
                 return [
-                    'success' => true,
+                    'success'  => true,
                     'filename' => $fileName,
-                    'path' => $this->publicPath . $fileName,
-                    'message' => 'Profile picture uploaded successfully'
+                    'path'     => $this->publicPath . $fileName,
+                    'message'  => 'Profile picture uploaded successfully'
                 ];
             } else {
                 return [
@@ -225,7 +225,7 @@ class UserProfileHandler
     public function getProfilePictureUrl($filename)
     {
         if (empty($filename)) {
-            return URLROOT . '/public/css/images/default-avatar.png';
+            return URLROOT . '/storage/uploads/users/avatar.png';
         }
 
         $filePath = $this->uploadDir . $filename;
@@ -233,7 +233,7 @@ class UserProfileHandler
             return URLROOT . '/' . $this->publicPath . $filename;
         }
 
-        return URLROOT . '/public/css/images/default-avatar.png';
+        return URLROOT . '/storage/uploads/users/avatar.png';
     }
 
     /**

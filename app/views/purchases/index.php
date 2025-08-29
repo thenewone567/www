@@ -592,14 +592,15 @@
                                                 </td>
                                                 <td>
                                                     <?php if (!empty($purchaseOrder->tracking_number)): ?>
-                                                        <span class="badge badge-info" data-toggle="tooltip"
-                                                            title="<?php echo htmlspecialchars($purchaseOrder->tracking_number); ?>">
+                                                        <span class="badge badge-info badge-compact" data-toggle="tooltip"
+                                                            title="<?php echo htmlspecialchars($purchaseOrder->tracking_number); ?> - Click to copy"
+                                                            onclick="copyToClipboard('<?php echo htmlspecialchars($purchaseOrder->tracking_number); ?>')">
                                                             <i class="fas fa-truck mr-1"></i>
-                                                            <?php echo htmlspecialchars(substr($purchaseOrder->tracking_number, 0, 8)); ?>...
+                                                            <?php echo htmlspecialchars($purchaseOrder->tracking_number); ?>
                                                         </span>
                                                     <?php else: ?>
                                                         <span class="text-muted">
-                                                            <i class="fas fa-minus"></i> No tracking
+                                                            <i class="fas fa-minus mr-1"></i> No tracking
                                                         </span>
                                                     <?php endif; ?>
                                                 </td>
@@ -610,12 +611,6 @@
                                                             title="View Details">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
-                                                        <?php if (!empty($purchaseOrder->tracking_number)): ?>
-                                                            <span class="btn btn-success btn-sm" data-toggle="tooltip"
-                                                                title="Tracking: <?php echo htmlspecialchars($purchaseOrder->tracking_number); ?>">
-                                                                <i class="fas fa-check"></i>
-                                                            </span>
-                                                        <?php endif; ?>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1366,5 +1361,33 @@
         // Add modal to body and show
         $('body').append(workflowModal);
         $('#workflowModal').modal('show');
+    }
+
+    // Copy tracking number to clipboard
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function () {
+            // Show temporary success feedback
+            const temp = $('<div class="alert alert-success alert-dismissible fade show" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">')
+                .html('<i class="fas fa-check mr-2"></i>Tracking number copied to clipboard!')
+                .append('<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>');
+
+            $('body').append(temp);
+
+            // Auto-dismiss after 3 seconds
+            setTimeout(function () {
+                temp.alert('close');
+            }, 3000);
+        }).catch(function (err) {
+            console.error('Failed to copy: ', err);
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+
+            alert('Tracking number copied: ' + text);
+        });
     }
 </script>

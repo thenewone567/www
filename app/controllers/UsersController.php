@@ -8,31 +8,37 @@ class UsersController extends BaseController
             $_POST = sanitizePost($_POST);
             $profilePicturePath = '';
             if (isset($_FILES['profile_picture_file']) && $_FILES['profile_picture_file']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = 'uploads/profile_pictures/';
+                $uploadDir = 'storage/uploads/users/';
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0777, true);
                 }
                 $ext = pathinfo($_FILES['profile_picture_file']['name'], PATHINFO_EXTENSION);
-                $filename = 'user_' . uniqid() . '_' . time() . '.' . $ext;
+                $filename = trim($_POST['username']) . '.' . $ext;
                 $targetPath = $uploadDir . $filename;
+
+                // Remove old profile picture if it exists
+                if (file_exists($targetPath)) {
+                    unlink($targetPath);
+                }
+
                 if (move_uploaded_file($_FILES['profile_picture_file']['tmp_name'], $targetPath)) {
-                    $profilePicturePath = $targetPath;
+                    $profilePicturePath = URLROOT . '/' . $targetPath;
                 }
             }
             $data = [
-                'username' => trim($_POST['username']),
-                'email' => trim($_POST['email'] ?? ''),
-                'password' => trim($_POST['password']),
-                'role_id' => trim($_POST['role_id']),
-                'profile_picture' => $profilePicturePath,
-                'address' => trim($_POST['address'] ?? ''),
-                'job_title' => trim($_POST['job_title'] ?? ''),
-                'birthday' => trim($_POST['birthday'] ?? ''),
-                'education' => trim($_POST['education'] ?? ''),
-                'username_err' => '',
-                'password_err' => '',
+                'username'             => trim($_POST['username']),
+                'email'                => trim($_POST['email'] ?? ''),
+                'password'             => trim($_POST['password']),
+                'role_id'              => trim($_POST['role_id']),
+                'profile_picture'      => $profilePicturePath,
+                'address'              => trim($_POST['address'] ?? ''),
+                'job_title'            => trim($_POST['job_title'] ?? ''),
+                'birthday'             => trim($_POST['birthday'] ?? ''),
+                'education'            => trim($_POST['education'] ?? ''),
+                'username_err'         => '',
+                'password_err'         => '',
                 'confirm_password_err' => '',
-                'email_err' => ''
+                'email_err'            => ''
             ];
             // Validation (add more as needed)
             if (empty($data['username'])) {
@@ -61,20 +67,20 @@ class UsersController extends BaseController
             $this->renderLayout('users/register', $data);
         } else {
             $data = [
-                'username' => '',
-                'email' => '',
-                'password' => '',
-                'confirm_password' => '',
-                'role_id' => '',
-                'profile_picture' => '',
-                'address' => '',
-                'job_title' => '',
-                'birthday' => '',
-                'education' => '',
-                'username_err' => '',
-                'password_err' => '',
+                'username'             => '',
+                'email'                => '',
+                'password'             => '',
+                'confirm_password'     => '',
+                'role_id'              => '',
+                'profile_picture'      => '',
+                'address'              => '',
+                'job_title'            => '',
+                'birthday'             => '',
+                'education'            => '',
+                'username_err'         => '',
+                'password_err'         => '',
                 'confirm_password_err' => '',
-                'email_err' => ''
+                'email_err'            => ''
             ];
             $this->renderLayout('users/register', $data);
         }
@@ -105,31 +111,37 @@ class UsersController extends BaseController
             $_POST = sanitizePost($_POST);
             $profilePicturePath = $user->profile_picture;
             if (isset($_FILES['profile_picture_file']) && $_FILES['profile_picture_file']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = 'uploads/profile_pictures/';
+                $uploadDir = 'storage/uploads/users/';
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0777, true);
                 }
                 $ext = pathinfo($_FILES['profile_picture_file']['name'], PATHINFO_EXTENSION);
-                $filename = 'user_' . $user->user_id . '_' . time() . '.' . $ext;
+                $filename = $user->username . '.' . $ext;
                 $targetPath = $uploadDir . $filename;
+
+                // Remove old profile picture if it exists
+                if (file_exists($targetPath)) {
+                    unlink($targetPath);
+                }
+
                 if (move_uploaded_file($_FILES['profile_picture_file']['tmp_name'], $targetPath)) {
-                    $profilePicturePath = $targetPath;
+                    $profilePicturePath = URLROOT . '/' . $targetPath;
                 }
             }
             $data = [
-                'user_id' => $user->user_id,
+                'user_id'         => $user->user_id,
                 'profile_picture' => $profilePicturePath,
-                'full_name' => trim($_POST['full_name']),
+                'full_name'       => trim($_POST['full_name']),
                 // Use the username from the user object, not from POST (readonly field)
-                'username' => $user->username,
-                'email' => trim($_POST['email']),
-                'address' => trim($_POST['address'] ?? ''),
-                'job_title' => trim($_POST['job_title'] ?? ''),
-                'birthday' => trim($_POST['birthday'] ?? ''),
-                'education' => trim($_POST['education'] ?? ''),
-                'full_name_err' => '',
-                'username_err' => '',
-                'email_err' => ''
+                'username'        => $user->username,
+                'email'           => trim($_POST['email']),
+                'address'         => trim($_POST['address'] ?? ''),
+                'job_title'       => trim($_POST['job_title'] ?? ''),
+                'birthday'        => trim($_POST['birthday'] ?? ''),
+                'education'       => trim($_POST['education'] ?? ''),
+                'full_name_err'   => '',
+                'username_err'    => '',
+                'email_err'       => ''
             ];
             if (empty($data['full_name'])) {
                 $data['full_name_err'] = 'Full name is required';
@@ -166,9 +178,9 @@ class UsersController extends BaseController
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'username' => isset($_POST['username']) ? trim($_POST['username']) : '',
-                'password' => isset($_POST['password']) ? trim($_POST['password']) : '',
-                'remember_me' => isset($_POST['remember_me']) ? true : false,
+                'username'     => isset($_POST['username']) ? trim($_POST['username']) : '',
+                'password'     => isset($_POST['password']) ? trim($_POST['password']) : '',
+                'remember_me'  => isset($_POST['remember_me']) ? true : false,
                 'username_err' => '',
                 'password_err' => '',
             ];
@@ -236,8 +248,8 @@ class UsersController extends BaseController
 
             // Init data for GET request
             $data = [
-                'username' => '',
-                'password' => '',
+                'username'     => '',
+                'password'     => '',
                 'username_err' => '',
                 'password_err' => '',
             ];
@@ -259,7 +271,8 @@ class UsersController extends BaseController
             $_SESSION['user_id'] = $user->user_id;
             $_SESSION['user_username'] = $user->username;
             $_SESSION['user_name'] = $user->username;
-            $_SESSION['display_name'] = $userWithRole->display_name ?? ucfirst($user->username);
+            $_SESSION['display_name'] = $userWithRole->full_name ?? ucfirst($user->username);
+            $_SESSION['profile_picture'] = $userWithRole->profile_picture ?? '';
             $_SESSION['user_role'] = $userWithRole->role_name ?? 'Associate';
             $_SESSION['role_id'] = $userWithRole->role_id ?? 4;
             $_SESSION['login_time'] = time();
@@ -370,11 +383,11 @@ class UsersController extends BaseController
 
             // Init data
             $data = [
-                'current_password' => trim($_POST['current_password']),
-                'new_password' => trim($_POST['new_password']),
-                'confirm_password' => trim($_POST['confirm_password']),
+                'current_password'     => trim($_POST['current_password']),
+                'new_password'         => trim($_POST['new_password']),
+                'confirm_password'     => trim($_POST['confirm_password']),
                 'current_password_err' => '',
-                'new_password_err' => '',
+                'new_password_err'     => '',
                 'confirm_password_err' => ''
             ];
 
@@ -424,11 +437,11 @@ class UsersController extends BaseController
         } else {
             // Init data
             $data = [
-                'current_password' => '',
-                'new_password' => '',
-                'confirm_password' => '',
+                'current_password'     => '',
+                'new_password'         => '',
+                'confirm_password'     => '',
                 'current_password_err' => '',
-                'new_password_err' => '',
+                'new_password_err'     => '',
                 'confirm_password_err' => ''
             ];
 
@@ -448,11 +461,11 @@ class UsersController extends BaseController
             $username = trim($_POST['username'] ?? '');
 
             $data = [
-                'email' => $email,
-                'username' => $username,
-                'email_err' => '',
+                'email'        => $email,
+                'username'     => $username,
+                'email_err'    => '',
                 'username_err' => '',
-                'success' => false
+                'success'      => false
             ];
 
             // Validate inputs
@@ -526,10 +539,10 @@ class UsersController extends BaseController
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'token' => $token,
-                'password' => trim($_POST['password']),
-                'confirm_password' => trim($_POST['confirm_password']),
-                'password_err' => '',
+                'token'                => $token,
+                'password'             => trim($_POST['password']),
+                'confirm_password'     => trim($_POST['confirm_password']),
+                'password_err'         => '',
                 'confirm_password_err' => ''
             ];
 
@@ -565,10 +578,10 @@ class UsersController extends BaseController
             $this->renderLayout('users/resetPassword', $data, false);
         } else {
             $data = [
-                'token' => $token,
-                'password' => '',
-                'confirm_password' => '',
-                'password_err' => '',
+                'token'                => $token,
+                'password'             => '',
+                'confirm_password'     => '',
+                'password_err'         => '',
                 'confirm_password_err' => ''
             ];
 
@@ -632,13 +645,13 @@ class UsersController extends BaseController
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'username' => trim($_POST['username'] ?? ''),
-                'password' => trim($_POST['password'] ?? ''),
-                'confirm_password' => trim($_POST['confirm_password'] ?? ''),
-                'username_err' => '',
-                'password_err' => '',
+                'username'             => trim($_POST['username'] ?? ''),
+                'password'             => trim($_POST['password'] ?? ''),
+                'confirm_password'     => trim($_POST['confirm_password'] ?? ''),
+                'username_err'         => '',
+                'password_err'         => '',
                 'confirm_password_err' => '',
-                'success' => false
+                'success'              => false
             ];
 
             // Validate username

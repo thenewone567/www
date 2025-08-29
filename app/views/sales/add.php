@@ -1393,7 +1393,7 @@
 
 <!-- Include Enhanced Scanner Libraries -->
 <script src="<?php echo URLROOT; ?>/public/js/enhanced-barcode-scanner.js"></script>
-<link rel="stylesheet" href="<?php echo URLROOT; ?>/public/css/enhanced-receiving.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/public/css/app-unified.css">
 
 <!-- Additional CSS for Sales Scanner -->
 <style>

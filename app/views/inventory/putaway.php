@@ -1,7 +1,7 @@
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
 
 <!-- Unified CSS -->
-<link rel="stylesheet" href="<?= URLROOT ?>/css/app-unified.css">
+<link rel="stylesheet" href="<?= URLROOT ?>/public/css/app-unified.css">
 
 <?php
 // User Role & Permission System

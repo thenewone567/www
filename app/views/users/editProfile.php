@@ -50,13 +50,18 @@
                             <label for="profile_picture_file">Profile Picture</label>
                             <input type="file" name="profile_picture_file" id="profile_picture_file"
                                 class="form-control-file" accept="image/*">
-                            <?php if (!empty($data['user']->profile_picture)): ?>
-                                <div class="mt-2">
+                            <div class="mt-2">
+                                <?php if (!empty($data['user']->profile_picture)): ?>
                                     <img src="<?php echo htmlspecialchars($data['user']->profile_picture); ?>"
                                         alt="Current Profile Picture"
                                         style="max-width: 100px; max-height: 100px; border-radius: 50%; border: 1px solid #ccc;">
-                                </div>
-                            <?php endif; ?>
+                                <?php else: ?>
+                                    <img src="<?php echo URLROOT; ?>/storage/uploads/users/avatar.png" alt="Default Avatar"
+                                        style="max-width: 100px; max-height: 100px; border-radius: 50%; border: 1px solid #ccc;">
+                                    <small class="text-muted d-block">No profile picture uploaded. Default avatar will be
+                                        used.</small>
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
                         <script>

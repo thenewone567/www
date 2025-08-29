@@ -1,6 +1,6 @@
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'; ?>
 
-<link rel="stylesheet" href="<?php echo URLROOT; ?>/public/css/app.unified.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/public/css/app-unified.css">
 
 <div class="container-fluid page-top-area my-4">
     <div class="row align-items-center mb-3">
@@ -82,29 +82,34 @@
     <!-- Controls -->
     <div class="row mb-3">
         <div class="col-md-6 mb-2">
-            <div class="input-group">
-                <input id="productSearch" name="search" class="form-control" placeholder="Search products..."
-                    value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary"
-                        onclick="document.getElementById('productSearch').dispatchEvent(new Event('input'))"><i
-                            class="fas fa-search"></i></button>
+            <form method="GET" action="<?php echo URLROOT; ?>/products" class="d-inline">
+                <div class="search-container position-relative">
+                    <input id="productSearch" name="search" class="form-control search-input"
+                        placeholder="Search products..."
+                        value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                    <button type="submit" class="search-icon-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <?php if (!empty($_GET['search'])): ?>
+                        <a href="<?php echo URLROOT; ?>/products" class="clear-search-btn" title="Clear search">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    <?php endif; ?>
                 </div>
-            </div>
+            </form>
         </div>
         <div class="col-md-6 text-md-right">
-            <div class="btn-group mr-2">
-                <button class="btn btn-outline-primary" onclick="showAllColumns()"><i
-                        class="fas fa-expand mr-1"></i>Show All</button>
-                <button class="btn btn-outline-secondary" onclick="resetColumnView()"><i
-                        class="fas fa-eye-slash mr-1"></i>Default View</button>
+            <div class="pagination-controls">
+                <div class="d-flex align-items-center">
+                    <label for="itemsPerPage" class="text-muted mr-2 mb-0" style="font-size: 0.875rem;">Show:</label>
+                    <select id="itemsPerPage" class="form-control form-control-sm d-inline-block" style="width:100px;"
+                        onchange="changeItemsPerPage();">
+                        <option value="25" <?php echo (isset($data['pagination']['per_page']) && $data['pagination']['per_page'] == 25) ? 'selected' : ''; ?>>25</option>
+                        <option value="50" <?php echo (isset($data['pagination']['per_page']) && $data['pagination']['per_page'] == 50) ? 'selected' : ''; ?>>50</option>
+                        <option value="100" <?php echo (isset($data['pagination']['per_page']) && $data['pagination']['per_page'] == 100) ? 'selected' : ''; ?>>100</option>
+                    </select>
+                </div>
             </div>
-            <select id="itemsPerPage" class="form-control d-inline-block" style="width:120px;"
-                onchange="changeItemsPerPage();">
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-            </select>
         </div>
     </div>
 
@@ -112,21 +117,7 @@
     <div class="card-theme">
         <div class="card-body p-2 border-bottom">
             <div class="d-flex align-items-center flex-wrap">
-                <small class="text-muted mr-2">Columns:</small>
-                <div class="btn-group-toggle" data-toggle="buttons">
-                    <label class="btn btn-sm btn-outline-secondary mr-1 mb-1" style="cursor: default;" disabled><input
-                            type="checkbox" checked disabled>Image</label>
-                    <label class="btn btn-sm btn-outline-secondary mr-1 mb-1" style="cursor: default;" disabled><input
-                            type="checkbox" checked disabled>Product</label>
-                    <label class="btn btn-sm btn-outline-info active mr-1 mb-1 column-toggle" data-column="brand"><input
-                            type="checkbox" checked>Brand</label>
-                    <label class="btn btn-sm btn-outline-info active mr-1 mb-1 column-toggle"
-                        data-column="supplier"><input type="checkbox" checked>Supplier</label>
-                    <label class="btn btn-sm btn-outline-info active mr-1 mb-1 column-toggle" data-column="unit"><input
-                            type="checkbox" checked>Unit</label>
-                    <label class="btn btn-sm btn-outline-info active mr-1 mb-1 column-toggle"
-                        data-column="margin"><input type="checkbox" checked>Margin</label>
-                </div>
+                <h6 class="mb-0 text-primary">Products</h6>
             </div>
         </div>
 
@@ -134,7 +125,7 @@
             <table id="productsTable" class="table table-hover table-layout-fixed mb-0">
                 <thead class="thead-light">
                     <tr>
-                        <th style="width:40px"><input id="selectAll" type="checkbox" onchange="toggleSelectAll()"></th>
+                        <!-- select-all column removed -->
                         <th style="width:80px">Image</th>
                         <th>Product</th>
                         <th style="width:120px">SKU</th>
@@ -152,14 +143,12 @@
                     <?php if (!empty($data['products'])):
                         foreach ($data['products'] as $product): ?>
                             <tr>
-                                <td><input class="product-checkbox" type="checkbox" value="<?php echo $product->product_id; ?>">
-                                </td>
                                 <td>
                                     <?php if (!empty($product->image_path)): ?>
                                         <img src="<?php echo URLROOT; ?>/public/uploads/<?php echo $product->image_path; ?>"
                                             style="width:48px;height:48px;object-fit:cover;border-radius:4px;">
                                     <?php else: ?>
-                                        <img src="<?php echo URLROOT; ?>/public/images/products/default.jpg"
+                                        <img src="<?php echo URLROOT; ?>/storage/uploads/products/no_image.png"
                                             style="width:48px;height:48px;object-fit:cover;border-radius:4px;">
                                     <?php endif; ?>
                                 </td>
@@ -214,7 +203,7 @@
                             </tr>
                         <?php endforeach; else: ?>
                         <tr>
-                            <td colspan="12" class="text-center py-5">No products found — <a
+                            <td colspan="11" class="text-center py-5">No products found — <a
                                     href="<?php echo URLROOT; ?>/products/add">Add your first product</a></td>
                         </tr>
                     <?php endif; ?>
@@ -227,13 +216,85 @@
                 <?php if (!empty($data['pagination'])): ?>
                     <small class="text-muted">Showing <?php echo $data['pagination']['start_record']; ?> to
                         <?php echo $data['pagination']['end_record']; ?> of
-                        <?php echo $data['pagination']['total_records']; ?></small>
+                        <?php echo number_format($data['pagination']['total_records']); ?> products</small>
                 <?php endif; ?>
             </div>
             <div>
-                <?php if (!empty($data['pagination'])): ?>
-                    <?php // render pagination links (existing code could be reused) ?>
-                    <nav><?php echo $data['pagination']['links'] ?? ''; ?></nav>
+                <?php if (!empty($data['pagination']) && $data['pagination']['total_pages'] > 1): ?>
+                    <nav aria-label="Product pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            <?php
+                            $current_page = $data['pagination']['current_page'];
+                            $total_pages = $data['pagination']['total_pages'];
+                            $search = $data['pagination']['search'] ?? '';
+
+                            // Previous button
+                            if ($current_page > 1): ?>
+                                <li class="page-item">
+                                    <a class="page-link"
+                                        href="<?php echo URLROOT; ?>/products?page=<?php echo $current_page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo '&per_page=' . $data['pagination']['per_page']; ?>">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            <?php else: ?>
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php
+                            // Page numbers
+                            $start_page = max(1, $current_page - 2);
+                            $end_page = min($total_pages, $current_page + 2);
+
+                            // Show first page if not in range
+                            if ($start_page > 1): ?>
+                                <li class="page-item">
+                                    <a class="page-link"
+                                        href="<?php echo URLROOT; ?>/products?page=1<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo '&per_page=' . $data['pagination']['per_page']; ?>">1</a>
+                                </li>
+                                <?php if ($start_page > 2): ?>
+                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                <?php endif; ?>
+                            <?php endif; ?>
+
+                            <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+                                <li class="page-item <?php echo $i == $current_page ? 'active' : ''; ?>">
+                                    <a class="page-link"
+                                        href="<?php echo URLROOT; ?>/products?page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo '&per_page=' . $data['pagination']['per_page']; ?>">
+                                        <?php echo $i; ?>
+                                    </a>
+                                </li>
+                            <?php endfor; ?>
+
+                            <?php
+                            // Show last page if not in range
+                            if ($end_page < $total_pages): ?>
+                                <?php if ($end_page < $total_pages - 1): ?>
+                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                <?php endif; ?>
+                                <li class="page-item">
+                                    <a class="page-link"
+                                        href="<?php echo URLROOT; ?>/products?page=<?php echo $total_pages; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo '&per_page=' . $data['pagination']['per_page']; ?>"><?php echo $total_pages; ?></a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php
+                            // Next button
+                            if ($current_page < $total_pages): ?>
+                                <li class="page-item">
+                                    <a class="page-link"
+                                        href="<?php echo URLROOT; ?>/products?page=<?php echo $current_page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo '&per_page=' . $data['pagination']['per_page']; ?>">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            <?php else: ?>
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                                </li>
+                            <?php endif; ?>
+                        </ul>
+                    </nav>
                 <?php endif; ?>
             </div>
         </div>
@@ -317,32 +378,6 @@
                     document.querySelectorAll('.column-' + col).forEach(el => el.style.display = 'none');
                 }
             });
-
-            // Expose showAllColumns and resetColumnView globally for inline buttons
-            window.showAllColumns = function () {
-                toggles.forEach(btn => {
-                    const col = btn.dataset.column;
-                    const checkbox = btn.querySelector('input[type=checkbox]');
-                    if (!col || !checkbox) return;
-                    if (!checkbox.checked) {
-                        checkbox.checked = true;
-                        checkbox.dispatchEvent(new Event('change'));
-                    }
-                });
-            };
-
-            window.resetColumnView = function () {
-                toggles.forEach(btn => {
-                    const col = btn.dataset.column;
-                    const checkbox = btn.querySelector('input[type=checkbox]');
-                    if (!col || !checkbox) return;
-                    const def = !!window.productsDefaultColumns[col];
-                    if (checkbox.checked !== def) {
-                        checkbox.checked = def;
-                        checkbox.dispatchEvent(new Event('change'));
-                    }
-                });
-            };
 
         } catch (err) {
             // Fail silently but log for debugging
@@ -447,22 +482,15 @@
                 });
         };
 
-        // Toggle select all checkboxes on the products table
-        window.toggleSelectAll = function () {
-            try {
-                const master = document.getElementById('selectAll');
-                const checked = !!master.checked;
-                document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = checked);
-            } catch (err) { console.error(err); }
-        };
+        // select-all removed — no-op
 
-        // Change items per page - simple reload with items param
+        // Change items per page - simple reload with per_page param
         window.changeItemsPerPage = function () {
             const select = document.getElementById('itemsPerPage');
             if (!select) return;
             const val = select.value;
             const url = new URL(window.location.href);
-            url.searchParams.set('items', val);
+            url.searchParams.set('per_page', val);
             // reset to first page when changing page size
             url.searchParams.delete('page');
             window.location.href = url.toString();
@@ -478,6 +506,35 @@
                 }
             } catch (err) { console.warn('initializeProductTable failed', err); }
         };
+
+        // Search functionality
+        const searchInput = document.getElementById('productSearch');
+        if (searchInput) {
+            // Submit form on Enter key press
+            searchInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const form = searchInput.closest('form');
+                    if (form) {
+                        form.submit();
+                    }
+                }
+            });
+
+            // Optional: Add debounce for auto-search (uncomment if desired)
+            /*
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const form = searchInput.closest('form');
+                    if (form) {
+                        form.submit();
+                    }
+                }, 500); // Wait 500ms after user stops typing
+            });
+            */
+        }
     })();
 </script>
 
