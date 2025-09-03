@@ -67,3 +67,58 @@ Whenever you are generating or modifying code related to a data submission proce
   - Test all affected functionality
   - Document breaking changes
   - Ensure backward compatibility where possible
+
+## Temporary / Test / Debug Files — Do not leave behind
+
+We routinely find temporary, test, debug, and analysis artifacts left in the repository. These files increase repository noise, risk accidental commits of sensitive data, and complicate backups.
+
+Rules:
+
+- Do not commit temporary files (filename patterns like `*temp*`, `*tmp*`, `*debug*`, `*test*`, `*.log`, `*.zip` created for debugging/analysis) into source-controlled folders.
+- If you must run local analysis or debugging that produces artifacts, keep them outside the repository workspace or in a clearly-named local-only folder that is listed in `.gitignore`.
+- Use the provided cleanup script `scripts/archive_temp_files.ps1` to archive and remove temporary analysis artifacts when necessary. Review the archive before deleting it permanently.
+- Prefer logging to the application `storage/logs` with rotation; avoid creating one-off logs in `scripts/` or repository root. If a debug log is created, move it to `storage/logs` or remove it when done.
+
+Suggested `.gitignore` entries (add to the project root `.gitignore`):
+
+```
+# temporary / debug / analysis artifacts
+*temp*
+*tmp*
+*debug*
+*~debug*
+*.log
+*.zip
+/.archived/
+```
+
+When removing temporary artifacts commit a short message explaining what was removed and why, e.g. "chore: remove archived temp-scripts.zip and debug logs".
+
+If a change will affect other parts of the project (for example moving or deleting shared logs or archives), list the affected files and run a quick smoke test of related features.
+
+## One-off maintenance scripts (check*/fix*/verify\*)
+
+Scripts named with the `check*`, `fix*`, or `verify*` prefix are usually ad-hoc maintenance tools for debugging, diagnostics, or quick repairs. These should not remain in the main code tree as unreviewed, unmanaged artifacts.
+
+Rules:
+
+- Move these files to `archived/` for review before permanently deleting or committing them to the main branch.
+- If the logic is reusable or required by the application, refactor the code into the application with tests, documentation, and appropriate access control. Do not keep production logic in standalone ad-hoc scripts.
+- If the script is strictly one-time, keep it in `archived/` with a short note in `README_ARCHIVED_TEMP_FILES.md` and then delete it after review.
+- Pull requests that introduce `check*/fix*/verify*` files must include a short justification and an assigned owner for maintenance.
+
+## Database performance recommendations (dashboard)
+
+The dashboard runs several aggregation queries over large tables (for example `sales`). For queries that compute the first sale per customer or that filter by `sale_date`, adding a composite index will significantly reduce execution time and avoid long-running PHP requests.
+
+Recommended safe index to add (run on staging or locally, then deploy to production during a maintenance window):
+
+```
+ALTER TABLE sales ADD INDEX idx_customer_sale_date (customer_id, sale_date);
+```
+
+Notes:
+
+- This index supports GROUP BY / MIN(sale_date) patterns and WHERE filtering by `sale_date` and `customer_id`.
+- Create the index on a staging copy first to verify disk/time impact. For very large tables consider creating the index concurrently (MySQL 5.7+ supports online DDL with ALGORITHM=INPLACE) or using a maintenance window.
+- After adding the index, re-run slow dashboard requests and remove any temporary long-execution workarounds.

@@ -190,8 +190,10 @@ class Product
                 COALESCE(lp.unit_price, 50.00) as unit_price,
                 -- primary_purchase_price: best available supplier price or last purchase price
                 COALESCE(sc.min_supplier_price, lp.unit_price, 50.00) as primary_purchase_price,
-                -- selling_price: derived display price (fallback to unit_price * 1.3)
-                COALESCE(sc.min_supplier_price, lp.unit_price, 50.00) * 1.3 as selling_price,
+                -- selling_price: use actual selling_price from products table
+                COALESCE(p.selling_price, sc.min_supplier_price * 1.3, lp.unit_price * 1.3, 50.00) as selling_price,
+                -- current_average_cost: use the new column if it has data
+                COALESCE(p.current_average_cost, p.purchase_price, sc.min_supplier_price) as current_average_cost,
                 CASE 
                     WHEN COALESCE(SUM(s.quantity), 0) <= p.min_inventory_level THEN 'Low Inventory'
                     WHEN COALESCE(SUM(s.quantity), 0) <= p.reorder_level THEN 'Reorder'
@@ -257,6 +259,19 @@ class Product
         $this->db->execute();
         $result = $this->db->single();
         return $result ? (int) $result->total : 0;
+    }
+
+    public function getTotalInventoryCount()
+    {
+        $this->db->query("
+            SELECT COALESCE(SUM(i.quantity), 0) as total_inventory
+            FROM inventory i
+            WHERE i.product_id IS NOT NULL
+        ");
+
+        $this->db->execute();
+        $result = $this->db->single();
+        return $result ? (int) $result->total_inventory : 0;
     }
 
     public function getProductsForSale()
@@ -438,7 +453,7 @@ class Product
      */
     public function getProductsBySupplier($supplierId)
     {
-        $this->db->query(<<<'SQL'
+        $this->db->query("
             SELECT
                 p.product_id,
                 p.product_name,
@@ -447,39 +462,28 @@ class Product
                 p.image_path,
                 p.description,
                 p.min_inventory_level,
-                p.max_inventory_level,
                 p.reorder_level,
                 c.category_name,
                 b.brand_name,
                 u.unit_name,
-                COALESCE(lp.unit_price, 50.00) AS unit_price,
                 ps.supplier_id,
-                s.supplier_name,
                 ps.purchase_price AS supplier_price,
                 ps.lead_time_days,
                 ps.min_order_quantity,
                 ps.is_primary,
                 ps.supplier_sku AS supplier_product_code,
-                COALESCE((SELECT SUM(inv.quantity) FROM inventory inv WHERE inv.product_id = p.product_id), 0) AS current_inventory,
-                (SELECT MAX(pur.purchase_date) FROM purchase_items poi JOIN purchases pur ON poi.purchase_id = pur.purchase_id WHERE poi.product_id = p.product_id AND pur.status IN ('completed','received')) AS last_ordered_date
+                ps.is_active as status,
+                COALESCE((SELECT SUM(inv.quantity) FROM inventory inv WHERE inv.product_id = p.product_id), 0) AS current_inventory
             FROM products p
             JOIN product_suppliers ps ON p.product_id = ps.product_id AND ps.is_active = 1
-            JOIN suppliers s ON ps.supplier_id = s.supplier_id AND s.deleted_at IS NULL
             LEFT JOIN categories c ON p.category_id = c.category_id
             LEFT JOIN brands b ON p.brand_id = b.brand_id
             LEFT JOIN units u ON p.unit_id = u.unit_id
-            LEFT JOIN (
-                SELECT product_id, AVG(unit_price) as unit_price
-                FROM purchase_items
-                GROUP BY product_id
-            ) lp ON p.product_id = lp.product_id
-            WHERE p.is_active = 1
+            WHERE p.is_active = 1 AND ps.supplier_id = :supplier_id
             ORDER BY p.product_name ASC, ps.purchase_price ASC
-            LIMIT 1000
-    SQL
-        );
-        // Bind supplier id and execute
-        $this->db->bind(':supplierId', $supplierId, \PDO::PARAM_INT);
+            LIMIT 100
+        ");
+        $this->db->bind(':supplier_id', $supplierId);
         $this->db->execute();
         $result = $this->db->resultSet();
         return $result ? $result : [];
@@ -735,6 +739,7 @@ class Product
                 UPDATE products SET 
                     product_name = :product_name,
                     sku = :sku,
+                    model_number = :model_number,
                     supplier_code = :supplier_code,
                     category_id = :category_id,
                     brand_id = :brand_id,
@@ -760,10 +765,11 @@ class Product
             $this->db->bind(':product_id', $id);
             $this->db->bind(':product_name', $data['product_name']);
             $this->db->bind(':sku', $data['sku']);
+            $this->db->bind(':model_number', $data['model_number'] ?? null);
             $this->db->bind(':supplier_code', $data['supplier_code'] ?? null);
             $this->db->bind(':category_id', $data['category_id']);
-            $this->db->bind(':brand_id', $data['brand_id']);
-            $this->db->bind(':unit_id', $data['unit_id']);
+            $this->db->bind(':brand_id', $data['brand_id'] ?? null);
+            $this->db->bind(':unit_id', $data['unit_id'] ?? null);
             $this->db->bind(':product_type', $data['product_type'] ?? 'STANDARD');
             $this->db->bind(':has_expiry', $data['has_expiry'] ?? 0);
             $this->db->bind(':expiry_months', $data['expiry_months'] ?? 0);
@@ -793,7 +799,13 @@ class Product
                    c.category_name, 
                    b.brand_name, 
                    u.unit_name,
-                   COALESCE(SUM(s.quantity), 0) as current_inventory
+                   COALESCE(SUM(s.quantity), 0) as current_inventory,
+                   -- Calculate profit margin correctly using current_average_cost if available, otherwise purchase_price
+                   CASE 
+                       WHEN p.selling_price > 0 AND COALESCE(NULLIF(p.current_average_cost, 0), p.purchase_price, 0) > 0
+                       THEN ROUND(((p.selling_price - COALESCE(NULLIF(p.current_average_cost, 0), p.purchase_price, 0)) / p.selling_price) * 100, 2)
+                       ELSE 0
+                   END as calculated_profit_margin
             FROM products p
             LEFT JOIN categories c ON p.category_id = c.category_id
             LEFT JOIN brands b ON p.brand_id = b.brand_id
@@ -1490,6 +1502,9 @@ class Product
                 ps.lead_time_days,
                 ps.min_order_quantity,
                 ps.is_primary,
+                s.reliability_score,
+                s.on_time_delivery_rate,
+                s.average_delivery_days,
                 COALESCE(SUM(inv.quantity), 0) AS current_inventory
             FROM products p
             JOIN product_suppliers ps ON p.product_id = ps.product_id AND ps.is_active = 1
@@ -1499,7 +1514,8 @@ class Product
             WHERE p.is_active = 1
             GROUP BY p.product_id, p.product_name, p.sku, p.category_id, c.category_name, 
                      ps.supplier_id, s.supplier_name, ps.purchase_price, ps.lead_time_days, 
-                     ps.min_order_quantity, ps.is_primary
+                     ps.min_order_quantity, ps.is_primary, s.reliability_score, 
+                     s.on_time_delivery_rate, s.average_delivery_days
             ORDER BY p.product_name ASC, ps.purchase_price ASC
             LIMIT 2000
         SQL
@@ -1586,7 +1602,7 @@ class Product
         try {
             $this->db->query("
                 UPDATE products 
-                SET price = :price, updated_at = NOW() 
+                SET selling_price = :price, updated_at = NOW() 
                 WHERE product_id = :product_id AND deleted_at IS NULL
             ");
 
@@ -1711,18 +1727,18 @@ class Product
             }
 
             return [
-                'total_products'      => intval($basicStats->total_products ?? 0),
-                'average_margin'      => floatval($basicStats->average_margin ?? 0),
+                'total_products' => intval($basicStats->total_products ?? 0),
+                'average_margin' => floatval($basicStats->average_margin ?? 0),
                 'low_margin_products' => intval($basicStats->low_margin_products ?? 0),
-                'total_gross_margin'  => $totalGrossMargin
+                'total_gross_margin' => $totalGrossMargin
             ];
         } catch (Exception $e) {
             error_log('Error getting price management stats: ' . $e->getMessage());
             return [
-                'total_products'      => 0,
-                'average_margin'      => 0,
+                'total_products' => 0,
+                'average_margin' => 0,
                 'low_margin_products' => 0,
-                'total_gross_margin'  => 0
+                'total_gross_margin' => 0
             ];
         }
     }
@@ -1775,7 +1791,7 @@ class Product
             $offset = isset($filters['offset']) ? max(0, (int) $filters['offset']) : 0;
             $limit = isset($filters['limit']) ? max(1, (int) $filters['limit']) : 200;
 
-            // Fixed query with correct column names and sales data
+            // Dual-cost system: separate purchase price and current average cost
             $sql = "
                 SELECT
                     p.product_id,
@@ -1783,15 +1799,26 @@ class Product
                     p.sku,
                     COALESCE(c.category_name, 'Uncategorized') AS category_name,
                     COALESCE(p.selling_price, 0) AS price,
-                    COALESCE(p.purchase_price, 0) AS cost,
+                    COALESCE(p.current_average_cost, p.purchase_price, ps.purchase_price, 0) AS cost,
                     p.image_path,
                     p.updated_at AS price_updated_at,
                     COALESCE((SELECT SUM(quantity) FROM inventory WHERE product_id = p.product_id), 0) AS stock_quantity,
                     COALESCE(sales_data.total_sold, 0) AS total_sold,
                     COALESCE(sales_data.sales_rank, 9999) AS sales_rank,
-                    COALESCE(sales_data.total_revenue, 0) AS total_revenue
+                    COALESCE(sales_data.total_revenue, 0) AS total_revenue,
+                    COALESCE(p.purchase_price, 0) as base_purchase_price,
+                    COALESCE(p.current_average_cost, 0) as current_average_cost,
+                    COALESCE(ps.purchase_price, 0) as supplier_cost
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.category_id
+                LEFT JOIN (
+                    SELECT 
+                        ps.product_id,
+                        MIN(ps.purchase_price) as purchase_price
+                    FROM product_suppliers ps
+                    WHERE ps.is_active = 1
+                    GROUP BY ps.product_id
+                ) ps ON p.product_id = ps.product_id
                 LEFT JOIN (
                     SELECT 
                         si.product_id,
@@ -1890,4 +1917,421 @@ class Product
             return [];
         }
     }
+
+    /**
+     * Calculate weighted average price for a product
+     * Takes into account current inventory and their purchase prices
+     */
+    public function calculateWeightedAveragePrice($productId, $newQuantity, $newPrice)
+    {
+        try {
+            // Get current inventory quantity (sum all inventory records for this product)
+            $this->db->query("
+                SELECT 
+                    COALESCE(SUM(quantity), 0) as current_stock
+                FROM inventory 
+                WHERE product_id = :product_id
+            ");
+            $this->db->bind(':product_id', $productId);
+            $this->db->execute();
+            $inventoryData = $this->db->single();
+
+            $currentStock = $inventoryData ? $inventoryData->current_stock : 0;
+
+            // Get the current average cost from multiple sources (in order of preference):
+            // 1. Current purchase_price from products table (master inventory cost)
+            // 2. Recent weighted average from last purchase
+            // 3. Average of recent purchase prices
+            // 4. Fallback to new price
+
+            $currentAvgPrice = 0;
+
+            // Try products table purchase_price first (this is the "official" inventory cost)
+            $this->db->query("
+                SELECT purchase_price 
+                FROM products 
+                WHERE product_id = :product_id AND purchase_price > 0
+            ");
+            $this->db->bind(':product_id', $productId);
+            $this->db->execute();
+            $productData = $this->db->single();
+
+            if ($productData && $productData->purchase_price > 0) {
+                $currentAvgPrice = $productData->purchase_price;
+            } else {
+                // Fallback to recent purchase price (most recent actual cost)
+                $this->db->query("
+                    SELECT unit_price 
+                    FROM purchase_items 
+                    WHERE product_id = :product_id 
+                    ORDER BY purchase_item_id DESC 
+                    LIMIT 1
+                ");
+                $this->db->bind(':product_id', $productId);
+                $this->db->execute();
+                $recentPurchase = $this->db->single();
+
+                if ($recentPurchase && $recentPurchase->unit_price > 0) {
+                    $currentAvgPrice = $recentPurchase->unit_price;
+                } else {
+                    // Final fallback: use the new price as estimate for current stock
+                    $currentAvgPrice = $newPrice;
+                }
+            }
+
+            if ($currentStock <= 0) {
+                // No existing inventory, return new price
+                return [
+                    'new_average_price' => $newPrice,
+                    'calculation' => [
+                        'current_stock' => 0,
+                        'current_avg_price' => 0,
+                        'current_total_value' => 0,
+                        'new_quantity' => $newQuantity,
+                        'new_price' => $newPrice,
+                        'new_total_value' => $newQuantity * $newPrice,
+                        'total_stock_after' => $newQuantity,
+                        'total_value_after' => $newQuantity * $newPrice
+                    ]
+                ];
+            }
+
+            // Calculate weighted average
+            $currentTotalValue = $currentStock * $currentAvgPrice;
+            $newTotalValue = $newQuantity * $newPrice;
+            $totalStockAfter = $currentStock + $newQuantity;
+            $totalValueAfter = $currentTotalValue + $newTotalValue;
+
+            $newAveragePrice = $totalStockAfter > 0 ? $totalValueAfter / $totalStockAfter : 0;
+
+            return [
+                'new_average_price' => round($newAveragePrice, 2),
+                'calculation' => [
+                    'current_stock' => $currentStock,
+                    'current_avg_price' => round($currentAvgPrice, 2),
+                    'current_total_value' => round($currentTotalValue, 2),
+                    'new_quantity' => $newQuantity,
+                    'new_price' => $newPrice,
+                    'new_total_value' => round($newTotalValue, 2),
+                    'total_stock_after' => $totalStockAfter,
+                    'total_value_after' => round($totalValueAfter, 2)
+                ]
+            ];
+
+        } catch (Exception $e) {
+            error_log('Error calculating weighted average price: ' . $e->getMessage());
+            return [
+                'new_average_price' => $newPrice,
+                'calculation' => [
+                    'error' => 'Could not calculate weighted average: ' . $e->getMessage()
+                ]
+            ];
+        }
+    }
+
+    /**
+     * Get current inventory summary for a product
+     */
+    public function getCurrentInventorySummary($productId)
+    {
+        try {
+            $this->db->query("
+                SELECT 
+                    p.product_name,
+                    COALESCE(SUM(inv.quantity), 0) as current_stock,
+                    COALESCE(AVG(pi.unit_price), 0) as avg_purchase_price,
+                    COALESCE(MIN(pi.unit_price), 0) as min_purchase_price,
+                    COALESCE(MAX(pi.unit_price), 0) as max_purchase_price
+                FROM products p
+                LEFT JOIN inventory inv ON p.product_id = inv.product_id
+                LEFT JOIN purchase_items pi ON p.product_id = pi.product_id
+                WHERE p.product_id = :product_id
+                GROUP BY p.product_id, p.product_name
+            ");
+
+            $this->db->bind(':product_id', $productId);
+            $this->db->execute();
+
+            return $this->db->single();
+
+        } catch (Exception $e) {
+            error_log('Error getting inventory summary: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    // =============== BOT HELPER METHODS ===============
+
+    /**
+     * Get total products count for bot dashboard
+     */
+    public function getTotalProducts()
+    {
+        try {
+            $this->db->query("SELECT COUNT(*) as total FROM products WHERE is_active = 1 AND deleted_at IS NULL");
+            $result = $this->db->executeSingle();
+            return $result->total ?? 0;
+        } catch (Exception $e) {
+            error_log('Error getting total products: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Get random products for bot operations
+     */
+    public function getRandomProducts($limit = 5)
+    {
+        try {
+            $this->db->query("
+                SELECT product_id, product_name, sku, purchase_price as cost, selling_price as price
+                FROM products 
+                WHERE is_active = 1 AND deleted_at IS NULL 
+                ORDER BY RAND() 
+                LIMIT :limit
+            ");
+            $this->db->bind(':limit', $limit);
+            $this->db->execute();
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log('Error getting random products: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get random products that are in stock for sales bot
+     */
+    public function getRandomProductsInStock($limit = 5)
+    {
+        try {
+            $this->db->query("
+                SELECT p.product_id, p.product_name, p.sku, p.purchase_price as cost, p.selling_price as price, i.quantity as stock_quantity
+                FROM products p
+                LEFT JOIN inventory i ON p.product_id = i.product_id
+                WHERE p.is_active = 1 AND p.deleted_at IS NULL 
+                AND COALESCE(i.quantity, 0) > 0
+                ORDER BY RAND() 
+                LIMIT :limit
+            ");
+            $this->db->bind(':limit', $limit);
+            $this->db->execute();
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log('Error getting random products in stock: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get products with profit margin calculation for smart sales bot
+     */
+    public function getProductsWithProfitMargins($limit = 10)
+    {
+        try {
+            // Use current average cost / primary purchase price / unit price / purchase_price
+            // and aggregate inventory quantities across locations to match UI calculations.
+            $this->db->query("
+                SELECT p.product_id as product_id, p.product_id as id,
+                       p.product_name,
+                       p.sku,
+                       p.purchase_price,
+                       p.current_average_cost,
+                       p.selling_price,
+                       COALESCE((SELECT SUM(quantity) FROM inventory WHERE product_id = p.product_id), 0) as current_stock,
+                       -- treat 0 as NULL for current_average_cost so fallback to purchase_price works
+                       COALESCE(NULLIF(p.current_average_cost, 0), p.purchase_price, 0) as cost,
+                       CASE
+                           WHEN p.selling_price > 0
+                           THEN ROUND(((p.selling_price - COALESCE(NULLIF(p.current_average_cost, 0), p.purchase_price, 0)) / p.selling_price) * 100, 2)
+                           ELSE 0
+                       END as profit_margin_percent,
+                       (p.selling_price - COALESCE(NULLIF(p.current_average_cost, 0), p.purchase_price, 0)) as profit_amount
+                FROM products p
+                WHERE p.is_active = 1
+                AND p.deleted_at IS NULL
+                AND COALESCE((SELECT SUM(quantity) FROM inventory WHERE product_id = p.product_id), 0) > 0
+                AND p.selling_price > 0
+                AND COALESCE(NULLIF(p.current_average_cost, 0), p.purchase_price, 0) > 0
+                ORDER BY profit_margin_percent DESC, RAND()
+                LIMIT :limit
+            ");
+            $this->db->bind(':limit', $limit);
+            $this->db->execute();
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log('Error getting products with profit margins: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get KPI statistics for all products (not paginated)
+     * Used for dashboard KPI cards that should show all products data
+     */
+    public function getAllProductsKpiStats()
+    {
+        try {
+            $stats = [];
+
+            // Total products count
+            $this->db->query("
+                SELECT COUNT(*) as total_products
+                FROM products p
+                WHERE p.is_active = 1 AND p.deleted_at IS NULL
+            ");
+            $this->db->execute();
+            $result = $this->db->single();
+            $stats['total_products'] = $result ? (int) $result->total_products : 0;
+
+            // Total inventory count (sum all inventory)
+            $this->db->query("
+                SELECT COALESCE(SUM(i.quantity), 0) as total_inventory
+                FROM inventory i
+                INNER JOIN products p ON i.product_id = p.product_id
+                WHERE p.is_active = 1 AND p.deleted_at IS NULL
+            ");
+            $this->db->execute();
+            $result = $this->db->single();
+            $stats['total_inventory'] = $result ? (int) $result->total_inventory : 0;
+
+            // Average margin calculation (across all products with valid prices)
+            $this->db->query("
+                SELECT AVG(
+                    CASE 
+                        WHEN p.selling_price > 0 AND 
+                             COALESCE(NULLIF(p.current_average_cost, 0), p.purchase_price, 0) > 0
+                        THEN ((p.selling_price - COALESCE(NULLIF(p.current_average_cost, 0), p.purchase_price, 0)) / p.selling_price) * 100
+                        ELSE NULL
+                    END
+                ) as avg_margin
+                FROM products p
+                WHERE p.is_active = 1 AND p.deleted_at IS NULL
+                AND p.selling_price > 0
+                AND COALESCE(NULLIF(p.current_average_cost, 0), p.purchase_price, 0) > 0
+            ");
+            $this->db->execute();
+            $result = $this->db->single();
+            $stats['avg_margin'] = $result && $result->avg_margin !== null ? (float) $result->avg_margin : null;
+
+            // Products needing reorder (across all products)
+            $this->db->query("
+                SELECT COUNT(*) as need_reorder
+                FROM products p
+                LEFT JOIN (
+                    SELECT product_id, SUM(quantity) as total_quantity 
+                    FROM inventory 
+                    GROUP BY product_id
+                ) i ON p.product_id = i.product_id
+                WHERE p.is_active = 1 AND p.deleted_at IS NULL
+                AND COALESCE(i.total_quantity, 0) <= COALESCE(p.reorder_level, 10)
+            ");
+            $this->db->execute();
+            $result = $this->db->single();
+            $stats['need_reorder'] = $result ? (int) $result->need_reorder : 0;
+
+            return $stats;
+        } catch (Exception $e) {
+            error_log('Error getting all products KPI stats: ' . $e->getMessage());
+            return [
+                'total_products' => 0,
+                'total_inventory' => 0,
+                'avg_margin' => null,
+                'need_reorder' => 0
+            ];
+        }
+    }
+
+    /**
+     * Check if a product-supplier relationship already exists (including inactive ones)
+     */
+    public function getProductSupplierLink($productId, $supplierId)
+    {
+        try {
+            $this->db->query("
+                SELECT * FROM product_suppliers 
+                WHERE product_id = :product_id AND supplier_id = :supplier_id
+            ");
+            $this->db->bind(':product_id', $productId);
+            $this->db->bind(':supplier_id', $supplierId);
+            $this->db->execute();
+            return $this->db->single();
+        } catch (Exception $e) {
+            error_log("Error checking product supplier link: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Link a supplier to a product (insert or update if exists)
+     */
+    public function linkSupplier($productId, $supplierId, $purchasePrice, $leadTimeDays = 7, $minOrderQuantity = 1, $supplierSku = null, $supplierNotes = '', $supplierRating = 4, $isActive = 1)
+    {
+        try {
+            // Log the parameters being passed
+            error_log("LinkSupplier parameters: productId=$productId, supplierId=$supplierId, purchasePrice=$purchasePrice");
+
+            // Check if a relationship already exists (including inactive ones)
+            $existingLink = $this->getProductSupplierLink($productId, $supplierId);
+
+            if ($existingLink) {
+                // Update existing record
+                error_log("LinkSupplier: Updating existing relationship");
+                $this->db->query("
+                    UPDATE product_suppliers SET 
+                        supplier_sku = :supplier_sku,
+                        purchase_price = :purchase_price,
+                        min_order_quantity = :min_order_quantity,
+                        lead_time_days = :lead_time_days,
+                        notes = :notes,
+                        quality_rating = :quality_rating,
+                        is_active = :is_active,
+                        updated_at = NOW()
+                    WHERE product_id = :product_id AND supplier_id = :supplier_id
+                ");
+
+                $this->db->bind(':product_id', (int) $productId);
+                $this->db->bind(':supplier_id', (int) $supplierId);
+                $this->db->bind(':supplier_sku', $supplierSku);
+                $this->db->bind(':purchase_price', (float) $purchasePrice);
+                $this->db->bind(':min_order_quantity', (int) $minOrderQuantity);
+                $this->db->bind(':lead_time_days', (int) $leadTimeDays);
+                $this->db->bind(':notes', $supplierNotes);
+                $this->db->bind(':quality_rating', (float) $supplierRating);
+                $this->db->bind(':is_active', (int) $isActive);
+            } else {
+                // Insert new record
+                error_log("LinkSupplier: Inserting new relationship");
+                $this->db->query("
+                    INSERT INTO product_suppliers (
+                        product_id, supplier_id, supplier_sku, purchase_price, 
+                        min_order_quantity, lead_time_days, notes, quality_rating, is_active
+                    ) VALUES (
+                        :product_id, :supplier_id, :supplier_sku, :purchase_price, 
+                        :min_order_quantity, :lead_time_days, :notes, :quality_rating, :is_active
+                    )
+                ");
+
+                $this->db->bind(':product_id', (int) $productId);
+                $this->db->bind(':supplier_id', (int) $supplierId);
+                $this->db->bind(':supplier_sku', $supplierSku);
+                $this->db->bind(':purchase_price', (float) $purchasePrice);
+                $this->db->bind(':min_order_quantity', (int) $minOrderQuantity);
+                $this->db->bind(':lead_time_days', (int) $leadTimeDays);
+                $this->db->bind(':notes', $supplierNotes);
+                $this->db->bind(':quality_rating', (float) $supplierRating);
+                $this->db->bind(':is_active', (int) $isActive);
+            }
+
+            $result = $this->db->execute();
+            error_log("LinkSupplier execute result: " . ($result ? 'success' : 'failed'));
+
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error linking supplier to product: " . $e->getMessage());
+            error_log("LinkSupplier exception stack trace: " . $e->getTraceAsString());
+            return false;
+        }
+    }
 }
+?>

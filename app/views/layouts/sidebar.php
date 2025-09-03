@@ -11,7 +11,7 @@ $sidebarItems = getSidebarItems($userRole, $roleId);
             <img src="<?php echo URLROOT . '/' . htmlspecialchars($logoPath); ?>" alt="Logo"
                 style="max-height:34px;max-width:48px;object-fit:contain;display:block;">
         <?php endif; ?>
-        <span style="font-weight:600;font-size:1.05rem;line-height:1.1;letter-spacing:.5px;">
+        <span class="brand-title" style="font-weight:600;font-size:1.05rem;line-height:1.1;letter-spacing:.5px;">
             <?php echo htmlspecialchars(company_name()); ?>
         </span>
     </div>

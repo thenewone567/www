@@ -43,14 +43,14 @@ class PurchasesController extends Controller
         $purchaseSummary = $this->purchaseModel->getPurchaseSummary();
 
         $data = [
-            'purchases'         => $purchases,
-            'orders'            => $purchases, // Add for backward compatibility with view
-            'summary'           => $purchaseSummary, // Add comprehensive summary for KPI cards
+            'purchases' => $purchases,
+            'orders' => $purchases, // Add for backward compatibility with view
+            'summary' => $purchaseSummary, // Add comprehensive summary for KPI cards
             // Legacy stats for backward compatibility
             'monthly_purchases' => $summaryStats['monthly_purchases'],
-            'pending_orders'    => $summaryStats['pending_orders'],
-            'active_suppliers'  => $summaryStats['active_suppliers'],
-            'items_received'    => $summaryStats['items_received']
+            'pending_orders' => $summaryStats['pending_orders'],
+            'active_suppliers' => $summaryStats['active_suppliers'],
+            'items_received' => $summaryStats['items_received']
         ];
         $this->view('purchases/index', $data);
     }
@@ -63,16 +63,16 @@ class PurchasesController extends Controller
             $_POST = sanitizePost($_POST);
             $postedProducts = isset($_POST['products']) && is_array($_POST['products']) ? $_POST['products'] : [];
             $data = [
-                'supplier_id'          => isset($_POST['supplier_id']) ? trim($_POST['supplier_id']) : '', // optional if multi-supplier
-                'products'             => $postedProducts,
-                'expected_date'        => isset($_POST['expected_date']) ? trim($_POST['expected_date']) : date('Y-m-d', strtotime('+7 days')),
-                'notes'                => isset($_POST['notes']) ? trim($_POST['notes']) : '',
+                'supplier_id' => isset($_POST['supplier_id']) ? trim($_POST['supplier_id']) : '', // optional if multi-supplier
+                'products' => $postedProducts,
+                'expected_date' => isset($_POST['expected_date']) ? trim($_POST['expected_date']) : date('Y-m-d', strtotime('+7 days')),
+                'notes' => isset($_POST['notes']) ? trim($_POST['notes']) : '',
                 'average_price_method' => isset($_POST['average_price_method']) ? 1 : 0,
-                'total_amount'         => '0.00', // will be recomputed
-                'invoice_attachment'   => '',
-                'supplier_id_err'      => '',
-                'total_amount_err'     => '',
-                'products_err'         => ''
+                'total_amount' => '0.00', // will be recomputed
+                'invoice_attachment' => '',
+                'supplier_id_err' => '',
+                'total_amount_err' => '',
+                'products_err' => ''
             ];
 
             // Group items by supplier
@@ -94,7 +94,7 @@ class PurchasesController extends Controller
                 }
                 $supplierGroups[$sid]['items'][] = [
                     'product_id' => $pid,
-                    'quantity'   => $qty,
+                    'quantity' => $qty,
                     'unit_price' => $price
                 ];
                 $supplierGroups[$sid]['total'] += $qty * $price;
@@ -129,21 +129,21 @@ class PurchasesController extends Controller
                 $errors = [];
                 foreach ($supplierGroups as $sid => $group) {
                     $purchaseData = [
-                        'supplier_id'          => $sid,
-                        'total_amount'         => number_format($group['total'], 2, '.', ''),
-                        'expected_date'        => $data['expected_date'],
-                        'notes'                => $data['notes'],
+                        'supplier_id' => $sid,
+                        'total_amount' => number_format($group['total'], 2, '.', ''),
+                        'expected_date' => $data['expected_date'],
+                        'notes' => $data['notes'],
                         'average_price_method' => $data['average_price_method'],
-                        'created_by'           => $_SESSION['user_id'] ?? 0
+                        'created_by' => $_SESSION['user_id'] ?? 0
                     ];
                     $purchase_id = $this->purchaseModel->addPurchase($purchaseData);
                     if ($purchase_id) {
                         foreach ($group['items'] as $it) {
                             $this->purchaseModel->addPurchaseItem([
                                 'purchase_id' => $purchase_id,
-                                'product_id'  => $it['product_id'],
-                                'quantity'    => $it['quantity'],
-                                'unit_price'  => $it['unit_price']
+                                'product_id' => $it['product_id'],
+                                'quantity' => $it['quantity'],
+                                'unit_price' => $it['unit_price']
                             ]);
                         }
                         $created++;
@@ -208,17 +208,17 @@ class PurchasesController extends Controller
                 flash('purchase_message', 'No suppliers found');
             }
             $data = [
-                'supplier_id'          => '',
-                'supplier_id_err'      => '',
-                'total_amount'         => '',
-                'total_amount_err'     => '',
-                'products_err'         => '', // Missing key added
-                'expected_date'        => date('Y-m-d', strtotime('+7 days')), // Missing key added
-                'notes'                => '', // Missing key added
+                'supplier_id' => '',
+                'supplier_id_err' => '',
+                'total_amount' => '',
+                'total_amount_err' => '',
+                'products_err' => '', // Missing key added
+                'expected_date' => date('Y-m-d', strtotime('+7 days')), // Missing key added
+                'notes' => '', // Missing key added
                 'average_price_method' => 0, // Default to unchecked
-                'products'             => $products,
-                'suppliers'            => $suppliers,
-                'session_cart'         => array_values($cartManager->getCart())
+                'products' => $products,
+                'suppliers' => $suppliers,
+                'session_cart' => array_values($cartManager->getCart())
             ];
             $this->view('purchases/add', $data);
         }
@@ -339,9 +339,103 @@ class PurchasesController extends Controller
         echo json_encode(['success' => true]);
     }
 
-    /**
-     * Clear cart session data
-     */
+    // API: calculate weighted average price
+    public function apiCalculateAveragePrice()
+    {
+        header('Content-Type: application/json');
+
+        // Add debugging
+        error_log('API Calculate Average Price called');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log('Invalid request method: ' . $_SERVER['REQUEST_METHOD']);
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        error_log('Input received: ' . json_encode($input));
+
+        $productId = $input['product_id'] ?? null;
+        $newQuantity = $input['quantity'] ?? 0;
+        $newPrice = $input['price'] ?? 0;
+
+        // Allow manual override for testing
+        $manualCurrentStock = $input['manual_current_stock'] ?? null;
+        $manualCurrentPrice = $input['manual_current_price'] ?? null;
+
+        if (!$productId || !$newQuantity || !$newPrice) {
+            error_log('Missing parameters - productId: ' . $productId . ', quantity: ' . $newQuantity . ', price: ' . $newPrice);
+            echo json_encode(['success' => false, 'message' => 'Missing required parameters']);
+            return;
+        }
+
+        try {
+            // If manual parameters provided, use direct calculation
+            if ($manualCurrentStock !== null && $manualCurrentPrice !== null) {
+                $currentStock = (int) $manualCurrentStock;
+                $currentPrice = (float) $manualCurrentPrice;
+
+                if ($currentStock <= 0) {
+                    $result = [
+                        'new_average_price' => $newPrice,
+                        'calculation' => [
+                            'current_stock' => 0,
+                            'current_avg_price' => 0,
+                            'current_total_value' => 0,
+                            'new_quantity' => $newQuantity,
+                            'new_price' => $newPrice,
+                            'new_total_value' => $newQuantity * $newPrice,
+                            'total_stock_after' => $newQuantity,
+                            'total_value_after' => $newQuantity * $newPrice,
+                            'note' => 'Manual override used'
+                        ]
+                    ];
+                } else {
+                    $currentTotalValue = $currentStock * $currentPrice;
+                    $newTotalValue = $newQuantity * $newPrice;
+                    $totalStockAfter = $currentStock + $newQuantity;
+                    $totalValueAfter = $currentTotalValue + $newTotalValue;
+                    $newAveragePrice = $totalValueAfter / $totalStockAfter;
+
+                    $result = [
+                        'new_average_price' => round($newAveragePrice, 2),
+                        'calculation' => [
+                            'current_stock' => $currentStock,
+                            'current_avg_price' => round($currentPrice, 2),
+                            'current_total_value' => round($currentTotalValue, 2),
+                            'new_quantity' => $newQuantity,
+                            'new_price' => $newPrice,
+                            'new_total_value' => round($newTotalValue, 2),
+                            'total_stock_after' => $totalStockAfter,
+                            'total_value_after' => round($totalValueAfter, 2),
+                            'note' => 'Manual override used'
+                        ]
+                    ];
+                }
+            } else {
+                // Use database calculation
+                $result = $this->productModel->calculateWeightedAveragePrice($productId, $newQuantity, $newPrice);
+            }
+
+            $inventorySummary = $this->productModel->getCurrentInventorySummary($productId);
+
+            error_log('Calculation result: ' . json_encode($result));
+
+            echo json_encode([
+                'success' => true,
+                'average_price' => $result['new_average_price'],
+                'calculation' => $result['calculation'],
+                'inventory_summary' => $inventorySummary
+            ]);
+
+        } catch (Exception $e) {
+            error_log('Error in calculation: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error calculating average price: ' . $e->getMessage()]);
+        }
+    }    /**
+         * Clear cart session data
+         */
     public function clearCart()
     {
         $cartManager = CartSessionManager::getInstance();
@@ -389,9 +483,9 @@ class PurchasesController extends Controller
         }
 
         $data = [
-            'title'            => 'Purchase Details - #' . $id,
-            'purchase'         => $purchase,
-            'purchase_items'   => $purchaseItems,
+            'title' => 'Purchase Details - #' . $id,
+            'purchase' => $purchase,
+            'purchase_items' => $purchaseItems,
             'receiving_status' => $receivingStatus
         ];
 
@@ -507,7 +601,7 @@ class PurchasesController extends Controller
             }
 
             $data = [
-                'title'    => 'Confirm Receipt - PO #' . $purchase->po_number,
+                'title' => 'Confirm Receipt - PO #' . $purchase->po_number,
                 'purchase' => $purchase
             ];
 
@@ -716,9 +810,9 @@ class PurchasesController extends Controller
         $overdueOrders = $this->purchaseModel->getOverduePurchaseOrders(7);
 
         $data = [
-            'title'             => 'Purchase Order Approvals',
+            'title' => 'Purchase Order Approvals',
             'pending_approvals' => $pendingApprovals,
-            'overdue_orders'    => $overdueOrders
+            'overdue_orders' => $overdueOrders
         ];
 
         $this->view('purchases/approvals', $data);
@@ -766,15 +860,15 @@ class PurchasesController extends Controller
             $total += $qty * $price;
             $items[] = [
                 'product_id' => $product->product_id,
-                'qty'        => $qty,
-                'price'      => $price
+                'qty' => $qty,
+                'price' => $price
             ];
         }
         // Insert purchase order
         $purchase_id = $this->purchaseModel->addPurchase([
-            'supplier_id'  => $supplier_id,
+            'supplier_id' => $supplier_id,
             'total_amount' => $total,
-            'created_by'   => $_SESSION['user_id'] ?? 0
+            'created_by' => $_SESSION['user_id'] ?? 0
         ]);
         if (!$purchase_id) {
             echo json_encode(['success' => false, 'message' => 'Failed to create purchase order.']);
@@ -784,9 +878,9 @@ class PurchasesController extends Controller
         foreach ($items as $item) {
             $this->purchaseModel->addPurchaseItem([
                 'purchase_id' => $purchase_id,
-                'product_id'  => $item['product_id'],
-                'quantity'    => $item['qty'],
-                'unit_price'  => $item['price']
+                'product_id' => $item['product_id'],
+                'quantity' => $item['qty'],
+                'unit_price' => $item['price']
             ]);
         }
         echo json_encode(['success' => true, 'message' => 'Purchase order created successfully.']);
@@ -883,7 +977,7 @@ class PurchasesController extends Controller
                 if ($barcodeValue) {
                     $existingBarcode = [
                         'barcode_value' => $barcodeValue,
-                        'type'          => 'CODE128'
+                        'type' => 'CODE128'
                     ];
                 }
             } else {
@@ -892,19 +986,19 @@ class PurchasesController extends Controller
 
             if ($existingBarcode) {
                 $barcodeData[] = [
-                    'product_id'        => $item->product_id,
-                    'product_name'      => $item->product_name,
-                    'sku'               => $item->sku ?? '',
-                    'barcode_value'     => $existingBarcode['barcode_value'],
-                    'barcode_type'      => $existingBarcode['type'] ?? 'CODE128',
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product_name,
+                    'sku' => $item->sku ?? '',
+                    'barcode_value' => $existingBarcode['barcode_value'],
+                    'barcode_type' => $existingBarcode['type'] ?? 'CODE128',
                     'quantity_received' => $item->quantity_received ?? $item->quantity,
-                    'location'          => $item->location_name ?? 'Main Warehouse'
+                    'location' => $item->location_name ?? 'Main Warehouse'
                 ];
             }
         }
 
         $data = [
-            'title'    => 'Print Barcodes - Purchase #' . $purchase_id,
+            'title' => 'Print Barcodes - Purchase #' . $purchase_id,
             'purchase' => $purchase,
             'barcodes' => $barcodeData
         ];
@@ -970,10 +1064,10 @@ class PurchasesController extends Controller
         }
 
         echo json_encode([
-            'success'   => true,
+            'success' => true,
             'generated' => $generatedCount,
-            'errors'    => $errors,
-            'message'   => "$generatedCount barcodes generated successfully"
+            'errors' => $errors,
+            'message' => "$generatedCount barcodes generated successfully"
         ]);
         exit;
     }
@@ -1015,7 +1109,7 @@ class PurchasesController extends Controller
 
         $data = [
             'purchases' => $purchases,
-            'title'     => 'Purchase Order History'
+            'title' => 'Purchase Order History'
         ];
         $this->view('purchases/history', $data);
     }
@@ -1034,13 +1128,13 @@ class PurchasesController extends Controller
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'status'              => trim($_POST['status'] ?? ''),
-                'tracking_number'     => trim($_POST['tracking_number'] ?? ''),
-                'expected_date'       => trim($_POST['expected_date'] ?? ''),
-                'notes'               => trim($_POST['notes'] ?? ''),
+                'status' => trim($_POST['status'] ?? ''),
+                'tracking_number' => trim($_POST['tracking_number'] ?? ''),
+                'expected_date' => trim($_POST['expected_date'] ?? ''),
+                'notes' => trim($_POST['notes'] ?? ''),
                 'cancellation_reason' => trim($_POST['cancellation_reason'] ?? ''),
-                'cancelled_action'    => trim($_POST['cancelled_action'] ?? ''),
-                'custom_reason'       => trim($_POST['custom_reason'] ?? '')
+                'cancelled_action' => trim($_POST['cancelled_action'] ?? ''),
+                'custom_reason' => trim($_POST['custom_reason'] ?? '')
             ];
 
             // Handle cancellation fields
@@ -1118,7 +1212,7 @@ class PurchasesController extends Controller
             echo json_encode([
                 'success' => true,
                 'message' => 'Tracking number updated successfully',
-                'status'  => 'in_transit'
+                'status' => 'in_transit'
             ]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to update tracking number']);

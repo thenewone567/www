@@ -111,11 +111,18 @@ class ProductsController extends Controller
         // Get recent product activities (last 50)
         $activities = $this->getRecentActivities(50);
 
+        // Get KPI statistics for all products (not just paginated ones)
+        $kpiStats = $this->productModel->getAllProductsKpiStats();
+
         $data = [
             'products' => $products,
             'categories' => $categories,
             'brands' => $brands,
             'activities' => $activities,
+            // KPI data for cards (all products, not filtered by pagination)
+            'total_inventory' => $kpiStats['total_inventory'],
+            'avg_margin' => $kpiStats['avg_margin'],
+            'need_reorder' => $kpiStats['need_reorder'],
             'pagination' => [
                 'current_page' => $page,
                 'per_page' => $per_page,
@@ -180,6 +187,8 @@ class ProductsController extends Controller
                 'sku' => trim($_POST['sku'] ?? ''),
                 'model_number' => trim($_POST['model_number'] ?? ''),
                 'category_id' => !empty($_POST['category_id']) ? intval($_POST['category_id']) : null,
+                'brand_id' => !empty($_POST['brand_id']) ? intval($_POST['brand_id']) : null,
+                'unit_id' => !empty($_POST['unit_id']) ? intval($_POST['unit_id']) : 1, // Default to unit_id 1 (Piece)
                 'product_type' => trim($_POST['product_type'] ?? ''),
                 'product_status' => trim($_POST['product_status'] ?? 'active'),
                 // Dimensions
@@ -200,7 +209,9 @@ class ProductsController extends Controller
                 // Error fields
                 'product_name_err' => '',
                 'sku_err' => '',
-                'category_id_err' => ''
+                'category_id_err' => '',
+                'brand_id_err' => '',
+                'unit_id_err' => ''
             ];
 
             // Handle file upload
@@ -233,7 +244,8 @@ class ProductsController extends Controller
             // If no errors, add product
             if (
                 empty($data['product_name_err']) && empty($data['sku_err']) &&
-                empty($data['category_id_err'])
+                empty($data['category_id_err']) && empty($data['brand_id_err']) &&
+                empty($data['unit_id_err'])
             ) {
                 // Debug logging
                 error_log('ProductsController::add - Attempting to add product with data: ' . print_r($data, true));
@@ -257,7 +269,9 @@ class ProductsController extends Controller
                 error_log('ProductsController::add - Validation errors: ' . print_r([
                     'product_name_err' => $data['product_name_err'] ?? '',
                     'sku_err' => $data['sku_err'] ?? '',
-                    'category_id_err' => $data['category_id_err'] ?? ''
+                    'category_id_err' => $data['category_id_err'] ?? '',
+                    'brand_id_err' => $data['brand_id_err'] ?? '',
+                    'unit_id_err' => $data['unit_id_err'] ?? ''
                 ], true));
 
                 $data['error'] = 'Submission failed! Please fix the validation errors and try again.';
@@ -265,6 +279,8 @@ class ProductsController extends Controller
 
             // Load form data for redisplay
             $data['categories'] = $this->categoryModel->getCategories();
+            $data['brands'] = $this->brandModel->getBrands();
+            $data['units'] = $this->unitModel->getUnits();
             $this->view('products/add', $data);
 
         } else {
@@ -274,6 +290,8 @@ class ProductsController extends Controller
                 'sku' => '',
                 'model_number' => '',
                 'category_id' => '',
+                'brand_id' => '',
+                'unit_id' => 1, // Default to "Piece"
                 'product_type' => 'STANDARD',
                 'product_status' => 'active',
                 'width' => '',
@@ -285,9 +303,13 @@ class ProductsController extends Controller
                 'has_warranty' => false,
                 'warranty_period' => '',
                 'categories' => $this->categoryModel->getCategories(),
+                'brands' => $this->brandModel->getBrands(),
+                'units' => $this->unitModel->getUnits(),
                 'product_name_err' => '',
                 'sku_err' => '',
-                'category_id_err' => ''
+                'category_id_err' => '',
+                'brand_id_err' => '',
+                'unit_id_err' => ''
             ];
             $this->view('products/add', $data);
         }
@@ -302,10 +324,11 @@ class ProductsController extends Controller
                 'product_id' => $id,
                 'product_name' => trim($_POST['product_name'] ?? ''),
                 'sku' => trim($_POST['sku'] ?? ''),
+                'model_number' => trim($_POST['model_number'] ?? ''),
                 'supplier_code' => trim($_POST['supplier_code'] ?? ''),
                 'category_id' => intval($_POST['category_id'] ?? 0),
-                'brand_id' => intval($_POST['brand_id'] ?? 0),
-                'unit_id' => intval($_POST['unit_id'] ?? 0),
+                'brand_id' => !empty($_POST['brand_id']) ? intval($_POST['brand_id']) : null,
+                'unit_id' => !empty($_POST['unit_id']) ? intval($_POST['unit_id']) : null,
                 'product_type' => trim($_POST['product_type'] ?? 'STANDARD'),
                 'has_expiry' => isset($_POST['has_expiry']) ? 1 : 0,
                 'expiry_months' => intval($_POST['expiry_months'] ?? 0),
@@ -316,7 +339,13 @@ class ProductsController extends Controller
                 'selling_price' => floatval($_POST['selling_price'] ?? 0),
                 'profit_margin' => floatval($_POST['profit_margin'] ?? 0),
                 'weight' => floatval($_POST['weight'] ?? 0),
-                'dimensions' => trim($_POST['dimensions'] ?? ''),
+                // Process individual dimension fields and build JSON
+                'width' => !empty($_POST['width']) ? floatval($_POST['width']) : null,
+                'width_unit' => trim($_POST['width_unit'] ?? 'cm'),
+                'height' => !empty($_POST['height']) ? floatval($_POST['height']) : null,
+                'height_unit' => trim($_POST['height_unit'] ?? 'cm'),
+                'length' => !empty($_POST['length']) ? floatval($_POST['length']) : null,
+                'length_unit' => trim($_POST['length_unit'] ?? 'cm'),
                 'warranty_period' => intval($_POST['warranty_period'] ?? 0),
                 'image_path' => trim($_POST['current_image'] ?? ''),
                 'product_name_err' => '',
@@ -342,7 +371,24 @@ class ProductsController extends Controller
                 }
             }
 
-            // Validation (same as add method)
+            // Build dimensions JSON from individual fields
+            $dimensionsData = [];
+            if (!empty($data['width']))
+                $dimensionsData['width'] = $data['width'];
+            if (!empty($data['width_unit']))
+                $dimensionsData['width_unit'] = $data['width_unit'];
+            if (!empty($data['height']))
+                $dimensionsData['height'] = $data['height'];
+            if (!empty($data['height_unit']))
+                $dimensionsData['height_unit'] = $data['height_unit'];
+            if (!empty($data['length']))
+                $dimensionsData['length'] = $data['length'];
+            if (!empty($data['length_unit']))
+                $dimensionsData['length_unit'] = $data['length_unit'];
+
+            $data['dimensions'] = !empty($dimensionsData) ? json_encode($dimensionsData) : null;
+
+            // Validation (updated for edit form requirements)
             if (empty($data['product_name'])) {
                 $data['product_name_err'] = 'Please enter product name';
             }
@@ -355,40 +401,24 @@ class ProductsController extends Controller
                 $data['category_id_err'] = 'Please select a valid category';
             }
 
-            if ($data['brand_id'] <= 0) {
-                $data['brand_id_err'] = 'Please select a valid brand';
-            }
-
-            if ($data['unit_id'] <= 0) {
-                $data['unit_id_err'] = 'Please select a valid unit';
-            }
+            // Brand is optional - no validation required
+            // Unit validation - but allow 0 as it might be valid
+            // if ($data['unit_id'] <= 0) {
+            //     $data['unit_id_err'] = 'Please select a valid unit';
+            // }
 
             if (empty($data['product_type']) || !in_array($data['product_type'], ['STANDARD', 'BULK', 'OVERSIZED', 'FRAGILE', 'HAZMAT'])) {
                 $data['product_type_err'] = 'Please select a valid product type';
             }
 
-            if (empty($data['purchase_price']) || $data['purchase_price'] <= 0) {
-                $data['purchase_price_err'] = 'Please enter a valid purchase price';
-            }
-
-            if (empty($data['selling_price']) || $data['selling_price'] <= 0) {
-                $data['selling_price_err'] = 'Please enter a valid selling price';
-            }
-
-            if (
-                !empty($data['purchase_price']) && !empty($data['selling_price']) &&
-                $data['selling_price'] <= $data['purchase_price']
-            ) {
-                $data['selling_price_err'] = 'Selling price must be higher than purchase price';
-            }
+            // Purchase price and selling price are readonly in edit form - no validation
+            // They are managed through separate supplier pricing workflow
 
             // If no errors, update product
             if (
-                empty($data['product_name_err']) && empty($data['sku_err']) && empty($data['category_id_err']) &&
-                empty($data['brand_id_err']) && empty($data['unit_id_err']) && empty($data['product_type_err']) &&
-                empty($data['purchase_price_err']) && empty($data['selling_price_err'])
+                empty($data['product_name_err']) && empty($data['sku_err']) &&
+                empty($data['category_id_err']) && empty($data['product_type_err'])
             ) {
-
                 if ($this->productModel->updateProduct($id, $data)) {
                     flash('product_message', 'Product Updated Successfully');
                     redirect('products');
@@ -410,10 +440,17 @@ class ProductsController extends Controller
                 redirect('products');
             }
 
+            // Parse dimensions JSON to individual fields
+            $dimensionsData = [];
+            if (!empty($product->dimensions)) {
+                $dimensionsData = json_decode($product->dimensions, true) ?? [];
+            }
+
             $data = [
                 'product_id' => $product->product_id,
                 'product_name' => $product->product_name,
                 'sku' => $product->sku,
+                'model_number' => $product->model_number ?? '',
                 'supplier_code' => $product->supplier_code ?? '',
                 'category_id' => $product->category_id,
                 'brand_id' => $product->brand_id,
@@ -428,6 +465,13 @@ class ProductsController extends Controller
                 'selling_price' => $product->selling_price ?? 0,
                 'profit_margin' => $product->profit_margin ?? 0,
                 'weight' => $product->weight ?? 0,
+                // Parse individual dimension fields from JSON
+                'width' => $dimensionsData['width'] ?? '',
+                'width_unit' => $dimensionsData['width_unit'] ?? 'cm',
+                'height' => $dimensionsData['height'] ?? '',
+                'height_unit' => $dimensionsData['height_unit'] ?? 'cm',
+                'length' => $dimensionsData['length'] ?? '',
+                'length_unit' => $dimensionsData['length_unit'] ?? 'cm',
                 'dimensions' => $product->dimensions ?? '',
                 'warranty_period' => $product->warranty_period ?? 0,
                 'image_path' => $product->image_path,
@@ -449,15 +493,36 @@ class ProductsController extends Controller
 
     public function delete($id)
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            if ($this->productModel->deleteProduct($id)) {
-                flash('product_message', 'Product Removed');
-                redirect('products');
-            } else {
-                die('Something went wrong');
-            }
-        } else {
+        // Backwards-compatible alias to deactivate
+        $this->deactivate($id);
+    }
+
+    public function deactivate($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
             redirect('products');
+            return;
+        }
+
+        $isAjax = (
+            (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+            (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) ||
+            (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)
+        );
+
+        $result = $this->productModel->deleteProduct($id);
+
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => (bool) $result, 'message' => $result ? 'Product deactivated' : 'Failed to deactivate product']);
+            return;
+        }
+
+        if ($result) {
+            flash('product_message', 'Product Deactivated');
+            redirect('products');
+        } else {
+            die('Something went wrong');
         }
     }
 
@@ -1084,20 +1149,19 @@ class ProductsController extends Controller
             // Check if relationship already exists
             $existingLink = $this->productModel->getProductSupplierLink($productId, $supplierId);
             error_log("LinkSupplier: Existing link check: " . ($existingLink ? 'exists' : 'does not exist'));
-            if ($existingLink) {
-                throw new Exception('Supplier is already linked to this product');
+
+            if ($existingLink && $existingLink->is_active == 1) {
+                throw new Exception('Supplier is already actively linked to this product');
             }
 
-            // Create the link
+            // If relationship exists but is inactive, we'll update it. If it doesn't exist, we'll create it.
+            // The linkSupplier method handles both cases automatically.
+
+            // Create the link - using simplified method with only essential parameters
             $success = $this->productModel->linkSupplier(
                 $productId,
                 $supplierId,
-                $purchasePrice,    // purchase_price from form
-                $leadTimeDays,     // lead_time_days from form
-                $minOrderQuantity, // min_order_quantity from form  
-                $supplierSku,      // supplier_sku from form
-                $supplierNotes,    // supplier_notes from form
-                $supplierRating    // supplier_rating from form
+                $purchasePrice
             );
             error_log("LinkSupplier: Link creation result: " . ($success ? 'success' : 'failed'));
 
@@ -1110,7 +1174,19 @@ class ProductsController extends Controller
                     'message' => 'Supplier linked successfully'
                 ]);
             } else {
-                throw new Exception('Failed to link supplier');
+                // Add more debugging info to the response
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Failed to link supplier',
+                    'debug' => [
+                        'productId' => $productId,
+                        'supplierId' => $supplierId,
+                        'purchasePrice' => $purchasePrice,
+                        'productExists' => $product ? true : false,
+                        'supplierExists' => $supplier ? true : false
+                    ]
+                ]);
+                return;
             }
 
         } catch (Exception $e) {
@@ -1162,6 +1238,39 @@ class ProductsController extends Controller
 
             // Get product suppliers with supplier details
             $suppliers = $this->productModel->getProductSuppliers($productId);
+
+            // Also fetch product to help detect scaling issues (e.g. purchase_price stored in paise)
+            $product = $this->productModel->getProductById($productId);
+            $product_selling = $product && isset($product->selling_price) ? floatval($product->selling_price) : null;
+
+            // Normalize supplier prices for display without mutating DB: add purchase_price_raw and purchase_price_display
+            foreach ($suppliers as $i => $s) {
+                // support array or object rows
+                $row = is_object($s) ? (array) $s : $s;
+                $rawPrice = isset($row['purchase_price']) ? floatval($row['purchase_price']) : null;
+
+                $normalized = $rawPrice;
+                // Heuristic: if supplier price is much larger than selling price (e.g. >10x), assume it's in paise and divide by 100
+                if ($rawPrice !== null && $product_selling !== null && $product_selling > 0) {
+                    if ($rawPrice / $product_selling > 10) {
+                        $normalized = $rawPrice / 100.0;
+                    }
+                }
+
+                // Fallback: if price is extremely large (e.g. > 10000) and normalized is still large, divide by 100
+                if ($normalized !== null && $normalized > 10000) {
+                    $normalized = $normalized / 100.0;
+                }
+
+                // Attach fields for client consumption
+                if (is_object($s)) {
+                    $s->purchase_price_raw = $rawPrice;
+                    $s->purchase_price_display = function_exists('formatCurrency') ? formatCurrency($normalized ?? 0, 2) : number_format($normalized ?? 0, 2);
+                } else {
+                    $suppliers[$i]['purchase_price_raw'] = $rawPrice;
+                    $suppliers[$i]['purchase_price_display'] = function_exists('formatCurrency') ? formatCurrency($normalized ?? 0, 2) : number_format($normalized ?? 0, 2);
+                }
+            }
 
             echo json_encode([
                 'success' => true,
@@ -1329,47 +1438,7 @@ class ProductsController extends Controller
         }
     }
 
-    /**
-     * Set primary supplier for a product
-     */
-    public function setPrimarySupplier()
-    {
-        header('Content-Type: application/json');
-
-        try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new Exception('Method not allowed');
-            }
-
-            $productId = $_POST['product_id'] ?? null;
-            $supplierId = $_POST['supplier_id'] ?? null;
-
-            if (!$productId || !$supplierId) {
-                throw new Exception('Product ID and Supplier ID are required');
-            }
-
-            // Set primary supplier
-            $success = $this->productModel->setPrimarySupplier($productId, $supplierId);
-
-            if ($success) {
-                // Log the activity
-                $this->logActivity('set_primary_supplier', 'product', $productId, "Set primary supplier for product");
-
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Primary supplier set successfully'
-                ]);
-            } else {
-                throw new Exception('Failed to set primary supplier');
-            }
-
-        } catch (Exception $e) {
-            echo json_encode([
-                'success' => false,
-                'message' => $e->getMessage()
-            ]);
-        }
-    }
+    // Removed setPrimarySupplier method - replaced by smart supplier selection
 
     /**
      * Remove supplier from a product

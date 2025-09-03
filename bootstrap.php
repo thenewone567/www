@@ -75,17 +75,20 @@ set_error_handler(function ($severity, $message, $file, $line) {
 
     logError("$message in $file on line $line", [
         "severity" => $severity,
-        "file"     => $file,
-        "line"     => $line
+        "file" => $file,
+        "line" => $line
     ]);
 
-    // Check if this is an AJAX request
+    // Check if this is an AJAX request or API call
     $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
+    $isApiCall = (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) ||
+        (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
+        (strpos($_SERVER['REQUEST_URI'] ?? '', '/admin/executeBot') !== false);
 
     if (APP_ENV === "development") {
-        if ($isAjax) {
-            // For AJAX requests, log error but don't output HTML
-            error_log("AJAX Error: $message in $file on line $line");
+        if ($isAjax || $isApiCall) {
+            // For AJAX/API requests, log error but don't output HTML
+            error_log("AJAX/API Error: $message in $file on line $line");
         } else {
             echo "<div style=\"background: #fee; border: 1px solid #fcc; padding: 10px; margin: 5px;\">";
             echo "<strong>Error:</strong> $message<br>";
@@ -101,17 +104,20 @@ set_error_handler(function ($severity, $message, $file, $line) {
 // Set exception handler  
 set_exception_handler(function ($exception) {
     logError($exception->getMessage(), [
-        "file"  => $exception->getFile(),
-        "line"  => $exception->getLine(),
+        "file" => $exception->getFile(),
+        "line" => $exception->getLine(),
         "trace" => $exception->getTraceAsString()
     ]);
 
-    // Check if this is an AJAX request
+    // Check if this is an AJAX request or API call
     $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
+    $isApiCall = (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) ||
+        (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
+        (strpos($_SERVER['REQUEST_URI'] ?? '', '/admin/executeBot') !== false);
 
     if (APP_ENV === "development") {
-        if ($isAjax) {
-            // For AJAX requests, return JSON error instead of HTML
+        if ($isAjax || $isApiCall) {
+            // For AJAX/API requests, return JSON error instead of HTML
             if (!headers_sent()) {
                 header('Content-Type: application/json');
                 http_response_code(500);
@@ -119,7 +125,7 @@ set_exception_handler(function ($exception) {
             echo json_encode([
                 'success' => false,
                 'message' => 'Server error: ' . $exception->getMessage(),
-                'error'   => 'PHP Exception in ' . basename($exception->getFile()) . ' on line ' . $exception->getLine()
+                'error' => 'PHP Exception in ' . basename($exception->getFile()) . ' on line ' . $exception->getLine()
             ]);
         } else {
             echo "<div style=\"background: #fee; border: 1px solid #fcc; padding: 10px; margin: 5px;\">";
@@ -130,7 +136,7 @@ set_exception_handler(function ($exception) {
             echo "</div>";
         }
     } else {
-        if ($isAjax) {
+        if ($isAjax || $isApiCall) {
             if (!headers_sent()) {
                 header('Content-Type: application/json');
                 http_response_code(500);

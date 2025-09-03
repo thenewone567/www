@@ -296,7 +296,7 @@
                         <i class="fas fa-plus mr-2"></i>Link Another Supplier
                     </button>
                     <button class="btn btn-outline-primary ml-2" id="viewLinkedProductsBtn" style="display: none;">
-                        <i class="fas fa-eye mr-2"></i>View All Links
+                        <i class="fas fa-eye mr-2"></i>View Unlinked Products
                     </button>
                 </div>
             </div>
@@ -307,14 +307,14 @@
 <!-- Success modal removed (success shown inline instead) -->
 </div>
 
-<!-- Linked Products Section (moved to bottom) -->
+<!-- Unlinked Products Section (moved to bottom) -->
 <div class="row mb-4 mt-4">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="fas fa-link text-info mr-2"></i>
-                    Currently Linked Products
+                    Currently Unlinked Products
                 </h5>
             </div>
             <div class="card-body">
@@ -340,61 +340,26 @@
                                     <th>Product Name</th>
                                     <th>SKU</th>
                                     <th>Category</th>
-                                    <th>Supplier</th>
-                                    <th>Price</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($data['supplier_links'] as $link): ?>
-                                    <tr data-product-id="<?php echo htmlspecialchars($link->product_id ?? ''); ?>"
-                                        data-supplier-id="<?php echo htmlspecialchars($link->supplier_id ?? ''); ?>">
-                                        <td><?php echo htmlspecialchars($link->product_name ?? 'N/A'); ?></td>
-                                        <td><?php echo htmlspecialchars($link->sku ?? 'N/A'); ?></td>
-                                        <td><?php echo htmlspecialchars($link->category_name ?? 'N/A'); ?></td>
-                                        <td><?php echo htmlspecialchars($link->supplier_name ?? 'N/A'); ?></td>
-                                        <td>
-                                            <?php
-                                            // Accept several possible property names since different queries may alias the column differently
-                                            $sp = 0.0;
-                                            $priceFound = false;
-                                            if (property_exists($link, 'supplier_price') && $link->supplier_price !== null) {
-                                                $sp = floatval($link->supplier_price);
-                                                $priceFound = true;
-                                            } elseif (property_exists($link, 'purchase_price') && $link->purchase_price !== null) {
-                                                $sp = floatval($link->purchase_price);
-                                                $priceFound = true;
-                                            } elseif (property_exists($link, 'supplier_cost_price') && $link->supplier_cost_price !== null) {
-                                                $sp = floatval($link->supplier_cost_price);
-                                                $priceFound = true;
-                                            } elseif (property_exists($link, 'supplier_cost') && $link->supplier_cost !== null) {
-                                                $sp = floatval($link->supplier_cost);
-                                                $priceFound = true;
-                                            }
-
-                                            // If price field exists (even if zero), display it; otherwise show Not set
-                                            if ($priceFound) {
-                                                echo '₹' . number_format($sp, 2);
-                                            } else {
-                                                echo '<span class="text-muted">Not set</span>';
-                                            }
-                                            ?>
-                                        </td>
+                                <?php foreach ($data['supplier_links'] as $product): ?>
+                                    <tr data-product-id="<?php echo htmlspecialchars($product->product_id ?? ''); ?>">
+                                        <td><?php echo htmlspecialchars($product->product_name ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($product->sku ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($product->category_name ?? 'N/A'); ?></td>
                                         <td>
                                             <span
-                                                class="badge badge-<?php echo ($link->is_active ?? 1) ? 'success' : 'secondary'; ?>">
-                                                <?php echo ($link->is_active ?? 1) ? 'Active' : 'Inactive'; ?>
+                                                class="badge badge-<?php echo ($product->is_active ?? 1) ? 'success' : 'secondary'; ?>">
+                                                <?php echo ($product->is_active ?? 1) ? 'Active' : 'Inactive'; ?>
                                             </span>
                                         </td>
                                         <td>
-                                            <button class="btn btn-danger btn-sm unlink-product-btn"
-                                                data-link-id="<?php echo $link->id ?? ''; ?>">
-                                                <i class="fas fa-unlink"></i> Unlink
-                                            </button>
-                                            <button class="btn btn-primary btn-sm edit-link-btn"
-                                                data-link-id="<?php echo $link->id ?? ''; ?>">
-                                                <i class="fas fa-edit"></i> Edit
+                                            <button class="btn btn-success btn-sm link-product-btn"
+                                                data-product-id="<?php echo htmlspecialchars($product->product_id ?? ''); ?>">
+                                                <i class="fas fa-link"></i> Link Supplier
                                             </button>
                                         </td>
                                     </tr>
@@ -419,9 +384,8 @@
                 <?php else: ?>
                     <div class="alert alert-info text-center">
                         <i class="fas fa-info-circle fa-2x mb-2"></i>
-                        <h5>No Products Linked</h5>
-                        <p class="mb-0">No products are currently linked to suppliers. Use the workflow below to link
-                            products.</p>
+                        <h5>No Unlinked Products</h5>
+                        <p class="mb-0">All products are currently linked to suppliers. No unlinked products found.</p>
                         <?php if (isset($_GET['debug'])): ?>
                             <small class="text-muted">Debug: Empty data array or no supplier_links key found.</small>
                         <?php endif; ?>
@@ -433,8 +397,7 @@
 </div>
 
 <script>
-    class WorkflowManager {
-        constructor() {
+    class WorkflowManager { constructor() {
             this.currentStep = 1;
             this.selectedProduct = null;
             this.selectedSupplier = null;
@@ -860,7 +823,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         window.workflowManager = new WorkflowManager();
 
-        // Delegated handlers for unlink and edit buttons in linked products table
+        // Delegated handlers for link buttons in unlinked products table
         document.body.addEventListener('click', async function (e) {
             // Unlink
             if (e.target.closest && e.target.closest('.unlink-product-btn')) {

@@ -1,0 +1,524 @@
+2025-09-03 03:28:43 - createSmartSale before update product_id=14 total_inventory=23
+2025-09-03 03:28:43 - updateStock called for product_id=14 existing_inventory_id=69 existing_quantity=23 quantityChange=-1
+2025-09-03 03:28:43 - updateStock result for product_id=14 inventory_id=69 new_quantity=22 success=true
+2025-09-03 03:28:43 - createSmartSale after update product_id=14 total_inventory=22
+2025-09-03 03:29:04 - createSmartSale before update product_id=5 total_inventory=32
+2025-09-03 03:29:04 - updateStock called for product_id=5 existing_inventory_id=46 existing_quantity=32 quantityChange=-4
+2025-09-03 03:29:04 - updateStock result for product_id=5 inventory_id=46 new_quantity=28 success=true
+2025-09-03 03:29:04 - createSmartSale after update product_id=5 total_inventory=28
+2025-09-03 03:29:15 - updateStock called for product_id=4 existing_inventory_id=45 existing_quantity=22 quantityChange=14
+2025-09-03 03:29:15 - updateStock result for product_id=4 inventory_id=45 new_quantity=36 success=true
+2025-09-03 03:29:25 - createSmartSale before update product_id=5 total_inventory=26
+2025-09-03 03:29:25 - updateStock called for product_id=5 existing_inventory_id=46 existing_quantity=26 quantityChange=-2
+2025-09-03 03:29:25 - updateStock result for product_id=5 inventory_id=46 new_quantity=24 success=true
+2025-09-03 03:29:25 - createSmartSale after update product_id=5 total_inventory=24
+2025-09-03 03:29:46 - createSmartSale before update product_id=4 total_inventory=32
+2025-09-03 03:29:46 - updateStock called for product_id=4 existing_inventory_id=45 existing_quantity=32 quantityChange=-4
+2025-09-03 03:29:46 - updateStock result for product_id=4 inventory_id=45 new_quantity=28 success=true
+2025-09-03 03:29:46 - createSmartSale after update product_id=4 total_inventory=28
+2025-09-03 03:30:07 - createSmartSale before update product_id=128 total_inventory=12
+2025-09-03 03:30:07 - updateStock called for product_id=128 existing_inventory_id=31 existing_quantity=12 quantityChange=-1
+2025-09-03 03:30:07 - updateStock result for product_id=128 inventory_id=31 new_quantity=11 success=true
+2025-09-03 03:30:07 - createSmartSale after update product_id=128 total_inventory=11
+2025-09-03 03:30:28 - createSmartSale before update product_id=128 total_inventory=9
+2025-09-03 03:30:28 - updateStock called for product_id=128 existing_inventory_id=31 existing_quantity=9 quantityChange=-2
+2025-09-03 03:30:28 - updateStock result for product_id=128 inventory_id=31 new_quantity=7 success=true
+2025-09-03 03:30:28 - createSmartSale after update product_id=128 total_inventory=7
+2025-09-03 03:30:48 - updateStock called for product_id=128 existing_inventory_id=31 existing_quantity=7 quantityChange=29
+2025-09-03 03:30:48 - updateStock result for product_id=128 inventory_id=31 new_quantity=36 success=true
+2025-09-03 03:30:49 - createSmartSale before update product_id=8 total_inventory=33
+2025-09-03 03:30:49 - updateStock called for product_id=8 existing_inventory_id=49 existing_quantity=33 quantityChange=-1
+2025-09-03 03:30:49 - updateStock result for product_id=8 inventory_id=49 new_quantity=32 success=true
+2025-09-03 03:30:49 - createSmartSale after update product_id=8 total_inventory=32
+2025-09-03 03:31:10 - createSmartSale before update product_id=128 total_inventory=32
+2025-09-03 03:31:10 - updateStock called for product_id=128 existing_inventory_id=31 existing_quantity=32 quantityChange=-4
+2025-09-03 03:31:10 - updateStock result for product_id=128 inventory_id=31 new_quantity=28 success=true
+2025-09-03 03:31:10 - createSmartSale after update product_id=128 total_inventory=28
+2025-09-03 12:12:12 - createSmartSale before update product_id=8 total_inventory=28
+2025-09-03 12:12:12 - updateStock called for product_id=8 existing_inventory_id=49 existing_quantity=28 quantityChange=-4
+2025-09-03 12:12:12 - updateStock result for product_id=8 inventory_id=49 new_quantity=24 success=true
+2025-09-03 12:12:12 - createSmartSale after update product_id=8 total_inventory=24
+2025-09-03 12:12:19 - createSmartSale before update product_id=5 total_inventory=22
+2025-09-03 12:12:19 - updateStock called for product_id=5 existing_inventory_id=46 existing_quantity=22 quantityChange=-2
+2025-09-03 12:12:19 - updateStock result for product_id=5 inventory_id=46 new_quantity=20 success=true
+2025-09-03 12:12:19 - createSmartSale after update product_id=5 total_inventory=20
+2025-09-03 12:12:20 - createSmartSale before update product_id=128 total_inventory=26
+2025-09-03 12:12:20 - updateStock called for product_id=128 existing_inventory_id=31 existing_quantity=26 quantityChange=-2
+2025-09-03 12:12:20 - updateStock result for product_id=128 inventory_id=31 new_quantity=24 success=true
+2025-09-03 12:12:20 - createSmartSale after update product_id=128 total_inventory=24
+2025-09-03 12:12:21 - createSmartSale before update product_id=128 total_inventory=23
+2025-09-03 12:12:21 - updateStock called for product_id=128 existing_inventory_id=31 existing_quantity=23 quantityChange=-1
+2025-09-03 12:12:21 - updateStock result for product_id=128 inventory_id=31 new_quantity=22 success=true
+2025-09-03 12:12:21 - createSmartSale after update product_id=128 total_inventory=22
+2025-09-03 12:12:22 - createSmartSale before update product_id=8 total_inventory=20
+2025-09-03 12:12:22 - updateStock called for product_id=8 existing_inventory_id=49 existing_quantity=20 quantityChange=-4
+2025-09-03 12:12:22 - updateStock result for product_id=8 inventory_id=49 new_quantity=16 success=true
+2025-09-03 12:12:22 - createSmartSale after update product_id=8 total_inventory=16
+2025-09-03 12:12:23 - createSmartSale before update product_id=128 total_inventory=19
+2025-09-03 12:12:23 - updateStock called for product_id=128 existing_inventory_id=31 existing_quantity=19 quantityChange=-3
+2025-09-03 12:12:23 - updateStock result for product_id=128 inventory_id=31 new_quantity=16 success=true
+2025-09-03 12:12:23 - createSmartSale after update product_id=128 total_inventory=16
+2025-09-03 12:12:25 - createSmartSale before update product_id=5 total_inventory=19
+2025-09-03 12:12:25 - updateStock called for product_id=5 existing_inventory_id=46 existing_quantity=19 quantityChange=-1
+2025-09-03 12:12:25 - updateStock result for product_id=5 inventory_id=46 new_quantity=18 success=true
+2025-09-03 12:12:25 - createSmartSale after update product_id=5 total_inventory=18
+2025-09-03 12:12:27 - createSmartSale before update product_id=6 total_inventory=48
+2025-09-03 12:12:27 - updateStock called for product_id=6 existing_inventory_id=47 existing_quantity=48 quantityChange=-2
+2025-09-03 12:12:27 - updateStock result for product_id=6 inventory_id=47 new_quantity=46 success=true
+2025-09-03 12:12:27 - createSmartSale after update product_id=6 total_inventory=46
+2025-09-03 12:12:29 - createSmartSale before update product_id=128 total_inventory=15
+2025-09-03 12:12:29 - updateStock called for product_id=128 existing_inventory_id=31 existing_quantity=15 quantityChange=-1
+2025-09-03 12:12:29 - updateStock result for product_id=128 inventory_id=31 new_quantity=14 success=true
+2025-09-03 12:12:29 - createSmartSale after update product_id=128 total_inventory=14
+2025-09-03 12:12:31 - createSmartSale before update product_id=128 total_inventory=13
+2025-09-03 12:12:31 - updateStock called for product_id=128 existing_inventory_id=31 existing_quantity=13 quantityChange=-1
+2025-09-03 12:12:31 - updateStock result for product_id=128 inventory_id=31 new_quantity=12 success=true
+2025-09-03 12:12:31 - createSmartSale after update product_id=128 total_inventory=12
+2025-09-03 12:12:33 - createSmartSale before update product_id=128 total_inventory=9
+2025-09-03 12:12:33 - updateStock called for product_id=128 existing_inventory_id=31 existing_quantity=9 quantityChange=-3
+2025-09-03 12:12:33 - updateStock result for product_id=128 inventory_id=31 new_quantity=6 success=true
+2025-09-03 12:12:33 - createSmartSale after update product_id=128 total_inventory=6
+2025-09-03 12:12:35 - createSmartSale before update product_id=6 total_inventory=43
+2025-09-03 12:12:35 - updateStock called for product_id=6 existing_inventory_id=47 existing_quantity=43 quantityChange=-3
+2025-09-03 12:12:35 - updateStock result for product_id=6 inventory_id=47 new_quantity=40 success=true
+2025-09-03 12:12:35 - createSmartSale after update product_id=6 total_inventory=40
+2025-09-03 12:12:37 - createSmartSale before update product_id=8 total_inventory=13
+2025-09-03 12:12:37 - updateStock called for product_id=8 existing_inventory_id=49 existing_quantity=13 quantityChange=-3
+2025-09-03 12:12:37 - updateStock result for product_id=8 inventory_id=49 new_quantity=10 success=true
+2025-09-03 12:12:37 - createSmartSale after update product_id=8 total_inventory=10
+2025-09-03 12:12:39 - createSmartSale before update product_id=4 total_inventory=25
+2025-09-03 12:12:39 - updateStock called for product_id=4 existing_inventory_id=45 existing_quantity=25 quantityChange=-3
+2025-09-03 12:12:39 - updateStock result for product_id=4 inventory_id=45 new_quantity=22 success=true
+2025-09-03 12:12:39 - createSmartSale after update product_id=4 total_inventory=22
+2025-09-03 12:12:41 - createSmartSale before update product_id=5 total_inventory=16
+2025-09-03 12:12:41 - updateStock called for product_id=5 existing_inventory_id=46 existing_quantity=16 quantityChange=-2
+2025-09-03 12:12:41 - updateStock result for product_id=5 inventory_id=46 new_quantity=14 success=true
+2025-09-03 12:12:41 - createSmartSale after update product_id=5 total_inventory=14
+2025-09-03 12:12:43 - createSmartSale before update product_id=8 total_inventory=8
+2025-09-03 12:12:43 - updateStock called for product_id=8 existing_inventory_id=49 existing_quantity=8 quantityChange=-2
+2025-09-03 12:12:43 - updateStock result for product_id=8 inventory_id=49 new_quantity=6 success=true
+2025-09-03 12:12:43 - createSmartSale after update product_id=8 total_inventory=6
+2025-09-03 12:12:45 - createSmartSale before update product_id=4 total_inventory=18
+2025-09-03 12:12:45 - updateStock called for product_id=4 existing_inventory_id=45 existing_quantity=18 quantityChange=-4
+2025-09-03 12:12:45 - updateStock result for product_id=4 inventory_id=45 new_quantity=14 success=true
+2025-09-03 12:12:45 - createSmartSale after update product_id=4 total_inventory=14
+2025-09-03 12:12:47 - createSmartSale before update product_id=5 total_inventory=11
+2025-09-03 12:12:47 - updateStock called for product_id=5 existing_inventory_id=46 existing_quantity=11 quantityChange=-3
+2025-09-03 12:12:47 - updateStock result for product_id=5 inventory_id=46 new_quantity=8 success=true
+2025-09-03 12:12:47 - createSmartSale after update product_id=5 total_inventory=8
+2025-09-03 12:12:49 - createSmartSale before update product_id=4 total_inventory=11
+2025-09-03 12:12:49 - updateStock called for product_id=4 existing_inventory_id=45 existing_quantity=11 quantityChange=-3
+2025-09-03 12:12:49 - updateStock result for product_id=4 inventory_id=45 new_quantity=8 success=true
+2025-09-03 12:12:49 - createSmartSale after update product_id=4 total_inventory=8
+2025-09-03 12:12:51 - createSmartSale before update product_id=8 total_inventory=3
+2025-09-03 12:12:51 - updateStock called for product_id=8 existing_inventory_id=49 existing_quantity=3 quantityChange=-3
+2025-09-03 12:12:51 - updateStock result for product_id=8 inventory_id=49 new_quantity=0 success=true
+2025-09-03 12:12:51 - createSmartSale after update product_id=8 total_inventory=0
+2025-09-03 12:12:53 - createSmartSale before update product_id=4 total_inventory=6
+2025-09-03 12:12:53 - updateStock called for product_id=4 existing_inventory_id=45 existing_quantity=6 quantityChange=-2
+2025-09-03 12:12:53 - updateStock result for product_id=4 inventory_id=45 new_quantity=4 success=true
+2025-09-03 12:12:53 - createSmartSale after update product_id=4 total_inventory=4
+2025-09-03 12:12:55 - createSmartSale before update product_id=6 total_inventory=39
+2025-09-03 12:12:55 - updateStock called for product_id=6 existing_inventory_id=47 existing_quantity=39 quantityChange=-1
+2025-09-03 12:12:55 - updateStock result for product_id=6 inventory_id=47 new_quantity=38 success=true
+2025-09-03 12:12:55 - createSmartSale after update product_id=6 total_inventory=38
+2025-09-03 12:12:57 - createSmartSale before update product_id=128 total_inventory=3
+2025-09-03 12:12:57 - updateStock called for product_id=128 existing_inventory_id=31 existing_quantity=3 quantityChange=-3
+2025-09-03 12:12:57 - updateStock result for product_id=128 inventory_id=31 new_quantity=0 success=true
+2025-09-03 12:12:57 - createSmartSale after update product_id=128 total_inventory=0
+2025-09-03 12:12:59 - createSmartSale before update product_id=5 total_inventory=7
+2025-09-03 12:12:59 - updateStock called for product_id=5 existing_inventory_id=46 existing_quantity=7 quantityChange=-1
+2025-09-03 12:12:59 - updateStock result for product_id=5 inventory_id=46 new_quantity=6 success=true
+2025-09-03 12:12:59 - createSmartSale after update product_id=5 total_inventory=6
+2025-09-03 12:13:01 - createSmartSale before update product_id=5 total_inventory=4
+2025-09-03 12:13:01 - updateStock called for product_id=5 existing_inventory_id=46 existing_quantity=4 quantityChange=-2
+2025-09-03 12:13:01 - updateStock result for product_id=5 inventory_id=46 new_quantity=2 success=true
+2025-09-03 12:13:01 - createSmartSale after update product_id=5 total_inventory=2
+2025-09-03 12:13:03 - createSmartSale before update product_id=4 total_inventory=0
+2025-09-03 12:13:03 - updateStock called for product_id=4 existing_inventory_id=45 existing_quantity=0 quantityChange=-4
+2025-09-03 12:13:03 - updateStock result for product_id=4 inventory_id=45 new_quantity=0 success=true
+2025-09-03 12:13:03 - createSmartSale after update product_id=4 total_inventory=0
+2025-09-03 12:13:05 - createSmartSale before update product_id=139 total_inventory=99
+2025-09-03 12:13:05 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=59 quantityChange=-2
+2025-09-03 12:13:05 - updateStock result for product_id=139 inventory_id=56 new_quantity=57 success=true
+2025-09-03 12:13:05 - createSmartSale after update product_id=139 total_inventory=97
+2025-09-03 12:13:07 - createSmartSale before update product_id=5 total_inventory=1
+2025-09-03 12:13:07 - updateStock called for product_id=5 existing_inventory_id=46 existing_quantity=1 quantityChange=-1
+2025-09-03 12:13:07 - updateStock result for product_id=5 inventory_id=46 new_quantity=0 success=true
+2025-09-03 12:13:07 - createSmartSale after update product_id=5 total_inventory=0
+2025-09-03 12:13:09 - createSmartSale before update product_id=14 total_inventory=21
+2025-09-03 12:13:09 - updateStock called for product_id=14 existing_inventory_id=69 existing_quantity=21 quantityChange=-1
+2025-09-03 12:13:09 - updateStock result for product_id=14 inventory_id=69 new_quantity=20 success=true
+2025-09-03 12:13:09 - createSmartSale after update product_id=14 total_inventory=20
+2025-09-03 12:13:11 - createSmartSale before update product_id=140 total_inventory=34
+2025-09-03 12:13:11 - updateStock called for product_id=140 existing_inventory_id=68 existing_quantity=34 quantityChange=-2
+2025-09-03 12:13:11 - updateStock result for product_id=140 inventory_id=68 new_quantity=32 success=true
+2025-09-03 12:13:11 - createSmartSale after update product_id=140 total_inventory=32
+2025-09-03 12:13:13 - createSmartSale before update product_id=139 total_inventory=93
+2025-09-03 12:13:13 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=53 quantityChange=-4
+2025-09-03 12:13:13 - updateStock result for product_id=139 inventory_id=56 new_quantity=49 success=true
+2025-09-03 12:13:13 - createSmartSale after update product_id=139 total_inventory=89
+2025-09-03 12:13:15 - createSmartSale before update product_id=122 total_inventory=15
+2025-09-03 12:13:15 - updateStock called for product_id=122 existing_inventory_id=60 existing_quantity=15 quantityChange=-4
+2025-09-03 12:13:15 - updateStock result for product_id=122 inventory_id=60 new_quantity=11 success=true
+2025-09-03 12:13:15 - createSmartSale after update product_id=122 total_inventory=11
+2025-09-03 12:13:17 - createSmartSale before update product_id=122 total_inventory=8
+2025-09-03 12:13:17 - updateStock called for product_id=122 existing_inventory_id=60 existing_quantity=8 quantityChange=-3
+2025-09-03 12:13:17 - updateStock result for product_id=122 inventory_id=60 new_quantity=5 success=true
+2025-09-03 12:13:17 - createSmartSale after update product_id=122 total_inventory=5
+2025-09-03 12:13:19 - createSmartSale before update product_id=9 total_inventory=20
+2025-09-03 12:13:19 - updateStock called for product_id=9 existing_inventory_id=9 existing_quantity=20 quantityChange=-4
+2025-09-03 12:13:19 - updateStock result for product_id=9 inventory_id=9 new_quantity=16 success=true
+2025-09-03 12:13:19 - createSmartSale after update product_id=9 total_inventory=16
+2025-09-03 12:13:21 - createSmartSale before update product_id=13 total_inventory=31
+2025-09-03 12:13:21 - updateStock called for product_id=13 existing_inventory_id=66 existing_quantity=31 quantityChange=-1
+2025-09-03 12:13:21 - updateStock result for product_id=13 inventory_id=66 new_quantity=30 success=true
+2025-09-03 12:13:21 - createSmartSale after update product_id=13 total_inventory=30
+2025-09-03 12:13:23 - createSmartSale before update product_id=122 total_inventory=4
+2025-09-03 12:13:23 - updateStock called for product_id=122 existing_inventory_id=60 existing_quantity=4 quantityChange=-1
+2025-09-03 12:13:23 - updateStock result for product_id=122 inventory_id=60 new_quantity=3 success=true
+2025-09-03 12:13:23 - createSmartSale after update product_id=122 total_inventory=3
+2025-09-03 12:13:25 - createSmartSale before update product_id=139 total_inventory=85
+2025-09-03 12:13:25 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=45 quantityChange=-4
+2025-09-03 12:13:25 - updateStock result for product_id=139 inventory_id=56 new_quantity=41 success=true
+2025-09-03 12:13:25 - createSmartSale after update product_id=139 total_inventory=81
+2025-09-03 12:13:27 - createSmartSale before update product_id=6 total_inventory=36
+2025-09-03 12:13:27 - updateStock called for product_id=6 existing_inventory_id=47 existing_quantity=36 quantityChange=-2
+2025-09-03 12:13:27 - updateStock result for product_id=6 inventory_id=47 new_quantity=34 success=true
+2025-09-03 12:13:27 - createSmartSale after update product_id=6 total_inventory=34
+2025-09-03 12:13:29 - createSmartSale before update product_id=139 total_inventory=80
+2025-09-03 12:13:29 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=40 quantityChange=-1
+2025-09-03 12:13:29 - updateStock result for product_id=139 inventory_id=56 new_quantity=39 success=true
+2025-09-03 12:13:29 - createSmartSale after update product_id=139 total_inventory=79
+2025-09-03 12:13:31 - createSmartSale before update product_id=108 total_inventory=50
+2025-09-03 12:13:31 - updateStock called for product_id=108 existing_inventory_id=32 existing_quantity=50 quantityChange=-1
+2025-09-03 12:13:31 - updateStock result for product_id=108 inventory_id=32 new_quantity=49 success=true
+2025-09-03 12:13:31 - createSmartSale after update product_id=108 total_inventory=49
+2025-09-03 12:13:33 - createSmartSale before update product_id=6 total_inventory=30
+2025-09-03 12:13:33 - updateStock called for product_id=6 existing_inventory_id=47 existing_quantity=30 quantityChange=-4
+2025-09-03 12:13:33 - updateStock result for product_id=6 inventory_id=47 new_quantity=26 success=true
+2025-09-03 12:13:33 - createSmartSale after update product_id=6 total_inventory=26
+2025-09-03 12:13:35 - createSmartSale before update product_id=9 total_inventory=13
+2025-09-03 12:13:35 - updateStock called for product_id=9 existing_inventory_id=9 existing_quantity=13 quantityChange=-3
+2025-09-03 12:13:35 - updateStock result for product_id=9 inventory_id=9 new_quantity=10 success=true
+2025-09-03 12:13:35 - createSmartSale after update product_id=9 total_inventory=10
+2025-09-03 12:13:37 - createSmartSale before update product_id=9 total_inventory=6
+2025-09-03 12:13:37 - updateStock called for product_id=9 existing_inventory_id=9 existing_quantity=6 quantityChange=-4
+2025-09-03 12:13:37 - updateStock result for product_id=9 inventory_id=9 new_quantity=2 success=true
+2025-09-03 12:13:37 - createSmartSale after update product_id=9 total_inventory=2
+2025-09-03 12:13:39 - createSmartSale before update product_id=6 total_inventory=22
+2025-09-03 12:13:39 - updateStock called for product_id=6 existing_inventory_id=47 existing_quantity=22 quantityChange=-4
+2025-09-03 12:13:39 - updateStock result for product_id=6 inventory_id=47 new_quantity=18 success=true
+2025-09-03 12:13:39 - createSmartSale after update product_id=6 total_inventory=18
+2025-09-03 12:13:41 - createSmartSale before update product_id=9 total_inventory=0
+2025-09-03 12:13:41 - updateStock called for product_id=9 existing_inventory_id=9 existing_quantity=0 quantityChange=-2
+2025-09-03 12:13:41 - updateStock result for product_id=9 inventory_id=9 new_quantity=0 success=true
+2025-09-03 12:13:41 - createSmartSale after update product_id=9 total_inventory=0
+2025-09-03 12:13:43 - createSmartSale before update product_id=122 total_inventory=0
+2025-09-03 12:13:43 - updateStock called for product_id=122 existing_inventory_id=60 existing_quantity=0 quantityChange=-3
+2025-09-03 12:13:43 - updateStock result for product_id=122 inventory_id=60 new_quantity=0 success=true
+2025-09-03 12:13:43 - createSmartSale after update product_id=122 total_inventory=0
+2025-09-03 12:13:45 - createSmartSale before update product_id=6 total_inventory=14
+2025-09-03 12:13:45 - updateStock called for product_id=6 existing_inventory_id=47 existing_quantity=14 quantityChange=-4
+2025-09-03 12:13:45 - updateStock result for product_id=6 inventory_id=47 new_quantity=10 success=true
+2025-09-03 12:13:45 - createSmartSale after update product_id=6 total_inventory=10
+2025-09-03 12:13:47 - createSmartSale before update product_id=6 total_inventory=9
+2025-09-03 12:13:47 - updateStock called for product_id=6 existing_inventory_id=47 existing_quantity=9 quantityChange=-1
+2025-09-03 12:13:47 - updateStock result for product_id=6 inventory_id=47 new_quantity=8 success=true
+2025-09-03 12:13:47 - createSmartSale after update product_id=6 total_inventory=8
+2025-09-03 12:13:49 - createSmartSale before update product_id=139 total_inventory=78
+2025-09-03 12:13:49 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=38 quantityChange=-1
+2025-09-03 12:13:49 - updateStock result for product_id=139 inventory_id=56 new_quantity=37 success=true
+2025-09-03 12:13:49 - createSmartSale after update product_id=139 total_inventory=77
+2025-09-03 12:13:51 - createSmartSale before update product_id=139 total_inventory=76
+2025-09-03 12:13:51 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=36 quantityChange=-1
+2025-09-03 12:13:51 - updateStock result for product_id=139 inventory_id=56 new_quantity=35 success=true
+2025-09-03 12:13:51 - createSmartSale after update product_id=139 total_inventory=75
+2025-09-03 12:13:53 - createSmartSale before update product_id=6 total_inventory=6
+2025-09-03 12:13:53 - updateStock called for product_id=6 existing_inventory_id=47 existing_quantity=6 quantityChange=-2
+2025-09-03 12:13:53 - updateStock result for product_id=6 inventory_id=47 new_quantity=4 success=true
+2025-09-03 12:13:53 - createSmartSale after update product_id=6 total_inventory=4
+2025-09-03 12:13:55 - createSmartSale before update product_id=6 total_inventory=2
+2025-09-03 12:13:55 - updateStock called for product_id=6 existing_inventory_id=47 existing_quantity=2 quantityChange=-2
+2025-09-03 12:13:55 - updateStock result for product_id=6 inventory_id=47 new_quantity=0 success=true
+2025-09-03 12:13:55 - createSmartSale after update product_id=6 total_inventory=0
+2025-09-03 12:13:57 - createSmartSale before update product_id=139 total_inventory=74
+2025-09-03 12:13:57 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=34 quantityChange=-1
+2025-09-03 12:13:57 - updateStock result for product_id=139 inventory_id=56 new_quantity=33 success=true
+2025-09-03 12:13:57 - createSmartSale after update product_id=139 total_inventory=73
+2025-09-03 12:13:59 - createSmartSale before update product_id=139 total_inventory=69
+2025-09-03 12:13:59 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=29 quantityChange=-4
+2025-09-03 12:13:59 - updateStock result for product_id=139 inventory_id=56 new_quantity=25 success=true
+2025-09-03 12:13:59 - createSmartSale after update product_id=139 total_inventory=65
+2025-09-03 12:14:01 - createSmartSale before update product_id=139 total_inventory=64
+2025-09-03 12:14:01 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=24 quantityChange=-1
+2025-09-03 12:14:01 - updateStock result for product_id=139 inventory_id=56 new_quantity=23 success=true
+2025-09-03 12:14:01 - createSmartSale after update product_id=139 total_inventory=63
+2025-09-03 12:14:03 - createSmartSale before update product_id=139 total_inventory=60
+2025-09-03 12:14:03 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=20 quantityChange=-3
+2025-09-03 12:14:03 - updateStock result for product_id=139 inventory_id=56 new_quantity=17 success=true
+2025-09-03 12:14:03 - createSmartSale after update product_id=139 total_inventory=57
+2025-09-03 12:14:05 - createSmartSale before update product_id=139 total_inventory=55
+2025-09-03 12:14:05 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=15 quantityChange=-2
+2025-09-03 12:14:05 - updateStock result for product_id=139 inventory_id=56 new_quantity=13 success=true
+2025-09-03 12:14:05 - createSmartSale after update product_id=139 total_inventory=53
+2025-09-03 12:14:07 - createSmartSale before update product_id=139 total_inventory=49
+2025-09-03 12:14:07 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=9 quantityChange=-4
+2025-09-03 12:14:07 - updateStock result for product_id=139 inventory_id=56 new_quantity=5 success=true
+2025-09-03 12:14:07 - createSmartSale after update product_id=139 total_inventory=45
+2025-09-03 12:14:09 - createSmartSale before update product_id=127 total_inventory=34
+2025-09-03 12:14:09 - updateStock called for product_id=127 existing_inventory_id=30 existing_quantity=34 quantityChange=-2
+2025-09-03 12:14:09 - updateStock result for product_id=127 inventory_id=30 new_quantity=32 success=true
+2025-09-03 12:14:09 - createSmartSale after update product_id=127 total_inventory=32
+2025-09-03 12:14:11 - createSmartSale before update product_id=139 total_inventory=44
+2025-09-03 12:14:11 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=4 quantityChange=-1
+2025-09-03 12:14:11 - updateStock result for product_id=139 inventory_id=56 new_quantity=3 success=true
+2025-09-03 12:14:11 - createSmartSale after update product_id=139 total_inventory=43
+2025-09-03 12:14:13 - createSmartSale before update product_id=127 total_inventory=31
+2025-09-03 12:14:13 - updateStock called for product_id=127 existing_inventory_id=30 existing_quantity=31 quantityChange=-1
+2025-09-03 12:14:13 - updateStock result for product_id=127 inventory_id=30 new_quantity=30 success=true
+2025-09-03 12:14:13 - createSmartSale after update product_id=127 total_inventory=30
+2025-09-03 12:14:15 - createSmartSale before update product_id=3 total_inventory=32
+2025-09-03 12:14:15 - updateStock called for product_id=3 existing_inventory_id=54 existing_quantity=32 quantityChange=-1
+2025-09-03 12:14:15 - updateStock result for product_id=3 inventory_id=54 new_quantity=31 success=true
+2025-09-03 12:14:15 - createSmartSale after update product_id=3 total_inventory=31
+2025-09-03 12:14:17 - createSmartSale before update product_id=127 total_inventory=29
+2025-09-03 12:14:17 - updateStock called for product_id=127 existing_inventory_id=30 existing_quantity=29 quantityChange=-1
+2025-09-03 12:14:17 - updateStock result for product_id=127 inventory_id=30 new_quantity=28 success=true
+2025-09-03 12:14:17 - createSmartSale after update product_id=127 total_inventory=28
+2025-09-03 12:14:19 - createSmartSale before update product_id=139 total_inventory=39
+2025-09-03 12:14:19 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-4
+2025-09-03 12:14:19 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:14:19 - createSmartSale after update product_id=139 total_inventory=39
+2025-09-03 12:14:21 - createSmartSale before update product_id=127 total_inventory=26
+2025-09-03 12:14:21 - updateStock called for product_id=127 existing_inventory_id=30 existing_quantity=26 quantityChange=-2
+2025-09-03 12:14:21 - updateStock result for product_id=127 inventory_id=30 new_quantity=24 success=true
+2025-09-03 12:14:21 - createSmartSale after update product_id=127 total_inventory=24
+2025-09-03 12:14:23 - createSmartSale before update product_id=127 total_inventory=21
+2025-09-03 12:14:23 - updateStock called for product_id=127 existing_inventory_id=30 existing_quantity=21 quantityChange=-3
+2025-09-03 12:14:23 - updateStock result for product_id=127 inventory_id=30 new_quantity=18 success=true
+2025-09-03 12:14:23 - createSmartSale after update product_id=127 total_inventory=18
+2025-09-03 12:14:25 - createSmartSale before update product_id=139 total_inventory=37
+2025-09-03 12:14:25 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-2
+2025-09-03 12:14:25 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:14:25 - createSmartSale after update product_id=139 total_inventory=37
+2025-09-03 12:14:27 - createSmartSale before update product_id=3 total_inventory=27
+2025-09-03 12:14:27 - updateStock called for product_id=3 existing_inventory_id=54 existing_quantity=27 quantityChange=-4
+2025-09-03 12:14:27 - updateStock result for product_id=3 inventory_id=54 new_quantity=23 success=true
+2025-09-03 12:14:27 - createSmartSale after update product_id=3 total_inventory=23
+2025-09-03 12:14:29 - createSmartSale before update product_id=127 total_inventory=14
+2025-09-03 12:14:29 - updateStock called for product_id=127 existing_inventory_id=30 existing_quantity=14 quantityChange=-4
+2025-09-03 12:14:29 - updateStock result for product_id=127 inventory_id=30 new_quantity=10 success=true
+2025-09-03 12:14:29 - createSmartSale after update product_id=127 total_inventory=10
+2025-09-03 12:14:31 - createSmartSale before update product_id=3 total_inventory=21
+2025-09-03 12:14:31 - updateStock called for product_id=3 existing_inventory_id=54 existing_quantity=21 quantityChange=-2
+2025-09-03 12:14:31 - updateStock result for product_id=3 inventory_id=54 new_quantity=19 success=true
+2025-09-03 12:14:31 - createSmartSale after update product_id=3 total_inventory=19
+2025-09-03 12:14:33 - createSmartSale before update product_id=139 total_inventory=33
+2025-09-03 12:14:33 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-4
+2025-09-03 12:14:33 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:14:33 - createSmartSale after update product_id=139 total_inventory=33
+2025-09-03 12:14:35 - createSmartSale before update product_id=3 total_inventory=17
+2025-09-03 12:14:35 - updateStock called for product_id=3 existing_inventory_id=54 existing_quantity=17 quantityChange=-2
+2025-09-03 12:14:35 - updateStock result for product_id=3 inventory_id=54 new_quantity=15 success=true
+2025-09-03 12:14:35 - createSmartSale after update product_id=3 total_inventory=15
+2025-09-03 12:14:37 - createSmartSale before update product_id=3 total_inventory=12
+2025-09-03 12:14:37 - updateStock called for product_id=3 existing_inventory_id=54 existing_quantity=12 quantityChange=-3
+2025-09-03 12:14:37 - updateStock result for product_id=3 inventory_id=54 new_quantity=9 success=true
+2025-09-03 12:14:37 - createSmartSale after update product_id=3 total_inventory=9
+2025-09-03 12:14:39 - createSmartSale before update product_id=3 total_inventory=6
+2025-09-03 12:14:39 - updateStock called for product_id=3 existing_inventory_id=54 existing_quantity=6 quantityChange=-3
+2025-09-03 12:14:39 - updateStock result for product_id=3 inventory_id=54 new_quantity=3 success=true
+2025-09-03 12:14:39 - createSmartSale after update product_id=3 total_inventory=3
+2025-09-03 12:14:41 - createSmartSale before update product_id=3 total_inventory=0
+2025-09-03 12:14:41 - updateStock called for product_id=3 existing_inventory_id=54 existing_quantity=0 quantityChange=-3
+2025-09-03 12:14:41 - updateStock result for product_id=3 inventory_id=54 new_quantity=0 success=true
+2025-09-03 12:14:41 - createSmartSale after update product_id=3 total_inventory=0
+2025-09-03 12:14:43 - createSmartSale before update product_id=127 total_inventory=6
+2025-09-03 12:14:43 - updateStock called for product_id=127 existing_inventory_id=30 existing_quantity=6 quantityChange=-4
+2025-09-03 12:14:43 - updateStock result for product_id=127 inventory_id=30 new_quantity=2 success=true
+2025-09-03 12:14:43 - createSmartSale after update product_id=127 total_inventory=2
+2025-09-03 12:14:45 - createSmartSale before update product_id=127 total_inventory=0
+2025-09-03 12:14:45 - updateStock called for product_id=127 existing_inventory_id=30 existing_quantity=0 quantityChange=-2
+2025-09-03 12:14:45 - updateStock result for product_id=127 inventory_id=30 new_quantity=0 success=true
+2025-09-03 12:14:45 - createSmartSale after update product_id=127 total_inventory=0
+2025-09-03 12:14:47 - createSmartSale before update product_id=110 total_inventory=0
+2025-09-03 12:14:47 - updateStock called for product_id=110 existing_inventory_id=55 existing_quantity=0 quantityChange=-8
+2025-09-03 12:14:47 - updateStock result for product_id=110 inventory_id=55 new_quantity=0 success=true
+2025-09-03 12:14:47 - createSmartSale after update product_id=110 total_inventory=0
+2025-09-03 12:14:49 - createSmartSale before update product_id=139 total_inventory=29
+2025-09-03 12:14:49 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-4
+2025-09-03 12:14:49 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:14:49 - createSmartSale after update product_id=139 total_inventory=29
+2025-09-03 12:14:51 - createSmartSale before update product_id=139 total_inventory=28
+2025-09-03 12:14:51 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-1
+2025-09-03 12:14:51 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:14:51 - createSmartSale after update product_id=139 total_inventory=28
+2025-09-03 12:14:53 - createSmartSale before update product_id=139 total_inventory=26
+2025-09-03 12:14:53 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-2
+2025-09-03 12:14:53 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:14:53 - createSmartSale after update product_id=139 total_inventory=26
+2025-09-03 12:14:55 - createSmartSale before update product_id=139 total_inventory=25
+2025-09-03 12:14:55 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-1
+2025-09-03 12:14:55 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:14:55 - createSmartSale after update product_id=139 total_inventory=25
+2025-09-03 12:14:57 - createSmartSale before update product_id=139 total_inventory=24
+2025-09-03 12:14:57 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-1
+2025-09-03 12:14:57 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:14:57 - createSmartSale after update product_id=139 total_inventory=24
+2025-09-03 12:14:59 - createSmartSale before update product_id=139 total_inventory=23
+2025-09-03 12:14:59 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-1
+2025-09-03 12:14:59 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:14:59 - createSmartSale after update product_id=139 total_inventory=23
+2025-09-03 12:15:01 - createSmartSale before update product_id=139 total_inventory=20
+2025-09-03 12:15:01 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-3
+2025-09-03 12:15:01 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:15:01 - createSmartSale after update product_id=139 total_inventory=20
+2025-09-03 12:15:03 - createSmartSale before update product_id=139 total_inventory=17
+2025-09-03 12:15:03 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-3
+2025-09-03 12:15:03 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:15:03 - createSmartSale after update product_id=139 total_inventory=17
+2025-09-03 12:15:05 - createSmartSale before update product_id=139 total_inventory=14
+2025-09-03 12:15:05 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-3
+2025-09-03 12:15:05 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:15:05 - createSmartSale after update product_id=139 total_inventory=14
+2025-09-03 12:15:07 - createSmartSale before update product_id=139 total_inventory=11
+2025-09-03 12:15:07 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-3
+2025-09-03 12:15:07 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:15:07 - createSmartSale after update product_id=139 total_inventory=11
+2025-09-03 12:15:09 - createSmartSale before update product_id=139 total_inventory=9
+2025-09-03 12:15:09 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-2
+2025-09-03 12:15:09 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:15:09 - createSmartSale after update product_id=139 total_inventory=9
+2025-09-03 12:15:11 - createSmartSale before update product_id=139 total_inventory=5
+2025-09-03 12:15:11 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-4
+2025-09-03 12:15:11 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:15:11 - createSmartSale after update product_id=139 total_inventory=5
+2025-09-03 12:15:13 - createSmartSale before update product_id=139 total_inventory=3
+2025-09-03 12:15:13 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-2
+2025-09-03 12:15:13 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:15:13 - createSmartSale after update product_id=139 total_inventory=3
+2025-09-03 12:15:15 - createSmartSale before update product_id=139 total_inventory=1
+2025-09-03 12:15:15 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-2
+2025-09-03 12:15:15 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:15:15 - createSmartSale after update product_id=139 total_inventory=1
+2025-09-03 12:15:17 - createSmartSale before update product_id=139 total_inventory=0
+2025-09-03 12:15:17 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-1
+2025-09-03 12:15:17 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-03 12:15:17 - createSmartSale after update product_id=139 total_inventory=0
+2025-09-03 12:15:19 - createSmartSale before update product_id=7 total_inventory=37
+2025-09-03 12:15:19 - updateStock called for product_id=7 existing_inventory_id=48 existing_quantity=37 quantityChange=-2
+2025-09-03 12:15:19 - updateStock result for product_id=7 inventory_id=48 new_quantity=35 success=true
+2025-09-03 12:15:19 - createSmartSale after update product_id=7 total_inventory=35
+2025-09-03 12:15:21 - createSmartSale before update product_id=7 total_inventory=34
+2025-09-03 12:15:21 - updateStock called for product_id=7 existing_inventory_id=48 existing_quantity=34 quantityChange=-1
+2025-09-03 12:15:21 - updateStock result for product_id=7 inventory_id=48 new_quantity=33 success=true
+2025-09-03 12:15:21 - createSmartSale after update product_id=7 total_inventory=33
+2025-09-03 12:15:23 - createSmartSale before update product_id=7 total_inventory=30
+2025-09-03 12:15:23 - updateStock called for product_id=7 existing_inventory_id=48 existing_quantity=30 quantityChange=-3
+2025-09-03 12:15:23 - updateStock result for product_id=7 inventory_id=48 new_quantity=27 success=true
+2025-09-03 12:15:23 - createSmartSale after update product_id=7 total_inventory=27
+2025-09-03 12:15:25 - createSmartSale before update product_id=7 total_inventory=26
+2025-09-03 12:15:25 - updateStock called for product_id=7 existing_inventory_id=48 existing_quantity=26 quantityChange=-1
+2025-09-03 12:15:25 - updateStock result for product_id=7 inventory_id=48 new_quantity=25 success=true
+2025-09-03 12:15:25 - createSmartSale after update product_id=7 total_inventory=25
+2025-09-03 12:15:27 - createSmartSale before update product_id=7 total_inventory=23
+2025-09-03 12:15:27 - updateStock called for product_id=7 existing_inventory_id=48 existing_quantity=23 quantityChange=-2
+2025-09-03 12:15:27 - updateStock result for product_id=7 inventory_id=48 new_quantity=21 success=true
+2025-09-03 12:15:27 - createSmartSale after update product_id=7 total_inventory=21
+2025-09-03 12:15:29 - createSmartSale before update product_id=7 total_inventory=20
+2025-09-03 12:15:29 - updateStock called for product_id=7 existing_inventory_id=48 existing_quantity=20 quantityChange=-1
+2025-09-03 12:15:29 - updateStock result for product_id=7 inventory_id=48 new_quantity=19 success=true
+2025-09-03 12:15:29 - createSmartSale after update product_id=7 total_inventory=19
+2025-09-03 12:15:31 - createSmartSale before update product_id=7 total_inventory=15
+2025-09-03 12:15:31 - updateStock called for product_id=7 existing_inventory_id=48 existing_quantity=15 quantityChange=-4
+2025-09-03 12:15:31 - updateStock result for product_id=7 inventory_id=48 new_quantity=11 success=true
+2025-09-03 12:15:31 - createSmartSale after update product_id=7 total_inventory=11
+2025-09-03 12:15:33 - createSmartSale before update product_id=7 total_inventory=8
+2025-09-03 12:15:33 - updateStock called for product_id=7 existing_inventory_id=48 existing_quantity=8 quantityChange=-3
+2025-09-03 12:15:33 - updateStock result for product_id=7 inventory_id=48 new_quantity=5 success=true
+2025-09-03 12:15:33 - createSmartSale after update product_id=7 total_inventory=5
+2025-09-03 12:15:35 - createSmartSale before update product_id=7 total_inventory=1
+2025-09-03 12:15:35 - updateStock called for product_id=7 existing_inventory_id=48 existing_quantity=1 quantityChange=-4
+2025-09-03 12:15:35 - updateStock result for product_id=7 inventory_id=48 new_quantity=0 success=true
+2025-09-03 12:15:35 - createSmartSale after update product_id=7 total_inventory=0
+2025-09-03 12:15:37 - createSmartSale before update product_id=142 total_inventory=20
+2025-09-03 12:15:37 - updateStock called for product_id=142 existing_inventory_id=65 existing_quantity=20 quantityChange=-4
+2025-09-03 12:15:37 - updateStock result for product_id=142 inventory_id=65 new_quantity=16 success=true
+2025-09-03 12:15:37 - createSmartSale after update product_id=142 total_inventory=16
+2025-09-03 12:15:39 - createSmartSale before update product_id=142 total_inventory=12
+2025-09-03 12:15:39 - updateStock called for product_id=142 existing_inventory_id=65 existing_quantity=12 quantityChange=-4
+2025-09-03 12:15:39 - updateStock result for product_id=142 inventory_id=65 new_quantity=8 success=true
+2025-09-03 12:15:39 - createSmartSale after update product_id=142 total_inventory=8
+2025-09-03 12:15:41 - createSmartSale before update product_id=142 total_inventory=4
+2025-09-03 12:15:41 - updateStock called for product_id=142 existing_inventory_id=65 existing_quantity=4 quantityChange=-4
+2025-09-03 12:15:41 - updateStock result for product_id=142 inventory_id=65 new_quantity=0 success=true
+2025-09-03 12:15:41 - createSmartSale after update product_id=142 total_inventory=0
+2025-09-03 12:15:43 - createSmartSale before update product_id=14 total_inventory=19
+2025-09-03 12:15:43 - updateStock called for product_id=14 existing_inventory_id=69 existing_quantity=19 quantityChange=-1
+2025-09-03 12:15:43 - updateStock result for product_id=14 inventory_id=69 new_quantity=18 success=true
+2025-09-03 12:15:43 - createSmartSale after update product_id=14 total_inventory=18
+2025-09-03 12:15:45 - createSmartSale before update product_id=123 total_inventory=26
+2025-09-03 12:15:45 - updateStock called for product_id=123 existing_inventory_id=72 existing_quantity=26 quantityChange=-1
+2025-09-03 12:15:45 - updateStock result for product_id=123 inventory_id=72 new_quantity=25 success=true
+2025-09-03 12:15:45 - createSmartSale after update product_id=123 total_inventory=25
+2025-09-03 12:15:47 - createSmartSale before update product_id=140 total_inventory=31
+2025-09-03 12:15:47 - updateStock called for product_id=140 existing_inventory_id=68 existing_quantity=31 quantityChange=-1
+2025-09-03 12:15:47 - updateStock result for product_id=140 inventory_id=68 new_quantity=30 success=true
+2025-09-03 12:15:47 - createSmartSale after update product_id=140 total_inventory=30
+2025-09-03 12:15:49 - createSmartSale before update product_id=140 total_inventory=28
+2025-09-03 12:15:49 - updateStock called for product_id=140 existing_inventory_id=68 existing_quantity=28 quantityChange=-2
+2025-09-03 12:15:49 - updateStock result for product_id=140 inventory_id=68 new_quantity=26 success=true
+2025-09-03 12:15:49 - createSmartSale after update product_id=140 total_inventory=26
+2025-09-03 12:15:51 - createSmartSale before update product_id=113 total_inventory=39
+2025-09-03 12:15:51 - updateStock called for product_id=113 existing_inventory_id=22 existing_quantity=39 quantityChange=-1
+2025-09-03 12:15:51 - updateStock result for product_id=113 inventory_id=22 new_quantity=38 success=true
+2025-09-03 12:15:51 - createSmartSale after update product_id=113 total_inventory=38
+2025-09-03 12:15:53 - createSmartSale before update product_id=108 total_inventory=47
+2025-09-03 12:15:53 - updateStock called for product_id=108 existing_inventory_id=32 existing_quantity=47 quantityChange=-2
+2025-09-03 12:15:53 - updateStock result for product_id=108 inventory_id=32 new_quantity=45 success=true
+2025-09-03 12:15:53 - createSmartSale after update product_id=108 total_inventory=45
+2025-09-03 12:15:54 - createSmartSale before update product_id=132 total_inventory=30
+2025-09-03 12:15:54 - updateStock called for product_id=132 existing_inventory_id=71 existing_quantity=30 quantityChange=-2
+2025-09-03 12:15:54 - updateStock result for product_id=132 inventory_id=71 new_quantity=28 success=true
+2025-09-03 12:15:54 - createSmartSale after update product_id=132 total_inventory=28
+2025-09-03 12:15:55 - createSmartSale before update product_id=113 total_inventory=36
+2025-09-03 12:15:55 - updateStock called for product_id=113 existing_inventory_id=22 existing_quantity=36 quantityChange=-2
+2025-09-03 12:15:55 - updateStock result for product_id=113 inventory_id=22 new_quantity=34 success=true
+2025-09-03 12:15:55 - createSmartSale after update product_id=113 total_inventory=34
+2025-09-03 12:15:56 - createSmartSale before update product_id=108 total_inventory=44
+2025-09-03 12:15:56 - updateStock called for product_id=108 existing_inventory_id=32 existing_quantity=44 quantityChange=-1
+2025-09-03 12:15:56 - updateStock result for product_id=108 inventory_id=32 new_quantity=43 success=true
+2025-09-03 12:15:56 - createSmartSale after update product_id=108 total_inventory=43
+2025-09-03 12:15:57 - createSmartSale before update product_id=130 total_inventory=54
+2025-09-03 12:15:57 - updateStock called for product_id=130 existing_inventory_id=59 existing_quantity=54 quantityChange=-2
+2025-09-03 12:15:57 - updateStock result for product_id=130 inventory_id=59 new_quantity=52 success=true
+2025-09-03 12:15:57 - createSmartSale after update product_id=130 total_inventory=52
+2025-09-03 12:15:58 - createSmartSale before update product_id=130 total_inventory=50
+2025-09-03 12:15:58 - updateStock called for product_id=130 existing_inventory_id=59 existing_quantity=50 quantityChange=-2
+2025-09-03 12:15:58 - updateStock result for product_id=130 inventory_id=59 new_quantity=48 success=true
+2025-09-03 12:15:58 - createSmartSale after update product_id=130 total_inventory=48
+2025-09-03 12:15:59 - createSmartSale before update product_id=108 total_inventory=41
+2025-09-03 12:15:59 - updateStock called for product_id=108 existing_inventory_id=32 existing_quantity=41 quantityChange=-2
+2025-09-03 12:15:59 - updateStock result for product_id=108 inventory_id=32 new_quantity=39 success=true
+2025-09-03 12:15:59 - createSmartSale after update product_id=108 total_inventory=39
+2025-09-03 12:16:00 - createSmartSale before update product_id=17 total_inventory=59
+2025-09-03 12:16:00 - updateStock called for product_id=17 existing_inventory_id=13 existing_quantity=59 quantityChange=-1
+2025-09-03 12:16:00 - updateStock result for product_id=17 inventory_id=13 new_quantity=58 success=true
+2025-09-03 12:16:00 - createSmartSale after update product_id=17 total_inventory=58
+2025-09-03 12:16:02 - createSmartSale before update product_id=112 total_inventory=18
+2025-09-03 12:16:02 - updateStock called for product_id=112 existing_inventory_id=19 existing_quantity=18 quantityChange=-2
+2025-09-03 12:16:02 - updateStock result for product_id=112 inventory_id=19 new_quantity=16 success=true
+2025-09-03 12:16:02 - createSmartSale after update product_id=112 total_inventory=16
+2025-09-03 12:16:03 - createSmartSale before update product_id=13 total_inventory=29
+2025-09-03 12:16:03 - updateStock called for product_id=13 existing_inventory_id=66 existing_quantity=29 quantityChange=-1
+2025-09-03 12:16:03 - updateStock result for product_id=13 inventory_id=66 new_quantity=28 success=true
+2025-09-03 12:16:03 - createSmartSale after update product_id=13 total_inventory=28
+2025-09-03 12:16:04 - createSmartSale before update product_id=14 total_inventory=17
+2025-09-03 12:16:04 - updateStock called for product_id=14 existing_inventory_id=69 existing_quantity=17 quantityChange=-1
+2025-09-03 12:16:04 - updateStock result for product_id=14 inventory_id=69 new_quantity=16 success=true
+2025-09-03 12:16:04 - createSmartSale after update product_id=14 total_inventory=16
+2025-09-03 12:16:05 - createSmartSale before update product_id=108 total_inventory=38
+2025-09-03 12:16:05 - updateStock called for product_id=108 existing_inventory_id=32 existing_quantity=38 quantityChange=-1
+2025-09-03 12:16:05 - updateStock result for product_id=108 inventory_id=32 new_quantity=37 success=true
+2025-09-03 12:16:05 - createSmartSale after update product_id=108 total_inventory=37

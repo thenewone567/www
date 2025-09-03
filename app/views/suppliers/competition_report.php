@@ -139,9 +139,6 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <div>
                                                                 <strong class="text-primary"><?php echo htmlspecialchars($supplier->supplier_name); ?></strong>
-                                                                <?php if ($supplier->is_primary): ?>
-                                                                    <span class="badge badge-primary badge-sm ml-1">Primary</span>
-                                                                <?php endif; ?>
                                                                 <?php if ($supplier->supplier_id == $productData['lowest_supplier']->supplier_id): ?>
                                                                     <span class="badge badge-success badge-sm ml-1">Lowest</span>
                                                                 <?php endif; ?>

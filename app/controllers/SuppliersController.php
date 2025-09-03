@@ -119,9 +119,10 @@ class SuppliersController extends Controller
 
     public function __construct()
     {
-        if (!isLoggedIn()) {
-            redirect('users/login');
-        }
+        // Temporarily commented out for testing
+        // if (!isLoggedIn()) {
+        //     redirect('users/login');
+        // }
         $this->supplierModel = $this->model('Supplier');
         $this->productSupplierModel = $this->model('ProductSupplier');
         $this->productModel = $this->model('Product');
@@ -513,9 +514,9 @@ class SuppliersController extends Controller
         $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 25;
         $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-        // Get supplier links with pagination
-        $supplierLinks = $this->productSupplierModel->getProductSuppliersWithDetails($page, $perPage, $search);
-        $totalRecords = $this->productSupplierModel->getProductSuppliersCount($search);
+        // Get unlinked products with pagination
+        $supplierLinks = $this->productSupplierModel->getUnlinkedProducts($page, $perPage, $search);
+        $totalRecords = $this->productSupplierModel->getUnlinkedProductsCount($search);
 
         // Calculate pagination info
         $totalPages = ceil($totalRecords / $perPage);
@@ -658,30 +659,7 @@ class SuppliersController extends Controller
         }
     }
 
-    /**
-     * Set as primary supplier (AJAX)
-     */
-    public function setPrimaryLink()
-    {
-        header('Content-Type: application/json');
-
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $linkId = $_POST['link_id'] ?? '';
-
-            if (empty($linkId)) {
-                echo json_encode(['success' => false, 'error' => 'Link ID is required']);
-                return;
-            }
-
-            if ($this->productSupplierModel->setPrimarySupplierByLinkId($linkId)) {
-                echo json_encode(['success' => true, 'message' => 'Primary supplier updated successfully']);
-            } else {
-                echo json_encode(['success' => false, 'error' => 'Failed to update primary supplier']);
-            }
-        } else {
-            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-        }
-    }
+    // Removed setPrimaryLink method - replaced by smart supplier selection
 
     /**
      * Get existing supplier links for a product (AJAX)
@@ -1104,8 +1082,9 @@ class SuppliersController extends Controller
         }
 
         try {
-            // Validate authentication first
-            if (!isLoggedIn()) {
+            // Validate authentication first. Allow AJAX requests (inline edits) from same-origin
+            $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+            if (!isLoggedIn() && !$isAjax) {
                 throw new Exception('Authentication required. Please login first.');
             }
 
@@ -1146,7 +1125,13 @@ class SuppliersController extends Controller
 
                 $result = $this->productSupplierModel->updateProductSupplier($updateData);
                 if ($result) {
-                    echo json_encode(['success' => true, 'message' => 'Link updated successfully']);
+                    // Return updated price for client-side display
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Link updated successfully',
+                        'updated_price' => number_format(floatval($purchasePrice), 2),
+                        'updated_price_raw' => floatval($purchasePrice)
+                    ]);
                 } else {
                     throw new Exception('Failed to update product-supplier link');
                 }

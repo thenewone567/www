@@ -84,14 +84,22 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="model_number">Model/Batch Number</label>
+                                <input type="text" class="form-control" id="model_number" name="model_number" 
+                                       value="<?php echo htmlspecialchars($data['model_number'] ?? ''); ?>"
+                                       placeholder="e.g., DCD771C2, A1234-X567">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label for="supplier_code">Supplier Code</label>
                                 <input type="text" class="form-control" id="supplier_code" name="supplier_code" 
                                        value="<?php echo htmlspecialchars($data['supplier_code'] ?? ''); ?>">
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label for="product_type">Product Type</label>
                                 <select class="form-control" id="product_type" name="product_type">
@@ -109,9 +117,9 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="category_id">Category *</label>
+                                <label for="category_id">Category</label>
                                 <select class="form-control <?php echo !empty($data['category_id_err']) ? 'is-invalid' : ''; ?>" 
-                                        id="category_id" name="category_id" required>
+                                        id="category_id" name="category_id">
                                     <option value="">Select Category</option>
                                     <?php if (!empty($data['categories'])): ?>
                                         <?php foreach ($data['categories'] as $category): ?>
@@ -127,9 +135,9 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="brand_id">Brand *</label>
+                                <label for="brand_id">Brand</label>
                                 <select class="form-control <?php echo !empty($data['brand_id_err']) ? 'is-invalid' : ''; ?>" 
-                                        id="brand_id" name="brand_id" required>
+                                        id="brand_id" name="brand_id">
                                     <option value="">Select Brand</option>
                                     <?php if (!empty($data['brands'])): ?>
                                         <?php foreach ($data['brands'] as $brand): ?>
@@ -167,32 +175,32 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="purchase_price">Purchase Price *</label>
+                                <label for="purchase_price">Purchase Price</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">₹</span>
                                     </div>
                                     <input type="number" step="0.01" min="0" 
-                                           class="form-control <?php echo !empty($data['purchase_price_err']) ? 'is-invalid' : ''; ?>" 
+                                           class="form-control" 
                                            id="purchase_price" name="purchase_price" 
-                                           value="<?php echo $data['purchase_price'] ?? 0; ?>" required>
-                                    <div class="invalid-feedback"><?php echo $data['purchase_price_err'] ?? ''; ?></div>
+                                           value="<?php echo $data['purchase_price'] ?? 0; ?>" readonly>
                                 </div>
+                                <small class="form-text text-muted">Managed through supplier pricing system</small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="selling_price">Selling Price *</label>
+                                <label for="selling_price">Selling Price</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">₹</span>
                                     </div>
                                     <input type="number" step="0.01" min="0" 
-                                           class="form-control <?php echo !empty($data['selling_price_err']) ? 'is-invalid' : ''; ?>" 
+                                           class="form-control" 
                                            id="selling_price" name="selling_price" 
-                                           value="<?php echo $data['selling_price'] ?? 0; ?>" required>
-                                    <div class="invalid-feedback"><?php echo $data['selling_price_err'] ?? ''; ?></div>
+                                           value="<?php echo $data['selling_price'] ?? 0; ?>" readonly>
                                 </div>
+                                <small class="form-text text-muted">Calculated automatically from purchase price and margin</small>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -240,14 +248,67 @@
 
                     <!-- Additional Information -->
                     <div class="row">
-                        <div class="col-md-6">
+                        <!-- Dimensions Section - matching add form structure -->
+                        <div class="col-md-4">
                             <div class="form-group">
-                                <label for="dimensions">Dimensions (L x W x H)</label>
-                                <input type="text" class="form-control" id="dimensions" name="dimensions" 
-                                       value="<?php echo htmlspecialchars($data['dimensions'] ?? ''); ?>" 
-                                       placeholder="e.g., 10cm x 5cm x 2cm">
+                                <label for="width" class="form-label small">Width</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="width" 
+                                           name="width" 
+                                           value="<?php echo $data['width'] ?? ''; ?>" 
+                                           placeholder="Width" 
+                                           step="0.01" 
+                                           min="0">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" id="width_unit_display">cm</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="width_unit" id="width_unit" value="cm">
                             </div>
                         </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="height" class="form-label small">Height</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="height" 
+                                           name="height" 
+                                           value="<?php echo $data['height'] ?? ''; ?>" 
+                                           placeholder="Height" 
+                                           step="0.01" 
+                                           min="0">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" id="height_unit_display">cm</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="height_unit" id="height_unit" value="cm">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="length" class="form-label small">Length</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="length" 
+                                           name="length" 
+                                           value="<?php echo $data['length'] ?? ''; ?>" 
+                                           placeholder="Length" 
+                                           step="0.01" 
+                                           min="0">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" id="length_unit_display">cm</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="length_unit" id="length_unit" value="cm">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label for="warranty_period">Warranty (months)</label>
@@ -338,6 +399,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Calculate initial margin
     calculateProfitMargin();
+
+    // Handle dimension unit synchronization
+    function updateDimensionUnits(selectedUnit) {
+        // Update dimension units (width, height, length) - EXCLUDING weight
+        ['width', 'height', 'length'].forEach(dimension => {
+            const unitDisplay = document.getElementById(dimension + '_unit_display');
+            const unitInput = document.getElementById(dimension + '_unit');
+            if (unitDisplay && unitInput) {
+                unitDisplay.textContent = selectedUnit;
+                unitInput.value = selectedUnit;
+            }
+        });
+    }
+
+    // Set initial unit values from the stored data
+    const widthUnit = "<?php echo htmlspecialchars($data['width_unit'] ?? 'cm'); ?>";
+    const heightUnit = "<?php echo htmlspecialchars($data['height_unit'] ?? 'cm'); ?>";
+    const lengthUnit = "<?php echo htmlspecialchars($data['length_unit'] ?? 'cm'); ?>";
+    
+    // Update displays with stored values
+    if (document.getElementById('width_unit_display')) {
+        document.getElementById('width_unit_display').textContent = widthUnit;
+        document.getElementById('width_unit').value = widthUnit;
+    }
+    if (document.getElementById('height_unit_display')) {
+        document.getElementById('height_unit_display').textContent = heightUnit;
+        document.getElementById('height_unit').value = heightUnit;
+    }
+    if (document.getElementById('length_unit_display')) {
+        document.getElementById('length_unit_display').textContent = lengthUnit;
+        document.getElementById('length_unit').value = lengthUnit;
+    }
 });
 </script>
 

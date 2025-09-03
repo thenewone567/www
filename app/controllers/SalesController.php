@@ -66,7 +66,7 @@ class SalesController extends Controller
                         'id' => $product->product_id,
                         'name' => $product->product_name,
                         'sku' => $product->sku,
-                        'price' => number_format($product->sale_price ?? 0, 2),
+                        'price' => number_format($product->selling_price ?? 0, 2),
                         'inventory' => $product->inventory_quantity ?? 0,
                         'barcode' => $product->barcode_value
                     ]
@@ -294,7 +294,7 @@ class SalesController extends Controller
             'name' => $product->product_name,
             'sku' => $product->sku ?? '',
             'category' => $product->category_name ?? 'Uncategorized',
-            'price' => floatval($product->unit_price ?? $product->sale_price ?? 0),
+            'price' => floatval($product->selling_price ?? $product->unit_price ?? 0),
             'inventory' => intval($product->current_Inventory ?? $product->inventory_quantity ?? 0),
             'image' => $product->image_path ?? null,
             'barcode' => $product->barcode_value ?? '',
@@ -347,6 +347,92 @@ class SalesController extends Controller
             'saleItems' => $saleItems
         ];
         $this->view('sales/details', $data);
+    }
+
+    /**
+     * Process POS sale transaction
+     */
+    public function process_sale()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            header('Content-Type: application/json');
+
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            if (!$input) {
+                echo json_encode(['success' => false, 'message' => 'Invalid input data']);
+                return;
+            }
+
+            $customer_id = $input['customer_id'] ?? null;
+            $payment_method = $input['payment_method'] ?? 'cash';
+            $amount_received = $input['amount_received'] ?? 0;
+            $cart_items = $input['cart_items'] ?? [];
+            $total_amount = $input['total_amount'] ?? 0;
+
+            // Validate input
+            if (empty($cart_items)) {
+                echo json_encode(['success' => false, 'message' => 'Cart is empty']);
+                return;
+            }
+
+            if ($total_amount <= 0) {
+                echo json_encode(['success' => false, 'message' => 'Invalid total amount']);
+                return;
+            }
+
+            // Prepare sale data
+            $sale_data = [
+                'customer_id' => !empty($customer_id) ? $customer_id : null,
+                'total_amount' => $total_amount,
+                'payment_mode' => $payment_method,
+                'sale_date' => date('Y-m-d H:i:s')
+            ];
+
+            try {
+                // Add the sale
+                $sale_id = $this->saleModel->addSale($sale_data);
+
+                if ($sale_id) {
+                    // Add sale items
+                    $items_added = 0;
+                    foreach ($cart_items as $item) {
+                        $sale_item_data = [
+                            'sale_id' => $sale_id,
+                            'product_id' => $item['id'],
+                            'quantity' => $item['quantity'],
+                            'unit_price' => $item['price'],
+                            'discount' => 0 // No discount for POS sales for now
+                        ];
+                        $result = $this->saleModel->addSaleItem($sale_item_data);
+                        if ($result) {
+                            $items_added++;
+                        } else {
+                            error_log("Failed to add sale item: " . json_encode($sale_item_data));
+                        }
+                    }
+
+                    if ($items_added > 0) {
+                        echo json_encode([
+                            'success' => true,
+                            'message' => 'Sale processed successfully',
+                            'sale_id' => $sale_id,
+                            'items_added' => $items_added,
+                            'change' => max(0, $amount_received - $total_amount)
+                        ]);
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'Sale created but no items were added']);
+                    }
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Failed to create sale']);
+                }
+            } catch (Exception $e) {
+                error_log("POS Sale processing error: " . $e->getMessage());
+                echo json_encode(['success' => false, 'message' => 'Error processing sale']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        }
     }
 
     public function add()

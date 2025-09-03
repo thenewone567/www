@@ -108,6 +108,66 @@ $suppliers = isset($data['suppliers']) && is_array($data['suppliers']) ? $data['
                             </div>
                         </div>
                         
+                        <!-- Brand and Unit Row -->
+                        <div class="row mb-2">
+                            <div class="col-md-6 mb-2">
+                                <label for="brand_id" class="form-label small">Brand</label>
+                                <div class="input-group input-group-sm">
+                                    <select class="form-control <?php echo (!empty($data['brand_id_err'])) ? 'is-invalid' : ''; ?>" 
+                                            id="brand_id" 
+                                            name="brand_id">
+                                        <option value="">Select brand (optional)...</option>
+                                        <?php if (!empty($data['brands'])): ?>
+                                            <?php foreach ($data['brands'] as $brand): ?>
+                                                <?php if (is_object($brand)): ?>
+                                                <option value="<?php echo $brand->brand_id; ?>"
+                                                        <?php echo (($data['brand_id'] ?? '') == $brand->brand_id) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($brand->brand_name); ?>
+                                                </option>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                    <div class="input-group-append">
+                                        <a href="<?php echo URLROOT; ?>/brands" class="btn btn-outline-primary btn-sm" title="Manage Brands">
+                                            <i class="fas fa-cog"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                <?php if (!empty($data['brand_id_err'])): ?>
+                                    <div class="invalid-feedback"><?php echo $data['brand_id_err']; ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label for="unit_id" class="form-label small">Unit</label>
+                                <div class="input-group input-group-sm">
+                                    <select class="form-control <?php echo (!empty($data['unit_id_err'])) ? 'is-invalid' : ''; ?>" 
+                                            id="unit_id" 
+                                            name="unit_id">
+                                        <option value="">Select unit...</option>
+                                        <?php if (!empty($data['units'])): ?>
+                                            <?php foreach ($data['units'] as $unit): ?>
+                                                <?php if (is_object($unit)): ?>
+                                                <option value="<?php echo $unit->unit_id; ?>"
+                                                        <?php echo (($data['unit_id'] ?? '') == $unit->unit_id || ($unit->unit_name == 'Piece' && empty($data['unit_id']))) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($unit->unit_name); ?>
+                                                </option>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                    <div class="input-group-append">
+                                        <a href="<?php echo URLROOT; ?>/units" class="btn btn-outline-primary btn-sm" title="Manage Units">
+                                            <i class="fas fa-cog"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                <?php if (!empty($data['unit_id_err'])): ?>
+                                    <div class="invalid-feedback"><?php echo $data['unit_id_err']; ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
                         <!-- Secondary Information Row -->
                         <div class="row mb-2">
                             <div class="col-md-4 mb-2">

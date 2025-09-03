@@ -55,134 +55,164 @@ function buildPaginationUrl($page, $perPage = null)
 </div>
 
 <div class="container-fluid mt-0 pt-3">
-    <!-- Enhanced KPI Summary Cards (unified .kpi-card markup) -->
+    <!-- Enhanced KPI Summary Cards in 6x2 Grid -->
+    <!-- Row 1: Primary KPIs -->
     <div class="row mb-4">
-        <div class="col-lg-2 col-md-4 mb-3">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
             <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
                         <?php echo isset($data['total_suppliers']) ? $data['total_suppliers'] : '0'; ?>
                     </div>
-                    <div class="kpi-value small">Registered •
-                        <?php echo isset($data['total_suppliers']) ? $data['total_suppliers'] : '0'; ?>
-                    </div>
+                    <div class="kpi-value small">Total Suppliers</div>
                     <div class="kpi-small-spark" aria-hidden="true"></div>
                     <i class="fas fa-users kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 mb-3">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
             <div class="kpi-card kpi-gradient-success shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
                         <?php echo isset($data['active_suppliers']) ? $data['active_suppliers'] : '0'; ?>
                     </div>
-                    <div class="kpi-value small">Active •
-                        <?php echo isset($data['active_suppliers']) ? $data['active_suppliers'] : '0'; ?>
-                    </div>
+                    <div class="kpi-value small">Active Suppliers</div>
                     <div class="kpi-small-spark" aria-hidden="true"></div>
                     <i class="fas fa-check-circle kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 mb-3">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
             <div class="kpi-card kpi-gradient-info shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
                         <?php echo isset($data['avg_delivery_days']) ? number_format($data['avg_delivery_days'], 1) : '0'; ?>
                     </div>
-                    <div class="kpi-value small">Avg Delivery • Days</div>
+                    <div class="kpi-value small">Avg Delivery Days</div>
                     <div class="kpi-small-spark" aria-hidden="true"></div>
                     <i class="fas fa-truck kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 mb-3">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
             <div class="kpi-card kpi-gradient-warning shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
                         <?php echo isset($data['avg_on_time_rate']) ? number_format($data['avg_on_time_rate'], 1) : '0'; ?>%
                     </div>
-                    <div class="kpi-value small">On-Time Rate • Average</div>
+                    <div class="kpi-value small">On-Time Rate</div>
                     <div class="kpi-small-spark" aria-hidden="true"></div>
                     <i class="fas fa-clock kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 mb-3">
-            <div class="kpi-card kpi-gradient-success shadow-sm h-100 special">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="kpi-card kpi-gradient-success shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
                         <?php echo isset($data['gold_tier_suppliers']) ? $data['gold_tier_suppliers'] : '0'; ?>
                     </div>
-                    <div class="kpi-value small">Gold Tier • Suppliers</div>
+                    <div class="kpi-value small">Gold Tier</div>
                     <div class="kpi-small-spark" aria-hidden="true"></div>
                     <i class="fas fa-crown kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 mb-3">
-            <div class="kpi-card kpi-gradient-primary shadow-sm h-100 secondary special">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
                         ₹<?php echo isset($data['total_order_value']) ? number_format($data['total_order_value'] / 100000, 1) : '0'; ?>L
                     </div>
-                    <div class="kpi-value small">Total Value • Order Value</div>
+                    <div class="kpi-value small">Total Order Value</div>
                     <div class="kpi-small-spark" aria-hidden="true"></div>
                     <i class="fas fa-chart-line kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
-    </div> <!-- end of KPI row -->
+    </div>
 
-    <!-- Quick Stats Cards (unified look) -->
+    <!-- Row 2: Secondary KPIs -->
     <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
-                <div class="kpi-body text-center">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="kpi-card kpi-gradient-danger shadow-sm h-100">
+                <div class="kpi-body">
                     <div class="kpi-count">
-                        ₹<?php echo isset($data['total_order_value']) ? number_format($data['total_order_value'] / 100000, 1) : '2.45'; ?>L
+                        <?php echo isset($data['poor_performers_count']) ? $data['poor_performers_count'] : '0'; ?>
                     </div>
-                    <div class="kpi-value small">Total Supplier Value</div>
-                    <i class="fas fa-handshake kpi-icon" aria-hidden="true"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="kpi-card kpi-gradient-success shadow-sm h-100">
-                <div class="kpi-body text-center">
-                    <div class="kpi-count">
-                        <?php echo isset($data['avg_on_time_rate']) ? number_format($data['avg_on_time_rate'], 1) : '85.2'; ?>%
-                    </div>
-                    <div class="kpi-value small">Average On-Time Rate</div>
-                    <i class="fas fa-percentage kpi-icon" aria-hidden="true"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="kpi-card kpi-gradient-warning shadow-sm h-100">
-                <div class="kpi-body text-center">
-                    <div class="kpi-count">
-                        <?php echo isset($data['poor_performers_count']) ? $data['poor_performers_count'] : '3'; ?>
-                    </div>
-                    <div class="kpi-value small">Suppliers Need Attention</div>
+                    <div class="kpi-value small">Need Attention</div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
                     <i class="fas fa-exclamation-triangle kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
             <div class="kpi-card kpi-gradient-info shadow-sm h-100">
-                <div class="kpi-body text-center">
+                <div class="kpi-body">
                     <div class="kpi-count">
-                        <?php echo isset($data['active_suppliers']) ? $data['active_suppliers'] : '8'; ?>
+                        <?php echo isset($data['silver_tier_suppliers']) ? $data['silver_tier_suppliers'] : '0'; ?>
                     </div>
-                    <div class="kpi-value small">Active Partnerships</div>
-                    <i class="fas fa-sync-alt kpi-icon" aria-hidden="true"></i>
+                    <div class="kpi-value small">Silver Tier</div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-medal kpi-icon" aria-hidden="true"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="kpi-card kpi-gradient-secondary shadow-sm h-100">
+                <div class="kpi-body">
+                    <div class="kpi-count">
+                        <?php echo isset($data['bronze_tier_suppliers']) ? $data['bronze_tier_suppliers'] : '0'; ?>
+                    </div>
+                    <div class="kpi-value small">Bronze Tier</div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-award kpi-icon" aria-hidden="true"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="kpi-card kpi-gradient-success shadow-sm h-100">
+                <div class="kpi-body">
+                    <div class="kpi-count">
+                        <?php echo isset($data['avg_quality_rating']) ? number_format($data['avg_quality_rating'], 1) : '0'; ?>
+                    </div>
+                    <div class="kpi-value small">Avg Quality Rating</div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-star kpi-icon" aria-hidden="true"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="kpi-card kpi-gradient-warning shadow-sm h-100">
+                <div class="kpi-body">
+                    <div class="kpi-count">
+                        <?php echo isset($data['pending_orders']) ? $data['pending_orders'] : '0'; ?>
+                    </div>
+                    <div class="kpi-value small">Pending Orders</div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-hourglass-half kpi-icon" aria-hidden="true"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
+                <div class="kpi-body">
+                    <div class="kpi-count">
+                        <?php echo isset($data['total_products_supplied']) ? $data['total_products_supplied'] : '0'; ?>
+                    </div>
+                    <div class="kpi-value small">Products Supplied</div>
+                    <div class="kpi-small-spark" aria-hidden="true"></div>
+                    <i class="fas fa-boxes kpi-icon" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
@@ -1118,7 +1148,7 @@ function buildPaginationUrl($page, $perPage = null)
                     }
                     el = el.parentNode;
                 }
-        });
+            });
         })();
     </script>
 
@@ -1632,7 +1662,7 @@ function buildPaginationUrl($page, $perPage = null)
                 if (notification.parentNode) {
                     notification.parentNode.removeChild(notification);
                 }
-        }, 3000);
+            }, 3000);
         }
     </script>
 

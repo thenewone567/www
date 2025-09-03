@@ -1,0 +1,162 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <title>Receiving Receipt - BOT-PO-20250831112637-4768</title>
+            <style>
+                /* A4 sizing for print */
+                @page { size: A4; margin: 10mm; }
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                .receipt-container { width: 210mm; min-height: 297mm; margin: 0 auto; border: 1px solid #ccc; box-sizing: border-box; background: #fff; }
+                .header { background-color: #2c3e50; color: white; padding: 20px; text-align: center; }
+                .company-info { text-align: center; padding: 15px; background-color: #ecf0f1; }
+                .receipt-info { padding: 20px; background-color: #f8f9fa; }
+                .purchase-details { padding: 20px; }
+                .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                .items-table th { background-color: #3498db; color: white; }
+                .summary { padding: 20px; background-color: #f8f9fa; }
+                .signatures { margin-top: 40px; }
+                .signature-box { display: inline-block; width: 45%; margin: 10px; }
+                .signature-line { border-bottom: 1px solid #000; height: 50px; margin-bottom: 5px; }
+                .footer { text-align: center; padding: 15px; font-size: 12px; color: #666; }
+                .print-only { display: none; }
+                @media print {
+                    .no-print { display: none; }
+                    .print-only { display: block; }
+                    body { margin: 0; }
+                }
+                .barcode { text-align: center; font-family: monospace; font-size: 14px; letter-spacing: 2px; padding: 10px; }
+            </style>
+        </head>
+        <body>
+            <div class='receipt-container'>
+                <div class='header'>
+                    <h1>RECEIVING RECEIPT</h1>
+                    <p>Receipt #: RCP-20250831-112822-181</p>
+                </div>
+                
+                
+
+                <div class='company-info'>
+                    <h3>Hardware Store Inventory Management</h3>
+                    <p>123 Hardware Street, Industrial District<br>
+                    Phone: (555) 123-4567 | Email: receiving@hardwarestore.com</p>
+                </div>
+                
+                <div class='receipt-info'>
+                    <div style='display: flex; justify-content: space-between;'>
+                        <div>
+                            <strong>Receipt Date:</strong> 2025-08-31 11:28:22<br>
+                            <strong>Received By:</strong> Sukhdev Singh<br>
+                            <strong>Status:</strong> Received and Staged at Dock
+                        </div>
+                        <div style='text-align: right;'>
+                            <div class='barcode'>
+                                |||| | || ||| | | ||| ||||<br>
+                                RCP-20250831-112822-181
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class='purchase-details'>
+                    <h3>Purchase Order Information</h3>
+                    <table style='width: 100%; border-collapse: collapse;'>
+                        <tr>
+                            <td style='border: 1px solid #ddd; padding: 8px; background-color: #f8f9fa;'><strong>PO Number:</strong></td>
+                            <td style='border: 1px solid #ddd; padding: 8px;'>BOT-PO-20250831112637-4768</td>
+                            <td style='border: 1px solid #ddd; padding: 8px; background-color: #f8f9fa;'><strong>Order Date:</strong></td>
+                            <td style='border: 1px solid #ddd; padding: 8px;'>2025-08-31</td>
+                        </tr>
+                        <tr>
+                            <td style='border: 1px solid #ddd; padding: 8px; background-color: #f8f9fa;'><strong>Supplier:</strong></td>
+                            <td style='border: 1px solid #ddd; padding: 8px;'>Tool World Distributors</td>
+                            <td style='border: 1px solid #ddd; padding: 8px; background-color: #f8f9fa;'><strong>Expected Date:</strong></td>
+                            <td style='border: 1px solid #ddd; padding: 8px;'>2025-09-07</td>
+                        </tr>
+                        <tr>
+                            <td style='border: 1px solid #ddd; padding: 8px; background-color: #f8f9fa;'><strong>Tracking:</strong></td>
+                            <td style='border: 1px solid #ddd; padding: 8px;'>N/A</td>
+                            <td style='border: 1px solid #ddd; padding: 8px; background-color: #f8f9fa;'><strong>Total Amount:</strong></td>
+                            <td style='border: 1px solid #ddd; padding: 8px; font-weight: bold;'>$210.00</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                
+        <div class='purchase-details'>
+            <h3>Items Received</h3>
+            <table class='items-table'>
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>Product Name</th>
+                        <th>Quantity Ordered</th>
+                        <th>Quantity Received</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>PDO001</td>
+                        <td>PDO Test Product</td>
+                        <td>21</td>
+                        <td>21</td>
+                        <td>$10.00</td>
+                        <td>$210.00</td>
+                        <td><span style='color: green;'>✓ Received</span></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr style='background-color: #f8f9fa; font-weight: bold;'>
+                        <td colspan='5' style='text-align: right;'>Total:</td>
+                        <td>$210.00</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+                
+                <div class='summary'>
+                    <h3>Receiving Summary</h3>
+                    <p><strong>Status Change:</strong> Purchase order status updated to 'Received and Staged at Dock'</p>
+                    <p><strong>Location:</strong> Receiving Dock - Staging Area</p>
+                    <p><strong>Notes:</strong> Auto-generated by Purchase Bot</p>
+                </div>
+                
+                <div class='signatures'>
+                    <div class='signature-box'>
+                        <div class='signature-line'></div>
+                        <div style='text-align: center; margin: 5px 0;'>
+                            <strong>Received By</strong>
+                            <div style='margin-top:8px; font-weight:600;'>Sukhdev Singh</div>
+                            <div style='font-size:12px; color:#666;'>Print Name & Sign</div>
+                        </div>
+                    </div>
+                    <div class='signature-box' style='float: right;'>
+                        <div class='signature-line'></div>
+                        <div style='text-align: center; margin: 5px 0;'>
+                            <strong>Delivered By</strong>
+                            <div style='margin-top:8px; font-weight:600;'>&nbsp;</div>
+                            <div style='font-size:12px; color:#666;'>Print Name & Sign</div>
+                        </div>
+                    </div>
+                    <div style='clear: both;'></div>
+                </div>
+                
+                <div class='footer'>
+                    <p>This is an automated receiving receipt generated by the Hardware Store Inventory Management System.<br>
+                    Receipt generated on 2025-08-31 11:28:22 | User: Sukhdev Singh</p>
+                </div>
+            </div>
+            
+            <div class='no-print' style='text-align: center; margin: 20px;'>
+                <button onclick='window.print()' style='background-color: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px;'>Print Receipt</button>
+                <button onclick='window.close()' style='background-color: #95a5a6; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px;'>Close</button>
+            </div>
+        </body>
+        </html>

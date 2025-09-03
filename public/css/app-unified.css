@@ -177,6 +177,129 @@
      z-index: 10550 !important;
  }
 
+ /* Fix dropdown jumping in products table - eliminate all movement */
+ table#productsTable .btn-group.dropdown {
+     position: relative;
+     display: inline-flex;
+     white-space: nowrap;
+ }
+
+ /* Completely disable hover effects that cause jumping */
+ table#productsTable .btn-group.dropdown .btn {
+     float: none;
+     position: relative;
+     z-index: auto !important;
+     margin-left: 0 !important;
+     border-radius: var(--border-radius-sm) !important;
+     margin-right: 1px;
+ }
+
+ table#productsTable .btn-group.dropdown .btn:hover {
+     z-index: auto !important;
+     transform: none !important;
+     transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out !important;
+     margin-left: 0 !important;
+ }
+
+ /* Override Bootstrap btn-group negative margins for products table */
+ table#productsTable .btn-group.dropdown .btn:not(:first-child) {
+     margin-left: 0 !important;
+     border-top-left-radius: var(--border-radius-sm) !important;
+     border-bottom-left-radius: var(--border-radius-sm) !important;
+ }
+
+ table#productsTable .btn-group.dropdown .btn:not(:last-child) {
+     border-top-right-radius: var(--border-radius-sm) !important;
+     border-bottom-right-radius: var(--border-radius-sm) !important;
+ }
+
+ /* Stable dropdown menu positioning - prevent overlap with next row */
+ table#productsTable .dropdown-menu {
+     position: absolute !important;
+     top: 100% !important;
+     right: 0 !important;
+     left: auto !important;
+     z-index: 1050 !important;
+     min-width: 160px;
+     margin: 2px 0 0 !important;
+     border: 1px solid var(--card-border);
+     background-color: var(--card-bg);
+     transform: none !important;
+     will-change: auto !important;
+     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175) !important;
+ }
+
+ /* Ensure dropdown shows above table content and doesn't interfere with other buttons */
+ table#productsTable .dropdown.show .dropdown-menu {
+     z-index: 1060 !important;
+ }
+
+ /* Add proper spacing to prevent overlap with next row */
+ table#productsTable tbody tr {
+     position: relative;
+ }
+
+ table#productsTable tbody tr:hover {
+     z-index: 10;
+ }
+
+ /* When dropdown is open, ensure the entire row has higher z-index */
+ table#productsTable tbody tr:has(.dropdown.show) {
+     z-index: 20;
+ }
+
+ /* Fallback for browsers that don't support :has() */
+ table#productsTable .dropdown.show {
+     z-index: 20;
+ }
+
+ /* Ensure table rows have proper spacing to accommodate dropdowns */
+ table#productsTable tbody tr td {
+     padding: 0.45rem 0.5rem;
+     vertical-align: middle;
+ }
+
+ /* Add a small gap between rows to prevent dropdown overlap */
+ table#productsTable tbody tr+tr td {
+     border-top: 2px solid transparent;
+ }
+
+ /* Prevent table cell from affecting dropdown */
+ table#productsTable td:last-child {
+     overflow: visible !important;
+     position: relative;
+     white-space: nowrap;
+ }
+
+ /* Stable table responsive behavior */
+ .table-responsive {
+     overflow-x: auto;
+     overflow-y: visible;
+ }
+
+ /* Remove any transforms or transitions that cause jumping */
+ table#productsTable .dropdown-toggle {
+     transform: none !important;
+     transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out !important;
+ }
+
+ table#productsTable .dropdown-toggle::after {
+     vertical-align: middle;
+     margin-left: 0.5em;
+ }
+
+ /* Ensure dropdown items have proper styling */
+ table#productsTable .dropdown-item {
+     color: var(--text-primary);
+     padding: 0.5rem 1rem;
+     transition: background-color 0.15s ease-in-out;
+ }
+
+ table#productsTable .dropdown-item:hover {
+     background-color: var(--bg-secondary);
+     color: var(--text-primary);
+ }
+
  /* Stronger rules for header controls (Export / Filter) to avoid white backgrounds */
  .card-theme .card-header .btn,
  .card-theme .card-header .dropdown-toggle,
@@ -264,6 +387,81 @@
  table#productsTable .badge {
      padding: 0.18rem 0.32rem;
      font-size: 0.78rem;
+ }
+
+ /* Smart Supplier Recommendation Badges */
+ .smart-recommendation-badge {
+     background: linear-gradient(135deg, var(--success), #20c997);
+     color: var(--text-white);
+     font-size: 0.7rem;
+     padding: 0.15rem 0.4rem;
+     border-radius: var(--border-radius-sm);
+     margin-left: 0.25rem;
+     display: inline-block;
+     font-weight: 500;
+     box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+     transition: var(--transition-fast);
+ }
+
+ .smart-recommendation-badge:hover {
+     transform: translateY(-1px);
+     box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+ }
+
+ .smart-recommendation-badge.optimal {
+     background: linear-gradient(135deg, var(--success), #28a745);
+ }
+
+ .smart-recommendation-badge.good {
+     background: linear-gradient(135deg, var(--info), #17a2b8);
+ }
+
+ .smart-recommendation-badge.acceptable {
+     background: linear-gradient(135deg, var(--warning), #ffc107);
+     color: var(--text-primary);
+ }
+
+ /* Supplier select with recommendations */
+ .supplier-select-enhanced {
+     position: relative;
+ }
+
+ .supplier-select-enhanced select option.recommended {
+     background-color: rgba(40, 167, 69, 0.1);
+     font-weight: 600;
+ }
+
+ .supplier-select-enhanced select option.recommended::before {
+     content: "⭐ ";
+ }
+
+ /* Smart recommendation reasoning tooltip */
+ .recommendation-reason {
+     font-size: 0.75rem;
+     color: var(--text-muted);
+     margin-top: 0.25rem;
+     padding: 0.25rem 0.5rem;
+     background-color: var(--bg-secondary);
+     border-radius: var(--border-radius-sm);
+     border-left: 3px solid var(--success);
+     display: none;
+ }
+
+ .recommendation-reason.show {
+     display: block;
+     animation: fadeInUp 0.3s ease-out;
+ }
+
+ @keyframes fadeInUp {
+     from {
+         opacity: 0;
+         transform: translateY(10px);
+     }
+
+     to {
+         opacity: 1;
+         transform: translateY(0);
+     }
  }
 
  /* Ensure code elements like SKU don't force extra width */
@@ -398,56 +596,105 @@
 
  #linkedSuppliersTbody input.form-control-sm {
      padding: 0.25rem 0.35rem;
-
-     /* ------------------------------------------------------------------ */
-     /* Styles moved from app/views/admin/viewUser.php - profile info panel */
-     /* Kept minimal and using theme variables to avoid global impact. */
-     .profile-body .info-row {
-         display: flex;
-         justify-content: space-between;
-         align-items: center;
-         padding: 10px 0;
-         border-bottom: 1px solid var(--card-border);
-     }
-
-     .profile-body .info-row:last-child {
-         border-bottom: none;
-     }
-
-     .profile-body .info-label {
-         font-weight: 600;
-         color: var(--text-primary);
-         display: flex;
-         align-items: center;
-         gap: 8px;
-     }
-
-     .profile-body .info-value {
-         color: var(--text-secondary);
-         font-weight: 500;
-     }
-
-     .profile-header {
-         padding: 30px 20px;
-     }
-
-     .profile-avatar {
-         margin-bottom: 15px;
-     }
-
-     .profile-body {
-         padding: 25px;
-     }
-
-     .profile-actions {
-         background-color: var(--bg-secondary);
-         padding: 20px 25px;
-     }
-
-     /* ------------------------------------------------------------------ */
-     font-size: 0.85rem;
-     height: auto;
  }
+
+ /* Minimal neutral brand title to restore original look */
+ .sidebar-heading .brand-title {
+     font-weight: 600;
+     font-size: 1.05rem;
+     letter-spacing: 0.5px;
+     color: var(--text-primary);
+     display: inline-block;
+ }
+
+ /* Center sidebar heading and stack logo above text */
+ .theme-sidebar .sidebar-heading {
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     flex-direction: column;
+     padding: 16px 12px;
+     gap: 6px;
+     text-align: center;
+     min-height: 80px;
+ }
+
+ /* Alternative animated gradient effect for brand text (subtle, slow) */
+ .sidebar-heading .brand-title {
+     background-image: linear-gradient(90deg, var(--primary), var(--info), var(--success));
+     background-size: 200% 100%;
+     background-position: 0% 50%;
+     background-clip: text;
+     -webkit-background-clip: text;
+     -webkit-text-fill-color: transparent;
+ }
+
+ .sidebar-heading .brand-title:hover {
+     background-position: 100% 50%;
+     transform: translateY(-2px) scale(1.03);
+ }
+
+ /* Inner glow accent that works in light and dark themes */
+ .sidebar-heading .brand-title::after {
+     content: '';
+     display: inline-block;
+     width: 100%;
+     height: 6px;
+     margin-left: 8px;
+     border-radius: 4px;
+     opacity: 0.18;
+     vertical-align: middle;
+     background: linear-gradient(90deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0));
+ }
+
+ /* Make sure image and title remain visually grouped on small screens */
+ @media (max-width: 576px) {
+     .theme-sidebar .sidebar-heading {
+         padding-left: 8px;
+         padding-right: 8px;
+         min-height: 64px;
+     }
+
+     .sidebar-heading .brand-title {
+         font-size: 1.12rem;
+         padding: 2px 4px;
+     }
+
+     .sidebar-heading img {
+         max-height: 40px;
+         margin-bottom: 6px;
+     }
+ }
+
+ /* Stronger glass/logotype effect - layered bevel + shine
+   Appended as an override block so it remains minimal and theme-safe */
+ /* Neutral brand title centered and larger */
+ .theme-sidebar .sidebar-heading .brand-title {
+     font-weight: 700;
+     font-size: 1.5rem;
+     letter-spacing: 0.4px;
+     color: var(--text-primary);
+     display: block;
+     line-height: 1.05;
+ }
+
+ /* Inner bevel and glass fill using pseudo-element behind the text */
+ /* Remove decorative pseudo-elements previously used for glass effect */
+ .theme-sidebar .sidebar-heading .brand-title::before,
+ .theme-sidebar .sidebar-heading .brand-title::after {
+     display: none !important;
+ }
+
+ /* Top highlight stripe sweep mimicking the reference image */
+ /* Remove custom branding effects; restore minimal default appearance for brand title */
+ .theme-sidebar .sidebar-heading .brand-title {
+     font-weight: 600;
+     font-size: 1.05rem;
+     color: var(--text-primary);
+     display: inline-block;
+ }
+
+ /* ------------------------------------------------------------------ */
 
  #linkedSuppliersTbody .cell-purchase-price {
      min-width: 110px;
@@ -668,6 +915,11 @@
 
  .kpi-gradient-primary {
      background: linear-gradient(135deg, #b6d9ff 0, #007bff 100%);
+     color: #fff;
+ }
+
+ .kpi-gradient-danger {
+     background: linear-gradient(135deg, #ffb3b3 0, #dc3545 100%);
      color: #fff;
  }
 
@@ -2099,6 +2351,18 @@
      border-bottom: 2px solid var(--card-border);
      background-color: var(--bg-secondary);
      font-weight: 600;
+     cursor: help;
+     transition: background-color 0.2s ease;
+ }
+
+ /* Table header hover effect for better tooltip indication */
+ .table thead th:hover {
+     background-color: var(--primary);
+     color: white;
+ }
+
+ .table thead th[title]:hover {
+     position: relative;
  }
 
  .table tbody+tbody {
@@ -2447,6 +2711,27 @@
      border: 1px solid var(--card-border);
      border-radius: var(--border-radius);
      box-shadow: var(--card-shadow-hover);
+ }
+
+ /* Ensure compact ellipsis dropdowns (button groups) are fully opaque and above overlapping elements */
+ .btn-group .dropdown-menu,
+ .table .btn-group .dropdown-menu,
+ .card-theme .btn-group .dropdown-menu {
+     background-color: var(--card-bg) !important;
+     color: var(--text-primary) !important;
+     border: 1px solid var(--card-border) !important;
+     box-shadow: var(--card-shadow) !important;
+     z-index: 10600 !important;
+     /* sit above sticky headers and other controls */
+     -webkit-backdrop-filter: none !important;
+     backdrop-filter: none !important;
+     opacity: 1 !important;
+     /* prevent translucent backgrounds */
+ }
+
+ /* Small padding tweak for compact dropdowns triggered by the ellipsis button */
+ .btn-group .dropdown-menu .dropdown-item {
+     padding: 0.4rem 0.9rem !important;
  }
 
  .dropdown-menu-right {
@@ -5691,7 +5976,7 @@
  }
 
  /* small KPI card helpers */
- .kpi-card:not(.kpi-gradient-warning):not(.kpi-gradient-info):not(.kpi-gradient-success):not(.kpi-gradient-primary) {
+ .kpi-card:not(.kpi-gradient-warning):not(.kpi-gradient-info):not(.kpi-gradient-success):not(.kpi-gradient-primary):not(.kpi-gradient-danger) {
      /* Only apply the default card background for KPI cards that do NOT use a gradient class */
      padding: 0.75rem;
      border-radius: var(--border-radius);
@@ -5859,6 +6144,19 @@
  .table-responsive {
      width: 100%;
      overflow-x: auto;
+     /* allow vertically overflowing elements (dropdowns) to be visible
+          while still enabling horizontal scrolling for wide tables */
+     overflow-y: visible;
+ }
+
+ /* Ensure dropdown menus inside responsive tables are not clipped by
+    the table container. This keeps ellipsis menus readable and above
+    sticky headers or table content. */
+ .table-responsive .dropdown-menu {
+     /* keep absolute positioning but allow it to render outside the
+         scrolling box */
+     position: absolute;
+     z-index: 10650 !important;
  }
 
  .sortable {
@@ -5917,6 +6215,11 @@
 
  .kpi-card.kpi-gradient-primary {
      background: linear-gradient(135deg, #b6d9ff 0, #007bff 100%) !important;
+     color: #ffffff !important;
+ }
+
+ .kpi-card.kpi-gradient-danger {
+     background: linear-gradient(135deg, #ffb3b3 0, #dc3545 100%) !important;
      color: #ffffff !important;
  }
 
@@ -6207,4 +6510,219 @@
          padding: 0.5rem;
          font-size: 0.9rem;
      }
+ }
+
+ /* ===== ENHANCED PURCHASE HISTORY STYLES ===== */
+ .purchase-history-container {
+     position: relative;
+ }
+
+ .purchase-history-filters {
+     background: var(--bg-secondary);
+     border-radius: var(--border-radius);
+     padding: 1rem;
+     margin-bottom: 1rem;
+     border: 1px solid var(--card-border);
+ }
+
+ .purchase-history-table {
+     background: var(--card-bg);
+     border-radius: var(--border-radius);
+     overflow: hidden;
+     box-shadow: var(--card-shadow);
+ }
+
+ .purchase-history-table th {
+     background: var(--bg-secondary);
+     color: var(--text-primary);
+     font-weight: 600;
+     border-bottom: 2px solid var(--card-border);
+     padding: 0.75rem 0.5rem;
+     font-size: 0.875rem;
+ }
+
+ .purchase-history-table tbody tr {
+     transition: var(--transition);
+     border-bottom: 1px solid var(--card-border);
+ }
+
+ .purchase-history-table tbody tr:hover {
+     background: var(--bg-secondary);
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+ }
+
+ .purchase-history-table td {
+     padding: 0.875rem 0.5rem;
+     vertical-align: middle;
+     border-top: none;
+ }
+
+ /* Purchase status badges */
+ .badge-purchase-pending {
+     background: linear-gradient(135deg, #ffc107, #ffb300);
+     color: #212529;
+ }
+
+ .badge-purchase-sent {
+     background: linear-gradient(135deg, #17a2b8, #138496);
+     color: white;
+ }
+
+ .badge-purchase-received {
+     background: linear-gradient(135deg, #28a745, #1e7e34);
+     color: white;
+ }
+
+ .badge-purchase-cancelled {
+     background: linear-gradient(135deg, #dc3545, #c82333);
+     color: white;
+ }
+
+ /* Purchase items modal enhancements */
+ .purchase-items-modal .modal-body {
+     max-height: 70vh;
+     overflow-y: auto;
+ }
+
+ .purchase-items-table {
+     font-size: 0.9rem;
+ }
+
+ .purchase-items-table .product-image {
+     width: 40px;
+     height: 40px;
+     object-fit: cover;
+     border-radius: var(--border-radius-sm);
+     border: 1px solid var(--card-border);
+ }
+
+ .purchase-items-table .product-placeholder {
+     width: 40px;
+     height: 40px;
+     background: var(--bg-secondary);
+     border-radius: var(--border-radius-sm);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     border: 1px solid var(--card-border);
+ }
+
+ /* Enhanced search and filter styling */
+ .purchase-search-container {
+     position: relative;
+ }
+
+ .purchase-search-container .form-control {
+     padding-right: 2.5rem;
+ }
+
+ .purchase-search-container .input-group-text {
+     background: transparent;
+     border-left: none;
+     color: var(--text-muted);
+ }
+
+ /* Purchase timeline indicators */
+ .timeline-indicator {
+     position: relative;
+     padding-left: 1.5rem;
+ }
+
+ .timeline-indicator::before {
+     content: '';
+     position: absolute;
+     left: 0;
+     top: 50%;
+     transform: translateY(-50%);
+     width: 8px;
+     height: 8px;
+     border-radius: 50%;
+     background: var(--success);
+ }
+
+ .timeline-indicator.overdue::before {
+     background: var(--danger);
+     animation: pulse 2s infinite;
+ }
+
+ .timeline-indicator.due-today::before {
+     background: var(--warning);
+ }
+
+ /* Purchase amount styling */
+ .purchase-amount {
+     font-family: 'Courier New', monospace;
+     font-weight: 600;
+ }
+
+ .purchase-amount .currency {
+     font-size: 0.9em;
+     opacity: 0.8;
+ }
+
+ /* Export/Print button group */
+ .purchase-actions {
+     background: var(--bg-secondary);
+     border-radius: var(--border-radius);
+     padding: 0.5rem;
+ }
+
+ /* Responsive enhancements */
+ @media (max-width: 768px) {
+     .purchase-history-table {
+         font-size: 0.8rem;
+     }
+
+     .purchase-history-table th,
+     .purchase-history-table td {
+         padding: 0.5rem 0.25rem;
+     }
+
+     .purchase-history-filters {
+         padding: 0.75rem;
+     }
+
+     .purchase-history-filters .form-control {
+         margin-bottom: 0.5rem;
+     }
+ }
+
+ @media (max-width: 576px) {
+     .purchase-history-table .btn-group {
+         flex-direction: column;
+     }
+
+     .purchase-history-table .btn-group .btn {
+         border-radius: var(--border-radius-sm) !important;
+         margin-bottom: 0.25rem;
+     }
+ }
+
+ /* Animation for loading states */
+ @keyframes pulse {
+
+     0%,
+     100% {
+         opacity: 1;
+     }
+
+     50% {
+         opacity: 0.5;
+     }
+ }
+
+ .loading-pulse {
+     animation: pulse 1.5s ease-in-out infinite;
+ }
+
+ /* Table layout fixes */
+ .table-layout-fixed {
+     table-layout: fixed;
+     width: 100%;
+ }
+
+ .table-layout-fixed th,
+ .table-layout-fixed td {
+     word-wrap: break-word;
+     overflow-wrap: break-word;
  }

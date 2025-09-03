@@ -817,4 +817,129 @@ class Inventory
             return false;
         }
     }
+
+    // =============== BOT HELPER METHODS ===============
+
+    /**
+     * Get low stock count for bot dashboard
+     */
+    public function getLowStockCount($threshold = 10)
+    {
+        try {
+            $this->db->query("
+                SELECT COUNT(DISTINCT p.product_id) as count 
+                FROM products p
+                WHERE p.is_active = 1 
+                AND p.deleted_at IS NULL
+                AND COALESCE((SELECT SUM(quantity) FROM inventory WHERE product_id = p.product_id), 0) <= COALESCE(p.reorder_level, :threshold)
+            ");
+            $this->db->bind(':threshold', $threshold);
+            $result = $this->db->executeSingle();
+            return $result->count ?? 0;
+        } catch (Exception $e) {
+            error_log('Error getting low stock count: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Get low stock products for bot operations
+     */
+    public function getLowStockProducts($threshold = 10)
+    {
+        try {
+            $this->db->query("
+                SELECT 
+                    p.product_id, 
+                    p.product_name, 
+                    COALESCE((SELECT SUM(quantity) FROM inventory WHERE product_id = p.product_id), 0) as stock_quantity,
+                    p.reorder_level
+                FROM products p
+                WHERE p.is_active = 1 
+                AND p.deleted_at IS NULL
+                AND COALESCE((SELECT SUM(quantity) FROM inventory WHERE product_id = p.product_id), 0) <= COALESCE(p.reorder_level, :threshold)
+                ORDER BY stock_quantity ASC
+                LIMIT 50
+            ");
+            $this->db->bind(':threshold', $threshold);
+            $this->db->execute();
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log('Error getting low stock products: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Update stock quantity for a product
+     */
+    public function updateStock($productId, $quantityChange)
+    {
+        try {
+            // First check if inventory record exists
+            $this->db->query("SELECT inventory_id, quantity FROM inventory WHERE product_id = ?");
+            $this->db->bind(1, $productId);
+            $existing = $this->db->executeSingle();
+
+            // Debug logging for inventory updates
+            $logFile = APPROOT . DS . 'bot_inventory.log';
+            $time = date('Y-m-d H:i:s');
+            if ($existing) {
+                $msg = sprintf("%s - updateStock called for product_id=%s existing_inventory_id=%s existing_quantity=%s quantityChange=%s\n", $time, $productId, $existing->inventory_id, $existing->quantity, $quantityChange);
+            } else {
+                $msg = sprintf("%s - updateStock called for product_id=%s no_existing_record quantityChange=%s\n", $time, $productId, $quantityChange);
+            }
+            @file_put_contents($logFile, $msg, FILE_APPEND);
+
+            if ($existing) {
+                // Update existing inventory
+                $newQuantity = max(0, $existing->quantity + $quantityChange);
+                $this->db->query("UPDATE inventory SET quantity = ? WHERE inventory_id = ?");
+                $this->db->bind(1, $newQuantity);
+                $this->db->bind(2, $existing->inventory_id);
+                $res = $this->db->execute();
+                $afterMsg = sprintf("%s - updateStock result for product_id=%s inventory_id=%s new_quantity=%s success=%s\n", date('Y-m-d H:i:s'), $productId, $existing->inventory_id, $newQuantity, $res ? 'true' : 'false');
+                @file_put_contents($logFile, $afterMsg, FILE_APPEND);
+                return $res;
+            } else {
+                // If trying to reduce stock for a product with no inventory record, fail and log
+                if ($quantityChange < 0) {
+                    $msg = sprintf("%s - updateStock attempted negative change for non-existing product_id=%s quantityChange=%s - aborting\n", date('Y-m-d H:i:s'), $productId, $quantityChange);
+                    @file_put_contents($logFile, $msg, FILE_APPEND);
+                    return false;
+                }
+
+                // Create new inventory record if it doesn't exist (positive additions only)
+                $this->db->query("INSERT INTO inventory (product_id, quantity, location_id) VALUES (?, ?, 1)");
+                $this->db->bind(1, $productId);
+                $this->db->bind(2, max(0, $quantityChange));
+                $res = $this->db->execute();
+                $insertMsg = sprintf("%s - updateStock inserted product_id=%s inserted_quantity=%s success=%s\n", date('Y-m-d H:i:s'), $productId, max(0, $quantityChange), $res ? 'true' : 'false');
+                @file_put_contents($logFile, $insertMsg, FILE_APPEND);
+                return $res;
+            }
+        } catch (Exception $e) {
+            error_log('Error updating stock: ' . $e->getMessage());
+            @file_put_contents(APPROOT . DS . 'bot_inventory.log', date('Y-m-d H:i:s') . " - updateStock exception for product_id={$productId} message=" . $e->getMessage() . "\n", FILE_APPEND);
+            return false;
+        }
+    }
+
+    /**
+     * Get total inventory quantity for a single product
+     */
+    public function getProductTotal($productId)
+    {
+        try {
+            $this->db->query('SELECT COALESCE(SUM(quantity),0) as total FROM inventory WHERE product_id = ?');
+            $this->db->bind(1, $productId);
+            $this->db->execute();
+            $r = $this->db->single();
+            return $r ? (int) $r->total : 0;
+        } catch (Exception $e) {
+            error_log('Error in getProductTotal: ' . $e->getMessage());
+            return null;
+        }
+    }
 }
+?>

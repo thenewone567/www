@@ -1,5 +1,9 @@
 RewriteEngine On
 
+# Force admin routes to the front controller even if an admin/ directory exists on disk.
+# This ensures URLs like /admin/priceManagement are handled by index.php routing.
+RewriteRule ^admin($|/.*) index.php?url=$0 [QSA,L]
+
 # Main rewrite rule for MVC routing
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

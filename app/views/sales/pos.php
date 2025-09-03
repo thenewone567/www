@@ -19,28 +19,36 @@
     <div class="row">
         <!-- Left Panel - Product Entry & Cart -->
         <div class="col-md-8">
-            <!-- Barcode Scanner Section -->
+            <!-- Unified Product Search Section -->
             <div class="theme-card mb-4">
                 <div class="card-header bg-primary-theme text-white">
-                    <h5 class="mb-0"><i class="fa-solid fa-barcode"></i> Barcode Scanner</h5>
+                    <h5 class="mb-0"><i class="fa-solid fa-search"></i> Product Search</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-8">
                             <div class="input-group input-group-lg">
-                                <span class="input-group-text"><i class="fa-solid fa-barcode"></i></span>
-                                <input type="text" id="barcode-input" class="form-control"
-                                    placeholder="Scan or type barcode here..." autofocus>
-                                <button class="btn btn-primary" type="button" onclick="scanBarcode()">
-                                    <i class="fa-solid fa-search"></i> Scan
+                                <span class="input-group-text"><i class="fa-solid fa-search"></i></span>
+                                <input type="text" id="unified-search-input" class="form-control"
+                                    placeholder="Search by product name, SKU, or scan barcode..." autofocus>
+                                <button class="btn btn-primary" type="button" onclick="performUnifiedSearch()">
+                                    <i class="fa-solid fa-plus"></i> Add
                                 </button>
                             </div>
-                            <small class="text-muted">Press Enter after scanning or typing barcode</small>
+                            <small class="text-muted">Type product name, SKU, or scan barcode - Press Enter to add to
+                                cart</small>
                         </div>
                         <div class="col-md-4">
                             <button class="btn btn-outline-secondary btn-lg w-100" onclick="showProductSearch()">
-                                <i class="fa-solid fa-list"></i> Browse Products
+                                <i class="fa-solid fa-list"></i> Browse All Products
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Live Search Results -->
+                    <div id="search-results-dropdown" class="mt-3" style="display: none;">
+                        <div class="list-group shadow-sm">
+                            <!-- Search results will be populated here -->
                         </div>
                     </div>
                 </div>
@@ -90,11 +98,13 @@
                 <div class="card-body">
                     <select id="customer-select" class="form-control form-control-lg">
                         <option value="">Walk-in Customer</option>
-                        <?php foreach ($data['customers'] as $customer): ?>
-                            <option value="<?php echo $customer->customer_id; ?>">
-                                <?php echo htmlspecialchars($customer->name); ?>
-                            </option>
-                        <?php endforeach; ?>
+                        <?php if (isset($data['customers']) && is_array($data['customers'])): ?>
+                            <?php foreach ($data['customers'] as $customer): ?>
+                                <option value="<?php echo $customer->customer_id; ?>">
+                                    <?php echo htmlspecialchars($customer->name); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </select>
                     <button class="btn btn-outline-info btn-sm mt-2 w-100">
                         <i class="fa-solid fa-user-plus"></i> Add New Customer
@@ -181,7 +191,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title"><i class="fa-solid fa-search"></i> Product Search</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="form-group mb-3">
@@ -200,22 +212,31 @@
                             </tr>
                         </thead>
                         <tbody id="product-search-results">
-                            <?php foreach ($data['products'] as $product): ?>
+                            <?php if (isset($data['products']) && is_array($data['products'])): ?>
+                                <?php foreach ($data['products'] as $product): ?>
+                                    <tr>
+                                        <td><strong><?php echo htmlspecialchars($product->product_name); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($product->sku ?? 'N/A'); ?></td>
+                                        <td><span
+                                                class="badge badge-info"><?php echo $product->Inventory_quantity ?? 0; ?></span>
+                                        </td>
+                                        <td><?php echo formatCurrency($product->selling_price ?? 0, 2); ?></td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm"
+                                                onclick="addProductToCart(<?php echo $product->product_id; ?>, '<?php echo addslashes($product->product_name); ?>', <?php echo $product->selling_price ?? 0; ?>, <?php echo $product->current_inventory ?? $product->Inventory_quantity ?? 0; ?>)">
+                                                <i class="fa-solid fa-plus"></i> Add
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
                                 <tr>
-                                    <td><strong><?php echo htmlspecialchars($product->product_name); ?></strong></td>
-                                    <td><?php echo htmlspecialchars($product->sku ?? 'N/A'); ?></td>
-                                    <td><span
-                                            class="badge badge-info"><?php echo $product->Inventory_quantity ?? 0; ?></span>
-                                    </td>
-                                    <td><?php echo formatCurrency($product->sale_price ?? 0, 2); ?></td>
-                                    <td>
-                                        <button class="btn btn-primary btn-sm"
-                                            onclick="addProductToCart(<?php echo $product->product_id; ?>, '<?php echo addslashes($product->product_name); ?>', <?php echo $product->sale_price ?? 0; ?>)">
-                                            <i class="fa-solid fa-plus"></i> Add
-                                        </button>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        <i class="fa-solid fa-box-open fa-2x mb-2"></i><br>
+                                        No products available
                                     </td>
                                 </tr>
-                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -224,130 +245,418 @@
     </div>
 </div>
 
+<style>
+    #search-results-dropdown {
+        position: relative;
+        z-index: 1000;
+    }
+
+    #search-results-dropdown .list-group {
+        max-height: 300px;
+        overflow-y: auto;
+        border-radius: 0.375rem;
+    }
+
+    #search-results-dropdown .list-group-item {
+        border-left: 1px solid #dee2e6;
+        border-right: 1px solid #dee2e6;
+    }
+
+    #search-results-dropdown .list-group-item:first-child {
+        border-top: 1px solid #dee2e6;
+        border-top-left-radius: 0.375rem;
+        border-top-right-radius: 0.375rem;
+    }
+
+    #search-results-dropdown .list-group-item:last-child {
+        border-bottom: 1px solid #dee2e6;
+        border-bottom-left-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+    }
+
+    #search-results-dropdown .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
 <script>
+    // Initialize cart system
     let cart = [];
     let cartTotal = 0;
 
-    // Barcode scanning
-    document.getElementById('barcode-input').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            scanBarcode();
-        }
+    // Initialize cart display on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        updateCartDisplay();
+        updateOrderSummary();
+        console.log('POS system initialized');
     });
 
-    function scanBarcode() {
-        const barcode = document.getElementById('barcode-input').value.trim();
-        if (!barcode) {
-            alert('Please enter a barcode');
+    // Unified search functionality
+    const unifiedSearchInput = document.getElementById('unified-search-input');
+    if (unifiedSearchInput) {
+        // Enter key to add product
+        unifiedSearchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                performUnifiedSearch();
+            }
+        });
+
+        // Live search as user types
+        unifiedSearchInput.addEventListener('input', function () {
+            performLiveSearch();
+        });
+    } else {
+        console.error('Unified search input not found');
+    }
+
+    // Product search functionality
+    const productSearchInput = document.getElementById('product-search');
+    if (productSearchInput) {
+        productSearchInput.addEventListener('input', function () {
+            filterProductSearch();
+        });
+    } else {
+        console.error('Product search input not found');
+    }
+
+    function filterProductSearch() {
+        const searchTerm = document.getElementById('product-search').value.toLowerCase().trim();
+        const tableRows = document.querySelectorAll('#product-search-results tr');
+
+        console.log('Filtering products with search term:', searchTerm);
+        console.log('Found table rows:', tableRows.length);
+
+        let visibleCount = 0;
+
+        tableRows.forEach((row, index) => {
+            if (!row.querySelector('td')) {
+                console.log('Skipping row', index, '- no td elements');
+                return; // Skip empty rows
+            }
+
+            const productName = row.querySelector('td:first-child')?.textContent.toLowerCase() || '';
+            const sku = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+
+            console.log('Row', index, '- Product:', productName, 'SKU:', sku);
+
+            // Search in product name and SKU
+            const matches = productName.includes(searchTerm) || sku.includes(searchTerm);
+
+            if (!searchTerm || matches) {
+                row.style.display = '';
+                visibleCount++;
+                console.log('Row', index, '- SHOWING');
+            } else {
+                row.style.display = 'none';
+                console.log('Row', index, '- HIDING');
+            }
+        });
+
+        console.log('Visible products after filter:', visibleCount);
+
+        // Show "no results" message if no products match
+        let noResultsRow = document.getElementById('no-search-results');
+        if (visibleCount === 0 && searchTerm) {
+            if (!noResultsRow) {
+                noResultsRow = document.createElement('tr');
+                noResultsRow.id = 'no-search-results';
+                noResultsRow.innerHTML = '<td colspan="5" class="text-center text-muted py-4"><i class="fa-solid fa-search fa-2x mb-2"></i><br>No products found matching "' + searchTerm + '"</td>';
+                document.getElementById('product-search-results').appendChild(noResultsRow);
+            } else {
+                noResultsRow.querySelector('td').innerHTML = '<i class="fa-solid fa-search fa-2x mb-2"></i><br>No products found matching "' + searchTerm + '"';
+                noResultsRow.style.display = '';
+            }
+        } else if (noResultsRow) {
+            noResultsRow.style.display = 'none';
+        }
+    }
+
+    // Unified search functions
+    function performUnifiedSearch() {
+        const searchTerm = document.getElementById('unified-search-input').value.trim();
+        if (!searchTerm) {
+            alert('Please enter a product name, SKU, or barcode');
             return;
         }
 
+        // Hide search dropdown
+        document.getElementById('search-results-dropdown').style.display = 'none';
+
+        // First try barcode scan
         fetch('<?php echo URLROOT; ?>/sales/scan_barcode', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: 'barcode=' + encodeURIComponent(barcode)
+            body: 'barcode=' + encodeURIComponent(searchTerm)
         })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    addProductToCart(data.product.id, data.product.name, data.product.price, data.product.Inventory);
-                    document.getElementById('barcode-input').value = '';
-                    document.getElementById('barcode-input').focus();
+                    // Found by barcode
+                    addProductFromSearchResult(data.product);
+                    clearUnifiedSearch();
                 } else {
-                    alert('Product not found: ' + data.message);
-                    document.getElementById('barcode-input').select();
+                    // Try searching by name/SKU
+                    searchProductByName(searchTerm);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error scanning barcode');
+                // Fallback to name search
+                searchProductByName(searchTerm);
             });
     }
 
-    function addProductToCart(productId, productName, price, Inventory = 999) {
-        const existingItem = cart.find(item => item.id === productId);
+    function searchProductByName(searchTerm) {
+        // Search through available products (client-side search)
+        const products = <?php echo json_encode(isset($data['products']) && is_array($data['products']) ? $data['products'] : []); ?>;
+        const matches = products.filter(product =>
+            product.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
 
-        if (existingItem) {
-            existingItem.quantity += 1;
+        if (matches.length === 1) {
+            // Exact match - add directly
+            addProductFromSearchResult({
+                id: matches[0].product_id,
+                name: matches[0].product_name,
+                price: matches[0].selling_price,
+                inventory: matches[0].inventory_quantity || matches[0].Inventory_quantity || 0
+            });
+            clearUnifiedSearch();
+        } else if (matches.length > 1) {
+            // Multiple matches - show dropdown
+            showSearchResults(matches);
         } else {
-            cart.push({
+            alert('Product not found: "' + searchTerm + '"');
+            document.getElementById('unified-search-input').select();
+        }
+    }
+
+    function showSearchResults(products) {
+        const dropdown = document.getElementById('search-results-dropdown');
+        const listGroup = dropdown.querySelector('.list-group');
+
+        listGroup.innerHTML = '';
+
+        products.slice(0, 5).forEach(product => { // Show max 5 results
+            const item = document.createElement('a');
+            item.className = 'list-group-item list-group-item-action';
+            item.style.cursor = 'pointer';
+            item.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${product.product_name}</strong><br>
+                        <small class="text-muted">SKU: ${product.sku || 'N/A'}</small>
+                    </div>
+                    <div class="text-right">
+                        <span class="badge badge-info">${product.inventory_quantity || product.Inventory_quantity || 0} in stock</span><br>
+                        <strong>₹${parseFloat(product.selling_price || 0).toFixed(2)}</strong>
+                    </div>
+                </div>
+            `;
+
+            item.addEventListener('click', function () {
+                addProductFromSearchResult({
+                    id: product.product_id,
+                    name: product.product_name,
+                    price: product.selling_price,
+                    inventory: product.inventory_quantity || product.Inventory_quantity || 0
+                });
+                clearUnifiedSearch();
+            });
+
+            listGroup.appendChild(item);
+        });
+
+        dropdown.style.display = 'block';
+    }
+
+    function performLiveSearch() {
+        const searchTerm = document.getElementById('unified-search-input').value.trim();
+
+        if (searchTerm.length < 2) {
+            document.getElementById('search-results-dropdown').style.display = 'none';
+            return;
+        }
+
+        // Search through available products
+        const products = <?php echo json_encode(isset($data['products']) && is_array($data['products']) ? $data['products'] : []); ?>;
+        const matches = products.filter(product =>
+            product.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+
+        if (matches.length > 0) {
+            showSearchResults(matches);
+        } else {
+            document.getElementById('search-results-dropdown').style.display = 'none';
+        }
+    }
+
+    function addProductFromSearchResult(productData) {
+        let price = productData.price;
+        if (typeof price === 'string') {
+            price = parseFloat(price.replace(/[$,]/g, ''));
+        } else {
+            price = parseFloat(price);
+        }
+
+        addProductToCart(
+            productData.id,
+            productData.name,
+            price,
+            productData.inventory || 999
+        );
+    }
+
+    function clearUnifiedSearch() {
+        document.getElementById('unified-search-input').value = '';
+        document.getElementById('search-results-dropdown').style.display = 'none';
+        document.getElementById('unified-search-input').focus();
+    }
+
+    function addProductToCart(productId, productName, price, inventory = 999) {
+        // Ensure proper data types
+        productId = parseInt(productId);
+        price = parseFloat(price) || 0;
+        inventory = parseInt(inventory) || 999;
+
+        // Validate inputs
+        if (!productId || !productName || price <= 0) {
+            console.error('Invalid product data:', { productId, productName, price });
+            alert('Invalid product data');
+            return;
+        }
+
+        // Find existing item in cart
+        const existingItemIndex = cart.findIndex(item => parseInt(item.id) === productId);
+
+        if (existingItemIndex !== -1) {
+            // Product already exists, increase quantity
+            cart[existingItemIndex].quantity += 1;
+            console.log('Increased quantity for existing product:', cart[existingItemIndex]);
+        } else {
+            // Add new product to cart
+            const newItem = {
                 id: productId,
                 name: productName,
-                price: parseFloat(price),
+                price: price,
                 quantity: 1,
-                Inventory: Inventory
-            });
+                inventory: inventory
+            };
+            cart.push(newItem);
+            console.log('Added new product to cart:', newItem);
         }
 
         updateCartDisplay();
         updateOrderSummary();
+
+        console.log('Current cart state:', cart);
     }
 
     function updateCartDisplay() {
         const cartBody = document.getElementById('cart-items');
         const emptyCart = document.getElementById('empty-cart');
 
-        if (cart.length === 0) {
-            emptyCart.style.display = 'table-row';
+        if (!cartBody) {
+            console.error('Cart body element not found');
             return;
         }
 
-        emptyCart.style.display = 'none';
+        if (cart.length === 0) {
+            if (emptyCart) {
+                emptyCart.style.display = 'table-row';
+            }
+            cartBody.innerHTML = '<tr id="empty-cart" class="text-center"><td colspan="5" class="text-muted py-4"><i class="fa-solid fa-shopping-cart fa-2x mb-2"></i><br>Cart is empty. Scan a barcode to add items.</td></tr>';
+            return;
+        }
+
+        if (emptyCart) {
+            emptyCart.style.display = 'none';
+        }
 
         let html = '';
         cart.forEach((item, index) => {
-            const subtotal = item.price * item.quantity;
+            const subtotal = (item.price * item.quantity);
             html += `
-            <tr>
-                <td><strong>${item.name}</strong></td>
+            <tr data-product-id="${item.id}">
+                <td><strong>${escapeHtml(item.name)}</strong></td>
                 <td>$${item.price.toFixed(2)}</td>
                 <td>
-                    <div class="input-group input-group-sm">
-                        <button class="btn btn-outline-secondary" onclick="updateQuantity(${index}, -1)">-</button>
-                        <input type="number" class="form-control text-center" value="${item.quantity}" 
-                               onchange="setQuantity(${index}, this.value)" min="1">
-                        <button class="btn btn-outline-secondary" onclick="updateQuantity(${index}, 1)">+</button>
+                    <div class="input-group input-group-sm" style="width: 120px;">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" onclick="updateQuantity(${index}, -1)">-</button>
+                        <input type="number" class="form-control form-control-sm text-center" value="${item.quantity}" 
+                               onchange="setQuantity(${index}, this.value)" min="1" style="width: 50px;">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" onclick="updateQuantity(${index}, 1)">+</button>
                     </div>
                 </td>
-                <td>$${subtotal.toFixed(2)}</td>
+                <td><strong>$${subtotal.toFixed(2)}</strong></td>
                 <td>
-                    <button class="btn btn-danger btn-sm" onclick="removeFromCart(${index})">
+                    <button class="btn btn-danger btn-sm" type="button" onclick="removeFromCart(${index})">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </td>
-            </tr>
-        `;
+            </tr>`;
         });
 
         cartBody.innerHTML = html;
+        console.log('Cart display updated, items:', cart.length);
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     function updateQuantity(index, change) {
+        if (index < 0 || index >= cart.length) {
+            console.error('Invalid cart index:', index);
+            return;
+        }
+
         cart[index].quantity += change;
+
         if (cart[index].quantity <= 0) {
             cart.splice(index, 1);
         }
+
         updateCartDisplay();
         updateOrderSummary();
+        console.log('Quantity updated, cart:', cart);
     }
 
     function setQuantity(index, quantity) {
+        if (index < 0 || index >= cart.length) {
+            console.error('Invalid cart index:', index);
+            return;
+        }
+
         const qty = parseInt(quantity);
         if (qty > 0) {
             cart[index].quantity = qty;
         } else {
             cart.splice(index, 1);
         }
+
         updateCartDisplay();
         updateOrderSummary();
+        console.log('Quantity set, cart:', cart);
     }
 
     function removeFromCart(index) {
-        cart.splice(index, 1);
+        if (index < 0 || index >= cart.length) {
+            console.error('Invalid cart index:', index);
+            return;
+        }
+
+        const removedItem = cart.splice(index, 1)[0];
         updateCartDisplay();
         updateOrderSummary();
+        console.log('Removed item from cart:', removedItem);
     }
 
     function clearCart() {
@@ -364,19 +673,29 @@
         const tax = 0; // No tax for now
         const total = subtotal + tax;
 
-        document.getElementById('total-items').textContent = totalItems;
-        document.getElementById('subtotal').textContent = subtotal.toFixed(2);
-        document.getElementById('tax').textContent = tax.toFixed(2);
-        document.getElementById('total').textContent = total.toFixed(2);
+        // Update display elements
+        const totalItemsEl = document.getElementById('total-items');
+        const subtotalEl = document.getElementById('subtotal');
+        const taxEl = document.getElementById('tax');
+        const totalEl = document.getElementById('total');
+
+        if (totalItemsEl) totalItemsEl.textContent = totalItems;
+        if (subtotalEl) subtotalEl.textContent = subtotal.toFixed(2);
+        if (taxEl) taxEl.textContent = tax.toFixed(2);
+        if (totalEl) totalEl.textContent = total.toFixed(2);
 
         cartTotal = total;
 
         // Enable/disable pay button
         const payButton = document.getElementById('pay-button');
-        payButton.disabled = cart.length === 0;
+        if (payButton) {
+            payButton.disabled = cart.length === 0;
+        }
 
         // Update change calculation
         calculateChange();
+
+        console.log('Order summary updated:', { totalItems, subtotal, total });
     }
 
     // Calculate change
@@ -389,8 +708,7 @@
     }
 
     function showProductSearch() {
-        const modal = new bootstrap.Modal(document.getElementById('productSearchModal'));
-        modal.show();
+        $('#productSearchModal').modal('show');
     }
 
     function processPayment() {
@@ -399,7 +717,7 @@
             return;
         }
 
-        const customerId = document.getElementById('customer-select').value;
+        const customerId = document.getElementById('customer-select').value || null;
         const paymentMethod = document.getElementById('payment-method').value;
         const amountReceived = parseFloat(document.getElementById('amount-received').value) || 0;
 
@@ -408,15 +726,53 @@
             return;
         }
 
-        // Here you would process the payment
-        alert('Payment processing would be implemented here');
+        // Disable the pay button to prevent double submission
+        const payButton = document.getElementById('pay-button');
+        payButton.disabled = true;
+        payButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
 
-        // Clear cart after successful payment
-        cart = [];
-        updateCartDisplay();
-        updateOrderSummary();
-        document.getElementById('amount-received').value = '';
-        document.getElementById('barcode-input').focus();
+        // Prepare sale data
+        const saleData = {
+            customer_id: customerId,
+            payment_method: paymentMethod,
+            amount_received: amountReceived,
+            cart_items: cart,
+            total_amount: cartTotal
+        };
+
+        // Send to server
+        fetch('<?php echo URLROOT; ?>/sales/process_sale', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(saleData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Sale processed successfully!\nSale ID: ${data.sale_id}\nChange: $${data.change.toFixed(2)}`);
+
+                    // Clear cart after successful payment
+                    cart = [];
+                    updateCartDisplay();
+                    updateOrderSummary();
+                    document.getElementById('amount-received').value = '';
+                    document.getElementById('customer-select').value = '';
+                    document.getElementById('unified-search-input').focus();
+                } else {
+                    alert('Error processing sale: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error processing payment');
+            })
+            .finally(() => {
+                // Re-enable the pay button
+                payButton.disabled = false;
+                payButton.innerHTML = '<i class="fa-solid fa-money-bill"></i> Process Payment';
+            });
     }
 
     function holdTransaction() {
@@ -431,7 +787,7 @@
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function () {
-        document.getElementById('barcode-input').focus();
+        document.getElementById('unified-search-input').focus();
     });
 </script>
 

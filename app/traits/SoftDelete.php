@@ -20,19 +20,30 @@ trait SoftDelete
     {
         $userId = $_SESSION['user_id'] ?? null;
 
-        $this->db->query("
-            UPDATE $table 
-            SET status = 'deleted',
-                deleted_at = NOW(),
-                deleted_by = :deleted_by
-            WHERE $idField = :id
-        ");
+        // Prefer status/deleted_at fields if present, otherwise fall back to is_active flag
+        if ($this->hasColumn($table, 'status')) {
+            $this->db->query("UPDATE $table 
+                SET status = 'deleted',
+                    deleted_at = NOW(),
+                    deleted_by = :deleted_by
+                WHERE $idField = :id");
 
-        $this->db->bind(':id', $id);
-        $this->db->bind(':deleted_by', $userId);
+            $this->db->bind(':id', $id);
+            $this->db->bind(':deleted_by', $userId);
 
-        $result = $this->db->execute();
-
+            $result = $this->db->execute();
+        } else {
+            // Fallback: set is_active = 0 if that column exists
+            if ($this->hasColumn($table, 'is_active')) {
+                $this->db->query("UPDATE $table SET is_active = 0 WHERE $idField = :id");
+                $this->db->bind(':id', $id);
+                $result = $this->db->execute();
+            } else {
+                // No recognizable soft-delete columns; abort and log
+                error_log("SoftDelete: no status or is_active column found on table $table");
+                return false;
+            }
+        }
         // Log the soft delete action
         if ($result) {
             $this->logSoftDelete($table, $id, $userId);
@@ -53,18 +64,26 @@ trait SoftDelete
     {
         $userId = $_SESSION['user_id'] ?? null;
 
-        $this->db->query("
-            UPDATE $table 
-            SET status = 'active',
-                deleted_at = NULL,
-                deleted_by = NULL
-            WHERE $idField = :id
-        ");
+        if ($this->hasColumn($table, 'status')) {
+            $this->db->query("UPDATE $table 
+                SET status = 'active',
+                    deleted_at = NULL,
+                    deleted_by = NULL
+                WHERE $idField = :id");
 
-        $this->db->bind(':id', $id);
+            $this->db->bind(':id', $id);
 
-        $result = $this->db->execute();
-
+            $result = $this->db->execute();
+        } else {
+            if ($this->hasColumn($table, 'is_active')) {
+                $this->db->query("UPDATE $table SET is_active = 1 WHERE $idField = :id");
+                $this->db->bind(':id', $id);
+                $result = $this->db->execute();
+            } else {
+                error_log("RestoreDeleted: no status or is_active column found on table $table");
+                return false;
+            }
+        }
         // Log the restore action
         if ($result) {
             $this->logRestore($table, $id, $userId);
@@ -82,13 +101,22 @@ trait SoftDelete
      */
     protected function getActiveRecords($table, $conditions = '')
     {
-        $whereClause = "WHERE (status != 'deleted' OR status IS NULL)";
-
-        if (!empty($conditions)) {
-            $whereClause .= " AND ($conditions)";
+        if ($this->hasColumn($table, 'status')) {
+            $whereClause = "WHERE (status != 'deleted' OR status IS NULL)";
+        } elseif ($this->hasColumn($table, 'is_active')) {
+            $whereClause = "WHERE is_active = 1";
+        } else {
+            // No soft-delete columns, return all records
+            $whereClause = "";
         }
 
-        $this->db->query("SELECT * FROM $table $whereClause ORDER BY created_at DESC");
+        if (!empty($conditions)) {
+            $whereClause .= ($whereClause ? ' AND (' : 'WHERE (') . $conditions . ')';
+        }
+
+        $orderBy = $this->hasColumn($table, 'created_at') ? 'ORDER BY created_at DESC' : '';
+
+        $this->db->query("SELECT * FROM $table $whereClause $orderBy");
         $this->db->execute();
 
         return $this->db->resultSet();
@@ -102,18 +130,26 @@ trait SoftDelete
      */
     protected function getDeletedRecords($table)
     {
-        $this->db->query("
-            SELECT *, 
-                   u.username as deleted_by_username,
-                   u.full_name as deleted_by_name
-            FROM $table t
-            LEFT JOIN users u ON t.deleted_by = u.user_id
-            WHERE t.status = 'deleted' 
-            ORDER BY t.deleted_at DESC
-        ");
+        if ($this->hasColumn($table, 'status')) {
+            $where = "t.status = 'deleted'";
+            $order = $this->hasColumn($table, 'deleted_at') ? 'ORDER BY t.deleted_at DESC' : '';
+            $join = $this->hasColumn($table, 'deleted_by') ? 'LEFT JOIN users u ON t.deleted_by = u.user_id' : '';
 
-        $this->db->execute();
-        return $this->db->resultSet();
+            $this->db->query(
+                "SELECT t.*, u.username as deleted_by_username, u.full_name as deleted_by_name FROM $table t $join WHERE $where $order"
+            );
+            $this->db->execute();
+            return $this->db->resultSet();
+        } elseif ($this->hasColumn($table, 'is_active')) {
+            // If using is_active flag, consider records with is_active = 0 as deleted
+            $join = $this->hasColumn($table, 'deleted_by') ? 'LEFT JOIN users u ON t.deleted_by = u.user_id' : '';
+            $order = $this->hasColumn($table, 'deleted_at') ? 'ORDER BY t.deleted_at DESC' : '';
+            $this->db->query("SELECT t.*, u.username as deleted_by_username, u.full_name as deleted_by_name FROM $table t $join WHERE t.is_active = 0 $order");
+            $this->db->execute();
+            return $this->db->resultSet();
+        } else {
+            return [];
+        }
     }
 
     /**
@@ -126,18 +162,38 @@ trait SoftDelete
      */
     protected function isDeleted($id, $table, $idField)
     {
-        $this->db->query("
-            SELECT status 
-            FROM $table 
-            WHERE $idField = :id
-        ");
+        if ($this->hasColumn($table, 'status')) {
+            $this->db->query("SELECT status FROM $table WHERE $idField = :id");
+            $this->db->bind(':id', $id);
+            $this->db->execute();
+            $record = $this->db->single();
+            return $record && $record->status === 'deleted';
+        } elseif ($this->hasColumn($table, 'is_active')) {
+            $this->db->query("SELECT is_active FROM $table WHERE $idField = :id");
+            $this->db->bind(':id', $id);
+            $this->db->execute();
+            $record = $this->db->single();
+            return $record && intval($record->is_active) === 0;
+        } else {
+            return false;
+        }
+    }
 
-        $this->db->bind(':id', $id);
-        $this->db->execute();
-
-        $record = $this->db->single();
-
-        return $record && $record->status === 'deleted';
+    /**
+     * Helper: check if a table has a given column
+     */
+    private function hasColumn($table, $column)
+    {
+        try {
+            $this->db->query("SHOW COLUMNS FROM $table LIKE :col");
+            $this->db->bind(':col', $column);
+            $this->db->execute();
+            $row = $this->db->single();
+            return (bool) $row;
+        } catch (Exception $e) {
+            // If any error occurs assume the column does not exist
+            return false;
+        }
     }
 
     /**

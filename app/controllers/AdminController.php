@@ -42,6 +42,17 @@ class AdminController extends BaseController
     }
 
     /**
+     * Pricing Dashboard - view for Price Bot and summary KPIs
+     */
+    public function pricing_dashboard()
+    {
+        $data = [
+            'title' => 'Pricing Dashboard'
+        ];
+        $this->view('admin/pricing_dashboard', $data);
+    }
+
+    /**
      * Check if current user has admin permissions
      */
     private function hasAdminPermissions()
@@ -71,10 +82,10 @@ class AdminController extends BaseController
         $systemHealth = $this->getSystemHealth();
 
         $data = [
-            'title'           => 'Admin Panel',
-            'stats'           => $stats,
+            'title' => 'Admin Panel',
+            'stats' => $stats,
             'recent_activity' => $recentActivity,
-            'system_health'   => $systemHealth
+            'system_health' => $systemHealth
         ];
 
         $this->view('admin/dashboard', $data);
@@ -118,7 +129,7 @@ class AdminController extends BaseController
 
         $data = [
             'title' => 'User Details - ' . ($user->name ?? $user->username),
-            'user'  => $user
+            'user' => $user
         ];
 
         $this->renderLayout('admin/viewUser', $data);
@@ -169,12 +180,12 @@ class AdminController extends BaseController
             }
 
             $data = [
-                'name'            => trim($_POST['name']),
-                'email'           => trim($_POST['email'] ?? ''),
-                'job_title'       => trim($_POST['job_title'] ?? ''),
-                'address'         => trim($_POST['address'] ?? ''),
-                'birthday'        => trim($_POST['birthday'] ?? ''),
-                'education'       => trim($_POST['education'] ?? ''),
+                'name' => trim($_POST['name']),
+                'email' => trim($_POST['email'] ?? ''),
+                'job_title' => trim($_POST['job_title'] ?? ''),
+                'address' => trim($_POST['address'] ?? ''),
+                'birthday' => trim($_POST['birthday'] ?? ''),
+                'education' => trim($_POST['education'] ?? ''),
                 'profile_picture' => $profilePicturePath
             ];
 
@@ -195,7 +206,7 @@ class AdminController extends BaseController
 
         $data = [
             'title' => 'Edit User Profile - ' . ($user->name ?? $user->username),
-            'user'  => $user
+            'user' => $user
         ];
 
         $this->renderLayout('admin/editUserProfile', $data);
@@ -238,12 +249,12 @@ class AdminController extends BaseController
         }
 
         $data = [
-            'title'       => 'User Management by Category',
-            'officials'   => $officials,
-            'customers'   => $customers,
+            'title' => 'User Management by Category',
+            'officials' => $officials,
+            'customers' => $customers,
             'contractors' => $contractors,
-            'counts'      => $counts,
-            'roles'       => $this->roleModel->getAllRoles()
+            'counts' => $counts,
+            'roles' => $this->roleModel->getAllRoles()
         ];
 
         $this->view('admin/user_categorization', $data);
@@ -287,11 +298,11 @@ class AdminController extends BaseController
         $sourceTable = strtolower(trim((string) $sourceTable));
         // Map common singular/plural variants and accidental values
         $tableMap = [
-            'user'        => 'users',
-            'users'       => 'users',
-            'customer'    => 'customers',
-            'customers'   => 'customers',
-            'contractor'  => 'contractors',
+            'user' => 'users',
+            'users' => 'users',
+            'customer' => 'customers',
+            'customers' => 'customers',
+            'contractor' => 'contractors',
             'contractors' => 'contractors'
         ];
 
@@ -471,12 +482,12 @@ class AdminController extends BaseController
                 $_POST = sanitizePost($_POST);
 
                 $data = [
-                    'name'     => trim($_POST['name'] ?? ''),
+                    'name' => trim($_POST['name'] ?? ''),
                     'username' => trim($_POST['username'] ?? ''),
-                    'email'    => trim($_POST['email'] ?? ''),
+                    'email' => trim($_POST['email'] ?? ''),
                     'password' => trim($_POST['password'] ?? ''),
-                    'role_id'  => intval($_POST['role_id'] ?? 0),
-                    'status'   => $_POST['status'] ?? 'active'
+                    'role_id' => intval($_POST['role_id'] ?? 0),
+                    'status' => $_POST['status'] ?? 'active'
                 ];
 
                 // Enhanced validation
@@ -524,10 +535,10 @@ class AdminController extends BaseController
                         echo json_encode([
                             'success' => true,
                             'message' => 'User created successfully',
-                            'user'    => [
-                                'name'     => $data['name'],
+                            'user' => [
+                                'name' => $data['name'],
                                 'username' => $data['username'],
-                                'email'    => $data['email']
+                                'email' => $data['email']
                             ]
                         ]);
                     } else {
@@ -567,15 +578,15 @@ class AdminController extends BaseController
                 $_POST = sanitizePost($_POST);
 
                 $data = [
-                    'name'       => trim($_POST['name'] ?? ''),
-                    'username'   => trim($_POST['username'] ?? ''),
-                    'email'      => trim($_POST['email'] ?? ''),
-                    'password'   => trim($_POST['password'] ?? ''),
-                    'role_id'    => intval($_POST['role_id'] ?? 0),
-                    'status'     => $_POST['status'] ?? 'active',
-                    'phone'      => trim($_POST['phone'] ?? ''),
+                    'name' => trim($_POST['name'] ?? ''),
+                    'username' => trim($_POST['username'] ?? ''),
+                    'email' => trim($_POST['email'] ?? ''),
+                    'password' => trim($_POST['password'] ?? ''),
+                    'role_id' => intval($_POST['role_id'] ?? 0),
+                    'status' => $_POST['status'] ?? 'active',
+                    'phone' => trim($_POST['phone'] ?? ''),
                     'department' => trim($_POST['department'] ?? ''),
-                    'hire_date'  => $_POST['hire_date'] ?? date('Y-m-d')
+                    'hire_date' => $_POST['hire_date'] ?? date('Y-m-d')
                 ];
 
                 $errors = $this->validateOfficialData($data);
@@ -585,8 +596,8 @@ class AdminController extends BaseController
 
                     if ($this->userModel->addUser($data)) {
                         echo json_encode([
-                            'success'  => true,
-                            'message'  => 'Official user created successfully',
+                            'success' => true,
+                            'message' => 'Official user created successfully',
                             'redirect' => 'admin/users'
                         ]);
                     } else {
@@ -629,19 +640,19 @@ class AdminController extends BaseController
 
                 // Customer data
                 $customerData = [
-                    'company_name'   => trim($_POST['company_name'] ?? ''),
+                    'company_name' => trim($_POST['company_name'] ?? ''),
                     'contact_person' => trim($_POST['contact_person'] ?? ''),
-                    'email'          => trim($_POST['email'] ?? ''),
-                    'phone'          => trim($_POST['phone'] ?? ''),
-                    'address'        => trim($_POST['address'] ?? ''),
-                    'city'           => trim($_POST['city'] ?? ''),
-                    'state'          => trim($_POST['state'] ?? ''),
-                    'zip_code'       => trim($_POST['zip_code'] ?? ''),
-                    'discount_type'  => $_POST['discount_type'] ?? 'percentage',
+                    'email' => trim($_POST['email'] ?? ''),
+                    'phone' => trim($_POST['phone'] ?? ''),
+                    'address' => trim($_POST['address'] ?? ''),
+                    'city' => trim($_POST['city'] ?? ''),
+                    'state' => trim($_POST['state'] ?? ''),
+                    'zip_code' => trim($_POST['zip_code'] ?? ''),
+                    'discount_type' => $_POST['discount_type'] ?? 'percentage',
                     'discount_value' => floatval($_POST['discount_value'] ?? 0),
-                    'credit_limit'   => floatval($_POST['credit_limit'] ?? 0),
-                    'payment_terms'  => intval($_POST['payment_terms'] ?? 30),
-                    'is_active'      => 1
+                    'credit_limit' => floatval($_POST['credit_limit'] ?? 0),
+                    'payment_terms' => intval($_POST['payment_terms'] ?? 30),
+                    'is_active' => 1
                 ];
 
                 $errors = $this->validateCustomerData($customerData);
@@ -650,8 +661,8 @@ class AdminController extends BaseController
                     $customerModel = new Customer();
                     if ($customerModel->addCustomer($customerData)) {
                         echo json_encode([
-                            'success'  => true,
-                            'message'  => 'Customer created successfully',
+                            'success' => true,
+                            'message' => 'Customer created successfully',
                             'redirect' => 'admin/users'
                         ]);
                     } else {
@@ -687,20 +698,20 @@ class AdminController extends BaseController
 
                 // Contractor data
                 $contractorData = [
-                    'company_name'     => trim($_POST['company_name'] ?? ''),
-                    'contact_person'   => trim($_POST['contact_person'] ?? ''),
-                    'email'            => trim($_POST['email'] ?? ''),
-                    'phone'            => trim($_POST['phone'] ?? ''),
-                    'address'          => trim($_POST['address'] ?? ''),
-                    'city'             => trim($_POST['city'] ?? ''),
-                    'state'            => trim($_POST['state'] ?? ''),
-                    'zip_code'         => trim($_POST['zip_code'] ?? ''),
-                    'specialty'        => trim($_POST['specialty'] ?? ''),
-                    'license_number'   => trim($_POST['license_number'] ?? ''),
-                    'commission_type'  => $_POST['commission_type'] ?? 'percentage',
+                    'company_name' => trim($_POST['company_name'] ?? ''),
+                    'contact_person' => trim($_POST['contact_person'] ?? ''),
+                    'email' => trim($_POST['email'] ?? ''),
+                    'phone' => trim($_POST['phone'] ?? ''),
+                    'address' => trim($_POST['address'] ?? ''),
+                    'city' => trim($_POST['city'] ?? ''),
+                    'state' => trim($_POST['state'] ?? ''),
+                    'zip_code' => trim($_POST['zip_code'] ?? ''),
+                    'specialty' => trim($_POST['specialty'] ?? ''),
+                    'license_number' => trim($_POST['license_number'] ?? ''),
+                    'commission_type' => $_POST['commission_type'] ?? 'percentage',
                     'commission_value' => floatval($_POST['commission_value'] ?? 0),
-                    'payment_terms'    => intval($_POST['payment_terms'] ?? 30),
-                    'is_active'        => 1
+                    'payment_terms' => intval($_POST['payment_terms'] ?? 30),
+                    'is_active' => 1
                 ];
 
                 $errors = $this->validateContractorData($contractorData);
@@ -709,8 +720,8 @@ class AdminController extends BaseController
                     $contractorModel = new Contractor();
                     if ($contractorModel->addContractor($contractorData)) {
                         echo json_encode([
-                            'success'  => true,
-                            'message'  => 'Contractor created successfully',
+                            'success' => true,
+                            'message' => 'Contractor created successfully',
                             'redirect' => 'admin/users'
                         ]);
                     } else {
@@ -814,11 +825,11 @@ class AdminController extends BaseController
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'user_id'      => $userId,
-                'name'         => trim($_POST['name']),
-                'email'        => trim($_POST['email']),
-                'role_id'      => intval($_POST['role_id']),
-                'status'       => $_POST['status'] ?? 'active',
+                'user_id' => $userId,
+                'name' => trim($_POST['name']),
+                'email' => trim($_POST['email']),
+                'role_id' => intval($_POST['role_id']),
+                'status' => $_POST['status'] ?? 'active',
                 'source_table' => $_POST['source_table'] ?? $_GET['source'] ?? 'users'
             ];
 
@@ -876,8 +887,8 @@ class AdminController extends BaseController
         $permissions = $this->getAvailablePermissions();
 
         $data = [
-            'title'       => 'Role Management',
-            'roles'       => $roles,
+            'title' => 'Role Management',
+            'roles' => $roles,
             'permissions' => $permissions
         ];
 
@@ -893,7 +904,7 @@ class AdminController extends BaseController
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'role_name'   => trim($_POST['role_name']),
+                'role_name' => trim($_POST['role_name']),
                 'description' => trim($_POST['description']),
                 'permissions' => $_POST['permissions'] ?? []
             ];
@@ -942,8 +953,8 @@ class AdminController extends BaseController
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'role_id'     => $roleId,
-                'role_name'   => trim($_POST['role_name']),
+                'role_id' => $roleId,
+                'role_name' => trim($_POST['role_name']),
                 'description' => trim($_POST['description']),
                 'permissions' => $_POST['permissions'] ?? []
             ];
@@ -992,12 +1003,12 @@ class AdminController extends BaseController
         $totalPages = ceil($totalActivities / $perPage);
 
         $data = [
-            'title'            => 'Activity Logs',
-            'activities'       => $activities,
+            'title' => 'Activity Logs',
+            'activities' => $activities,
             'total_activities' => $totalActivities,
-            'current_page'     => $page,
-            'total_pages'      => $totalPages,
-            'current_user'     => $_SESSION['user_name'] ?? 'Unknown'
+            'current_page' => $page,
+            'total_pages' => $totalPages,
+            'current_user' => $_SESSION['user_name'] ?? 'Unknown'
         ];
 
         $this->view('admin/activity_logs', $data);
@@ -1013,10 +1024,10 @@ class AdminController extends BaseController
 
             // Handle settings update
             $settings = [
-                'auto_approve_threshold'  => floatval($_POST['auto_approve_threshold'] ?? 1000),
+                'auto_approve_threshold' => floatval($_POST['auto_approve_threshold'] ?? 1000),
                 'low_Inventory_threshold' => intval($_POST['low_Inventory_threshold'] ?? 10),
-                'session_timeout'         => intval($_POST['session_timeout'] ?? 3600),
-                'backup_frequency'        => $_POST['backup_frequency'] ?? 'daily'
+                'session_timeout' => intval($_POST['session_timeout'] ?? 3600),
+                'backup_frequency' => $_POST['backup_frequency'] ?? 'daily'
             ];
 
             if ($this->updateSystemSettings($settings)) {
@@ -1029,7 +1040,7 @@ class AdminController extends BaseController
         $currentSettings = $this->getSystemSettings();
 
         $data = [
-            'title'    => 'System Settings',
+            'title' => 'System Settings',
             'settings' => $currentSettings
         ];
 
@@ -1042,40 +1053,40 @@ class AdminController extends BaseController
     private function getAvailablePermissions()
     {
         return [
-            'users'     => [
-                'label'       => 'User Management',
+            'users' => [
+                'label' => 'User Management',
                 'permissions' => ['create', 'read', 'update', 'delete']
             ],
-            'sales'     => [
-                'label'       => 'Sales',
+            'sales' => [
+                'label' => 'Sales',
                 'permissions' => ['create', 'read', 'update', 'delete']
             ],
             'purchases' => [
-                'label'       => 'Purchases',
+                'label' => 'Purchases',
                 'permissions' => ['create', 'read', 'update', 'delete', 'approve']
             ],
             'inventory' => [
-                'label'       => 'Inventory',
+                'label' => 'Inventory',
                 'permissions' => ['create', 'read', 'update', 'delete']
             ],
             'customers' => [
-                'label'       => 'Customers',
+                'label' => 'Customers',
                 'permissions' => ['create', 'read', 'update', 'delete']
             ],
             'suppliers' => [
-                'label'       => 'Suppliers',
+                'label' => 'Suppliers',
                 'permissions' => ['create', 'read', 'update', 'delete']
             ],
-            'reports'   => [
-                'label'       => 'Reports',
+            'reports' => [
+                'label' => 'Reports',
                 'permissions' => ['read', 'export']
             ],
-            'settings'  => [
-                'label'       => 'Settings',
+            'settings' => [
+                'label' => 'Settings',
                 'permissions' => ['read', 'update']
             ],
-            'admin'     => [
-                'label'       => 'Admin Panel',
+            'admin' => [
+                'label' => 'Admin Panel',
                 'permissions' => ['access']
             ]
         ];
@@ -1087,9 +1098,9 @@ class AdminController extends BaseController
     private function getSystemStats()
     {
         return [
-            'total_users'   => $this->userModel->getTotalUsers(),
-            'active_users'  => $this->userModel->getActiveUsers(),
-            'total_roles'   => $this->roleModel->getTotalRoles(),
+            'total_users' => $this->userModel->getTotalUsers(),
+            'active_users' => $this->userModel->getActiveUsers(),
+            'total_roles' => $this->roleModel->getTotalRoles(),
             'recent_logins' => $this->userModel->getRecentLoginsCount(7)
         ];
     }
@@ -1101,9 +1112,9 @@ class AdminController extends BaseController
     {
         return [
             'database_status' => $this->checkDatabaseConnection(),
-            'disk_space'      => $this->getDiskUsage(),
-            'php_version'     => phpversion(),
-            'memory_usage'    => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB'
+            'disk_space' => $this->getDiskUsage(),
+            'php_version' => phpversion(),
+            'memory_usage' => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB'
         ];
     }
 
@@ -1138,10 +1149,10 @@ class AdminController extends BaseController
         // This would typically be stored in database
         // For now, return defaults
         return [
-            'auto_approve_threshold'  => 1000,
+            'auto_approve_threshold' => 1000,
             'low_Inventory_threshold' => 10,
-            'session_timeout'         => 3600,
-            'backup_frequency'        => 'daily'
+            'session_timeout' => 3600,
+            'backup_frequency' => 'daily'
         ];
     }
 
@@ -1179,8 +1190,8 @@ class AdminController extends BaseController
         $availablePages = $this->getAvailablePages();
 
         $data = [
-            'title'           => 'User Permissions Management',
-            'users'           => $users,
+            'title' => 'User Permissions Management',
+            'users' => $users,
             'available_pages' => $availablePages
         ];
 
@@ -1193,60 +1204,60 @@ class AdminController extends BaseController
     private function getAvailablePages()
     {
         return [
-            'dashboard'     => [
-                'label'       => 'Dashboard',
+            'dashboard' => [
+                'label' => 'Dashboard',
                 'description' => 'Main dashboard access'
             ],
-            'sales'         => [
-                'label'       => 'Sales Management',
+            'sales' => [
+                'label' => 'Sales Management',
                 'description' => 'Manage sales, invoices, and transactions'
             ],
-            'purchases'     => [
-                'label'       => 'Purchase Management',
+            'purchases' => [
+                'label' => 'Purchase Management',
                 'description' => 'Manage purchases and suppliers'
             ],
-            'inventory'     => [
-                'label'       => 'Inventory Management',
+            'inventory' => [
+                'label' => 'Inventory Management',
                 'description' => 'Manage products, and inventory'
             ],
-            'customers'     => [
-                'label'       => 'Customer Management',
+            'customers' => [
+                'label' => 'Customer Management',
                 'description' => 'Manage customer information'
             ],
-            'suppliers'     => [
-                'label'       => 'Supplier Management',
+            'suppliers' => [
+                'label' => 'Supplier Management',
                 'description' => 'Manage supplier information'
             ],
-            'products'      => [
-                'label'       => 'Product Management',
+            'products' => [
+                'label' => 'Product Management',
                 'description' => 'Manage product catalog'
             ],
-            'reports'       => [
-                'label'       => 'Reports',
+            'reports' => [
+                'label' => 'Reports',
                 'description' => 'Access to various reports'
             ],
-            'settings'      => [
-                'label'       => 'System Settings',
+            'settings' => [
+                'label' => 'System Settings',
                 'description' => 'System configuration and settings'
             ],
-            'users'         => [
-                'label'       => 'User Management',
+            'users' => [
+                'label' => 'User Management',
                 'description' => 'Manage user accounts (Admin only)'
             ],
-            'cycle_counts'  => [
-                'label'       => 'Cycle Counts',
+            'cycle_counts' => [
+                'label' => 'Cycle Counts',
                 'description' => 'Inventory cycle counting'
             ],
-            'returns'       => [
-                'label'       => 'Returns Management',
+            'returns' => [
+                'label' => 'Returns Management',
                 'description' => 'Handle product returns'
             ],
-            'expenses'      => [
-                'label'       => 'Expense Management',
+            'expenses' => [
+                'label' => 'Expense Management',
                 'description' => 'Track business expenses'
             ],
             'notifications' => [
-                'label'       => 'Notifications',
+                'label' => 'Notifications',
                 'description' => 'System notifications'
             ]
         ];
@@ -1270,12 +1281,12 @@ class AdminController extends BaseController
 
         // Get filter parameters from URL
         $filters = [
-            'category'      => $_GET['category'] ?? '',
-            'price_range'   => $_GET['price_range'] ?? '',
-            'stock_status'  => $_GET['stock_status'] ?? '',
-            'stock_filter'  => $_GET['stock_filter'] ?? '',
+            'category' => $_GET['category'] ?? '',
+            'price_range' => $_GET['price_range'] ?? '',
+            'stock_status' => $_GET['stock_status'] ?? '',
+            'stock_filter' => $_GET['stock_filter'] ?? '',
             'margin_filter' => $_GET['margin_filter'] ?? '',
-            'sales_filter'  => $_GET['sales_filter'] ?? ''
+            'sales_filter' => $_GET['sales_filter'] ?? ''
         ];
 
         // Get products with pricing information
@@ -1285,10 +1296,10 @@ class AdminController extends BaseController
         $stats = $this->getPriceManagementStats($productModel);
 
         $data = [
-            'title'    => 'Price Management',
+            'title' => 'Price Management',
             'products' => $products,
-            'stats'    => $stats,
-            'filters'  => $filters
+            'stats' => $stats,
+            'filters' => $filters
         ];
 
         $this->view('admin/price_management', $data);
@@ -1331,8 +1342,8 @@ class AdminController extends BaseController
                 }
 
                 echo json_encode([
-                    'success'   => true,
-                    'message'   => $autoSave ? 'Price auto-saved' : 'Price updated successfully',
+                    'success' => true,
+                    'message' => $autoSave ? 'Price auto-saved' : 'Price updated successfully',
                     'new_price' => number_format($newPrice, 2)
                 ]);
             } else {
@@ -1370,7 +1381,7 @@ class AdminController extends BaseController
 
             echo json_encode([
                 'success' => true,
-                'data'    => $priceHistory
+                'data' => $priceHistory
             ]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -1433,8 +1444,8 @@ class AdminController extends BaseController
             }
 
             echo json_encode([
-                'success'       => true,
-                'message'       => "Successfully updated {$updatedCount} product prices",
+                'success' => true,
+                'message' => "Successfully updated {$updatedCount} product prices",
                 'updated_count' => $updatedCount
             ]);
         } catch (Exception $e) {
@@ -1566,8 +1577,8 @@ class AdminController extends BaseController
             }
 
             echo json_encode([
-                'success'       => true,
-                'message'       => "Successfully updated {$updatedCount} product prices",
+                'success' => true,
+                'message' => "Successfully updated {$updatedCount} product prices",
                 'updated_count' => $updatedCount
             ]);
         } catch (Exception $e) {
@@ -1584,18 +1595,18 @@ class AdminController extends BaseController
         try {
             $stats = $productModel->getPriceManagementStats();
             return [
-                'total_products'      => $stats['total_products'] ?? 0,
-                'average_margin'      => $stats['average_margin'] ?? 0,
+                'total_products' => $stats['total_products'] ?? 0,
+                'average_margin' => $stats['average_margin'] ?? 0,
                 'low_margin_products' => $stats['low_margin_products'] ?? 0,
-                'total_gross_margin'  => $stats['total_gross_margin'] ?? 0
+                'total_gross_margin' => $stats['total_gross_margin'] ?? 0
             ];
         } catch (Exception $e) {
             // Return default stats if there's an error
             return [
-                'total_products'      => 0,
-                'average_margin'      => 0,
+                'total_products' => 0,
+                'average_margin' => 0,
                 'low_margin_products' => 0,
-                'total_gross_margin'  => 0
+                'total_gross_margin' => 0
             ];
         }
     }
@@ -1639,5 +1650,175 @@ class AdminController extends BaseController
         }
 
         return round($newPrice, 2);
+    }
+
+    /**
+     * Execute Bot - Single execution endpoint for pricing bot
+     */
+    public function executeBot()
+    {
+        // Clear any existing output buffer to prevent HTML from interfering with JSON
+        if (ob_get_level()) {
+            ob_clean();
+        }
+
+        header('Content-Type: application/json');
+
+        if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+
+        $botId = $_POST['bot_id'] ?? '';
+
+        if (empty($botId)) {
+            echo json_encode(['success' => false, 'message' => 'Bot ID is required']);
+            return;
+        }
+
+        try {
+            // Handle different bot types
+            if ($botId === 'pricing_bot') {
+                $result = $this->executePricingBot();
+                echo json_encode($result);
+            } elseif ($botId === 'sales_bot') {
+                $result = $this->executeSalesBot();
+                echo json_encode($result);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Unknown bot type: ' . $botId]);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Bot execution error: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Execute Pricing Bot Logic
+     */
+    private function executePricingBot()
+    {
+        try {
+            $productModel = $this->model('Product');
+
+            // Get products that need price optimization
+            $products = $productModel->getProductsForPriceManagement();
+
+            if (empty($products)) {
+                return [
+                    'success' => true,
+                    'message' => 'No products need pricing optimization',
+                    'action' => 'skipped_pricing',
+                    'details' => 'All products have optimal pricing'
+                ];
+            }
+
+            // Select a random product for bot processing (limit to prevent mass changes)
+            $selectedProduct = $products[array_rand($products)];
+
+            // Calculate optimal price using bot algorithm
+            $currentPrice = (float) $selectedProduct->price; // Use 'price' not 'selling_price'
+            $costPrice = (float) $selectedProduct->cost; // Use 'cost' not 'purchase_price'
+
+            if ($costPrice <= 0) {
+                return [
+                    'success' => false,
+                    'message' => 'Cannot calculate price: invalid cost price',
+                    'action' => 'pricing_error',
+                    'details' => "Product {$selectedProduct->name} has invalid cost price"
+                ];
+            }
+
+            // Bot pricing algorithm - target 30% margin with slight variation
+            $targetMargin = 0.30; // 30% profit margin
+            $variation = (rand(-50, 50) / 1000); // ±5% variation
+            $finalMargin = $targetMargin + $variation;
+
+            $newPrice = $costPrice / (1 - $finalMargin);
+
+            // Apply safety limits
+            $minPrice = $costPrice * 1.10; // Minimum 10% markup
+            $maxPrice = $costPrice * 2.50; // Maximum 150% markup
+            $newPrice = max($minPrice, min($maxPrice, $newPrice));
+
+            // Round to nearest cent
+            $newPrice = round($newPrice, 2);
+
+            // Only update if price changed significantly (more than 1%)
+            $priceChangePercent = abs(($newPrice - $currentPrice) / $currentPrice) * 100;
+
+            if ($priceChangePercent < 1.0) {
+                return [
+                    'success' => true,
+                    'message' => 'Price already optimal',
+                    'action' => 'no_price_change',
+                    'details' => "Price for {$selectedProduct->name} is within 1% of optimal"
+                ];
+            }
+
+            // Update the price in database
+            $updateResult = $productModel->updateProductPrice(
+                $selectedProduct->product_id,
+                $newPrice
+            );
+
+            if (!$updateResult) {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to update product price',
+                    'action' => 'pricing_error'
+                ];
+            }
+
+            // Calculate profit margin
+            $newMargin = (($newPrice - $costPrice) / $newPrice) * 100;
+            $priceChange = $newPrice - $currentPrice;
+            $changeDirection = $priceChange > 0 ? 'increased' : 'decreased';
+
+            return [
+                'success' => true,
+                'message' => 'Price optimized successfully',
+                'action' => 'price_updated',
+                'details' => "Price for {$selectedProduct->name} {$changeDirection} from $" . number_format($currentPrice, 2) . " to $" . number_format($newPrice, 2) . " (Margin: " . round($newMargin, 1) . "%)",
+                'product_name' => $selectedProduct->name,
+                'old_price' => $currentPrice,
+                'new_price' => $newPrice,
+                'price_change' => $priceChange,
+                'margin_percent' => round($newMargin, 1),
+                'change_percent' => round($priceChangePercent, 2)
+            ];
+
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Pricing bot error: ' . $e->getMessage(),
+                'action' => 'error'
+            ];
+        }
+    }
+
+    /**
+     * Execute Sales Bot Logic - Delegate to BotController
+     */
+    private function executeSalesBot()
+    {
+        try {
+            // Use the BotController to execute sales bot logic
+            require_once APPROOT . '/app/controllers/BotController.php';
+            $botController = new BotController();
+
+            // Use reflection to access the private method
+            $reflection = new ReflectionClass($botController);
+            $method = $reflection->getMethod('executeSalesBot');
+            $method->setAccessible(true);
+
+            return $method->invoke($botController);
+
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Sales bot error: ' . $e->getMessage(),
+                'action' => 'error'
+            ];
+        }
     }
 }

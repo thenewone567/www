@@ -15,7 +15,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
             </h1>
             <small class="text-muted">Manage product pricing, margins, and bulk updates</small>
         </div>
-        <div class="col-12 col-md-6 text-md-right">
+        <!-- <div class="col-12 col-md-6 text-md-right">
             <div class="btn-group" role="group">
                 <button class="btn-theme btn-success-theme" onclick="bulkPriceUpdate()">
                     <i class="fas fa-edit mr-2"></i>Bulk Update
@@ -27,7 +27,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                     <i class="fas fa-upload mr-2"></i>Import Prices
                 </button>
             </div>
-        </div>
+        </div> -->
     </div>
 </div>
 
@@ -96,6 +96,51 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         </div>
     </div>
 
+    <!-- Bubble Chart Analysis -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-theme">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bubble mr-2"></i>Price & Margin Analysis
+                    </h5>
+                    <small class="text-muted">Visual analysis of price, margin, revenue and profitability</small>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 400px;">
+                        <canvas id="bubbleChart"></canvas>
+                    </div>
+                    <div class="chart-legend mt-3">
+                        <div class="row text-center">
+                            <div class="col-md-2">
+                                <small class="text-muted"><strong>X-Axis:</strong> Price per Unit ($)</small>
+                            </div>
+                            <div class="col-md-2">
+                                <small class="text-muted"><strong>Y-Axis:</strong> Gross Margin (%)</small>
+                            </div>
+                            <div class="col-md-2">
+                                <small class="text-muted"><strong>Bubble Size:</strong> Revenue/Sales Volume</small>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    <span style="color: #28a745;">●</span> Profitable &nbsp;
+                                    <span style="color: #dc3545;">●</span> Loss-making &nbsp;
+                                    <span style="color: #ffc107;">●</span> Needs Pricing
+                                </small>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12 text-center">
+                                <small class="text-muted"><em>Orange bubbles show products without prices (positioned at
+                                        estimated 30% markup for visualization)</em></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Margin Management Controls -->
     <div class="margin-management-section mb-4">
         <div class="row">
@@ -108,113 +153,457 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         </h5>
                     </div>
                     <div class="card-body">
-                        <!-- Target Gross Margin -->
-                        <div class="mb-3">
-                            <label>Target Gross Margin</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="targetGrossMargin" value="25" step="0.1"
-                                    min="10" max="50">
-                                <div class="input-group-append">
-                                    <span class="input-group-text">%</span>
-                                </div>
-                            </div>
-                            <small class="text-muted">Overall target for all products combined</small>
-                        </div>
+                        <!-- Range-Based Margin Pricing -->
+                        <div class="mb-4">
+                            <h6 class="font-weight-bold text-primary mb-3">
+                                <i class="fas fa-layer-group mr-2"></i>Price Range Margin Settings
+                            </h6>
+                            <p class="text-muted small mb-3">
+                                Set different profit margins for different cost ranges. Selling Price = Cost × (1 +
+                                Margin%).
+                                <br><strong>Positive Example:</strong> Cost $20 with 150% margin = Selling Price $50
+                                (Profit $30)
+                                <br><strong>Negative Example:</strong> Cost $20 with -30% margin = Selling Price $14
+                                (Loss $6 - Dead Stock Clearance)
+                                <br><span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Use negative
+                                    margins to clear dead stock at a loss</span>
+                            </p>
 
-                        <!-- Volume-Based Strategy -->
-                        <div class="mb-3">
-                            <label class="font-weight-bold">Volume-Based Pricing Strategy</label>
-                            <div class="row mt-2">
-                                <div class="col-6">
-                                    <label class="small">High Volume (>100/month)</label>
-                                    <div class="input-group input-group-sm">
-                                        <input type="number" class="form-control" id="highVolumeMargin" value="15"
-                                            step="1" min="5" max="200">
-                                        <div class="input-group-append">
-                                            <span class="input-group-text">%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <label class="small">Low Volume (<10 /month)</label>
-                                            <div class="input-group input-group-sm">
-                                                <input type="number" class="form-control" id="lowVolumeMargin"
-                                                    value="45" step="1" min="10" max="500">
-                                                <div class="input-group-append">
-                                                    <span class="input-group-text">%</span>
+                            <div class="row">
+                                <!-- Range 1 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="price-range-row p-3 border rounded">
+                                        <label class="small font-weight-bold text-info">Range 1</label>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range1_from" placeholder="From" value="0" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range1_to" placeholder="To" value="50" min="0"
+                                                            step="0.01">
+                                                    </div>
                                                 </div>
+                                                <small class="text-muted">Cost Range ($)</small>
                                             </div>
+                                            <div class="col-5">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" id="range1_margin"
+                                                        value="150" min="-90" max="1000" step="5">
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Margin (-90% to 1000%)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Range 2 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="price-range-row p-3 border rounded">
+                                        <label class="small font-weight-bold text-info">Range 2</label>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range2_from" placeholder="From" value="50.01" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range2_to" placeholder="To" value="100" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Cost Range ($)</small>
+                                            </div>
+                                            <div class="col-5">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" id="range2_margin"
+                                                        value="120" min="-90" max="1000" step="5">
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Margin (-90% to 1000%)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Range 3 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="price-range-row p-3 border rounded">
+                                        <label class="small font-weight-bold text-info">Range 3</label>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range3_from" placeholder="From" value="100.01" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range3_to" placeholder="To" value="200" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Cost Range ($)</small>
+                                            </div>
+                                            <div class="col-5">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" id="range3_margin"
+                                                        value="100" min="-90" max="1000" step="5">
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Margin (-90% to 1000%)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Range 4 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="price-range-row p-3 border rounded">
+                                        <label class="small font-weight-bold text-info">Range 4</label>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range4_from" placeholder="From" value="200.01" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range4_to" placeholder="To" value="500" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Cost Range ($)</small>
+                                            </div>
+                                            <div class="col-5">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" id="range4_margin"
+                                                        value="80" min="-90" max="1000" step="5">
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Margin (-90% to 1000%)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Range 5 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="price-range-row p-3 border rounded">
+                                        <label class="small font-weight-bold text-info">Range 5</label>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range5_from" placeholder="From" value="500.01" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range5_to" placeholder="To" value="1000" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Cost Range ($)</small>
+                                            </div>
+                                            <div class="col-5">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" id="range5_margin"
+                                                        value="60" min="-90" max="1000" step="5">
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Margin (-90% to 1000%)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Range 6 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="price-range-row p-3 border rounded">
+                                        <label class="small font-weight-bold text-info">Range 6</label>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range6_from" placeholder="From" value="1000.01" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range6_to" placeholder="To" value="2000" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Cost Range ($)</small>
+                                            </div>
+                                            <div class="col-5">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" id="range6_margin"
+                                                        value="50" min="-90" max="1000" step="5">
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Margin (-90% to 1000%)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Range 7 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="price-range-row p-3 border rounded">
+                                        <label class="small font-weight-bold text-info">Range 7</label>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range7_from" placeholder="From" value="2000.01" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range7_to" placeholder="To" value="5000" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Cost Range ($)</small>
+                                            </div>
+                                            <div class="col-5">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" id="range7_margin"
+                                                        value="40" min="-90" max="1000" step="5">
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Margin (-90% to 1000%)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Range 8 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="price-range-row p-3 border rounded">
+                                        <label class="small font-weight-bold text-info">Range 8</label>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range8_from" placeholder="From" value="5000.01" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range8_to" placeholder="To" value="10000" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Cost Range ($)</small>
+                                            </div>
+                                            <div class="col-5">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" id="range8_margin"
+                                                        value="30" min="-90" max="1000" step="5">
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Margin (-90% to 1000%)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Range 9 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="price-range-row p-3 border rounded">
+                                        <label class="small font-weight-bold text-info">Range 9</label>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range9_from" placeholder="From" value="10000.01" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range9_to" placeholder="To" value="20000" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Cost Range ($)</small>
+                                            </div>
+                                            <div class="col-5">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" id="range9_margin"
+                                                        value="25" min="-90" max="1000" step="5">
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Margin (-90% to 1000%)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Range 10 -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="price-range-row p-3 border rounded">
+                                        <label class="small font-weight-bold text-info">Range 10</label>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range10_from" placeholder="From" value="20000.01"
+                                                            min="0" step="0.01">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="number" class="form-control form-control-sm"
+                                                            id="range10_to" placeholder="To" value="999999" min="0"
+                                                            step="0.01">
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Cost Range ($)</small>
+                                            </div>
+                                            <div class="col-5">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" id="range10_margin"
+                                                        value="20" min="-90" max="1000" step="5">
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Margin (-90% to 1000%)</small>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <small class="text-muted">High volume = competitive pricing, Low volume = higher
-                                margins</small>
                         </div>
 
-                        <!-- Price Limit Controls -->
-                        <div class="mb-3">
-                            <label class="font-weight-bold text-primary">
-                                <i class="fas fa-shield-alt mr-1"></i>Price Safety Limits
-                            </label>
-                            <div class="row mt-2">
-                                <div class="col-6">
-                                    <label class="small text-danger">Maximum Loss Limit</label>
+                        <!-- Dead Stock Clearance Section -->
+                        <div class="mb-4">
+                            <hr class="my-4">
+                            <h6 class="font-weight-bold text-danger mb-3">
+                                <i class="fas fa-fire mr-2"></i>Dead Stock Clearance (Negative Margins)
+                            </h6>
+                            <div class="alert alert-warning">
+                                <small><i class="fas fa-exclamation-triangle mr-2"></i>
+                                    <strong>Warning:</strong> These settings will result in selling at a loss to clear
+                                    inventory.
+                                </small>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3 mb-2">
+                                    <button class="btn btn-outline-danger btn-sm w-100" onclick="applyQuickMargin(-10)">
+                                        <i class="fas fa-percentage mr-1"></i>-10% Loss
+                                    </button>
+                                    <small class="text-muted d-block text-center">Light clearance</small>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <button class="btn btn-outline-danger btn-sm w-100" onclick="applyQuickMargin(-25)">
+                                        <i class="fas fa-percentage mr-1"></i>-25% Loss
+                                    </button>
+                                    <small class="text-muted d-block text-center">Moderate clearance</small>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <button class="btn btn-danger btn-sm w-100" onclick="applyQuickMargin(-50)">
+                                        <i class="fas fa-percentage mr-1"></i>-50% Loss
+                                    </button>
+                                    <small class="text-muted d-block text-center">Heavy clearance</small>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <button class="btn btn-danger btn-sm w-100" onclick="applyQuickMargin(-75)">
+                                        <i class="fas fa-percentage mr-1"></i>-75% Loss
+                                    </button>
+                                    <small class="text-muted d-block text-center">Emergency clearance</small>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <label class="small font-weight-bold">Custom Negative Margin</label>
                                     <div class="input-group input-group-sm">
-                                        <input type="number" class="form-control" id="maxLossLimit" value="0" step="0.5"
-                                            min="0" max="100">
+                                        <input type="number" class="form-control" id="customNegativeMargin"
+                                            placeholder="Enter negative %" min="-90" max="-1" step="1">
                                         <div class="input-group-append">
                                             <span class="input-group-text">%</span>
                                         </div>
-                                    </div>
-                                    <small class="text-muted">Min margin: 0% (no loss)</small>
-                                </div>
-                                <div class="col-6">
-                                    <label class="small text-success">Maximum Profit Limit</label>
-                                    <div class="input-group input-group-sm">
-                                        <input type="number" class="form-control" id="maxProfitLimit" value="1000"
-                                            step="10" min="50" max="2000">
                                         <div class="input-group-append">
-                                            <span class="input-group-text">%</span>
+                                            <button class="btn btn-outline-danger"
+                                                onclick="applyCustomNegativeMargin()">
+                                                Apply
+                                            </button>
                                         </div>
                                     </div>
-                                    <small class="text-muted">Max margin: 1000% cap</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small font-weight-bold">Quick Example</label>
+                                    <div class="small text-muted">
+                                        Cost $100 with -30% = Sell $70 (Loss $30)
+                                    </div>
                                 </div>
                             </div>
-                            <div class="mt-2">
-                                <div class="form-check form-check-inline">
-                                    <input type="checkbox" class="form-check-input" id="enablePriceLimits" checked>
-                                    <label class="form-check-label" for="enablePriceLimits">
-                                        <small>Enable automatic price validation</small>
-                                    </label>
-                                </div>
-                            </div>
-                            <small class="text-muted">Prevents prices from exceeding safety thresholds during
-                                updates</small>
                         </div>
 
-                        <!-- Selection -->
+                        <!-- Action Buttons -->
                         <div class="mb-3">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="selectAllVisible">
-                                <label class="form-check-label" for="selectAllVisible">
-                                    Select all visible products (<span id="visibleCount">0</span>)
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="selectAllForMargin">
+                                <label class="form-check-label" for="selectAllForMargin">
+                                    Apply to all products (or select individual products in table below)
                                 </label>
                             </div>
+
+                            <div class="btn-group w-100" role="group">
+                                <button class="btn btn-success" onclick="applyRangeBasedMargins()">
+                                    <i class="fas fa-calculator mr-2"></i>Calculate & Apply Margins
+                                </button>
+                                <button class="btn btn-info" onclick="previewRangeBasedMargins()">
+                                    <i class="fas fa-eye mr-2"></i>Preview Changes
+                                </button>
+                                <button class="btn btn-warning" onclick="resetMarginRanges()">
+                                    <i class="fas fa-undo mr-2"></i>Reset to Defaults
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Smart Actions -->
-                        <div class="btn-group-vertical w-100">
-                            <button class="btn btn-primary mb-2" onclick="calculateSmartMargins()">
-                                <i class="fas fa-calculator mr-2"></i>Calculate Smart Margins
-                            </button>
-                            <button class="btn btn-success mb-2" onclick="applySmartMargins()">
-                                <i class="fas fa-magic mr-2"></i>Apply Smart Pricing to Selected
-                            </button>
-                            <button class="btn btn-info mb-2" onclick="previewGrossMarginImpact()">
-                                <i class="fas fa-eye mr-2"></i>Preview Gross Margin Impact
-                            </button>
-                            <button class="btn btn-warning mb-2" onclick="applyPriceLimitsToAll()">
-                                <i class="fas fa-shield-alt mr-2"></i>Apply Limits to All Prices
-                            </button>
+                        <!-- Preview Area -->
+                        <div id="marginPreview" class="alert alert-info" style="display: none;">
+                            <h6><i class="fas fa-info-circle mr-2"></i>Margin Preview</h6>
+                            <div id="marginPreviewContent"></div>
                         </div>
 
                         <div class="mt-3 text-center">
@@ -258,7 +647,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             <th width="50">#</th>
                             <th>Product Details</th>
                             <th>Category</th>
-                            <th>Purchase Price</th>
+                            <th>Cost Analysis</th>
                             <th>Expected Sale Price</th>
                             <th>Margin</th>
                             <th>Stock</th>
@@ -272,14 +661,18 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             <?php $index = 1; ?>
                             <?php foreach ($data['products'] as $product): ?>
                                 <?php
-                                // Calculate values
-                                $purchasePrice = $product->cost ?? 0;
+                                // Dual-cost system for better profitability analysis
+                                $basePurchasePrice = $product->base_purchase_price ?? 0;  // Original/supplier cost
+                                $currentAverageCost = $product->current_average_cost ?? 0; // Real average cost
+                                $effectiveCost = $product->cost ?? 0; // Cost used for calculations (prioritizes current_average_cost)
                                 $salePrice = $product->price ?? 0;
-                                $margin = 0;
-                                $profitPerUnit = $salePrice - $purchasePrice;
 
-                                if ($salePrice > 0 && $purchasePrice > 0) {
-                                    $margin = (($salePrice - $purchasePrice) / $salePrice) * 100;
+                                // Use effective cost for profit calculations
+                                $margin = 0;
+                                $profitPerUnit = $salePrice - $effectiveCost;
+
+                                if ($salePrice > 0 && $effectiveCost > 0) {
+                                    $margin = (($salePrice - $effectiveCost) / $salePrice) * 100;
                                 }
 
                                 $monthlySales = round(($product->total_sold ?? 0) / 3);
@@ -306,7 +699,12 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                         <div class="d-flex align-items-center">
                                             <?php if (!empty($product->image_path)): ?>
                                                 <img src="<?= URLROOT ?>/<?= $product->image_path ?>" alt="Product Image"
-                                                    class="rounded mr-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                                    class="rounded mr-3" style="width: 40px; height: 40px; object-fit: cover;"
+                                                    onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="bg-light rounded mr-3 align-items-center justify-content-center"
+                                                    style="width: 40px; height: 40px; display: none;">
+                                                    <i class="fas fa-box text-muted"></i>
+                                                </div>
                                             <?php else: ?>
                                                 <div class="bg-light rounded mr-3 d-flex align-items-center justify-content-center"
                                                     style="width: 40px; height: 40px;">
@@ -327,9 +725,24 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                             class="badge badge-light"><?= htmlspecialchars($product->category_name ?? 'Uncategorized') ?></span>
                                     </td>
                                     <td class="text-right">
-                                        <strong class="text-danger">₹<?= number_format($purchasePrice, 2) ?></strong>
-                                        <br>
-                                        <small class="text-muted">Cost</small>
+                                        <div class="cost-analysis">
+                                            <div>
+                                                <strong class="text-danger">₹<?= number_format($effectiveCost, 2) ?></strong>
+                                                <small class="text-muted ml-1">(Current)</small>
+                                            </div>
+                                            <?php if ($basePurchasePrice > 0 && $basePurchasePrice != $effectiveCost): ?>
+                                                <div class="mt-1">
+                                                    <small class="text-muted">Base:
+                                                        ₹<?= number_format($basePurchasePrice, 2) ?></small>
+                                                </div>
+                                            <?php endif; ?>
+                                            <?php if ($currentAverageCost > 0 && $currentAverageCost != $basePurchasePrice): ?>
+                                                <div>
+                                                    <small class="text-info">Avg:
+                                                        ₹<?= number_format($currentAverageCost, 2) ?></small>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                     <td class="text-right">
                                         <div class="input-group input-group-sm" style="width: 120px;">
@@ -339,7 +752,8 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                             <input type="number" class="form-control text-right sale-price-input"
                                                 value="<?= number_format($salePrice, 2, '.', '') ?>" step="0.01" min="0"
                                                 data-product-id="<?= $product->product_id ?? 0 ?>"
-                                                data-cost="<?= $purchasePrice ?>" onchange="updateSalePrice(this)">
+                                                data-cost="<?= $effectiveCost ?>" data-base-cost="<?= $basePurchasePrice ?>"
+                                                data-avg-cost="<?= $currentAverageCost ?>" onchange="updateSalePrice(this)">
                                         </div>
                                     </td>
                                     <td class="text-center">
@@ -387,7 +801,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                         <?php
                                         // Calculate profit/loss percentage based on margin
                                         $profitLossPercent = $margin;
-                                        $profitPerUnit = $salePrice - $purchasePrice;
+                                        $profitPerUnit = $salePrice - $effectiveCost;
 
                                         // Determine if it's profit or loss
                                         $isProfit = $profitLossPercent >= 0;
@@ -468,6 +882,303 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
 
 <script>
+    // Range-Based Margin Functions (Global scope for onclick handlers)
+    function applyRangeBasedMargins() {
+        console.log('Initiating range-based margin application...');
+        console.log('URLROOT:', '<?= URLROOT ?>');
+
+        const ranges = getRangeSettings();
+        const applyToAll = document.getElementById('selectAllForMargin').checked;
+
+        if (!applyToAll) {
+            const selectedProducts = $('.product-checkbox:checked');
+            if (selectedProducts.length === 0) {
+                alert('Please select products or check "Apply to all products"');
+                return;
+            }
+        }
+
+        if (!confirm('Apply range-based margins to selected products?\n\nThis will update selling prices based on cost ranges and SAVE to database.')) {
+            return;
+        }
+
+        let updateCount = 0;
+        let saveCount = 0;
+        const savePromises = [];
+
+        // Get the correct table rows based on the actual table structure
+        const products = applyToAll ? $('#productPriceTable tbody tr') : $('.product-checkbox:checked').closest('tr');
+        console.log(`Found ${products.length} products to update`);
+        console.log('First product element:', products.first()[0]);
+        console.log('First product data-product-id:', products.first().data('product-id'));
+
+        products.each(function (index) {
+            const row = $(this);
+            const productId = row.data('product-id');
+            console.log(`Product ${index}: ID = ${productId}`);
+
+            // Find the sale price input in this row
+            const priceInput = row.find('.sale-price-input');
+
+            if (priceInput.length) {
+                // Get the cost from the data attribute of the price input
+                const cost = parseFloat(priceInput.data('cost')) || 0;
+                console.log(`Processing product ${productId}: cost = ${cost}`);
+
+                if (cost > 0 && productId) {
+                    const margin = getMarginForCost(cost, ranges);
+                    const newPrice = cost * (1 + margin / 100);
+                    console.log(`Product ${productId}: applying ${margin}% margin, new price = ${newPrice.toFixed(2)}`);
+
+                    // Update the price input
+                    priceInput.val(newPrice.toFixed(2));
+
+                    // Call the updateSalePrice function to update margin displays
+                    updateSalePrice(priceInput[0]);
+                    updateCount++;
+
+                    // Save to database
+                    console.log(`Preparing to save product ${productId} with price ${newPrice.toFixed(2)}`);
+                    console.log(`API URL: <?= URLROOT ?>/api/updateProductPrice.php`);
+
+                    const savePromise = fetch('<?= URLROOT ?>/api/updateProductPrice.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            product_id: productId,
+                            price: parseFloat(newPrice.toFixed(2))
+                        })
+                    })
+                        .then(response => {
+                            console.log(`Response status for product ${productId}:`, response.status);
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.text(); // Get text first to see what we're actually receiving
+                        })
+                        .then(responseText => {
+                            console.log(`Raw response for product ${productId}:`, responseText.substring(0, 200) + '...');
+                            try {
+                                const data = JSON.parse(responseText);
+                                console.log(`Response data for product ${productId}:`, data);
+                                if (data.success) {
+                                    console.log(`Successfully saved price for product ${productId}`);
+                                    saveCount++;
+                                    // Add visual indicator for successful save
+                                    priceInput.addClass('border-success');
+                                    setTimeout(() => priceInput.removeClass('border-success'), 2000);
+                                } else {
+                                    console.error(`Failed to save price for product ${productId}:`, data.error);
+                                    throw new Error(data.error || 'Unknown API error');
+                                }
+                            } catch (parseError) {
+                                console.error(`JSON parse error for product ${productId}:`, parseError);
+                                console.error(`Full response text:`, responseText);
+                                throw new Error(`Invalid JSON response: ${parseError.message}`);
+                            }
+                        })
+                        .catch(error => {
+                            console.error(`Error saving price for product ${productId}:`, error);
+                            // Add visual indicator for failed save
+                            priceInput.addClass('border-danger');
+                            setTimeout(() => priceInput.removeClass('border-danger'), 3000);
+                        });
+
+                    savePromises.push(savePromise);
+                }
+            }
+        });
+
+        console.log(`Total save promises created: ${savePromises.length}`);
+
+        // Wait for all saves to complete
+        if (savePromises.length > 0) {
+            Promise.allSettled(savePromises).then(results => {
+                const failedSaves = results.filter(result => result.status === 'rejected').length;
+                const successSaves = results.length - failedSaves;
+
+                console.log(`Range-based margins applied to ${updateCount} products, ${successSaves} saved to database`);
+
+                if (failedSaves > 0) {
+                    showToast(`Margins applied to ${updateCount} products. ${successSaves} saved, ${failedSaves} failed to save.`, 'warning');
+                } else {
+                    showToast(`Range-based margins applied and saved for ${successSaves} products!`, 'success');
+                }
+            });
+        } else {
+            console.log('No products were eligible for saving');
+            showToast(`Margins applied to ${updateCount} products but no prices were saved (no valid product IDs or costs).`, 'warning');
+        }
+    }
+
+    function previewRangeBasedMargins() {
+        const ranges = getRangeSettings();
+        const applyToAll = document.getElementById('selectAllForMargin').checked;
+        const products = applyToAll ? $('#productPriceTable tbody tr') : $('.product-checkbox:checked').closest('tr');
+
+        if (products.length === 0) {
+            alert('No products selected for preview');
+            return;
+        }
+
+        let previewHtml = '<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Product</th><th>Current Cost</th><th>Current Price</th><th>New Price</th><th>Margin</th><th>Profit/Loss</th></tr></thead><tbody>';
+
+        products.each(function () {
+            const row = $(this);
+            // Get product name from the product details column (assuming it's in the 2nd column)
+            const productName = row.find('td:eq(1) strong').text().trim() || 'Unknown Product';
+            const priceInput = row.find('.sale-price-input');
+
+            if (priceInput.length) {
+                const cost = parseFloat(priceInput.data('cost')) || 0;
+                const currentPrice = parseFloat(priceInput.val()) || 0;
+
+                if (cost > 0) {
+                    const margin = getMarginForCost(cost, ranges);
+                    const newPrice = cost * (1 + margin / 100);
+                    const profitLoss = newPrice - cost;
+                    const isLoss = profitLoss < 0;
+
+                    const marginBadge = margin < 0 ?
+                        `<span class="badge badge-danger">${margin}%</span>` :
+                        `<span class="badge badge-info">${margin}%</span>`;
+
+                    const profitLossDisplay = isLoss ?
+                        `<span class="text-danger font-weight-bold">-$${Math.abs(profitLoss).toFixed(2)} LOSS</span>` :
+                        `<span class="text-success">+$${profitLoss.toFixed(2)}</span>`;
+
+                    previewHtml += `<tr ${isLoss ? 'class="table-warning"' : ''}>
+                        <td>${productName}</td>
+                        <td>$${cost.toFixed(2)}</td>
+                        <td>$${currentPrice.toFixed(2)}</td>
+                        <td><strong>$${newPrice.toFixed(2)}</strong></td>
+                        <td>${marginBadge}</td>
+                        <td>${profitLossDisplay}</td>
+                    </tr>`;
+                }
+            }
+        });
+
+        previewHtml += '</tbody></table></div>';
+
+        document.getElementById('marginPreviewContent').innerHTML = previewHtml;
+        document.getElementById('marginPreview').style.display = 'block';
+    }
+
+    function resetMarginRanges() {
+        if (!confirm('Reset all margin ranges to default values?')) {
+            return;
+        }
+
+        // Default ranges and margins
+        const defaults = [
+            { from: 0, to: 50, margin: 150 },
+            { from: 50.01, to: 100, margin: 120 },
+            { from: 100.01, to: 200, margin: 100 },
+            { from: 200.01, to: 500, margin: 80 },
+            { from: 500.01, to: 1000, margin: 60 },
+            { from: 1000.01, to: 2000, margin: 50 },
+            { from: 2000.01, to: 5000, margin: 40 },
+            { from: 5000.01, to: 10000, margin: 30 },
+            { from: 10000.01, to: 20000, margin: 25 },
+            { from: 20000.01, to: 999999, margin: 20 }
+        ];
+
+        defaults.forEach((range, index) => {
+            const rangeNum = index + 1;
+            document.getElementById(`range${rangeNum}_from`).value = range.from;
+            document.getElementById(`range${rangeNum}_to`).value = range.to;
+            document.getElementById(`range${rangeNum}_margin`).value = range.margin;
+        });
+
+        showToast('Margin ranges reset to defaults', 'info');
+    }
+
+    function getRangeSettings() {
+        const ranges = [];
+        for (let i = 1; i <= 10; i++) {
+            const from = parseFloat(document.getElementById(`range${i}_from`).value) || 0;
+            const to = parseFloat(document.getElementById(`range${i}_to`).value) || 0;
+            const margin = parseFloat(document.getElementById(`range${i}_margin`).value) || 0;
+
+            ranges.push({ from, to, margin });
+        }
+        return ranges;
+    }
+
+    function getMarginForCost(cost, ranges) {
+        for (const range of ranges) {
+            if (cost >= range.from && cost <= range.to) {
+                return range.margin;
+            }
+        }
+        // Default margin if no range matches
+        return 50;
+    }
+
+    // Dead Stock Clearance Functions
+    function applyQuickMargin(marginPercent) {
+        console.log(`Applying quick margin: ${marginPercent}%`);
+
+        const selectedProducts = $('.product-checkbox:checked');
+        if (selectedProducts.length === 0) {
+            alert('Please select products to apply negative margin pricing.');
+            return;
+        }
+
+        const action = marginPercent <= -50 ? 'HEAVY/EMERGENCY clearance' : 'clearance';
+        if (!confirm(`Apply ${marginPercent}% margin (${action}) to ${selectedProducts.length} selected products?\n\nThis will result in selling at a LOSS to clear dead stock.`)) {
+            return;
+        }
+
+        let updateCount = 0;
+        selectedProducts.each(function () {
+            const checkbox = $(this);
+            const row = checkbox.closest('tr');
+            const costElement = row.find('.product-cost');
+            const priceInput = row.find('.sale-price-input');
+
+            if (costElement.length && priceInput.length) {
+                const cost = parseFloat(costElement.text().replace('$', '')) || 0;
+
+                if (cost > 0) {
+                    const newPrice = cost * (1 + marginPercent / 100);
+                    priceInput.val(Math.max(0.01, newPrice).toFixed(2)); // Minimum price of $0.01
+                    priceInput.trigger('change');
+                    updateCount++;
+                }
+            }
+        });
+
+        console.log(`Negative margin applied to ${updateCount} products`);
+        showToast(`${marginPercent}% margin applied to ${updateCount} products (CLEARANCE PRICING)`, 'warning');
+    }
+
+    function applyCustomNegativeMargin() {
+        const customMargin = parseFloat(document.getElementById('customNegativeMargin').value);
+
+        if (isNaN(customMargin) || customMargin >= 0) {
+            alert('Please enter a negative margin percentage (e.g., -30)');
+            return;
+        }
+
+        if (customMargin < -90) {
+            alert('Margin cannot be less than -90% (would result in prices below 10% of cost)');
+            return;
+        }
+
+        applyQuickMargin(customMargin);
+        document.getElementById('customNegativeMargin').value = ''; // Clear input
+    }
+
+    // Handle missing images to prevent 404 errors
+    function handleImageError(img) {
+        img.src = '<?= URLROOT ?>/public/images/no-image.png';
+        img.style.opacity = '0.5';
+    }
+
     // Price Management JavaScript
     $(document).ready(function () {
         // Initialize DataTables for the old table (if it exists)
@@ -1382,26 +2093,26 @@ Would you like to proceed with the smart pricing strategy?`;
 
         // Color coding for profit/loss
         let profitLossClass = 'text-success';
-        let riskLevel = 'Profit';
+        let profitLevel = 'Profit';
 
         if (!isProfit) {
             profitLossClass = 'text-danger font-weight-bold';
-            riskLevel = 'Loss';
+            profitLevel = 'Loss';
         } else if (margin > 50) {
             profitLossClass = 'text-success font-weight-bold';
-            riskLevel = 'High Profit';
+            profitLevel = 'High Profit';
         } else if (margin > 25) {
             profitLossClass = 'text-success';
-            riskLevel = 'Good Profit';
+            profitLevel = 'Good Profit';
         } else if (margin > 15) {
             profitLossClass = 'text-info';
-            riskLevel = 'Low Profit';
+            profitLevel = 'Low Profit';
         } else if (margin > 0) {
             profitLossClass = 'text-warning';
-            riskLevel = 'Minimal Profit';
+            profitLevel = 'Minimal Profit';
         } else {
             profitLossClass = 'text-muted';
-            riskLevel = 'Break Even';
+            profitLevel = 'Break Even';
         }
 
         // Update the display
@@ -1412,12 +2123,58 @@ Would you like to proceed with the smart pricing strategy?`;
         // Update the small text elements
         const smallElements = profitLossDisplay.parent().find('small');
         if (smallElements.length >= 2) {
-            $(smallElements[0]).text(riskLevel).removeClass('text-success text-danger text-muted').addClass(profitLossClass.replace('font-weight-bold', ''));
+            $(smallElements[0]).text(profitLevel).removeClass('text-success text-danger text-muted').addClass(profitLossClass.replace('font-weight-bold', ''));
             $(smallElements[1]).text(`₹${profitPerUnit.toFixed(2)}/unit`).removeClass('text-success text-danger').addClass(profitPerUnit >= 0 ? 'text-success' : 'text-danger');
         }
 
         // Mark input as changed
         $(input).addClass('border-warning');
+
+        // Auto-save the price change to database
+        if (productId && salePrice >= 0) {
+            // Debounce the save to avoid too many requests
+            clearTimeout($(input).data('saveTimeout'));
+            const saveTimeout = setTimeout(() => {
+                savePriceToDatabase(productId, salePrice, input);
+            }, 1000); // Wait 1 second after user stops typing
+            $(input).data('saveTimeout', saveTimeout);
+        }
+    }
+
+    function savePriceToDatabase(productId, newPrice, inputElement) {
+        console.log(`Auto-saving price for product ${productId}: $${newPrice}`);
+
+        fetch('<?= URLROOT ?>/api/updateProductPrice.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                price: newPrice
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`Successfully auto-saved price for product ${productId}`);
+                    // Visual feedback for successful save
+                    $(inputElement).removeClass('border-warning border-danger');
+                    $(inputElement).addClass('border-success');
+                    setTimeout(() => $(inputElement).removeClass('border-success'), 2000);
+                } else {
+                    console.error(`Failed to auto-save price for product ${productId}:`, data.error);
+                    throw new Error(data.error);
+                }
+            })
+            .catch(error => {
+                console.error(`Error auto-saving price for product ${productId}:`, error);
+                // Visual feedback for failed save
+                $(inputElement).removeClass('border-warning border-success');
+                $(inputElement).addClass('border-danger');
+                // Keep the danger border longer to indicate the issue
+                setTimeout(() => $(inputElement).removeClass('border-danger'), 5000);
+            });
     }
 
     function savePriceChange(productId) {
@@ -1549,7 +2306,401 @@ Would you like to proceed with the smart pricing strategy?`;
     }
 </script>
 
+<script>
+    // Bubble Chart for Price & Margin Analysis
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('bubbleChart').getContext('2d');
+
+        // Prepare data from PHP products array
+        const products = <?php echo json_encode($data['products'] ?? []); ?>;
+        console.log('Raw products data (first 5):', products.slice(0, 5));
+        console.log('Sample product structure:', products[0]);
+
+        console.log('Total products received:', products.length);
+        console.log('Sample product data:', products.slice(0, 3));
+
+        // Debug: Check what fields are available in the product data
+        if (products.length > 0) {
+            console.log('Available product fields:', Object.keys(products[0]));
+
+            // Look for price-related fields
+            const priceFields = Object.keys(products[0]).filter(key =>
+                key.toLowerCase().includes('price') || key.toLowerCase().includes('cost')
+            );
+            console.log('Price-related fields found:', priceFields);
+        }
+
+        // Enhanced bubble size calculation function
+        function calculateBubbleSize(revenue, cost, totalSold, price) {
+            // Calculate different size metrics
+            const revenueSize = Math.max(revenue, 0);
+            const volumeSize = Math.max(totalSold * price, totalSold * cost, 0);
+            const stockValue = Math.max(cost * totalSold, price * totalSold, 0);
+
+            // Use the highest value for size calculation
+            const sizeMetric = Math.max(revenueSize, volumeSize, stockValue);
+
+            // Debug logging for size calculation
+            console.log('Bubble size calculation:', {
+                revenue: revenueSize,
+                volume: volumeSize,
+                stock: stockValue,
+                sizeMetric: sizeMetric,
+                totalSold: totalSold,
+                price: price,
+                cost: cost
+            });
+
+            // Calculate bubble size with better scaling
+            let bubbleSize;
+            if (sizeMetric === 0) {
+                bubbleSize = 5; // Minimum size for products with no data
+            } else if (sizeMetric < 100) {
+                bubbleSize = 8; // Small products
+            } else if (sizeMetric < 500) {
+                bubbleSize = 12; // Medium products
+            } else if (sizeMetric < 1000) {
+                bubbleSize = 16; // Medium-large products
+            } else if (sizeMetric < 5000) {
+                bubbleSize = 20; // Large products
+            } else {
+                bubbleSize = 25; // Very large products
+            }
+
+            return bubbleSize;
+        }
+
+        // Process data for bubble chart
+        const bubbleData = products.map(product => {
+            // Use correct field names from database query aliases
+            const price = parseFloat(product.price || 0);  // This is selling_price aliased as 'price'
+            const cost = parseFloat(product.cost || 0);    // This is purchase_price aliased as 'cost'
+            const revenue = parseFloat(product.total_revenue || 0);
+            const totalSold = parseFloat(product.total_sold || product.stock_quantity || 0);
+
+            // Debug logging for bulb product - more detailed with cost sources
+            if (product.name && product.name.toLowerCase().includes('bulb')) {
+                console.log('BULB COST ANALYSIS DEBUG:', {
+                    name: product.name,
+                    sku: product.sku,
+                    final_cost_used: cost,
+                    actual_avg_cost: product.actual_avg_cost,
+                    product_base_cost: product.product_base_cost,
+                    supplier_cost: product.supplier_cost,
+                    selling_price: price,
+                    full_product_data: product
+                });
+            }
+
+            // Calculate gross margin percentage
+            let grossMargin = 0;
+            if (price > 0 && cost > 0) {
+                grossMargin = ((price - cost) / price) * 100;
+            } else if (price === 0 && cost > 0) {
+                // For products without price, show as -100% margin (needs pricing)
+                grossMargin = -100;
+            }
+
+            // Calculate profit/loss for color coding
+            const profit = (price - cost) * totalSold;
+            const isProfit = profit >= 0;
+
+            // Determine bubble color based on status
+            let backgroundColor, borderColor;
+            if (price === 0) {
+                // Products without price - show in orange (needs attention)
+                backgroundColor = 'rgba(255, 193, 7, 0.6)';
+                borderColor = 'rgba(255, 193, 7, 1)';
+            } else if (isProfit) {
+                // Profitable products - green
+                backgroundColor = 'rgba(40, 167, 69, 0.6)';
+                borderColor = 'rgba(40, 167, 69, 1)';
+            } else {
+                // Loss-making products - red
+                backgroundColor = 'rgba(220, 53, 69, 0.6)';
+                borderColor = 'rgba(220, 53, 69, 1)';
+            }
+
+            return {
+                x: price > 0 ? price : cost * 1.3, // If no price, estimate at 30% markup for visualization
+                y: grossMargin,              // Y-axis: Gross Margin %
+                r: calculateBubbleSize(revenue, cost, totalSold, price), // Dynamic bubble size
+                label: product.name || 'Unknown Product',
+                sku: product.sku || '',
+                actualPrice: price,
+                cost: cost,
+                revenue: revenue,
+                totalSold: totalSold,
+                profit: profit,
+                isProfit: isProfit,
+                needsPricing: price === 0,
+                backgroundColor: backgroundColor,
+                borderColor: borderColor
+            };
+        }).filter(item => {
+            // Show products with either price or cost data
+            const hasValidData = (item.actualPrice > 0) || (item.cost > 0);
+
+            if (!hasValidData) {
+                console.log('Filtered out product (no price or cost):', item.label);
+            }
+            return hasValidData;
+        });
+
+        console.log('Products after filtering (price > 0):', bubbleData.length);
+        console.log('First few bubble data points:', bubbleData.slice(0, 10));
+
+        // Debug bubble sizes
+        const sizeDebug = bubbleData.slice(0, 10).map(item => ({
+            label: item.label,
+            revenue: item.revenue,
+            cost: item.cost,
+            totalSold: item.totalSold,
+            bubbleSize: item.r,
+            actualPrice: item.actualPrice
+        }));
+        console.log('Bubble size debug info:', sizeDebug);
+
+        // Check for size variety
+        const allSizes = bubbleData.map(item => item.r);
+        const uniqueSizes = [...new Set(allSizes)];
+        console.log('All bubble sizes:', allSizes.slice(0, 20));
+        console.log('Unique sizes found:', uniqueSizes);
+        console.log('Size range:', Math.min(...allSizes), 'to', Math.max(...allSizes));
+
+        // Calculate dynamic axis ranges for better accuracy
+        const xValues = bubbleData.map(item => item.x).filter(x => x > 0);
+        const yValues = bubbleData.map(item => item.y);
+
+        // X-axis (Price) range calculation
+        const minPrice = Math.min(...xValues);
+        const maxPrice = Math.max(...xValues);
+        const priceRange = maxPrice - minPrice;
+        const pricePadding = priceRange * 0.1; // 10% padding
+
+        const xAxisMin = Math.max(0, minPrice - pricePadding);
+        const xAxisMax = maxPrice + pricePadding;
+
+        // Y-axis (Margin) range calculation  
+        const minMargin = Math.min(...yValues);
+        const maxMargin = Math.max(...yValues);
+        const marginRange = maxMargin - minMargin;
+        const marginPadding = Math.max(5, marginRange * 0.1); // At least 5% padding
+
+        const yAxisMin = minMargin - marginPadding;
+        const yAxisMax = maxMargin + marginPadding;
+
+        console.log('Dynamic axis ranges calculated:');
+        console.log(`X-axis (Price): ${xAxisMin.toFixed(2)} to ${xAxisMax.toFixed(2)}`);
+        console.log(`Y-axis (Margin): ${yAxisMin.toFixed(1)}% to ${yAxisMax.toFixed(1)}%`);
+
+        const chartData = {
+            datasets: [{
+                label: 'Products',
+                data: bubbleData,
+                backgroundColor: bubbleData.map(item => item.backgroundColor),
+                borderColor: bubbleData.map(item => item.borderColor),
+                borderWidth: 2
+                // Removed pointRadius and radius properties to let the r value in data control size
+            }]
+        };
+
+        const config = {
+            type: 'bubble',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Price vs Margin Analysis with Revenue Impact',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function (context) {
+                                const point = context[0];
+                                return point.raw.label + (point.raw.sku ? ' (' + point.raw.sku + ')' : '');
+                            },
+                            label: function (context) {
+                                const point = context.raw;
+                                const labels = [];
+
+                                if (point.needsPricing) {
+                                    labels.push('⚠️ NEEDS PRICING');
+                                    labels.push(`Estimated Price: $${point.x.toFixed(2)} (cost + 30%)`);
+                                    labels.push(`Purchase Cost: $${point.cost.toFixed(2)}`);
+                                } else {
+                                    labels.push(`Selling Price: $${point.actualPrice.toFixed(2)}`);
+                                    labels.push(`Purchase Cost: $${point.cost.toFixed(2)}`);
+                                }
+
+                                labels.push(`Gross Margin: ${point.y.toFixed(1)}%`);
+                                labels.push(`Stock Quantity: ${point.totalSold}`);
+                                labels.push(`Total Revenue: $${point.revenue.toFixed(2)}`);
+
+                                if (!point.needsPricing) {
+                                    const profitPerUnit = point.actualPrice - point.cost;
+                                    labels.push(`Profit/Unit: $${profitPerUnit.toFixed(2)}`);
+                                    labels.push(`Total Profit: ${point.profit >= 0 ? '+' : ''}$${point.profit.toFixed(2)}`);
+                                }
+
+                                return labels;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Price per Unit ($)',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        min: xAxisMin,
+                        max: xAxisMax,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            callback: function (value) {
+                                return '$' + value.toFixed(2);
+                            }
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Gross Margin (%)',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        min: yAxisMin,
+                        max: yAxisMax,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            callback: function (value) {
+                                if (value <= -100) return 'No Price';
+                                return value.toFixed(1) + '%';
+                            }
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        hoverRadius: 8
+                    }
+                }
+            }
+        };
+
+        // Create the chart
+        const bubbleChart = new Chart(ctx, config);
+
+        // Add click handler for drill-down functionality
+        ctx.canvas.addEventListener('click', function (event) {
+            const points = bubbleChart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
+
+            if (points.length) {
+                const firstPoint = points[0];
+                const datasetIndex = firstPoint.datasetIndex;
+                const index = firstPoint.index;
+                const data = bubbleChart.data.datasets[datasetIndex].data[index];
+
+                // Show detailed information in a modal or alert
+                const message = `Product Details:\n` +
+                    `Name: ${data.label}\n` +
+                    `SKU: ${data.sku}\n` +
+                    `Price: $${data.x.toFixed(2)}\n` +
+                    `Gross Margin: ${data.y.toFixed(1)}%\n` +
+                    `Total Revenue: $${data.revenue.toFixed(2)}\n` +
+                    `Net Impact: ${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}`;
+
+                alert(message);
+            }
+        });
+    });
+</script>
+
 <style>
+    /* Price Range Styles */
+    .price-range-row {
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--border-color, #e9ecef) !important;
+        transition: all 0.2s ease;
+    }
+
+    .price-range-row:hover {
+        border-color: var(--primary, #007bff) !important;
+        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+        transform: translateY(-1px);
+    }
+
+    .price-range-row label {
+        color: var(--primary, #007bff);
+        margin-bottom: 0.5rem;
+    }
+
+    .price-range-row .form-control {
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    .price-range-row .input-group-text {
+        background: var(--primary, #007bff);
+        color: white;
+        border-color: var(--primary, #007bff);
+        font-weight: 600;
+    }
+
+    /* Negative Margin Styles */
+    .price-range-row input[type="number"][min="-90"] {
+        color: var(--danger, #dc3545);
+        font-weight: 500;
+    }
+
+    .price-range-row input[type="number"][min="-90"]:focus {
+        border-color: var(--danger, #dc3545);
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    /* Dead Stock Clearance Section */
+    .btn-outline-danger:hover,
+    .btn-danger:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
+    }
+
+    /* Table warning for loss items */
+    .table-warning {
+        background-color: rgba(255, 193, 7, 0.1) !important;
+    }
+
+    /* Bubble Chart Styles */
+    .chart-container {
+        background: var(--card-bg, #fff);
+        border-radius: var(--border-radius, 0.375rem);
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-legend {
+        background: rgba(var(--primary-rgb, 0, 123, 255), 0.05);
+        border-radius: var(--border-radius, 0.375rem);
+        padding: 0.75rem;
+        border: 1px solid rgba(var(--primary-rgb, 0, 123, 255), 0.1);
+    }
+
+    .chart-legend small {
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
     /* Price Limit Enhancement Styles */
     .price-adjustment-notification {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -1598,5 +2749,8 @@ Would you like to proceed with the smart pricing strategy?`;
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
     }
 </style>
+
+<!-- Load Chart.js before jQuery-dependent scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'footer.php'; ?>

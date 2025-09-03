@@ -57,8 +57,25 @@ function hasPermission($page)
         return true;
     }
 
-    // Check specific page permissions
-    return $userModel->hasPagePermission($userId, $page);
+    // For now, use simple role-based access
+    // You can extend this later when permission tables are implemented
+    $userRole = strtolower($_SESSION['user_role'] ?? '');
+
+    // Define basic page access by role
+    $rolePermissions = [
+        'manager' => ['dashboard', 'products', 'inventory', 'sales', 'purchases', 'reports', 'customers', 'suppliers'],
+        'cashier' => ['dashboard', 'sales', 'products', 'customers'],
+        'inventory_manager' => ['dashboard', 'products', 'inventory', 'purchases', 'suppliers'],
+        'user' => ['dashboard'],
+        'bot' => ['dashboard', 'bot'], // Bot role for automation
+    ];
+
+    if (isset($rolePermissions[$userRole])) {
+        return in_array(strtolower($page), $rolePermissions[$userRole]);
+    }
+
+    // Default: deny access
+    return false;
 }
 
 /**
@@ -80,8 +97,8 @@ function hasPageAccess($page)
         return true;
     }
 
-    // Check specific page permissions
-    return $userModel->hasPagePermission($userId, $page);
+    // Use the same logic as hasPermission
+    return hasPermission($page);
 }
 
 /**
@@ -126,19 +143,25 @@ function getUserAccessiblePages()
             'cycle_counts',
             'returns',
             'expenses',
-            'notifications'
+            'notifications',
+            'bot'
         ];
     }
 
     try {
-        $permissions = $userModel->getUserPermissions($userId);
-        $accessiblePages = [];
+        // Use role-based permissions instead of database lookup
+        $userRole = strtolower($_SESSION['user_role'] ?? '');
 
-        foreach ($permissions as $page => $hasAccess) {
-            if ($hasAccess) {
-                $accessiblePages[] = $page;
-            }
-        }
+        // Define basic page access by role
+        $rolePermissions = [
+            'manager' => ['dashboard', 'products', 'inventory', 'sales', 'purchases', 'reports', 'customers', 'suppliers'],
+            'cashier' => ['dashboard', 'sales', 'products', 'customers'],
+            'inventory_manager' => ['dashboard', 'products', 'inventory', 'purchases', 'suppliers'],
+            'user' => ['dashboard'],
+            'bot' => ['dashboard', 'bot'], // Bot role for automation
+        ];
+
+        $accessiblePages = $rolePermissions[$userRole] ?? ['dashboard'];
 
         // If no permissions found, give basic access to prevent empty sidebar
         if (empty($accessiblePages)) {

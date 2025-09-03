@@ -89,7 +89,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <!-- KPI Cards Section - First Row (6 cards) -->
                         <div class="row mb-4">
                             <!-- Status Card -->
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="col-2 mb-3">
                                 <div
                                     class="card border-<?php echo (safeProperty($s, 'status') === 'active') ? 'success' : ((safeProperty($s, 'status') === 'pending') ? 'warning' : 'danger'); ?> h-100">
                                     <div class="card-body text-center p-3">
@@ -108,7 +108,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             </div>
 
                             <!-- Added By Card -->
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="col-2 mb-3">
                                 <div class="card border-info h-100">
                                     <div class="card-body text-center p-3">
                                         <div class="d-flex align-items-center justify-content-center mb-2">
@@ -124,7 +124,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             </div>
 
                             <!-- Supplier Tier Card -->
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="col-2 mb-3">
                                 <div class="card border-<?php
                                 $tier = $s->supplier_tier ?? 'Standard';
                                 echo (strtolower($tier) === 'gold') ? 'warning' :
@@ -152,7 +152,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             </div>
 
                             <!-- Performance Score Card -->
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="col-2 mb-3">
                                 <div class="card border-<?php
                                 $score = $s->reliability_score ?? 0;
                                 echo ($score >= 8) ? 'success' : (($score >= 6) ? 'warning' : 'danger');
@@ -174,7 +174,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             </div>
 
                             <!-- Quality Rating Card -->
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="col-2 mb-3">
                                 <div class="card border-warning h-100">
                                     <div class="card-body text-center p-3">
                                         <div class="d-flex align-items-center justify-content-center mb-2">
@@ -193,7 +193,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             </div>
 
                             <!-- On-Time Delivery Rate Card -->
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="col-2 mb-3">
                                 <div class="card border-<?php
                                 $onTimeRate = $s->on_time_delivery_rate ?? 0;
                                 echo ($onTimeRate >= 90) ? 'success' : (($onTimeRate >= 75) ? 'warning' : 'danger');
@@ -218,7 +218,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         <!-- KPI Cards Section - Second Row (6 cards) -->
                         <div class="row mb-4">
                             <!-- Payment Terms Card -->
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="col-2 mb-3">
                                 <div class="card border-primary h-100">
                                     <div class="card-body text-center p-3">
                                         <div class="d-flex align-items-center justify-content-center mb-2">
@@ -233,7 +233,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             </div>
 
                             <!-- Credit Limit Card -->
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="col-2 mb-3">
                                 <div class="card border-info h-100">
                                     <div class="card-body text-center p-3">
                                         <div class="d-flex align-items-center justify-content-center mb-2">
@@ -248,7 +248,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             </div>
 
                             <!-- Outstanding Card -->
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="col-2 mb-3">
                                 <div class="card border-<?php
                                 $outstanding = $s->current_outstanding ?? 0;
                                 $creditLimit = $s->credit_limit ?? 0;
@@ -272,7 +272,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             </div>
 
                             <!-- Average Delivery Time Card -->
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="col-2 mb-3">
                                 <div class="card border-info h-100">
                                     <div class="card-body text-center p-3">
                                         <div class="d-flex align-items-center justify-content-center mb-2">
@@ -291,7 +291,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             </div>
 
                             <!-- Delivery Time Card -->
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="col-2 mb-3">
                                 <div class="card border-info h-100">
                                     <div class="card-body text-center p-3">
                                         <div class="d-flex align-items-center justify-content-center mb-2">
@@ -310,7 +310,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             </div>
 
                             <!-- Verification Status Card -->
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="col-2 mb-3">
                                 <div
                                     class="card border-<?php echo (!empty($s->is_verified) && $s->is_verified == 1) ? 'success' : 'warning'; ?> h-100">
                                     <div class="card-body text-center p-3">
@@ -430,7 +430,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                             <?php echo count($data['supplier_products']); ?></span>
                                         <span class="badge bg-info">Active Links:
                                             <?php echo count(array_filter($data['supplier_products'], function ($p) {
-                                                return $p->status === 'active';
+                                                return $p->status == 1; // Check is_active field
                                             })); ?></span>
                                     </div>
                                 <?php endif; ?>
@@ -471,23 +471,18 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                                         <td>
                                                             <?php
                                                             $statusClass = '';
-                                                            $status = $product->status ?? 'inactive';
-                                                            switch (strtolower($status)) {
-                                                                case 'active':
-                                                                    $statusClass = 'bg-success';
-                                                                    break;
-                                                                case 'inactive':
-                                                                    $statusClass = 'bg-secondary';
-                                                                    break;
-                                                                case 'discontinued':
-                                                                    $statusClass = 'bg-danger';
-                                                                    break;
-                                                                default:
-                                                                    $statusClass = 'bg-light text-dark';
+                                                            $status = $product->status ?? 0;
+                                                            // Convert is_active (1/0) to readable status
+                                                            if ($status == 1) {
+                                                                $statusClass = 'bg-success';
+                                                                $statusText = 'Active';
+                                                            } else {
+                                                                $statusClass = 'bg-secondary';
+                                                                $statusText = 'Inactive';
                                                             }
                                                             ?>
                                                             <span class="badge <?php echo $statusClass; ?>">
-                                                                <?php echo htmlspecialchars(ucfirst($status)); ?>
+                                                                <?php echo $statusText; ?>
                                                             </span>
                                                         </td>
                                                         <td>
@@ -514,10 +509,6 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                         <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
                                         <h6 class="text-muted">No Products Linked</h6>
                                         <p class="text-muted small">This supplier has no products linked.</p>
-                                        <a href="<?php echo URLROOT; ?>/suppliers/link/<?php echo $data['supplier']->supplier_id; ?>"
-                                            class="btn btn-primary btn-sm">
-                                            <i class="fas fa-link"></i> Link Products
-                                        </a>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -540,80 +531,169 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                             </div>
                             <div class="card-body">
                                 <?php if (!empty($data['purchase_history'])): ?>
+                                    <!-- Enhanced Search and Filter Controls -->
+                                    <div class="purchase-history-filters">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="purchase-search-container">
+                                                    <div class="input-group">
+                                                        <input type="text" id="purchaseSearchInput" class="form-control"
+                                                            placeholder="Search purchase orders..."
+                                                            onkeyup="filterPurchaseHistory()">
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex gap-2">
+                                                    <select id="statusFilter" class="form-control"
+                                                        onchange="filterPurchaseHistory()">
+                                                        <option value="">All Status</option>
+                                                        <option value="pending">Pending</option>
+                                                        <option value="sent">Sent</option>
+                                                        <option value="partially_received">Partially Received</option>
+                                                        <option value="received">Received</option>
+                                                        <option value="cancelled">Cancelled</option>
+                                                    </select>
+                                                    <select id="dateFilter" class="form-control"
+                                                        onchange="filterPurchaseHistory()">
+                                                        <option value="">All Time</option>
+                                                        <option value="7">Last 7 days</option>
+                                                        <option value="30">Last 30 days</option>
+                                                        <option value="90">Last 3 months</option>
+                                                        <option value="365">Last year</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="table-responsive">
-                                        <table class="table table-striped table-hover table-sm" id="purchaseHistoryTable">
-                                            <thead class="table-dark">
+                                        <table class="purchase-history-table table table-hover table-layout-fixed mb-0"
+                                            id="purchaseHistoryTable">
+                                            <thead class="thead-light">
                                                 <tr>
-                                                    <th width="8%">#</th>
-                                                    <th width="25%">PO Number</th>
-                                                    <th width="18%">Date</th>
-                                                    <th width="18%">Status</th>
-                                                    <th width="18%">Amount</th>
-                                                    <th width="13%">Actions</th>
+                                                    <th style="width:80px" title="Serial Number">#</th>
+                                                    <th style="width:140px" title="Purchase Order Number">PO Number</th>
+                                                    <th style="width:120px" title="Purchase Date">Date</th>
+                                                    <th style="width:120px" title="Order Status">Status</th>
+                                                    <th style="width:100px" title="Total Items">Items</th>
+                                                    <th style="width:120px" title="Total Amount">Amount</th>
+                                                    <th style="width:120px" title="Expected/Received Date">Timeline</th>
+                                                    <th style="width:140px" title="Available Actions">Actions</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody id="purchaseHistoryTableBody">
                                                 <?php foreach ($data['purchase_history'] as $index => $order): ?>
-                                                    <tr>
-                                                        <td><?php echo $index + 1; ?></td>
+                                                    <tr data-status="<?php echo strtolower($order->status ?? 'unknown'); ?>"
+                                                        data-date="<?php echo $order->purchase_date ?? ''; ?>"
+                                                        data-po="<?php echo htmlspecialchars($order->po_number ?? 'PO-' . $order->purchase_id); ?>">
                                                         <td>
-                                                            <strong><?php echo htmlspecialchars($order->po_number ?? 'PO-' . $order->purchase_id); ?></strong>
-                                                            <br><small
-                                                                class="text-muted"><?php echo number_format($order->item_count ?? 0); ?>
-                                                                items</small>
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="badge badge-light"><?php echo $index + 1; ?></span>
+                                                            </div>
                                                         </td>
                                                         <td>
-                                                            <span><?php echo !empty($order->purchase_date) ? date('d-m-Y', strtotime($order->purchase_date)) : '-'; ?></span>
-                                                            <?php if (!empty($order->expected_date)): ?>
-                                                                <br><small class="text-muted">Exp:
-                                                                    <?php echo date('d-m-Y', strtotime($order->expected_date)); ?></small>
-                                                            <?php endif; ?>
+                                                            <div>
+                                                                <strong
+                                                                    class="text-primary"><?php echo htmlspecialchars($order->po_number ?? 'PO-' . $order->purchase_id); ?></strong>
+                                                                <br><small class="text-muted">ID:
+                                                                    <?php echo $order->purchase_id; ?></small>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div>
+                                                                <span
+                                                                    class="font-weight-bold"><?php echo !empty($order->purchase_date) ? date('d-M-Y', strtotime($order->purchase_date)) : '-'; ?></span>
+                                                                <br><small
+                                                                    class="text-muted"><?php echo !empty($order->purchase_date) ? date('H:i', strtotime($order->purchase_date)) : ''; ?></small>
+                                                            </div>
                                                         </td>
                                                         <td>
                                                             <?php
                                                             $statusClass = '';
+                                                            $statusIcon = '';
                                                             $status = $order->status ?? 'unknown';
                                                             switch (strtolower($status)) {
                                                                 case 'pending':
-                                                                    $statusClass = 'bg-warning text-dark';
+                                                                    $statusClass = 'badge-warning';
+                                                                    $statusIcon = 'fas fa-clock';
                                                                     break;
                                                                 case 'sent':
-                                                                    $statusClass = 'bg-info';
+                                                                    $statusClass = 'badge-info';
+                                                                    $statusIcon = 'fas fa-paper-plane';
                                                                     break;
                                                                 case 'partially_received':
-                                                                    $statusClass = 'bg-secondary';
+                                                                    $statusClass = 'badge-secondary';
+                                                                    $statusIcon = 'fas fa-boxes';
                                                                     break;
                                                                 case 'received':
-                                                                    $statusClass = 'bg-success';
+                                                                    $statusClass = 'badge-success';
+                                                                    $statusIcon = 'fas fa-check-circle';
                                                                     break;
                                                                 case 'cancelled':
-                                                                    $statusClass = 'bg-danger';
+                                                                    $statusClass = 'badge-danger';
+                                                                    $statusIcon = 'fas fa-times-circle';
                                                                     break;
                                                                 default:
-                                                                    $statusClass = 'bg-light text-dark';
+                                                                    $statusClass = 'badge-light';
+                                                                    $statusIcon = 'fas fa-question-circle';
                                                             }
                                                             ?>
                                                             <span class="badge <?php echo $statusClass; ?>">
-                                                                <?php echo htmlspecialchars(ucfirst($status)); ?>
+                                                                <i class="<?php echo $statusIcon; ?> mr-1"></i>
+                                                                <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $status))); ?>
                                                             </span>
                                                         </td>
                                                         <td>
-                                                            <strong><?php echo formatCurrency($order->total_amount ?? 0, 2); ?></strong>
+                                                            <div class="text-center">
+                                                                <span
+                                                                    class="h6 mb-1 text-info"><?php echo number_format($order->item_count ?? 0); ?></span>
+                                                                <br><small class="text-muted">items</small>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div>
+                                                                <strong
+                                                                    class="text-success"><?php echo formatCurrency($order->total_amount ?? 0, 2); ?></strong>
+                                                                <?php if (($order->total_amount ?? 0) > 0 && ($order->item_count ?? 0) > 0): ?>
+                                                                    <br><small class="text-muted">Avg:
+                                                                        <?php echo formatCurrency(($order->total_amount ?? 0) / ($order->item_count ?? 1), 2); ?>/item</small>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div>
+                                                                <?php if (!empty($order->expected_date)): ?>
+                                                                    <small class="text-muted">Expected:</small>
+                                                                    <br><span
+                                                                        class="font-weight-bold"><?php echo date('d-M-Y', strtotime($order->expected_date)); ?></span>
+                                                                <?php else: ?>
+                                                                    <small class="text-muted">No expected date</small>
+                                                                <?php endif; ?>
+                                                            </div>
                                                         </td>
                                                         <td>
                                                             <div class="btn-group btn-group-sm" role="group">
                                                                 <a href="<?php echo URLROOT; ?>/purchases/details/<?php echo $order->purchase_id; ?>"
-                                                                    class="btn btn-outline-primary btn-sm" data-bs-toggle="tooltip"
+                                                                    class="btn btn-outline-primary btn-sm" data-toggle="tooltip"
                                                                     title="View Details">
                                                                     <i class="fas fa-eye"></i>
                                                                 </a>
                                                                 <?php if (in_array(strtolower($order->status ?? ''), ['pending', 'sent'])): ?>
                                                                     <a href="<?php echo URLROOT; ?>/purchases/edit/<?php echo $order->purchase_id; ?>"
-                                                                        class="btn btn-outline-warning btn-sm" data-bs-toggle="tooltip"
+                                                                        class="btn btn-outline-warning btn-sm" data-toggle="tooltip"
                                                                         title="Edit Order">
                                                                         <i class="fas fa-edit"></i>
                                                                     </a>
                                                                 <?php endif; ?>
+                                                                <button type="button" class="btn btn-outline-info btn-sm"
+                                                                    onclick="viewPurchaseItems(<?php echo $order->purchase_id; ?>)"
+                                                                    data-toggle="tooltip" title="View Items">
+                                                                    <i class="fas fa-list"></i>
+                                                                </button>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -621,17 +701,80 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    <!-- Enhanced Pagination and Info -->
+                                    <div class="row mt-3 purchase-actions">
+                                        <div class="col-md-6">
+                                            <small class="text-muted">
+                                                Showing <span
+                                                    id="visibleOrdersCount"><?php echo count($data['purchase_history']); ?></span>
+                                                purchase orders
+                                                <?php if (!empty($data['supplier_stats']) && $data['supplier_stats']->total_orders > count($data['purchase_history'])): ?>
+                                                    of <?php echo number_format($data['supplier_stats']->total_orders); ?> total
+                                                <?php endif; ?>
+                                            </small>
+                                        </div>
+                                        <div class="col-md-6 text-right">
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-secondary"
+                                                    onclick="exportPurchaseHistory()" data-toggle="tooltip"
+                                                    title="Export to CSV">
+                                                    <i class="fas fa-download mr-1"></i>Export
+                                                </button>
+                                                <button type="button" class="btn btn-outline-primary"
+                                                    onclick="printPurchaseHistory()" data-toggle="tooltip" title="Print Report">
+                                                    <i class="fas fa-print mr-1"></i>Print
+                                                </button>
+                                                <button type="button" class="btn btn-outline-info"
+                                                    onclick="refreshPurchaseHistory()" data-toggle="tooltip"
+                                                    title="Refresh Data">
+                                                    <i class="fas fa-sync-alt mr-1"></i>Refresh
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 <?php else: ?>
                                     <div class="text-center py-4">
                                         <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
                                         <h6 class="text-muted">No Purchase Orders Found</h6>
                                         <p class="text-muted small">This supplier has no purchase order history.</p>
-                                        <a href="<?php echo URLROOT; ?>/purchases/add?supplier_id=<?php echo $data['supplier']->supplier_id; ?>"
-                                            class="btn btn-primary btn-sm">
-                                            <i class="fas fa-plus"></i> Create First Order
-                                        </a>
                                     </div>
                                 <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchase Items Modal -->
+                <div class="modal fade" id="purchaseItemsModal" tabindex="-1" role="dialog"
+                    aria-labelledby="purchaseItemsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-xl" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="purchaseItemsModalLabel">
+                                    <i class="fas fa-list mr-2"></i>Purchase Order Items
+                                </h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="purchaseItemsContent">
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                        <p class="mt-2">Loading purchase items...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+                                    <i class="fas fa-times mr-1"></i>Close
+                                </button>
+                                <button type="button" class="btn btn-primary" id="viewFullPurchaseBtn">
+                                    <i class="fas fa-eye mr-1"></i>View Full Details
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -824,6 +967,247 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
     // Start checking for jQuery availability
     waitForJQuery();
+
+    // Enhanced Purchase History Functions
+    function filterPurchaseHistory() {
+        const searchTerm = document.getElementById('purchaseSearchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+        const dateFilter = document.getElementById('dateFilter').value;
+        const rows = document.querySelectorAll('#purchaseHistoryTableBody tr');
+
+        rows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            const rowStatus = row.getAttribute('data-status') || '';
+            const rowDate = row.getAttribute('data-date') || '';
+
+            let showRow = true;
+
+            // Text search
+            if (searchTerm && !rowText.includes(searchTerm)) {
+                showRow = false;
+            }
+
+            // Status filter
+            if (statusFilter && rowStatus !== statusFilter) {
+                showRow = false;
+            }
+
+            // Date filter
+            if (dateFilter && rowDate) {
+                const orderDate = new Date(rowDate);
+                const now = new Date();
+                const daysAgo = parseInt(dateFilter);
+                const filterDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
+
+                if (orderDate < filterDate) {
+                    showRow = false;
+                }
+            }
+
+            row.style.display = showRow ? '' : 'none';
+        });
+
+        // Update info text
+        updatePurchaseHistoryInfo();
+    }
+
+    function refreshPurchaseHistory() {
+        location.reload();
+    }
+
+    function updatePurchaseHistoryInfo() {
+        const allRows = document.querySelectorAll('#purchaseHistoryTableBody tr');
+        const visibleRows = document.querySelectorAll('#purchaseHistoryTableBody tr:not([style*="display: none"])');
+
+        const countElement = document.getElementById('visibleOrdersCount');
+        if (countElement) {
+            countElement.textContent = visibleRows.length;
+        }
+    }
+
+    function viewPurchaseItems(purchaseId) {
+        // Show modal
+        $('#purchaseItemsModal').modal('show');
+
+        // Set up the view full purchase button
+        document.getElementById('viewFullPurchaseBtn').onclick = function () {
+            window.open(`${window.URLROOT}/purchases/details/${purchaseId}`, '_blank');
+        };
+
+        // Reset modal content
+        document.getElementById('purchaseItemsContent').innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p class="mt-2">Loading purchase items...</p>
+            </div>
+        `;
+
+        // Fetch purchase items
+        fetch(`${window.URLROOT}/api/getPurchaseItems.php?purchase_id=${purchaseId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.items) {
+                    displayPurchaseItems(data.items, data.purchase_info);
+                } else {
+                    document.getElementById('purchaseItemsContent').innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            No items found for this purchase order.
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching purchase items:', error);
+                document.getElementById('purchaseItemsContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Error loading purchase items. Please try again.
+                    </div>
+                `;
+            });
+    }
+
+    function displayPurchaseItems(items, purchaseInfo) {
+        let totalValue = 0;
+        let itemsHtml = '';
+
+        items.forEach((item, index) => {
+            const lineTotal = (item.quantity || 0) * (item.unit_price || 0);
+            totalValue += lineTotal;
+
+            itemsHtml += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            ${item.image_path ?
+                    `<img src="${window.URLROOT}/public/uploads/${item.image_path}" 
+                                     style="width:40px;height:40px;object-fit:cover;border-radius:4px;" class="mr-3">` :
+                    `<div class="bg-light rounded d-flex align-items-center justify-content-center mr-3" 
+                                     style="width:40px;height:40px;"><i class="fas fa-box text-muted"></i></div>`
+                }
+                            <div>
+                                <strong>${item.product_name || 'Unknown Product'}</strong>
+                                ${item.sku ? `<br><small class="text-muted">SKU: ${item.sku}</small>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-info">${item.quantity || 0}</span>
+                    </td>
+                    <td class="text-right">
+                        ₹${(item.unit_price || 0).toFixed(2)}
+                    </td>
+                    <td class="text-right">
+                        <strong>₹${lineTotal.toFixed(2)}</strong>
+                    </td>
+                </tr>
+            `;
+        });
+
+        const content = `
+            <!-- Purchase Info -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h6><i class="fas fa-file-alt mr-2"></i>PO: ${purchaseInfo?.po_number || 'N/A'}</h6>
+                    <small class="text-muted">Date: ${purchaseInfo?.purchase_date ?
+                new Date(purchaseInfo.purchase_date).toLocaleDateString() : 'N/A'}</small>
+                </div>
+                <div class="col-md-6 text-right">
+                    <span class="badge badge-${getStatusBadgeClass(purchaseInfo?.status)}">${purchaseInfo?.status || 'Unknown'}</span>
+                </div>
+            </div>
+            
+            <!-- Items Table -->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th width="8%">#</th>
+                            <th width="40%">Product</th>
+                            <th width="15%" class="text-center">Quantity</th>
+                            <th width="17%" class="text-right">Unit Price</th>
+                            <th width="20%" class="text-right">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHtml}
+                    </tbody>
+                    <tfoot class="thead-dark">
+                        <tr>
+                            <th colspan="4" class="text-right">Total Value:</th>
+                            <th class="text-right">₹${totalValue.toFixed(2)}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        `;
+
+        document.getElementById('purchaseItemsContent').innerHTML = content;
+
+        // Update modal title
+        document.getElementById('purchaseItemsModalLabel').innerHTML =
+            `<i class="fas fa-list mr-2"></i>Items for PO: ${purchaseInfo?.po_number || 'N/A'}`;
+    }
+
+    function getStatusBadgeClass(status) {
+        switch (status?.toLowerCase()) {
+            case 'pending': return 'warning';
+            case 'sent': return 'info';
+            case 'partially_received': return 'secondary';
+            case 'received': return 'success';
+            case 'cancelled': return 'danger';
+            default: return 'light';
+        }
+    }
+
+    function exportPurchaseHistory() {
+        const supplierId = <?php echo (isset($jsSupplier) && is_object($jsSupplier) && isset($jsSupplier->supplier_id)) ? $jsSupplier->supplier_id : 0; ?>;
+        const supplierName = '<?php echo (isset($jsSupplier) && is_object($jsSupplier) && isset($jsSupplier->supplier_name)) ? addslashes($jsSupplier->supplier_name) : ''; ?>';
+
+        if (confirm(`Export purchase history for "${supplierName}"?`)) {
+            window.location.href = `${window.URLROOT}/suppliers/exportPurchaseHistory/${supplierId}`;
+        }
+    }
+
+    function printPurchaseHistory() {
+        const printContent = document.getElementById('purchaseHistorySection').cloneNode(true);
+
+        // Remove action buttons from print view
+        const actionColumns = printContent.querySelectorAll('.btn-group');
+        actionColumns.forEach(col => col.remove());
+
+        // Create print window
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Purchase History - <?php echo (isset($jsSupplier) && is_object($jsSupplier) && isset($jsSupplier->supplier_name)) ? addslashes($jsSupplier->supplier_name) : ''; ?></title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        @media print {
+                            .no-print { display: none !important; }
+                            body { margin: 0; padding: 20px; }
+                            .table { font-size: 12px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container-fluid">
+                        <h3>Purchase History Report</h3>
+                        <p><strong>Supplier:</strong> <?php echo (isset($jsSupplier) && is_object($jsSupplier) && isset($jsSupplier->supplier_name)) ? htmlspecialchars($jsSupplier->supplier_name) : ''; ?></p>
+                        <p><strong>Generated:</strong> ${new Date().toLocaleDateString()}</p>
+                        ${printContent.innerHTML}
+                    </div>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+    }
 
     // Action button functions
     function viewPurchaseHistory() {

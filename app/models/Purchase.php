@@ -134,16 +134,16 @@ class Purchase
             // Prefer display_name session key (used elsewhere in the app), fallback to other session keys
             $receivedByName = $_SESSION['display_name'] ?? $_SESSION['user_full_name'] ?? $_SESSION['user_username'] ?? $_SESSION['username'] ?? null;
             $purchaseArray = [
-                'purchase_id'     => $purchaseData->purchase_id,
-                'po_number'       => $purchaseData->po_number,
-                'supplier_name'   => $purchaseData->supplier_name ?? 'Unknown Supplier',
-                'supplier_email'  => $purchaseData->supplier_email ?? null,
-                'purchase_date'   => $purchaseData->purchase_date,
-                'expected_date'   => $purchaseData->expected_date,
+                'purchase_id' => $purchaseData->purchase_id,
+                'po_number' => $purchaseData->po_number,
+                'supplier_name' => $purchaseData->supplier_name ?? 'Unknown Supplier',
+                'supplier_email' => $purchaseData->supplier_email ?? null,
+                'purchase_date' => $purchaseData->purchase_date,
+                'expected_date' => $purchaseData->expected_date,
                 'tracking_number' => $purchaseData->tracking_number,
-                'total_amount'    => $purchaseData->total_amount,
-                'notes'           => $purchaseData->notes,
-                'received_by'     => $receivedByName
+                'total_amount' => $purchaseData->total_amount,
+                'notes' => $purchaseData->notes,
+                'received_by' => $receivedByName
             ];
 
             // Generate receiving receipt
@@ -171,8 +171,8 @@ class Purchase
 
             // Store receipt info in session for display
             $_SESSION['show_receipt'] = [
-                'html'         => $receiptHtml,
-                'po_number'    => $purchaseData->po_number,
+                'html' => $receiptHtml,
+                'po_number' => $purchaseData->po_number,
                 'generated_at' => date('Y-m-d H:i:s')
             ];
 
@@ -763,9 +763,9 @@ class Purchase
     {
         $stats = [
             'monthly_purchases' => 0,
-            'pending_orders'    => 0,
-            'active_suppliers'  => 0,
-            'items_received'    => 0
+            'pending_orders' => 0,
+            'active_suppliers' => 0,
+            'items_received' => 0
         ];
 
         try {
@@ -828,22 +828,22 @@ class Purchase
     public function getPurchaseSummary()
     {
         $summary = [
-            'total_purchases'    => 0,
-            'pending'            => 0,
-            'sent'               => 0,
-            'in_transit'         => 0,
-            'received'           => 0,
-            'cancelled'          => 0,
-            'overdue'            => 0,
-            'suppliers'          => 0,
+            'total_purchases' => 0,
+            'pending' => 0,
+            'sent' => 0,
+            'in_transit' => 0,
+            'received' => 0,
+            'cancelled' => 0,
+            'overdue' => 0,
+            'suppliers' => 0,
             'total_orders_count' => 0,
             // Count versions for additional display
-            'pending_count'      => 0,
-            'sent_count'         => 0,
-            'in_transit_count'   => 0,
-            'received_count'     => 0,
+            'pending_count' => 0,
+            'sent_count' => 0,
+            'in_transit_count' => 0,
+            'received_count' => 0,
             // Debug info
-            'debug_info'         => ''
+            'debug_info' => ''
         ];
 
         try {
@@ -1475,10 +1475,10 @@ class Purchase
                     require_once APPROOT . DS . 'app' . DS . 'helpers' . DS . 'EmailHelper.php';
 
                     $purchaseData = [
-                        'po_number'     => $purchase->po_number,
+                        'po_number' => $purchase->po_number,
                         'supplier_name' => $purchase->supplier_name,
                         'purchase_date' => $purchase->purchase_date,
-                        'total_amount'  => $purchase->total_amount
+                        'total_amount' => $purchase->total_amount
                     ];
 
                     // Try to send email to supplier and internal team
@@ -1507,4 +1507,23 @@ class Purchase
             return false;
         }
     }
+
+    // =============== BOT HELPER METHODS ===============
+
+    /**
+     * Get pending orders count for bot dashboard
+     */
+    public function getPendingOrdersCount()
+    {
+        try {
+            $this->db->query("SELECT COUNT(*) as count FROM purchases WHERE status IN ('pending', 'approved', 'ordered')");
+            $result = $this->db->executeSingle();
+            return $result->count ?? 0;
+        } catch (Exception $e) {
+            error_log('Error getting pending orders count: ' . $e->getMessage());
+            return 0;
+        }
+    }
 }
+
+?>

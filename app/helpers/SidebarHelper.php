@@ -28,6 +28,7 @@ function getSidebarItems($userRole = null, $roleId = null)
             ['url' => 'inventory', 'icon' => 'fa-solid fa-warehouse', 'label' => 'Inventory Management'],
             ['url' => 'import', 'icon' => 'fa-solid fa-file-import', 'label' => 'Bulk Import'],
             ['url' => 'barcodes', 'icon' => 'fa-solid fa-barcode', 'label' => 'Barcode Management'],
+            ['url' => 'bot', 'icon' => 'fa-solid fa-robot', 'label' => 'Bot Automation'],
             ['url' => 'expenses', 'icon' => 'fa-solid fa-wallet', 'label' => 'Expenses'],
             ['url' => 'reports', 'icon' => 'fa-solid fa-file-alt', 'label' => 'Reports'],
             ['url' => 'company-profile', 'icon' => 'fa-solid fa-building', 'label' => 'Company Profile'],

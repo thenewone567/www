@@ -102,10 +102,10 @@ class Dashboard
     public function getTotalInventoryValue()
     {
         $this->db->query("
-            SELECT SUM(COALESCE(s.quantity, 0) * COALESCE(p.purchase_price, 0)) as total_value
+            SELECT SUM(COALESCE(i.quantity, 0) * COALESCE(p.current_average_cost, p.purchase_price, 0)) as total_value
             FROM products p
-            LEFT JOIN Inventory s ON p.product_id = s.product_id
-            WHERE p.is_active = 1 AND COALESCE(s.quantity, 0) > 0
+            LEFT JOIN inventory i ON p.product_id = i.product_id
+            WHERE p.is_active = 1 AND COALESCE(i.quantity, 0) > 0
         ");
         $this->db->execute();
         $result = $this->db->single();
@@ -114,7 +114,7 @@ class Dashboard
 
     public function getTotalProducts()
     {
-        $this->db->query("SELECT COUNT(*) as total FROM products WHERE is_active = 1");
+        $this->db->query("SELECT COUNT(*) as total FROM products WHERE is_active = 1 AND deleted_at IS NULL");
         $this->db->execute();
         $result = $this->db->single();
         return $result && $result->total !== null ? $result->total : 0;
@@ -124,15 +124,15 @@ class Dashboard
     {
         $this->db->query("
             SELECT p.product_id, p.product_name, p.sku, 
-                   COALESCE(SUM(s.quantity), 0) as current_inventory,
+                   COALESCE(SUM(i.quantity), 0) as current_inventory,
                    p.min_Inventory_level, p.reorder_level, c.category_name
             FROM products p
             LEFT JOIN categories c ON p.category_id = c.category_id
-            LEFT JOIN Inventory s ON p.product_id = s.product_id
+            LEFT JOIN inventory i ON p.product_id = i.product_id
             WHERE p.is_active = 1
             GROUP BY p.product_id, p.product_name, p.sku, p.min_Inventory_level, p.reorder_level, c.category_name
-            HAVING COALESCE(SUM(s.quantity), 0) <= p.reorder_level
-            ORDER BY (COALESCE(SUM(s.quantity), 0) / NULLIF(p.reorder_level, 1)) ASC
+            HAVING COALESCE(SUM(i.quantity), 0) <= COALESCE(p.reorder_level, 10)
+            ORDER BY (COALESCE(SUM(i.quantity), 0) / NULLIF(COALESCE(p.reorder_level, 10), 1)) ASC
             LIMIT :limit
         ");
         $this->db->bind(':limit', $limit);
@@ -144,11 +144,17 @@ class Dashboard
     public function getLowInventoryCount()
     {
         $this->db->query("
-            SELECT COUNT(DISTINCT p.product_id) as total 
+            SELECT COUNT(p.product_id) as total 
             FROM products p
-            LEFT JOIN Inventory s ON p.product_id = s.product_id
+            LEFT JOIN (
+                SELECT product_id, SUM(quantity) as total_qty 
+                FROM inventory 
+                GROUP BY product_id
+            ) inv ON p.product_id = inv.product_id
             WHERE p.is_active = 1
-            AND COALESCE((SELECT SUM(quantity) FROM Inventory WHERE product_id = p.product_id), 0) <= p.reorder_level
+            AND p.deleted_at IS NULL
+            AND COALESCE(inv.total_qty, 0) > 0
+            AND COALESCE(inv.total_qty, 0) <= COALESCE(p.reorder_level, 10)
         ");
         $this->db->execute();
         $result = $this->db->single();
@@ -158,11 +164,16 @@ class Dashboard
     public function getOutOfInventoryCount()
     {
         $this->db->query("
-            SELECT COUNT(DISTINCT p.product_id) as total 
+            SELECT COUNT(p.product_id) as total 
             FROM products p
-            LEFT JOIN Inventory s ON p.product_id = s.product_id
+            LEFT JOIN (
+                SELECT product_id, SUM(quantity) as total_qty 
+                FROM inventory 
+                GROUP BY product_id
+            ) inv ON p.product_id = inv.product_id
             WHERE p.is_active = 1
-            AND COALESCE((SELECT SUM(quantity) FROM Inventory WHERE product_id = p.product_id), 0) <= 0
+            AND p.deleted_at IS NULL
+            AND COALESCE(inv.total_qty, 0) <= 0
         ");
         $this->db->execute();
         $result = $this->db->single();
@@ -198,10 +209,59 @@ class Dashboard
         return $result ? $result : [];
     }
 
+    /**
+     * Get product counts grouped by price ranges
+     * Returns array with buckets: 0-500, 500-2000, 2000-5000, 5000-10000, 10000+
+     */
+    public function getPriceRangeDistribution()
+    {
+        $this->db->query("
+            SELECT
+                SUM(CASE WHEN COALESCE(p.selling_price,0) <= 500 THEN 1 ELSE 0 END) AS r1,
+                SUM(CASE WHEN COALESCE(p.selling_price,0) > 500 AND COALESCE(p.selling_price,0) <= 2000 THEN 1 ELSE 0 END) AS r2,
+                SUM(CASE WHEN COALESCE(p.selling_price,0) > 2000 AND COALESCE(p.selling_price,0) <= 5000 THEN 1 ELSE 0 END) AS r3,
+                SUM(CASE WHEN COALESCE(p.selling_price,0) > 5000 AND COALESCE(p.selling_price,0) <= 10000 THEN 1 ELSE 0 END) AS r4,
+                SUM(CASE WHEN COALESCE(p.selling_price,0) > 10000 THEN 1 ELSE 0 END) AS r5
+            FROM products p
+            WHERE p.is_active = 1 AND (p.deleted_at IS NULL)
+        ");
+        $this->db->execute();
+        $row = $this->db->single();
+        if (!$row)
+            return [0, 0, 0, 0, 0];
+        return [(int) $row->r1, (int) $row->r2, (int) $row->r3, (int) $row->r4, (int) $row->r5];
+    }
+
+    /**
+     * Inventory Status Distribution - counts for In Stock, Low Stock, Out of Stock, Reorder Level
+     */
+    public function getInventoryStatusDistribution()
+    {
+        // We'll compute per product current inventory
+        $this->db->query("
+            SELECT
+                SUM(CASE WHEN COALESCE(inv.total_qty,0) > COALESCE(p.reorder_level,0) THEN 1 ELSE 0 END) AS in_stock,
+                SUM(CASE WHEN COALESCE(inv.total_qty,0) > 0 AND COALESCE(inv.total_qty,0) <= COALESCE(p.reorder_level,0) THEN 1 ELSE 0 END) AS low_stock,
+                SUM(CASE WHEN COALESCE(inv.total_qty,0) <= 0 THEN 1 ELSE 0 END) AS out_of_stock,
+                SUM(CASE WHEN COALESCE(inv.total_qty,0) = COALESCE(p.reorder_level,0) THEN 1 ELSE 0 END) AS reorder_level
+            FROM products p
+            LEFT JOIN (SELECT product_id, SUM(quantity) as total_qty FROM inventory GROUP BY product_id) inv ON p.product_id = inv.product_id
+            WHERE p.is_active = 1 AND (p.deleted_at IS NULL)
+        ");
+        $this->db->execute();
+        $row = $this->db->single();
+        if (!$row)
+            return [0, 0, 0, 0];
+        return [(int) $row->in_stock, (int) $row->low_stock, (int) $row->out_of_stock, (int) $row->reorder_level];
+    }
+
     // Customer Analytics Methods
     public function getNewCustomers($days = 30)
     {
-        $this->db->query("SELECT COUNT(*) as total FROM customers WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL :days DAY)");
+        // Count customers whose first-ever sale falls within the last :days days.
+        // Use a grouped derived table to avoid a correlated subquery per row which can be very slow on large sales tables.
+        // Ensure there is an index on (customer_id, sale_date) on the sales table for best performance.
+        $this->db->query("\n            SELECT COUNT(*) as total FROM (\n                SELECT customer_id, MIN(sale_date) as first_sale\n                FROM sales\n                GROUP BY customer_id\n                HAVING MIN(sale_date) >= DATE_SUB(CURDATE(), INTERVAL :days DAY)\n            ) first_sales\n            JOIN customers c ON c.customer_id = first_sales.customer_id\n            WHERE c.status = 'active'\n        ");
         $this->db->bind(':days', $days);
         $this->db->execute();
         $result = $this->db->single();
@@ -227,24 +287,30 @@ class Dashboard
     // Financial Metrics Methods
     public function getGrossMargin($days = 30)
     {
+        // Get gross margin calculation with proper cost basis
+        // Use the unit_price from sale_items (actual sale price) vs the cost from products
         $this->db->query("
             SELECT 
                 SUM(si.quantity * si.unit_price) as total_revenue,
-                SUM(si.quantity * COALESCE(p.purchase_price, 0)) as total_cost
+                SUM(si.quantity * COALESCE(p.current_average_cost, p.purchase_price, 0)) as total_cost
             FROM sale_items si
             JOIN products p ON si.product_id = p.product_id
             JOIN sales s ON si.sale_id = s.sale_id
             WHERE s.sale_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)
+            AND si.unit_price > 0  -- Only include sales with actual prices
         ");
         $this->db->bind(':days', $days);
         $this->db->execute();
         $result = $this->db->single();
 
-        if (!$result || $result->total_revenue == 0)
+        if (!$result || $result->total_revenue == 0) {
             return 0;
+        }
 
         $grossProfit = $result->total_revenue - $result->total_cost;
-        return round(($grossProfit / $result->total_revenue) * 100, 1);
+        $marginPercent = round(($grossProfit / $result->total_revenue) * 100, 1);
+
+        return $marginPercent;
     }
 
     public function getDailySalesTrend($days = 7)

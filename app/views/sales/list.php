@@ -47,7 +47,7 @@
                                         <td>
                                             <span
                                                 class="badge bg-<?php echo $sale->payment_mode == 'cash' ? 'success' : ($sale->payment_mode == 'card' ? 'primary' : 'secondary'); ?>">
-                                                <?php echo ucfirst($sale->payment_mode); ?>
+                                                <?php echo ucfirst($sale->payment_mode ?? 'unknown'); ?>
                                             </span>
                                         </td>
                                         <td>

@@ -36,6 +36,15 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
             </a>
         </div>
 
+        <!-- Price Bot card (scheduled pricing adjustments) -->
+        <div class="col-6 col-md-4 col-lg-3 mb-3">
+            <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link" href="<?= URLROOT ?>/admin/pricing_dashboard" role="button">
+                <div class="text-info mb-2"><i class="fas fa-robot fa-2x"></i></div>
+                <div class="font-weight-bold">Price Bot</div>
+                <small class="text-muted">Automated pricing</small>
+            </a>
+        </div>
+
         <div class="col-6 col-md-4 col-lg-3 mb-3">
             <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link" href="<?= URLROOT ?>/admin/users" role="link">
                 <div class="text-primary mb-2"><i class="fas fa-users fa-2x"></i></div>

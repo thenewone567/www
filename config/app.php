@@ -11,7 +11,7 @@ define("APP_ENV", "development"); // development, production
 define("APPROOT", dirname(__DIR__));
 define("DS", DIRECTORY_SEPARATOR);
 define("URLROOT", "http://localhost");
-define("SITENAME", "Home Hardware");
+define("SITENAME", "Bhai Ji Traders");
 
 // Session configuration (only if headers not sent)
 if (!headers_sent()) {

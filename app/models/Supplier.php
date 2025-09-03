@@ -80,17 +80,17 @@ class Supplier
 
         // Valid sort columns mapping
         $validSortColumns = [
-            'supplier_id'           => 's.supplier_id',
-            'supplier_name'         => 's.supplier_name',
-            'contact_person'        => 's.contact_person',
-            'email'                 => 's.email',
-            'phone'                 => 's.phone',
-            'reliability_score'     => 's.reliability_score',
+            'supplier_id' => 's.supplier_id',
+            'supplier_name' => 's.supplier_name',
+            'contact_person' => 's.contact_person',
+            'email' => 's.email',
+            'phone' => 's.phone',
+            'reliability_score' => 's.reliability_score',
             'average_delivery_days' => 's.average_delivery_days',
-            'supplier_tier'         => 's.supplier_tier',
-            'status'                => 's.status',
-            'added_by'              => 'u.username',
-            'created_at'            => 's.created_at'
+            'supplier_tier' => 's.supplier_tier',
+            'status' => 's.status',
+            'added_by' => 'u.username',
+            'created_at' => 's.created_at'
         ];
 
         $orderColumn = isset($validSortColumns[$sortBy]) ? $validSortColumns[$sortBy] : 's.supplier_name';
@@ -273,8 +273,8 @@ class Supplier
         $result = $this->db->single();
         return [
             'on_time' => $result ? $result->on_time : 0,
-            'early'   => $result ? $result->early : 0,
-            'late'    => $result ? $result->late : 0
+            'early' => $result ? $result->early : 0,
+            'late' => $result ? $result->late : 0
         ];
     }
 
@@ -291,7 +291,7 @@ class Supplier
         $this->db->execute();
         $result = $this->db->single();
         return [
-            'gold'   => $result ? $result->gold : 0,
+            'gold' => $result ? $result->gold : 0,
             'silver' => $result ? $result->silver : 0,
             'bronze' => $result ? $result->bronze : 0
         ];
@@ -506,25 +506,25 @@ class Supplier
         // Track which fields are being changed
         $changedFields = [];
         $fieldMapping = [
-            'supplier_name'           => 'supplier_name',
-            'contact_person'          => 'contact_person',
-            'phone'                   => 'phone',
-            'email'                   => 'email',
-            'address'                 => 'address',
-            'gst_number'              => 'gst_number',
-            'default_delivery_days'   => 'default_delivery_days',
+            'supplier_name' => 'supplier_name',
+            'contact_person' => 'contact_person',
+            'phone' => 'phone',
+            'email' => 'email',
+            'address' => 'address',
+            'gst_number' => 'gst_number',
+            'default_delivery_days' => 'default_delivery_days',
             'preferred_payment_terms' => 'preferred_payment_terms',
-            'credit_limit'            => 'credit_limit',
-            'current_outstanding'     => 'current_outstanding',
-            'is_verified'             => 'is_verified',
-            'verification_date'       => 'verification_date',
-            'notes'                   => 'notes'
+            'credit_limit' => 'credit_limit',
+            'current_outstanding' => 'current_outstanding',
+            'is_verified' => 'is_verified',
+            'verification_date' => 'verification_date',
+            'notes' => 'notes'
         ];
 
         foreach ($fieldMapping as $formField => $dbField) {
             if (isset($data[$formField]) && $data[$formField] !== $currentSupplier->$dbField) {
                 $changedFields[] = [
-                    'field'     => $dbField,
+                    'field' => $dbField,
                     'old_value' => $currentSupplier->$dbField,
                     'new_value' => $data[$formField]
                 ];
@@ -760,12 +760,70 @@ class Supplier
     public function getSupplierPurchases($supplierId, $limit = 50)
     {
         $this->db->query("
-            SELECT p.*, 
-                   COUNT(pi.purchase_item_id) as item_count
+            SELECT p.purchase_id, p.po_number, p.purchase_date, p.expected_date, 
+                   p.status, p.total_amount, p.notes,
+                   COUNT(pi.purchase_item_id) as item_count,
+                   COALESCE(SUM(pi.quantity), 0) as total_quantity,
+                   COALESCE(AVG(pi.unit_price), 0) as avg_unit_price,
+                   CASE 
+                       WHEN p.expected_date IS NOT NULL AND p.expected_date < CURDATE() AND p.status NOT IN ('received', 'completed') 
+                       THEN 'overdue'
+                       WHEN p.expected_date IS NOT NULL AND p.expected_date = CURDATE() AND p.status NOT IN ('received', 'completed') 
+                       THEN 'due_today'
+                       ELSE 'on_time'
+                   END as delivery_status
             FROM purchases p
             LEFT JOIN purchase_items pi ON p.purchase_id = pi.purchase_id
             WHERE p.supplier_id = :supplier_id
-            GROUP BY p.purchase_id
+            GROUP BY p.purchase_id, p.po_number, p.purchase_date, p.expected_date, 
+                     p.status, p.total_amount, p.notes
+            ORDER BY p.purchase_date DESC
+            LIMIT :limit
+        ");
+        $this->db->bind(':supplier_id', $supplierId);
+        $this->db->bind(':limit', $limit);
+        $this->db->execute();
+
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Get detailed purchase history with product information
+     * @param int $supplierId
+     * @param int $limit
+     * @return array
+     */
+    public function getDetailedSupplierPurchases($supplierId, $limit = 50)
+    {
+        $this->db->query("
+            SELECT p.purchase_id,
+                   p.po_number,
+                   p.purchase_date,
+                   p.expected_date,
+                   p.status,
+                   p.total_amount,
+                   p.notes,
+                   COUNT(pi.purchase_item_id) as item_count,
+                   COALESCE(SUM(pi.quantity), 0) as total_quantity,
+                   COALESCE(AVG(pi.unit_price), 0) as avg_unit_price,
+                   GROUP_CONCAT(
+                       DISTINCT CONCAT(
+                           prod.product_name, ' (', pi.quantity, ' units)'
+                       ) SEPARATOR ', '
+                   ) as product_summary,
+                   CASE 
+                       WHEN p.expected_date IS NOT NULL AND p.expected_date < CURDATE() AND p.status NOT IN ('received', 'completed') 
+                       THEN 'overdue'
+                       WHEN p.expected_date IS NOT NULL AND p.expected_date = CURDATE() AND p.status NOT IN ('received', 'completed') 
+                       THEN 'due_today'
+                       ELSE 'on_time'
+                   END as delivery_status
+            FROM purchases p
+            LEFT JOIN purchase_items pi ON p.purchase_id = pi.purchase_id
+            LEFT JOIN products prod ON pi.product_id = prod.product_id
+            WHERE p.supplier_id = :supplier_id
+            GROUP BY p.purchase_id, p.po_number, p.purchase_date, p.expected_date, 
+                     p.status, p.total_amount, p.notes
             ORDER BY p.purchase_date DESC
             LIMIT :limit
         ");
@@ -945,10 +1003,10 @@ class Supplier
         $onhold = $onhold_result ? $onhold_result->onhold : 0;
 
         return [
-            'total'   => $total,
-            'active'  => $active,
+            'total' => $total,
+            'active' => $active,
             'pending' => $pending,
-            'onhold'  => $onhold
+            'onhold' => $onhold
         ];
     }
 
@@ -1142,4 +1200,23 @@ class Supplier
 
         return $this->db->execute();
     }
+
+    // =============== BOT HELPER METHODS ===============
+
+    /**
+     * Get total suppliers count for bot dashboard
+     */
+    public function getTotalSuppliers()
+    {
+        try {
+            $this->db->query("SELECT COUNT(*) as total FROM suppliers WHERE status = 'active' AND deleted_at IS NULL");
+            $result = $this->db->executeSingle();
+            return $result->total ?? 0;
+        } catch (Exception $e) {
+            error_log('Error getting total suppliers: ' . $e->getMessage());
+            return 0;
+        }
+    }
 }
+
+?>

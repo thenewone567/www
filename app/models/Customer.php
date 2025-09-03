@@ -23,15 +23,15 @@ class Customer
         $customerName = !empty($data['company_name']) ? $data['company_name'] : ($data['contact_person'] ?? '');
         $contactInfo = json_encode([
             'contact_person' => $data['contact_person'] ?? '',
-            'email'          => $data['email'] ?? '',
-            'phone'          => $data['phone'] ?? '',
-            'address'        => $data['address'] ?? '',
-            'city'           => $data['city'] ?? '',
-            'state'          => $data['state'] ?? '',
-            'zip_code'       => $data['zip_code'] ?? '',
-            'discount_type'  => $data['discount_type'] ?? 'percentage',
+            'email' => $data['email'] ?? '',
+            'phone' => $data['phone'] ?? '',
+            'address' => $data['address'] ?? '',
+            'city' => $data['city'] ?? '',
+            'state' => $data['state'] ?? '',
+            'zip_code' => $data['zip_code'] ?? '',
+            'discount_type' => $data['discount_type'] ?? 'percentage',
             'discount_value' => $data['discount_value'] ?? 0,
-            'payment_terms'  => $data['payment_terms'] ?? 30
+            'payment_terms' => $data['payment_terms'] ?? 30
         ]);
         $creditLimit = $data['credit_limit'] ?? 0;
 
@@ -221,4 +221,45 @@ class Customer
 
         return $this->db->execute();
     }
+
+    // =============== BOT HELPER METHODS ===============
+
+    /**
+     * Get total customers count for bot dashboard
+     */
+    public function getTotalCustomers()
+    {
+        try {
+            $this->db->query("SELECT COUNT(*) as total FROM customers WHERE status = 'active'");
+            $result = $this->db->executeSingle();
+            return $result->total ?? 0;
+        } catch (Exception $e) {
+            error_log('Error getting total customers: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Get random customers for bot operations
+     */
+    public function getRandomCustomers($limit = 5)
+    {
+        try {
+            $this->db->query("
+                SELECT customer_id, customer_name as name, contact_info
+                FROM customers 
+                WHERE status = 'active' 
+                ORDER BY RAND() 
+                LIMIT :limit
+            ");
+            $this->db->bind(':limit', $limit);
+            $this->db->execute();
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log('Error getting random customers: ' . $e->getMessage());
+            return [];
+        }
+    }
 }
+
+?>

@@ -20,6 +20,12 @@
     <!-- Unified CSS - Ultra lean 4.8KB (91% smaller!) -->
     <link rel="stylesheet" href="<?= URLROOT ?>/public/css/app-unified.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- Load jQuery early to prevent $ is not defined errors -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"
+        crossorigin="anonymous"></script>
+
     <title><?php echo htmlspecialchars(company_name()); ?></title>
 </head>
 

@@ -23,7 +23,7 @@
                     <div class="mr-3 display-4 text-primary"><i class="fas fa-cubes"></i></div>
                     <div>
                         <div class="text-muted">Total Products</div>
-                        <div class="h4 mb-0"><?php echo count($data['products'] ?? []); ?></div>
+                        <div class="h4 mb-0"><?php echo $data['pagination']['total_records'] ?? 0; ?></div>
                     </div>
                 </div>
             </div>
@@ -34,13 +34,7 @@
                     <div class="mr-3 display-4 text-success"><i class="fas fa-warehouse"></i></div>
                     <div>
                         <div class="text-muted">Total Inventory</div>
-                        <?php $totalInv = 0;
-                        if (!empty($data['products'])) {
-                            foreach ($data['products'] as $p) {
-                                $totalInv += $p->current_inventory ?? 0;
-                            }
-                        } ?>
-                        <div class="h4 mb-0"><?php echo number_format($totalInv); ?></div>
+                        <div class="h4 mb-0"><?php echo number_format($data['total_inventory'] ?? 0); ?></div>
                     </div>
                 </div>
             </div>
@@ -52,7 +46,7 @@
                     <div>
                         <div class="text-muted">Avg Margin</div>
                         <div class="h4 mb-0">
-                            <?php echo isset($data['avg_margin']) ? number_format($data['avg_margin'], 1) . '%' : '—'; ?>
+                            <?php echo isset($data['avg_margin']) && $data['avg_margin'] !== null ? number_format($data['avg_margin'], 1) . '%' : '—'; ?>
                         </div>
                     </div>
                 </div>
@@ -64,15 +58,7 @@
                     <div class="mr-3 display-4 text-danger"><i class="fas fa-exclamation-triangle"></i></div>
                     <div>
                         <div class="text-muted">Need Reorder</div>
-                        <?php $reorderCount = 0;
-                        if (!empty($data['products'])) {
-                            foreach ($data['products'] as $p) {
-                                $ri = $p->reorder_level ?? 10;
-                                if (($p->current_inventory ?? 0) <= $ri)
-                                    $reorderCount++;
-                            }
-                        } ?>
-                        <div class="h4 mb-0"><?php echo $reorderCount; ?></div>
+                        <div class="h4 mb-0"><?php echo $data['need_reorder'] ?? 0; ?></div>
                     </div>
                 </div>
             </div>
@@ -126,17 +112,19 @@
                 <thead class="thead-light">
                     <tr>
                         <!-- select-all column removed -->
-                        <th style="width:80px">Image</th>
-                        <th>Product</th>
-                        <th style="width:120px">SKU</th>
-                        <th class="column-brand" style="width:120px">Brand</th>
-                        <th style="width:120px">Category</th>
-                        <th style="width:100px">Stock</th>
-                        <th class="column-margin" style="width:90px">Margin</th>
-                        <th class="column-supplier" style="width:140px">Supplier</th>
-                        <th class="column-unit" style="width:80px">Unit</th>
-                        <th style="width:120px">Price</th>
-                        <th style="width:140px">Actions</th>
+                        <th style="width:80px" title="Product Image">Image</th>
+                        <th title="Product Name and Details">Product</th>
+                        <th style="width:120px" title="Stock Keeping Unit (SKU)">SKU</th>
+                        <th class="column-brand" style="width:120px" title="Product Brand">Brand</th>
+                        <th style="width:120px" title="Product Category">Category</th>
+                        <th style="width:100px" title="Current Stock Quantity">Stock</th>
+                        <th class="column-margin" style="width:90px" title="Profit Margin Percentage">Margin</th>
+                        <th class="column-reorder" style="width:140px" title="Reorder Level">Reorder Level</th>
+                        <th class="column-unit" style="width:80px" title="Unit of Measurement">Unit</th>
+                        <th style="width:90px" title="Base Purchase Price from Supplier">Purchase Price</th>
+                        <th style="width:90px" title="Current Average Cost (Realistic)">Average Cost</th>
+                        <th style="width:90px" title="Current Selling Price">Sale Price</th>
+                        <th style="width:140px" title="Available Actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="productsTableBody">
@@ -155,7 +143,8 @@
                                 <td>
                                     <strong><?php echo htmlspecialchars($product->product_name); ?></strong>
                                     <?php if (!empty($product->model_number)): ?>
-                                        <div class="text-muted small">Model: <?php echo htmlspecialchars($product->model_number); ?>
+                                        <div class="text-muted small">Model/Batch:
+                                            <?php echo htmlspecialchars($product->model_number); ?>
                                         </div><?php endif; ?>
                                 </td>
                                 <td><code><?php echo htmlspecialchars($product->sku); ?></code></td>
@@ -167,36 +156,51 @@
                                 </td>
                                 <td class="column-margin"><?php
                                 $selling = $product->selling_price ?? 0;
-                                $cost = $product->primary_purchase_price ?? $product->unit_price ?? 0;
+                                // Use same cost logic as details view: current_average_cost if available, otherwise purchase_price
+                                $cost = ($product->current_average_cost ?? 0) > 0 ? $product->current_average_cost : ($product->purchase_price ?? 0);
                                 $margin = 0;
                                 if ($selling > 0 && $cost > 0)
                                     $margin = (($selling - $cost) / $selling) * 100;
                                 echo number_format($margin, 1) . '%';
                                 ?></td>
-                                <td class="column-supplier"><?php echo htmlspecialchars($product->supplier_name ?? '-'); ?></td>
+                                <td class="column-reorder text-center">
+                                    <?php echo htmlspecialchars((string) ($product->reorder_level ?? '-')); ?>
+                                </td>
                                 <td class="column-unit"><?php echo htmlspecialchars($product->unit_name ?? '-'); ?></td>
-                                <td><?php echo formatCurrency($product->selling_price ?? 0, 2); ?></td>
+                                <td class="text-right">
+                                    <small class="text-muted">Base:</small><br>
+                                    <strong><?php echo formatCurrency($product->purchase_price ?? 0, 2); ?></strong>
+                                </td>
+                                <td class="text-right">
+                                    <small class="text-muted">Avg:</small><br>
+                                    <strong
+                                        class="text-info"><?php echo formatCurrency($product->current_average_cost ?? 0, 2); ?></strong>
+                                </td>
+                                <td class="text-right">
+                                    <small class="text-muted">Sale:</small><br>
+                                    <strong
+                                        class="text-success"><?php echo formatCurrency($product->selling_price ?? 0, 2); ?></strong>
+                                </td>
                                 <td>
-                                    <div class="btn-group">
+                                    <div class="btn-group dropdown">
                                         <button class="btn btn-sm btn-outline-primary"
                                             onclick="viewProduct(<?php echo $product->product_id; ?>)"><i
                                                 class="fas fa-eye"></i></button>
                                         <button class="btn btn-sm btn-outline-warning"
                                             onclick="editProduct(<?php echo $product->product_id; ?>)"><i
                                                 class="fas fa-edit"></i></button>
-                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                            data-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown"
+                                            aria-expanded="false" aria-haspopup="true">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
                                         <div class="dropdown-menu dropdown-menu-right">
                                             <a class="dropdown-item" href="#"
-                                                onclick="viewSuppliers(<?php echo $product->product_id; ?>)"><i
-                                                    class="fas fa-users mr-1"></i>Suppliers</a>
-                                            <a class="dropdown-item" href="#"
-                                                onclick="linkSupplier(<?php echo $product->product_id; ?>, '<?php echo htmlspecialchars($product->product_name, ENT_QUOTES); ?>')"><i
-                                                    class="fas fa-link mr-1"></i>Link Supplier</a>
+                                                onclick="openAddSupplierModal(<?php echo $product->product_id; ?>, '<?php echo htmlspecialchars($product->product_name, ENT_QUOTES); ?>')"><i
+                                                    class="fas fa-plus mr-1"></i>Add Supplier</a>
                                             <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item text-danger" href="#"
-                                                onclick="deleteProduct(<?php echo $product->product_id; ?>)"><i
-                                                    class="fas fa-trash mr-1"></i>Delete</a>
+                                            <a class="dropdown-item text-warning" href="#"
+                                                onclick="deactivateProduct(<?php echo $product->product_id; ?>)"><i
+                                                    class="fas fa-user-slash mr-1"></i>Deactivate</a>
                                         </div>
                                     </div>
                                 </td>
@@ -302,32 +306,67 @@
 
 </div>
 
-<!-- Reuse the LinkSupplierModal we added earlier if present in the layout --><!-- Fallback modal here to ensure JS works -->
-<div class="modal fade" id="LinkSupplierModal" tabindex="-1" role="dialog" aria-labelledby="LinkSupplierModalLabel"
+<!-- Add Supplier Modal -->
+<div class="modal fade" id="addSupplierModal" tabindex="-1" role="dialog" aria-labelledby="addSupplierModalLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="LinkSupplierModalLabel">Link Supplier</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
+                <h5 class="modal-title" id="addSupplierModalLabel">
+                    <i class="fas fa-plus mr-2"></i>Add Supplier to Product
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="link_product_id" value="">
-                <h6 id="link_product_name"></h6>
+                <div class="mb-3">
+                    <strong>Product:</strong> <span id="currentProductName" class="text-primary"></span>
+                </div>
+
                 <div class="form-group">
-                    <input type="text" id="supplier_search" class="form-control" placeholder="Search suppliers...">
+                    <label for="supplierSearch">Search Suppliers</label>
+                    <input type="text" class="form-control" id="supplierSearch"
+                        placeholder="Type supplier name to search..." onkeyup="searchSuppliers(this.value)">
                 </div>
-                <div id="existing_suppliers_section" style="display:none;"></div>
-                <div id="suppliers_loading" style="display:none;" class="text-center py-3">
-                    <div class="spinner-border text-primary" role="status"><span class="sr-only">Loading</span></div>
+
+                <div id="supplierSearchResults" class="mt-3">
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-search fa-2x mb-2"></i>
+                        <p>Start typing to search for suppliers</p>
+                    </div>
                 </div>
-                <div id="suppliers_list"></div>
+
+                <div id="selectedSupplier" class="mt-3" style="display: none;">
+                    <div class="alert alert-info">
+                        <strong>Selected:</strong> <span id="selectedSupplierName"></span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary float-right"
+                            onclick="clearSelectedSupplier()">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+
+                    <!-- Purchase Price Input -->
+                    <div class="form-group">
+                        <label for="purchasePriceProducts">Purchase Price <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">$</span>
+                            </div>
+                            <input type="number" class="form-control" id="purchasePriceProducts" placeholder="0.00"
+                                min="0.01" step="0.01" required>
+                        </div>
+                        <small class="form-text text-muted">Enter the purchase price for this product from this
+                            supplier</small>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirm_link_supplier" onclick="confirmLinkSupplier()"
-                    disabled>Link Supplier</button>
+                <button type="button" class="btn btn-primary" id="confirmAddSupplier" onclick="confirmAddSupplier()"
+                    disabled>
+                    <i class="fas fa-plus mr-1"></i> Add Supplier
+                </button>
             </div>
         </div>
     </div>
@@ -403,84 +442,232 @@
             window.location.href = URLROOT + '/products/edit/' + id;
         };
 
-        // View suppliers for a product (simple redirect fallback)
-        window.viewSuppliers = function (id) {
-            if (!id) return;
-            // If there's a dedicated suppliers view, redirect there; otherwise try modal
-            if (window.location && URLROOT) {
-                window.location.href = URLROOT + '/products/suppliers/' + id;
-            }
+        // Add Supplier Modal Functions
+        let selectedSupplierId = null;
+        let currentProductId = null;
+        let searchTimeout = null;
+
+        window.openAddSupplierModal = function (productId, productName) {
+            currentProductId = productId;
+            document.getElementById('currentProductName').textContent = productName || 'Unknown Product';
+            $('#addSupplierModal').modal('show');
+            document.getElementById('supplierSearch').value = '';
+            clearSelectedSupplier();
+            resetSearchResults();
         };
 
-        // Open the Link Supplier modal and prefill product info
-        window.linkSupplier = function (productId, productName) {
-            try {
-                document.getElementById('link_product_id').value = productId || '';
-                document.getElementById('link_product_name').textContent = productName || '';
-                // clear previous selections
-                document.getElementById('supplier_search').value = '';
-                document.getElementById('existing_suppliers_section').style.display = 'none';
-                document.getElementById('suppliers_list').innerHTML = '';
-                document.getElementById('confirm_link_supplier').disabled = true;
-                $('#LinkSupplierModal').modal('show');
-            } catch (err) {
-                console.error('linkSupplier error', err);
+        function resetSearchResults() {
+            document.getElementById('supplierSearchResults').innerHTML = `
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-search fa-2x mb-2"></i>
+                    <p>Start typing to search for suppliers</p>
+                </div>
+            `;
+        }
+
+        window.searchSuppliers = function (query) {
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
             }
-        };
 
-        // Handler for confirm link supplier - expects an element #selected_supplier_id to be set by supplier search UI
-        window.confirmLinkSupplier = function () {
-            const pid = document.getElementById('link_product_id').value;
-            const selected = document.getElementById('selected_supplier_id');
-            const supplierId = selected ? selected.value : null;
-
-            if (!pid || !supplierId) {
-                alert('Please select a supplier to link.');
+            if (!query || query.trim().length < 2) {
+                resetSearchResults();
                 return;
             }
 
-            fetch(URLROOT + '/products/linkSupplier', {
+            // Show loading
+            document.getElementById('supplierSearchResults').innerHTML = `
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Searching suppliers...</p>
+                </div>
+            `;
+
+            searchTimeout = setTimeout(() => {
+                fetch(`${URLROOT}/api/getSuppliers.php?search=${encodeURIComponent(query.trim())}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.suppliers) {
+                            displaySupplierResults(data.suppliers);
+                        } else {
+                            document.getElementById('supplierSearchResults').innerHTML = `
+                                <div class="text-center text-muted py-3">
+                                    <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                                    <p>No suppliers found matching "${query}"</p>
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error searching suppliers:', error);
+                        document.getElementById('supplierSearchResults').innerHTML = `
+                            <div class="text-center text-danger py-3">
+                                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                                <p>Error loading suppliers. Please try again.</p>
+                            </div>
+                        `;
+                    });
+            }, 300);
+        };
+
+        function displaySupplierResults(suppliers) {
+            if (!suppliers || suppliers.length === 0) {
+                resetSearchResults();
+                return;
+            }
+
+            let html = '<div class="list-group">';
+            suppliers.forEach(supplier => {
+                html += `
+                    <div class="list-group-item list-group-item-action" onclick="selectSupplier(${supplier.supplier_id}, '${escapeHtml(supplier.supplier_name)}')">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">${escapeHtml(supplier.supplier_name)}</h6>
+                            <small class="text-muted">ID: ${supplier.supplier_id}</small>
+                        </div>
+                        <p class="mb-1 text-muted">
+                            ${supplier.contact_person ? escapeHtml(supplier.contact_person) : 'No contact'} | 
+                            ${supplier.phone ? escapeHtml(supplier.phone) : 'No phone'} | 
+                            ${supplier.email ? escapeHtml(supplier.email) : 'No email'}
+                        </p>
+                        <small class="text-muted">${supplier.address ? escapeHtml(supplier.address) : 'No address'}</small>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            document.getElementById('supplierSearchResults').innerHTML = html;
+        }
+
+        window.selectSupplier = function (supplierId, supplierName) {
+            selectedSupplierId = supplierId;
+            document.getElementById('selectedSupplierName').textContent = supplierName;
+            document.getElementById('selectedSupplier').style.display = 'block';
+            document.getElementById('confirmAddSupplier').disabled = false;
+
+            // Hide search results
+            document.getElementById('supplierSearchResults').innerHTML = `
+                <div class="text-center text-success py-3">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <p>Supplier selected! Click "Add Supplier" to confirm.</p>
+                </div>
+            `;
+        };
+
+        window.clearSelectedSupplier = function () {
+            selectedSupplierId = null;
+            document.getElementById('selectedSupplier').style.display = 'none';
+            document.getElementById('confirmAddSupplier').disabled = true;
+            document.getElementById('purchasePriceProducts').value = '';
+            resetSearchResults();
+        };
+
+        window.confirmAddSupplier = function () {
+            if (!selectedSupplierId || !currentProductId) {
+                alert('Please select a supplier first.');
+                return;
+            }
+
+            // Validate purchase price
+            const purchasePrice = document.getElementById('purchasePriceProducts').value;
+            if (!purchasePrice || parseFloat(purchasePrice) <= 0) {
+                alert('Please enter a valid purchase price.');
+                document.getElementById('purchasePriceProducts').focus();
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('product_id', currentProductId);
+            formData.append('supplier_id', selectedSupplierId);
+            formData.append('purchase_price', purchasePrice);
+
+            // Disable button and show loading
+            const confirmBtn = document.getElementById('confirmAddSupplier');
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Adding...';
+
+            fetch(`${URLROOT}/products/linkSupplier`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ product_id: pid, supplier_id: supplierId })
+                body: formData,
+                credentials: 'same-origin'
             })
-                .then(r => r.json())
-                .then(j => {
-                    if (j.success) {
-                        $('#LinkSupplierModal').modal('hide');
-                        location.reload();
-                    } else {
-                        alert(j.message || 'Failed to link supplier');
+                .then(response => {
+                    console.log('Fetch response received:', response);
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    return response.text();
+                })
+                .then(text => {
+                    console.log('Raw response text:', text);
+
+                    try {
+                        const data = JSON.parse(text);
+                        console.log('Parsed JSON data:', data);
+
+                        if (data.success) {
+                            $('#addSupplierModal').modal('hide');
+                            alert('Supplier added successfully!');
+                            // Optionally reload the page to show updated data
+                            location.reload();
+                        } else {
+                            alert(data.error || data.message || 'Failed to add supplier.');
+                        }
+                    } catch (parseError) {
+                        console.error('JSON parsing error:', parseError);
+                        console.log('Response was not valid JSON');
+                        alert('Server returned invalid response.');
                     }
                 })
-                .catch(err => {
-                    console.error(err);
-                    alert('An error occurred while linking supplier');
+                .catch(error => {
+                    console.error('Complete error details:', error);
+                    console.log('Error name:', error.name);
+                    console.log('Error message:', error.message);
+                    console.log('Error stack:', error.stack);
+                    alert(`Network error while adding supplier: ${error.message}`);
+                })
+                .finally(() => {
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = originalText;
                 });
         };
 
-        // Delete product via POST to controller (confirm first)
-        window.deleteProduct = function (id) {
-            if (!id) return;
-            if (!confirm('Delete this product? This action cannot be undone.')) return;
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-            fetch(URLROOT + '/products/delete/' + id, {
+        // Deactivate product via POST to controller (confirm first)
+        window.deactivateProduct = function (id) {
+            if (!id) return;
+            if (!confirm('Deactivate this product? It will be hidden from the catalog.')) return;
+
+            fetch(URLROOT + '/products/deactivate/' + id, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
             })
                 .then(r => r.json())
                 .then(j => {
                     if (j.success) {
-                        // remove the row or reload
                         location.reload();
                     } else {
-                        alert(j.message || 'Failed to delete product');
+                        alert(j.message || 'Failed to deactivate product');
                     }
                 }).catch(err => {
                     console.error(err);
                     alert('Request failed');
                 });
         };
+
+        // Backwards-compatible alias for existing calls
+        window.deleteProduct = function (id) { return window.deactivateProduct(id); };
 
         // select-all removed — no-op
 
@@ -535,6 +722,45 @@
             });
             */
         }
+
+        // Handle dropdown z-index to prevent overlap with next row buttons
+        document.addEventListener('DOMContentLoaded', function () {
+            // Find all dropdown toggles in the products table
+            const dropdownToggles = document.querySelectorAll('table#productsTable .dropdown-toggle');
+
+            dropdownToggles.forEach(toggle => {
+                const dropdown = toggle.closest('.dropdown');
+                const tableRow = toggle.closest('tr');
+
+                // When dropdown is shown
+                toggle.addEventListener('click', function () {
+                    setTimeout(() => {
+                        if (dropdown.classList.contains('show')) {
+                            tableRow.style.zIndex = '20';
+                        }
+                    }, 10);
+                });
+
+                // Listen for Bootstrap dropdown events
+                $(dropdown).on('shown.bs.dropdown', function () {
+                    tableRow.style.zIndex = '20';
+                });
+
+                $(dropdown).on('hidden.bs.dropdown', function () {
+                    tableRow.style.zIndex = '';
+                });
+            });
+
+            // Also handle clicking outside to close dropdowns
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.dropdown')) {
+                    const openRows = document.querySelectorAll('table#productsTable tr[style*="z-index"]');
+                    openRows.forEach(row => {
+                        row.style.zIndex = '';
+                    });
+                }
+            });
+        });
     })();
 </script>
 

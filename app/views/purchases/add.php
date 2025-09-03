@@ -110,10 +110,46 @@
                             </div>
                         </div>
 
-                        <!-- Quick Filter Actions (keeps legacy IDs for JS compatibility) -->
+                        <!-- Smart Purchase Filters - Cost Optimization -->
                         <div class="row mb-3 mt-2">
+                            <!-- Priority Filters for Cost Optimization -->
+                            <div class="col-md-12 mb-2">
+                                <div class="alert alert-info py-2 px-3">
+                                    <i class="fas fa-dollar-sign mr-2"></i>
+                                    <strong>Smart Purchase Filters:</strong> Find the best deals and avoid expensive
+                                    products
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Smart Filter Buttons Row -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Smart Filters">
+                                    <button type="button" class="btn btn-outline-success" id="lowestPriceFilter"
+                                        title="Show products with lowest prices first">
+                                        <i class="fas fa-arrow-down"></i> Lowest Price First
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning" id="fastDeliveryFilter"
+                                        title="Show products with fastest delivery times">
+                                        <i class="fas fa-shipping-fast"></i> Fast Delivery
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" id="topRatedFilter"
+                                        title="Show products from highest rated suppliers">
+                                        <i class="fas fa-star"></i> Top Rated Suppliers
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" id="clearSmartFilters"
+                                        title="Clear all smart filters">
+                                        <i class="fas fa-times"></i> Clear Filters
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Standard Filter Row -->
+                        <div class="row mb-3">
                             <div class="col-md-2">
-                                <select id="categoryFilter" class="form-control">
+                                <select id="categoryFilter" class="form-control form-control-sm">
                                     <option value="">All Categories</option>
                                     <?php
                                     $categories = [];
@@ -130,8 +166,8 @@
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <select id="supplierFilter" class="form-control">
+                            <div class="col-md-2">
+                                <select id="supplierFilter" class="form-control form-control-sm">
                                     <option value="">All Suppliers</option>
                                     <?php if (!empty($data['suppliers'])): ?>
                                         <?php foreach ($data['suppliers'] as $supplier): ?>
@@ -143,15 +179,24 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <input id="priceMinFilter" class="form-control" placeholder="Min Price" type="number"
-                                    min="0" step="0.01">
+                                <input id="priceMinFilter" class="form-control form-control-sm" placeholder="Min Price"
+                                    type="number" min="0" step="0.01">
                             </div>
                             <div class="col-md-2">
-                                <input id="priceMaxFilter" class="form-control" placeholder="Max Price" type="number"
-                                    min="0" step="0.01">
+                                <input id="priceMaxFilter" class="form-control form-control-sm" placeholder="Max Price"
+                                    type="number" min="0" step="0.01">
                             </div>
-                            <div class="col-md-3 d-flex align-items-center">
-                                <small class="results-counter ml-2"><i class="fas fa-list mr-1"></i> <span
+                            <div class="col-md-2">
+                                <select id="deliveryTimeFilter" class="form-control form-control-sm">
+                                    <option value="">Any Delivery Time</option>
+                                    <option value="1-3">1-3 days</option>
+                                    <option value="4-7">4-7 days</option>
+                                    <option value="8-14">8-14 days</option>
+                                    <option value="15+">15+ days</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-center">
+                                <small class="results-counter"><i class="fas fa-list mr-1"></i> <span
                                         id="resultsCount">0</span> products found</small>
                             </div>
                         </div>
@@ -168,7 +213,11 @@
                                             data-supplier-id="<?php echo $product->supplier_id ?? ''; ?>"
                                             data-supplier-name="<?php echo strtolower($product->supplier_name ?? ''); ?>"
                                             data-price="<?php echo $product->supplier_price ?? $product->unit_price ?? 0; ?>"
-                                            data-inventory="<?php echo $product->current_inventory ?? 0; ?>">
+                                            data-current-cost="<?php echo $product->purchase_price ?? $product->selling_price ?? $product->supplier_price ?? 0; ?>"
+                                            data-inventory="<?php echo $product->current_inventory ?? 0; ?>"
+                                            data-lead-time="<?php echo $product->lead_time_days ?? 999; ?>"
+                                            data-supplier-rating="<?php echo isset($product->reliability_score) ? $product->reliability_score : 5.0; ?>"
+                                            data-delivery-performance="<?php echo isset($product->on_time_delivery_rate) ? $product->on_time_delivery_rate : 50; ?>">
                                             <div class="card product-card h-100 shadow-sm border border-light">
                                                 <!-- Compact Card Header -->
                                                 <div class="card-header bg-gradient-primary text-white py-1 px-2 border-bottom">
@@ -192,8 +241,8 @@
                                                         </small>
                                                     </div>
 
-                                                    <!-- Compact Middle Row: Supplier and Inventory -->
-                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <!-- Compact Middle Row: Supplier and Performance Indicators -->
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
                                                         <small class="text-dark font-weight-medium" style="font-size: 0.7rem;">
                                                             <i class="fas fa-building text-info mr-1"
                                                                 style="font-size: 0.6rem;"></i>
@@ -202,8 +251,33 @@
                                                         <span
                                                             class="badge <?php echo (($product->current_inventory ?? 0) > 0) ? 'badge-success' : 'badge-warning'; ?> px-1 py-0"
                                                             style="font-size: 0.65rem;">
-                                                            <?php echo $product->current_inventory ?? 0; ?>
+                                                            Stock: <?php echo $product->current_inventory ?? 0; ?>
                                                         </span>
+                                                    </div>
+
+                                                    <!-- Performance Indicators Row -->
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <!-- Supplier Rating -->
+                                                        <small class="text-muted" style="font-size: 0.65rem;">
+                                                            <i class="fas fa-star text-warning mr-1"></i>
+                                                            <?php
+                                                            $rating = isset($product->reliability_score) ? $product->reliability_score : 5.0;
+                                                            echo number_format($rating, 1);
+                                                            ?>/10
+                                                        </small>
+
+                                                        <!-- Delivery Time -->
+                                                        <small class="text-muted" style="font-size: 0.65rem;">
+                                                            <i class="fas fa-shipping-fast text-primary mr-1"></i>
+                                                            <?php
+                                                            $leadTime = $product->lead_time_days ?? 999;
+                                                            if ($leadTime >= 999) {
+                                                                echo 'TBD';
+                                                            } else {
+                                                                echo $leadTime . 'd';
+                                                            }
+                                                            ?>
+                                                        </small>
                                                     </div>
 
                                                     <!-- Spacer -->
@@ -224,6 +298,7 @@
                                                             data-product-id="<?php echo $product->product_id; ?>"
                                                             data-product-name="<?php echo htmlspecialchars($product->product_name ?? ''); ?>"
                                                             data-price="<?php echo $product->supplier_price ?? $product->unit_price ?? 0; ?>"
+                                                            data-current-cost="<?php echo $product->purchase_price ?? $product->selling_price ?? $product->supplier_price ?? 0; ?>"
                                                             data-supplier-id="<?php echo $product->supplier_id ?? ''; ?>"
                                                             data-supplier-name="<?php echo htmlspecialchars($product->supplier_name ?? ''); ?>">
                                                             <i class="fas fa-plus mr-1"></i>Add
@@ -275,6 +350,7 @@
                                             <th>Supplier</th>
                                             <th>Qty</th>
                                             <th>Price</th>
+                                            <th>Avg Price</th>
                                             <th>Total</th>
                                             <th></th>
                                         </tr>
@@ -303,9 +379,12 @@
                                 <!-- Cart automatically creates separate POs per supplier -->
                                 <div class="alert alert-info small mb-3" id="multi-po-info">
                                     <i class="fas fa-info-circle mr-1"></i>
-                                    <strong>Multi-Supplier Support:</strong> Items from different suppliers will automatically create separate purchase orders.
+                                    <strong>Multi-Supplier Support:</strong> Items from different suppliers will
+                                    automatically create separate purchase orders.
                                     <div id="po-preview" style="display: none;" class="mt-1">
-                                        <small><i class="fas fa-arrow-right mr-1"></i>Your cart will create <strong><span id="po-count">0</span> purchase order(s)</strong> with unique PO numbers.</small>
+                                        <small><i class="fas fa-arrow-right mr-1"></i>Your cart will create
+                                            <strong><span id="po-count">0</span> purchase order(s)</strong> with unique
+                                            PO numbers.</small>
                                     </div>
                                 </div>
 
@@ -407,7 +486,40 @@
             z-index: 1020;
         }
 
-        .toast-container {
+        /* Smart Filter Button Styles */
+        .btn-group .btn {
+            transition: all 0.3s ease-in-out;
+        }
+
+        #lowestPriceFilter.active {
+            background-color: #28a745 !important;
+            border-color: #28a745 !important;
+            color: white !important;
+            box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+        }
+
+        #fastDeliveryFilter.active {
+            background-color: #ffc107 !important;
+            border-color: #ffc107 !important;
+            color: #212529 !important;
+            box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+        }
+
+        #topRatedFilter.active {
+            background-color: #007bff !important;
+            border-color: #007bff !important;
+            color: white !important;
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+        }
+
+        #clearSmartFilters:hover {
+            background-color: #6c757d !important;
+            border-color: #6c757d !important;
+            color: white !important;
+        }
+
+        /* Toast notification styles */
+        .toast {
             position: fixed;
             top: 1rem;
             right: 1rem;
@@ -573,7 +685,7 @@
                 document.getElementById('stats-suppliers').textContent = suppliersCount;
                 document.getElementById('stats-avg').textContent = '₹' + avg.toFixed(2);
                 document.getElementById('order-stats').style.display = cart.length ? '' : 'none';
-                
+
                 // Update PO preview
                 const poPreview = document.getElementById('po-preview');
                 const poCount = document.getElementById('po-count');
@@ -633,6 +745,19 @@
                     let rows = '';
                     cart.forEach((item, idx) => {
                         total += item.price * item.quantity;
+
+                        // Handle average price display
+                        let avgPriceDisplay, avgPriceTooltip;
+                        if (item.averagePrice !== undefined && item.averagePrice !== null) {
+                            avgPriceDisplay = `₹${parseFloat(item.averagePrice).toFixed(2)}`;
+                            avgPriceTooltip = item.calculation ?
+                                `Current: ${item.calculation.current_stock} @ ₹${item.calculation.current_avg_price}\\nNew: ${item.calculation.new_quantity} @ ₹${item.calculation.new_price}\\nAverage: ₹${item.averagePrice}` :
+                                `Average price: ₹${item.averagePrice}`;
+                        } else {
+                            avgPriceDisplay = '<span class="text-muted">Calculating...</span>';
+                            avgPriceTooltip = 'Average price calculation in progress';
+                        }
+
                         rows += `
                 <tr data-idx="${idx}">
                     <td>${escapeHtml(item.name)}</td>
@@ -645,11 +770,22 @@
                         </div>
                     </td>
                     <td>₹${item.price.toFixed(2)}</td>
+                    <td>
+                        <span class="text-info" title="${avgPriceTooltip}" data-toggle="tooltip">
+                            ${avgPriceDisplay}
+                        </span>
+                    </td>
                     <td>₹${(item.price * item.quantity).toFixed(2)}</td>
                     <td><button class="btn btn-sm btn-link text-danger remove-line" data-idx="${idx}">Remove</button></td>
                 </tr>`;
                     });
                     tbody.innerHTML = rows;
+
+                    // Initialize tooltips for average price
+                    if (typeof $ !== 'undefined') {
+                        $('[data-toggle="tooltip"]').tooltip();
+                    }
+
                     document.getElementById('total-amount').textContent = total.toFixed(2);
                     document.getElementById('total_amount_input').value = total.toFixed(2);
                     document.getElementById('cart_items_input').value = JSON.stringify(cart);
@@ -662,6 +798,8 @@
                             const change = parseInt(this.dataset.change, 10);
                             if (!isNaN(idx)) {
                                 cart[idx].quantity = Math.max(1, cart[idx].quantity + change);
+                                // Recalculate average price when quantity changes
+                                calculateSimpleAveragePrice(cart[idx].id, cart[idx].quantity, cart[idx].price);
                                 updateCartDisplay();
                                 updateOrderStats();
                             }
@@ -705,6 +843,8 @@
                             const change = parseInt(this.dataset.change, 10);
                             if (!isNaN(idx)) {
                                 cart[idx].quantity = Math.max(1, cart[idx].quantity + change);
+                                // Recalculate average price when quantity changes
+                                calculateSimpleAveragePrice(cart[idx].id, cart[idx].quantity, cart[idx].price);
                                 updateCartDisplay();
                                 updateOrderStats();
                             }
@@ -734,11 +874,226 @@
             // Add item (used by modal and quick-add)
             function addToCartWithDetails(product) {
                 const existing = cart.find(i => i.id === product.id && i.supplier_id === product.supplier_id && i.price === product.price);
-                if (existing) existing.quantity += product.quantity;
-                else cart.push(product);
+                if (existing) {
+                    existing.quantity += product.quantity;
+                } else {
+                    // Set initial averagePrice to the purchase price
+                    product.averagePrice = product.price;
+                    cart.push(product);
+                }
+
+                // Calculate weighted average price immediately using available data
+                calculateSimpleAveragePrice(product.id, product.quantity, product.price);
+
                 updateCartDisplay();
                 updateOrderStats();
                 showNotification(`${product.name} added to cart`, 'success', 2000);
+            }
+
+            // Calculate weighted average price using server-side API
+            async function calculateSimpleAveragePrice(productId, newQuantity, newPrice) {
+                // Find the cart item
+                const cartItem = cart.find(i => i.id == productId);
+                if (!cartItem) return;
+
+                console.log('API Calculation Debug:');
+                console.log('Product ID:', productId);
+                console.log('New Quantity:', newQuantity);
+                console.log('New Price:', newPrice);
+
+                try {
+                    // Call the API to get accurate calculation
+                    const response = await fetch('/purchases/apiCalculateAveragePrice', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            product_id: productId,
+                            quantity: newQuantity,
+                            price: newPrice
+                        })
+                    });
+
+                    console.log('API Response Status:', response.status);
+                    const data = await response.json();
+                    console.log('API Response Data:', data);
+
+                    if (data.success) {
+                        cartItem.averagePrice = data.average_price;
+                        cartItem.calculation = data.calculation;
+
+                        // Debug the API calculation
+                        console.log('*** API CALCULATION DETAILS ***');
+                        console.log('API Result:', data.average_price);
+                        console.log('Calculation breakdown:', data.calculation);
+                        console.log('Expected for Bulb: 16 × ₹83.20 + qty × ₹70 = ₹80.56');
+
+                        if (data.calculation.current_avg_price && data.calculation.current_avg_price < 70) {
+                            console.warn('*** PROBLEM DETECTED ***');
+                            console.warn(`API is using ₹${data.calculation.current_avg_price} as current cost`);
+                            console.warn('This should be ₹83.20 for correct bulb calculation');
+                            console.warn('The database purchase_price field is likely incorrect');
+                        }
+
+                        // Show calculation hint
+                        const calc = data.calculation;
+                        const hint = `💡 Average Price Calculation:\n` +
+                            `Current: ${calc.current_stock} units @ ₹${calc.current_avg_price} = ₹${calc.current_total_value}\n` +
+                            `+ New: ${calc.new_quantity} units @ ₹${calc.new_price} = ₹${calc.new_total_value}\n` +
+                            `= Total: ${calc.total_stock_after} units @ ₹${data.average_price} average`;
+                        showNotification(hint, 'info', 4000);
+
+                        // Update the display immediately
+                        updateCartDisplay();
+                    } else {
+                        console.error('API Error:', data.message);
+                        // Check if it's an authentication error
+                        if (response.status === 401) {
+                            console.warn('Authentication required for API, using fallback calculation');
+                        }
+                        // Fallback to simple calculation if API fails
+                        fallbackCalculation(cartItem, newQuantity, newPrice);
+                    }
+                } catch (error) {
+                    console.error('Network error:', error);
+                    // Fallback to simple calculation if network fails
+                    fallbackCalculation(cartItem, newQuantity, newPrice);
+                }
+            }
+
+            // Fallback calculation for when API is unavailable
+            function fallbackCalculation(cartItem, newQuantity, newPrice) {
+                // Get current inventory and current COST (not supplier price) from the product card
+                const productCard = document.querySelector(`[data-id="${cartItem.id}"]`);
+
+                // Also try to find by product name if ID doesn't work
+                let productButton = null;
+                if (!productCard) {
+                    productButton = document.querySelector(`[data-product-id="${cartItem.id}"]`);
+                }
+
+                const dataSource = productCard || productButton;
+                const currentInventory = dataSource ? parseInt(dataSource.dataset.inventory) || 0 : 0;
+
+                // Use current inventory cost (purchase_price) for weighted average, not supplier price
+                const currentCost = dataSource ? parseFloat(dataSource.dataset.currentCost) || 0 : 0;
+                const supplierPrice = dataSource ? parseFloat(dataSource.dataset.price) || newPrice : newPrice;
+
+                // Debug logging
+                console.log('=== DETAILED FALLBACK CALCULATION DEBUG ===');
+                console.log('Product ID:', cartItem.id);
+                console.log('Product Name:', cartItem.name);
+                console.log('Product Card (by data-id):', productCard);
+                console.log('Product Button (by data-product-id):', productButton);
+                console.log('Data Source Used:', dataSource);
+
+                if (dataSource) {
+                    console.log('All data attributes:', dataSource.dataset);
+                    console.log('Raw currentCost value:', dataSource.dataset.currentCost);
+                    console.log('Raw price value:', dataSource.dataset.price);
+                    console.log('Raw inventory value:', dataSource.dataset.inventory);
+                }
+
+                console.log('Parsed Values:');
+                console.log('Current Inventory:', currentInventory);
+                console.log('Current Cost (for averaging):', currentCost);
+                console.log('Supplier Price (for purchasing):', supplierPrice);
+                console.log('New Quantity:', newQuantity);
+                console.log('New Price:', newPrice);
+
+                // If no current cost data, show a detailed error
+                if (currentCost <= 0 && currentInventory > 0) {
+                    console.warn('*** WARNING: No current cost data found! ***');
+                    console.warn('This means purchase_price is empty in the database');
+                    console.warn('Using supplier price as fallback for current cost');
+
+                    const fallbackCurrentCost = supplierPrice;
+
+                    if (currentInventory > 0 && fallbackCurrentCost > 0) {
+                        const currentTotalValue = currentInventory * fallbackCurrentCost;
+                        const newTotalValue = newQuantity * newPrice;
+                        const totalStock = currentInventory + newQuantity;
+                        const totalValue = currentTotalValue + newTotalValue;
+                        const averagePrice = totalValue / totalStock;
+
+                        console.log('FALLBACK Calculation Details:');
+                        console.log(`Current: ${currentInventory} × ₹${fallbackCurrentCost} = ₹${currentTotalValue}`);
+                        console.log(`New: ${newQuantity} × ₹${newPrice} = ₹${newTotalValue}`);
+                        console.log(`Total: ${totalStock} units = ₹${totalValue}`);
+                        console.log('Average Price:', averagePrice);
+
+                        cartItem.averagePrice = averagePrice;
+                        cartItem.calculation = {
+                            current_stock: currentInventory,
+                            current_avg_price: fallbackCurrentCost,
+                            current_total_value: currentTotalValue,
+                            new_quantity: newQuantity,
+                            new_price: newPrice,
+                            new_total_value: newTotalValue,
+                            total_stock_after: totalStock,
+                            total_value_after: totalValue,
+                            note: 'Using supplier price as fallback (no purchase_price data)'
+                        };
+
+                        showNotification(`⚠️ No cost data found, using supplier price (₹${fallbackCurrentCost}) for averaging`, 'warning', 4000);
+                        return;
+                    }
+                }
+
+                if (currentInventory > 0 && currentCost > 0) {
+                    // Use the correct formula: weighted average based on CURRENT COST (not supplier price)
+                    const currentTotalValue = currentInventory * currentCost;
+                    const newTotalValue = newQuantity * newPrice;
+                    const totalStock = currentInventory + newQuantity;
+                    const totalValue = currentTotalValue + newTotalValue;
+                    const averagePrice = totalValue / totalStock;
+
+                    console.log('CORRECT Calculation Details:');
+                    console.log(`Current: ${currentInventory} × ₹${currentCost} = ₹${currentTotalValue}`);
+                    console.log(`New: ${newQuantity} × ₹${newPrice} = ₹${newTotalValue}`);
+                    console.log(`Total: ${totalStock} units = ₹${totalValue}`);
+                    console.log('Average Price:', averagePrice);
+
+                    cartItem.averagePrice = averagePrice;
+                    cartItem.calculation = {
+                        current_stock: currentInventory,
+                        current_avg_price: currentCost,
+                        current_total_value: currentTotalValue,
+                        new_quantity: newQuantity,
+                        new_price: newPrice,
+                        new_total_value: newTotalValue,
+                        total_stock_after: totalStock,
+                        total_value_after: totalValue,
+                        note: 'Using current inventory cost for calculation'
+                    };
+
+                    // Show the calculation
+                    const hint = `💡 Weighted Average Calculation:\n` +
+                        `Current: ${currentInventory} units @ ₹${currentCost.toFixed(2)} = ₹${currentTotalValue.toFixed(2)}\n` +
+                        `+ New: ${newQuantity} units @ ₹${newPrice.toFixed(2)} = ₹${newTotalValue.toFixed(2)}\n` +
+                        `= Total: ${totalStock} units @ ₹${averagePrice.toFixed(2)} average`;
+                    showNotification(hint, 'info', 4000);
+                } else {
+                    // No existing inventory or no cost data, average price is just the new price
+                    cartItem.averagePrice = newPrice;
+                    cartItem.calculation = {
+                        current_stock: 0,
+                        current_avg_price: 0,
+                        current_total_value: 0,
+                        new_quantity: newQuantity,
+                        new_price: newPrice,
+                        new_total_value: newQuantity * newPrice,
+                        total_stock_after: newQuantity,
+                        total_value_after: newQuantity * newPrice,
+                        note: currentInventory > 0 ? 'No current cost data available' : 'No existing inventory'
+                    };
+
+                    if (currentInventory > 0 && currentCost <= 0) {
+                        showNotification('⚠️ No current cost data found, using new price only', 'warning', 3000);
+                    }
+                }
             }
 
             // Escape helper
@@ -746,61 +1101,158 @@
                 return String(str || '').replace(/[&<>"'`]/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": "&#39;", "`": "&#96;" }[m]; });
             }
 
-            // Product filtering
+            // Product filtering with smart filters for cost optimization
             function filterProducts() {
                 const searchTerm = (document.getElementById('unifiedPurchaseSearch') ? document.getElementById('unifiedPurchaseSearch').value : (document.getElementById('searchProducts') ? document.getElementById('searchProducts').value : '')).toLowerCase();
                 const categoryFilter = document.getElementById('categoryFilter').value.toLowerCase();
                 const supplierFilter = document.getElementById('supplierFilter').value;
                 const priceMin = parseFloat(document.getElementById('priceMinFilter').value) || 0;
                 const priceMax = parseFloat(document.getElementById('priceMaxFilter').value) || Infinity;
+                const deliveryTimeFilter = document.getElementById('deliveryTimeFilter').value;
                 const products = document.querySelectorAll('.product-item');
                 const tableRows = document.querySelectorAll('.product-row-table');
                 let visibleCount = 0;
 
-                // Filter card view products
-                products.forEach(product => {
-                    const name = product.dataset.name || '';
-                    const sku = product.dataset.sku || '';
-                    const category = product.dataset.category || '';
-                    const supplierId = product.dataset.supplierId || '';
-                    const price = parseFloat(product.dataset.price) || 0;
+                // Get current smart filter states
+                const isLowestPriceActive = document.getElementById('lowestPriceFilter').classList.contains('active');
+                const isFastDeliveryActive = document.getElementById('fastDeliveryFilter').classList.contains('active');
+                const isTopRatedActive = document.getElementById('topRatedFilter').classList.contains('active');
 
-                    const matchesSearch = !searchTerm || name.includes(searchTerm) || sku.includes(searchTerm);
-                    const matchesCategory = !categoryFilter || category === categoryFilter;
-                    const matchesSupplier = !supplierFilter || supplierId === supplierFilter;
-                    const matchesPrice = price >= priceMin && price <= priceMax;
+                // Collect all products and organize by product name for smart filtering
+                let productArray = Array.from(products).map(product => ({
+                    element: product,
+                    id: product.dataset.id,
+                    name: product.dataset.name || '',
+                    sku: product.dataset.sku || '',
+                    category: product.dataset.category || '',
+                    supplierId: product.dataset.supplierId || '',
+                    price: parseFloat(product.dataset.price) || 0,
+                    leadTime: parseInt(product.dataset.leadTime) || 999,
+                    supplierRating: parseFloat(product.dataset.supplierRating) || 5.0,
+                    deliveryPerformance: parseFloat(product.dataset.deliveryPerformance) || 50
+                }));
 
-                    if (matchesSearch && matchesCategory && matchesSupplier && matchesPrice) {
-                        product.style.display = '';
-                        visibleCount++;
-                    } else {
-                        product.style.display = 'none';
+                // Filter products by basic criteria first
+                productArray = productArray.filter(product => {
+                    const matchesSearch = !searchTerm || product.name.includes(searchTerm) || product.sku.includes(searchTerm);
+                    const matchesCategory = !categoryFilter || product.category === categoryFilter;
+                    const matchesSupplier = !supplierFilter || product.supplierId === supplierFilter;
+                    const matchesPrice = product.price >= priceMin && product.price <= priceMax;
+
+                    // Delivery time filter
+                    let matchesDeliveryTime = true;
+                    if (deliveryTimeFilter) {
+                        switch (deliveryTimeFilter) {
+                            case '1-3':
+                                matchesDeliveryTime = product.leadTime >= 1 && product.leadTime <= 3;
+                                break;
+                            case '4-7':
+                                matchesDeliveryTime = product.leadTime >= 4 && product.leadTime <= 7;
+                                break;
+                            case '8-14':
+                                matchesDeliveryTime = product.leadTime >= 8 && product.leadTime <= 14;
+                                break;
+                            case '15+':
+                                matchesDeliveryTime = product.leadTime >= 15;
+                                break;
+                        }
                     }
+
+                    return matchesSearch && matchesCategory && matchesSupplier && matchesPrice && matchesDeliveryTime;
                 });
 
-                // Filter table view rows
+                // Apply smart filters - show only the best option for each unique product
+                let finalProductsToShow = [];
+
+                if (isLowestPriceActive || isFastDeliveryActive || isTopRatedActive) {
+                    // Group products by product ID (same product from different suppliers)
+                    const productGroups = {};
+                    productArray.forEach(product => {
+                        if (!productGroups[product.id]) {
+                            productGroups[product.id] = [];
+                        }
+                        productGroups[product.id].push(product);
+                    });
+
+                    // For each product group, select the best option based on active filter
+                    Object.values(productGroups).forEach(group => {
+                        let bestProduct;
+
+                        if (isLowestPriceActive) {
+                            // Find product with lowest price
+                            bestProduct = group.reduce((min, current) =>
+                                current.price < min.price ? current : min
+                            );
+                        } else if (isFastDeliveryActive) {
+                            // Find product with fastest delivery
+                            bestProduct = group.reduce((fastest, current) =>
+                                current.leadTime < fastest.leadTime ? current : fastest
+                            );
+                        } else if (isTopRatedActive) {
+                            // Find product from highest rated supplier
+                            bestProduct = group.reduce((topRated, current) =>
+                                current.supplierRating > topRated.supplierRating ? current : topRated
+                            );
+                        }
+
+                        if (bestProduct) {
+                            finalProductsToShow.push(bestProduct);
+                        }
+                    });
+                } else {
+                    // No smart filter active, show all filtered products
+                    finalProductsToShow = productArray;
+                }
+
+                // Hide all products first
+                products.forEach(product => product.style.display = 'none');
+
+                // Show only the selected products
+                finalProductsToShow.forEach(product => {
+                    product.element.style.display = '';
+                    visibleCount++;
+                });
+
+                // Filter table view rows (if any) - using same logic
                 tableRows.forEach(row => {
                     const name = row.dataset.name || '';
                     const category = row.dataset.category || '';
                     const supplierId = row.dataset.supplierId || '';
                     const price = parseFloat(row.dataset.price) || 0;
+                    const leadTime = parseInt(row.dataset.leadTime) || 999;
 
                     const matchesSearch = !searchTerm || name.includes(searchTerm);
                     const matchesCategory = !categoryFilter || category === categoryFilter;
                     const matchesSupplier = !supplierFilter || supplierId === supplierFilter;
                     const matchesPrice = price >= priceMin && price <= priceMax;
 
-                    if (matchesSearch && matchesCategory && matchesSupplier && matchesPrice) {
+                    let matchesDeliveryTime = true;
+                    if (deliveryTimeFilter) {
+                        switch (deliveryTimeFilter) {
+                            case '1-3':
+                                matchesDeliveryTime = leadTime >= 1 && leadTime <= 3;
+                                break;
+                            case '4-7':
+                                matchesDeliveryTime = leadTime >= 4 && leadTime <= 7;
+                                break;
+                            case '8-14':
+                                matchesDeliveryTime = leadTime >= 8 && leadTime <= 14;
+                                break;
+                            case '15+':
+                                matchesDeliveryTime = leadTime >= 15;
+                                break;
+                        }
+                    }
+
+                    if (matchesSearch && matchesCategory && matchesSupplier && matchesPrice && matchesDeliveryTime) {
                         row.style.display = '';
                     } else {
                         row.style.display = 'none';
                     }
                 });
 
-                document.getElementById('resultsCount').textContent = `${visibleCount} products`;
-            }
-
-            // Debounced product filtering
+                document.getElementById('resultsCount').textContent = `${visibleCount}`;
+            }            // Debounced product filtering
             const debouncedFilterProducts = debounce(filterProducts, requirements.debounceMs);
 
             // Event listeners
@@ -810,8 +1262,108 @@
             document.getElementById('supplierFilter').addEventListener('change', filterProducts);
             document.getElementById('priceMinFilter').addEventListener('input', filterProducts);
             document.getElementById('priceMaxFilter').addEventListener('input', filterProducts);
+            document.getElementById('deliveryTimeFilter').addEventListener('change', filterProducts);
 
-            // View toggle functionality
+            // Smart Filter Button Event Listeners
+            document.getElementById('lowestPriceFilter').addEventListener('click', function () {
+                // Toggle active state
+                this.classList.toggle('active');
+
+                // Remove other smart filter active states
+                document.getElementById('fastDeliveryFilter').classList.remove('active');
+                document.getElementById('topRatedFilter').classList.remove('active');
+
+                // Update button styles
+                updateSmartFilterButtons();
+                filterProducts();
+
+                // Show notification
+                if (this.classList.contains('active')) {
+                    showNotification('🏷️ Showing only the lowest priced option for each product', 'success');
+                } else {
+                    showNotification('💼 Price filtering cleared - showing all options', 'info');
+                }
+            });
+
+            document.getElementById('fastDeliveryFilter').addEventListener('click', function () {
+                // Toggle active state
+                this.classList.toggle('active');
+
+                // Remove other smart filter active states
+                document.getElementById('lowestPriceFilter').classList.remove('active');
+                document.getElementById('topRatedFilter').classList.remove('active');
+
+                // Update button styles
+                updateSmartFilterButtons();
+                filterProducts();
+
+                // Show notification
+                if (this.classList.contains('active')) {
+                    showNotification('🚚 Showing only the fastest delivery option for each product', 'success');
+                } else {
+                    showNotification('📦 Delivery filtering cleared - showing all options', 'info');
+                }
+            });
+
+            document.getElementById('topRatedFilter').addEventListener('click', function () {
+                // Toggle active state
+                this.classList.toggle('active');
+
+                // Remove other smart filter active states
+                document.getElementById('lowestPriceFilter').classList.remove('active');
+                document.getElementById('fastDeliveryFilter').classList.remove('active');
+
+                // Update button styles
+                updateSmartFilterButtons();
+                filterProducts();
+
+                // Show notification
+                if (this.classList.contains('active')) {
+                    showNotification('⭐ Showing only the top-rated supplier option for each product', 'success');
+                } else {
+                    showNotification('🏢 Supplier rating filtering cleared - showing all options', 'info');
+                }
+            });
+
+            document.getElementById('clearSmartFilters').addEventListener('click', function () {
+                // Clear all smart filter active states
+                document.getElementById('lowestPriceFilter').classList.remove('active');
+                document.getElementById('fastDeliveryFilter').classList.remove('active');
+                document.getElementById('topRatedFilter').classList.remove('active');
+
+                // Clear standard filters too
+                document.getElementById('categoryFilter').value = '';
+                document.getElementById('supplierFilter').value = '';
+                document.getElementById('priceMinFilter').value = '';
+                document.getElementById('priceMaxFilter').value = '';
+                document.getElementById('deliveryTimeFilter').value = '';
+
+                // Update button styles
+                updateSmartFilterButtons();
+                filterProducts();
+
+                showNotification('🧹 All filters cleared - showing all products', 'info');
+            });
+
+            // Function to update smart filter button styles
+            function updateSmartFilterButtons() {
+                const buttons = ['lowestPriceFilter', 'fastDeliveryFilter', 'topRatedFilter'];
+                buttons.forEach(buttonId => {
+                    const button = document.getElementById(buttonId);
+                    if (button.classList.contains('active')) {
+                        // Convert outline button to solid button
+                        button.className = button.className.replace('btn-outline-', 'btn-');
+                    } else {
+                        // Convert solid button to outline button
+                        button.className = button.className.replace('btn-success', 'btn-outline-success');
+                        button.className = button.className.replace('btn-warning', 'btn-outline-warning');
+                        button.className = button.className.replace('btn-primary', 'btn-outline-primary');
+                    }
+                });
+            }
+
+            // Initialize filters on page load
+            filterProducts();
             function toggleView(viewType) {
                 const container = document.getElementById('products-container');
                 const tableContainer = document.getElementById('table-container');
@@ -987,7 +1539,7 @@
                     });
                 });
 
-                // Lazy-load suppliers when a table supplier select is focused
+                // Enhanced lazy-load suppliers with smart recommendations when a table supplier select is focused
                 document.querySelectorAll('#products-table .table-supplier-select').forEach(sel => {
                     sel.addEventListener('focus', function () {
                         const pid = this.dataset.productId;
@@ -1046,16 +1598,101 @@
             });
 
             // Fetch suppliers for a product and populate a select element
-            function fetchSuppliersForProduct(productId, selectEl) {
-                const supUrl = '<?php echo URLROOT; ?>/purchases/productSuppliers?product_id=' + encodeURIComponent(productId);
-                console.debug('[DEBUG] fetchSuppliersForProduct url:', supUrl);
+            function fetchSuppliersForProduct(productId, selectEl, quantity = 10, urgency = 'normal') {
+                const supUrl = '<?php echo URLROOT; ?>/api/smartSupplierRecommendations.php?product_id=' +
+                    encodeURIComponent(productId) +
+                    '&quantity=' + encodeURIComponent(quantity) +
+                    '&urgency=' + encodeURIComponent(urgency);
+                console.debug('[DEBUG] fetchSuppliersForProduct (smart) url:', supUrl);
+
                 fetch(supUrl, { credentials: 'same-origin' })
                     .then(r => r.json())
                     .then(data => {
+                        if (!data.success) {
+                            console.error('Smart supplier API error:', data.error);
+                            // Fallback to legacy API
+                            return fetchSuppliersForProductLegacy(productId, selectEl);
+                        }
+
                         const suppliers = data.suppliers || [];
-                        console.debug('[DEBUG] suppliers for product', productId, 'count:', suppliers.length);
+                        console.debug('[DEBUG] smart suppliers for product', productId, 'count:', suppliers.length);
+
                         if (!selectEl) return;
-                        // clear existing options (keep default)
+
+                        // Clear existing options (keep default)
+                        const existingDefault = Array.from(selectEl.options).find(o => o.value === '');
+                        selectEl.innerHTML = '';
+                        if (existingDefault) selectEl.appendChild(existingDefault);
+
+                        suppliers.forEach(s => {
+                            const opt = document.createElement('option');
+                            opt.value = s.supplier_id;
+
+                            // Build option text with price and recommendation badge
+                            let optionText = s.supplier_name;
+                            if (s.purchase_price) {
+                                optionText += ` — ₹${Number(s.purchase_price).toFixed(2)}`;
+                            }
+                            if (s.recommendation_badge) {
+                                optionText += ` [${s.recommendation_badge}]`;
+                            }
+
+                            opt.textContent = optionText;
+
+                            // Add CSS classes for styling
+                            if (s.is_recommended) {
+                                opt.className = 'smart-recommended';
+                                opt.selected = true; // Auto-select recommended supplier
+                            }
+
+                            // Add data attributes for additional info
+                            opt.dataset.leadTime = s.lead_time_days;
+                            opt.dataset.minOrder = s.min_order_quantity;
+                            opt.dataset.reasoning = s.recommendation_reasoning || '';
+
+                            selectEl.appendChild(opt);
+                        });
+
+                        // Show selection reasoning if available
+                        const recommendedSupplier = suppliers.find(s => s.is_recommended);
+                        if (recommendedSupplier && recommendedSupplier.recommendation_reasoning) {
+                            showSupplierSelectionReasoning(selectEl, recommendedSupplier);
+                        }
+
+                        // If this is a card select, update the product-item dataset when changed
+                        selectEl.addEventListener('change', function () {
+                            const pid = this.dataset.productId;
+                            const item = document.querySelector(`.product-item[data-id="${pid}"]`);
+                            if (item) item.dataset.supplierId = this.value;
+
+                            // Show reasoning for selected supplier
+                            const selectedOption = this.options[this.selectedIndex];
+                            if (selectedOption && selectedOption.dataset.reasoning) {
+                                showSupplierSelectionInfo(selectedOption);
+                            }
+                        });
+
+                    }).catch(err => {
+                        console.error('Failed to load smart suppliers for product', productId, err);
+                        // Fallback to legacy API
+                        fetchSuppliersForProductLegacy(productId, selectEl);
+                    });
+            }
+
+            // Legacy supplier fetching (fallback)
+            function fetchSuppliersForProductLegacy(productId, selectEl) {
+                const legacyUrl = '<?php echo URLROOT; ?>/purchases/productSuppliers?product_id=' + encodeURIComponent(productId);
+                console.debug('[DEBUG] fetchSuppliersForProduct (legacy fallback) url:', legacyUrl);
+
+                fetch(legacyUrl, { credentials: 'same-origin' })
+                    .then(r => r.json())
+                    .then(data => {
+                        const suppliers = data.suppliers || [];
+                        console.debug('[DEBUG] legacy suppliers for product', productId, 'count:', suppliers.length);
+
+                        if (!selectEl) return;
+
+                        // Clear existing options (keep default)
                         const existingDefault = Array.from(selectEl.options).find(o => o.value === '');
                         selectEl.innerHTML = '';
                         if (existingDefault) selectEl.appendChild(existingDefault);
@@ -1064,8 +1701,6 @@
                             const opt = document.createElement('option');
                             opt.value = s.supplier_id;
                             opt.textContent = s.supplier_name + (s.purchase_price ? ` — ₹${Number(s.purchase_price).toFixed(2)}` : '');
-                            // mark primary if present
-                            if (s.is_primary) opt.selected = true;
                             selectEl.appendChild(opt);
                         });
 
@@ -1076,8 +1711,50 @@
                             if (item) item.dataset.supplierId = this.value;
                         });
                     }).catch(err => {
-                        console.error('Failed to load suppliers for product', productId, err);
+                        console.error('Failed to load legacy suppliers for product', productId, err);
                     });
+            }
+
+            // Show supplier selection reasoning tooltip
+            function showSupplierSelectionReasoning(selectElement, supplier) {
+                // Remove any existing reasoning display
+                const existingReasoning = selectElement.parentNode.querySelector('.supplier-reasoning');
+                if (existingReasoning) {
+                    existingReasoning.remove();
+                }
+
+                // Add reasoning display
+                const reasoningDiv = document.createElement('div');
+                reasoningDiv.className = 'supplier-reasoning alert alert-info mt-1';
+                reasoningDiv.innerHTML = `
+                    <small>
+                        <i class="fas fa-lightbulb mr-1"></i>
+                        <strong>Smart Selection:</strong> ${supplier.supplier_name} recommended
+                        <br>
+                        <em>${supplier.recommendation_reasoning}</em>
+                    </small>
+                `;
+                selectElement.parentNode.appendChild(reasoningDiv);
+            }
+
+            // Show supplier selection info when user changes selection
+            function showSupplierSelectionInfo(selectedOption) {
+                if (!selectedOption.dataset.reasoning) return;
+
+                // Create a temporary tooltip or update existing reasoning
+                const selectElement = selectedOption.parentElement;
+                const existingReasoning = selectElement.parentNode.querySelector('.supplier-reasoning');
+
+                if (existingReasoning) {
+                    existingReasoning.innerHTML = `
+                        <small>
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <strong>Selection Info:</strong> ${selectedOption.textContent}
+                            <br>
+                            <em>Lead time: ${selectedOption.dataset.leadTime} days, Min order: ${selectedOption.dataset.minOrder}</em>
+                        </small>
+                    `;
+                }
             }
 
             // Product card click handlers
@@ -1220,7 +1897,7 @@
                     tbody.appendChild(tr);
                 });
 
-                // Rebind add-to-cart buttons for new rows
+                // Rebind add-to-cart buttons for new rows  
                 document.querySelectorAll('#products-table .add-to-cart-btn').forEach(button => {
                     button.addEventListener('click', function () {
                         const pid = this.dataset.id;
@@ -1234,7 +1911,7 @@
                     });
                 });
 
-                // Lazy-load suppliers when a table supplier select is focused
+                // Enhanced lazy-load suppliers with smart recommendations when a table supplier select is focused
                 document.querySelectorAll('#products-table .table-supplier-select').forEach(sel => {
                     sel.addEventListener('focus', function () {
                         const pid = this.dataset.productId;
@@ -1343,8 +2020,6 @@
                             const opt = document.createElement('option');
                             opt.value = s.supplier_id;
                             opt.textContent = s.supplier_name + (s.purchase_price ? ` — ₹${Number(s.purchase_price).toFixed(2)}` : '');
-                            // mark primary if present
-                            if (s.is_primary) opt.selected = true;
                             selectEl.appendChild(opt);
                         });
 
@@ -1366,24 +2041,24 @@
 
                 // Category filter options (server-populated)
                 <?php if (!empty($data['categories'])): ?>
-                    const categories = <?php echo json_encode($data['categories']); ?>;
-                    categories.forEach(cat => {
-                        const option = document.createElement('option');
-                        option.value = cat.category_name;
-                        option.textContent = cat.category_name;
-                        categoryFilter.appendChild(option);
-                    });
+                                            const categories = <?php echo json_encode($data['categories']); ?>;
+                                            categories.forEach(cat => {
+                                                const option = document.createElement('option');
+                                                option.value = cat.category_name;
+                                                option.textContent = cat.category_name;
+                                                categoryFilter.appendChild(option);
+                                            });
                 <?php endif; ?>
 
                 // Supplier filter options (server-populated)
                 <?php if (!empty($data['suppliers'])): ?>
-                    const suppliers = <?php echo json_encode($data['suppliers']); ?>;
-                    suppliers.forEach(sup => {
-                        const option = document.createElement('option');
-                        option.value = sup.supplier_id;
-                        option.textContent = sup.supplier_name;
-                        supplierFilter.appendChild(option);
-                    });
+                                            const suppliers = <?php echo json_encode($data['suppliers']); ?>;
+                                            suppliers.forEach(sup => {
+                                                const option = document.createElement('option');
+                                                option.value = sup.supplier_id;
+                                                option.textContent = sup.supplier_name;
+                                                supplierFilter.appendChild(option);
+                                            });
                 <?php endif; ?>
             })();
 
@@ -1413,8 +2088,10 @@
 
                 if (existingItem) {
                     existingItem.quantity++;
+                    // Recalculate average price when quantity increases
+                    calculateSimpleAveragePrice(existingItem.id, existingItem.quantity, existingItem.price);
                 } else {
-                    cart.push({
+                    const newItem = {
                         id: productId,
                         name: productName,
                         price: parseFloat(price),
@@ -1422,7 +2099,12 @@
                         supplier_name: supplierName || 'No Supplier',
                         supplier_id: supplierId || '',
                         inventory: parseInt(inventory || 0)
-                    });
+                    };
+                    // Set initial averagePrice to the purchase price
+                    newItem.averagePrice = newItem.price;
+                    cart.push(newItem);
+                    // Calculate weighted average price immediately
+                    calculateSimpleAveragePrice(newItem.id, newItem.quantity, newItem.price);
                 }
 
                 updateCartDisplay();

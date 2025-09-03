@@ -3,11 +3,11 @@
 <?php
 // Defensive programming - ensure data structure is correct
 $stats = isset($data['stats']) && is_object($data['stats']) ? $data['stats'] : (object) [
-    'total_locations'     => 0,
-    'dock_locations'      => 0,
+    'total_locations' => 0,
+    'dock_locations' => 0,
     'receiving_locations' => 0,
-    'storage_locations'   => 0,
-    'bin_locations'       => 0
+    'storage_locations' => 0,
+    'bin_locations' => 0
 ];
 
 $locations = isset($data['locations']) && is_array($data['locations']) ? $data['locations'] : [];
@@ -32,11 +32,11 @@ function parseLocationCode($code)
     if (preg_match('/^([sw])(\d+)-([a-zA-Z])(\d+)-([a-zA-Z])(\d+)$/i', $code, $matches)) {
         return [
             'section' => $matches[2],
-            'aisle'   => strtoupper($matches[3]),
-            'rack'    => $matches[4],
-            'column'  => strtoupper($matches[5]),
-            'bin'     => $matches[6],
-            'format'  => 'section_aisle_column'
+            'aisle' => strtoupper($matches[3]),
+            'rack' => $matches[4],
+            'column' => strtoupper($matches[5]),
+            'bin' => $matches[6],
+            'format' => 'section_aisle_column'
         ];
     }
 
@@ -44,11 +44,11 @@ function parseLocationCode($code)
     if (preg_match('/^S(\d+)-([A-Z])(\d+)-([A-Z])(\d+)$/i', $code, $matches)) {
         return [
             'section' => $matches[1],
-            'aisle'   => $matches[2],
-            'rack'    => $matches[3],
-            'column'  => $matches[4],
-            'bin'     => $matches[5],
-            'format'  => 'shop_format'
+            'aisle' => $matches[2],
+            'rack' => $matches[3],
+            'column' => $matches[4],
+            'bin' => $matches[5],
+            'format' => 'shop_format'
         ];
     }
 
@@ -56,11 +56,11 @@ function parseLocationCode($code)
     if (preg_match('/^([A-Z])(\d+)-([A-Z])(\d+)-(\d+)$/i', $code, $matches)) {
         return [
             'section' => '1', // Default section
-            'aisle'   => $matches[1],
-            'rack'    => $matches[2],
-            'column'  => $matches[3],
-            'bin'     => $matches[5],
-            'format'  => 'legacy'
+            'aisle' => $matches[1],
+            'rack' => $matches[2],
+            'column' => $matches[3],
+            'bin' => $matches[5],
+            'format' => 'legacy'
         ];
     }
 
@@ -80,9 +80,9 @@ function formatLocationDisplay($location)
 
     if (!$parsed) {
         return [
-            'code'        => $location->location_code,
+            'code' => $location->location_code,
             'description' => $location->location_name,
-            'badge'       => getBadgeType($location)
+            'badge' => getBadgeType($location)
         ];
     }
 
@@ -92,26 +92,26 @@ function formatLocationDisplay($location)
             $formattedCode = "S{$parsed['section']}-{$parsed['aisle']}{$parsed['rack']}-{$parsed['column']}{$parsed['bin']}";
             $description = "Section {$parsed['section']}, Aisle {$parsed['aisle']}, Rack {$parsed['rack']}, Bin {$parsed['column']}{$parsed['bin']}";
             return [
-                'code'        => $formattedCode,
+                'code' => $formattedCode,
                 'description' => $description,
-                'badge'       => 'Shop'
+                'badge' => 'Shop'
             ];
 
         case 'legacy':
             $formattedCode = "S{$parsed['section']}-{$parsed['aisle']}{$parsed['rack']}-{$parsed['column']}{$parsed['bin']}";
             $description = "Section {$parsed['section']}, Aisle {$parsed['aisle']}, Rack {$parsed['rack']}, Bin {$parsed['column']}{$parsed['bin']}";
             return [
-                'code'        => $formattedCode,
+                'code' => $formattedCode,
                 'description' => $description,
-                'badge'       => 'Shop'
+                'badge' => 'Shop'
             ];
 
         case 'simple':
         default:
             return [
-                'code'        => $parsed['simple'],
+                'code' => $parsed['simple'],
                 'description' => $location->location_name,
-                'badge'       => getBadgeType($location)
+                'badge' => getBadgeType($location)
             ];
     }
 }
@@ -147,6 +147,66 @@ function getBadgeType($location)
 
 <!-- Unified CSS -->
 <link rel="stylesheet" href="<?= URLROOT ?>/public/css/app-unified.css">
+
+<style>
+    /* Custom styles for location filter buttons */
+    #filterButtons {
+        gap: 0.5rem !important;
+    }
+
+    .location-filter-btn {
+        border-radius: 25px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border-width: 2px;
+        white-space: nowrap;
+    }
+
+    .location-filter-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .location-filter-btn.active {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .location-filter-btn .badge {
+        background-color: rgba(255, 255, 255, 0.8) !important;
+        color: #6c757d !important;
+        font-weight: 600;
+    }
+
+    .location-filter-btn.active .badge {
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        color: #495057 !important;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        #filterButtons {
+            justify-content: center;
+        }
+
+        .location-filter-btn {
+            font-size: 0.875rem;
+            padding: 0.4rem 0.8rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .location-filter-btn {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+        }
+
+        .location-filter-btn .badge {
+            font-size: 0.7rem;
+        }
+    }
+</style>
 
 <div class="container-fluid px-4">
     <div class="row">
@@ -221,219 +281,141 @@ function getBadgeType($location)
                 </div>
             </div>
 
-            <!-- Location Types Tabs -->
+            <!-- Location Types Filters -->
             <div class="card theme-card">
                 <div class="card-header">
-                    <ul class="nav nav-tabs card-header-tabs" id="locationTabs" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" id="all-tab" data-toggle="tab" href="#all" role="tab">
-                                <i class="fas fa-list mr-2"></i>All Locations
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="dock-tab" data-toggle="tab" href="#dock" role="tab">
-                                <i class="fas fa-truck mr-2"></i>Dock Doors
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="receiving-tab" data-toggle="tab" href="#receiving" role="tab">
-                                <i class="fas fa-inbox mr-2"></i>Receiving
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="storage-tab" data-toggle="tab" href="#storage" role="tab">
-                                <i class="fas fa-warehouse mr-2"></i>Storage
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="bins-tab" data-toggle="tab" href="#bins" role="tab">
-                                <i class="fas fa-box mr-2"></i>Bins
-                            </a>
-                        </li>
-                    </ul>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-filter mr-2"></i>Filter by Location Type</h5>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="clearAllFilters()">
+                            <i class="fas fa-times mr-1"></i>Clear All
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <div class="tab-content" id="locationTabContent">
-                        <!-- All Locations Tab -->
-                        <div class="tab-pane fade show active" id="all" role="tabpanel">
-                            <div class="location-grid">
-                                <?php if (!empty($locations) && is_array($locations)): ?>
-                                    <?php foreach ($locations as $location): ?>
-                                        <?php if (is_object($location)): ?>
-                                            <?php $displayInfo = formatLocationDisplay($location); ?>
-                                            <div class="theme-card location-card location-type-<?php echo $location->location_type; ?> clickable-card"
-                                                data-location-id="<?php echo $location->location_id; ?>"
-                                                data-location-code="<?php echo htmlspecialchars($displayInfo['code']); ?>"
-                                                data-location-name="<?php echo htmlspecialchars($location->location_name); ?>"
-                                                style="cursor: pointer;"
-                                                onclick="showLocationItems(<?php echo $location->location_id; ?>, '<?php echo htmlspecialchars($displayInfo['code']); ?>', '<?php echo htmlspecialchars($location->location_name); ?>')">
-                                                <div class="card-body">
-                                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                                        <div class="flex-grow-1">
-                                                            <h6 class="card-title mb-0">
-                                                                <strong><?php echo htmlspecialchars($displayInfo['code']); ?></strong>
-                                                            </h6>
+                    <!-- Horizontal Toggle Buttons -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap gap-2 mb-3" id="filterButtons">
+                                <button class="btn btn-outline-primary location-filter-btn active" data-filter="all"
+                                    onclick="toggleFilter(this)">
+                                    <i class="fas fa-list mr-2"></i>All Locations
+                                    <span class="badge badge-light ml-2"><?php echo $stats->total_locations; ?></span>
+                                </button>
+                                <button class="btn btn-outline-danger location-filter-btn" data-filter="dock"
+                                    onclick="toggleFilter(this)">
+                                    <i class="fas fa-truck mr-2"></i>Dock Doors
+                                    <span class="badge badge-light ml-2"><?php echo $stats->dock_locations; ?></span>
+                                </button>
+                                <button class="btn btn-outline-info location-filter-btn" data-filter="receiving"
+                                    onclick="toggleFilter(this)">
+                                    <i class="fas fa-inbox mr-2"></i>Receiving
+                                    <span
+                                        class="badge badge-light ml-2"><?php echo $stats->receiving_locations; ?></span>
+                                </button>
+                                <button class="btn btn-outline-success location-filter-btn" data-filter="storage"
+                                    onclick="toggleFilter(this)">
+                                    <i class="fas fa-warehouse mr-2"></i>Storage
+                                    <span class="badge badge-light ml-2"><?php echo $stats->storage_locations; ?></span>
+                                </button>
+                                <button class="btn btn-outline-warning location-filter-btn" data-filter="bin"
+                                    onclick="toggleFilter(this)">
+                                    <i class="fas fa-box mr-2"></i>Bins
+                                    <span class="badge badge-light ml-2"><?php echo $stats->bin_locations; ?></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Locations Display -->
+            <div class="card theme-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-map-marker-alt mr-2"></i>Locations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="location-grid" id="locationsContainer">
+                        <?php if (!empty($locations) && is_array($locations)): ?>
+                            <?php foreach ($locations as $location): ?>
+                                <?php if (is_object($location)): ?>
+                                    <?php $displayInfo = formatLocationDisplay($location); ?>
+                                    <div class="theme-card location-card location-type-<?php echo $location->location_type; ?> clickable-card"
+                                        data-location-id="<?php echo $location->location_id; ?>"
+                                        data-location-code="<?php echo htmlspecialchars($displayInfo['code']); ?>"
+                                        data-location-name="<?php echo htmlspecialchars($location->location_name); ?>"
+                                        data-location-type="<?php echo $location->location_type; ?>" style="cursor: pointer;"
+                                        onclick="showLocationItems(<?php echo $location->location_id; ?>, '<?php echo htmlspecialchars($displayInfo['code']); ?>', '<?php echo htmlspecialchars($location->location_name); ?>')">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="card-title mb-0">
+                                                        <strong><?php echo htmlspecialchars($displayInfo['code']); ?></strong>
+                                                    </h6>
+                                                </div>
+                                                <div class="text-right">
+                                                    <span
+                                                        class="badge location-badge mb-1
+                                                        <?php echo $location->location_type == 'dock' ? 'badge-danger' :
+                                                            ($location->location_type == 'receiving' ? 'badge-info' :
+                                                                ($location->location_type == 'storage' ? 'badge-success' : 'badge-warning')); ?>">
+                                                        <?php echo htmlspecialchars($displayInfo['badge']); ?>
+                                                    </span>
+                                                    <?php if (isset($location->item_count) && $location->item_count > 0): ?>
+                                                        <div class="small text-muted">
+                                                            <i class="fas fa-boxes"></i>
+                                                            <?php echo number_format($location->item_count); ?> items
                                                         </div>
-                                                        <div class="text-right">
-                                                            <span
-                                                                class="badge location-badge mb-1
-                                                            <?php echo $location->location_type == 'dock' ? 'badge-danger' :
-                                                                ($location->location_type == 'receiving' ? 'badge-info' :
-                                                                    ($location->location_type == 'storage' ? 'badge-success' : 'badge-warning')); ?>">
-                                                                <?php echo htmlspecialchars($displayInfo['badge']); ?>
-                                                            </span>
-                                                            <?php if (isset($location->item_count) && $location->item_count > 0): ?>
-                                                                <div class="small text-muted">
-                                                                    <i class="fas fa-boxes"></i>
-                                                                    <?php echo number_format($location->item_count); ?> items
-                                                                </div>
-                                                                <div class="small text-muted">
-                                                                    <i class="fas fa-cubes"></i>
-                                                                    <?php echo number_format($location->total_quantity ?? 0); ?> qty
-                                                                </div>
-                                                            <?php else: ?>
-                                                                <div class="small text-muted">
-                                                                    <i class="fas fa-inbox"></i> Empty
-                                                                </div>
-                                                            <?php endif; ?>
+                                                        <div class="small text-muted">
+                                                            <i class="fas fa-cubes"></i>
+                                                            <?php echo number_format($location->total_quantity ?? 0); ?> qty
                                                         </div>
-                                                    </div>
-                                                    <p class="card-text text-muted mb-2">
-                                                        <?php
-                                                        // Use clean name for storage locations, original name for others
-                                                        if (preg_match('/^[sw]\d+-[a-zA-Z]\d+-[a-zA-Z]\d+$/i', $location->standardized_address ?? $location->location_code)) {
-                                                            echo "Storage Location";
-                                                        } else {
-                                                            echo htmlspecialchars($location->location_name);
-                                                        }
-                                                        ?>
-                                                    </p>
-                                                    <div class="small text-muted">
-                                                        <div><strong>Location:</strong>
-                                                            <?php echo htmlspecialchars($displayInfo['description']); ?></div>
-                                                        <?php if ($location->zone): ?>
-                                                            <div><strong>Store Location:</strong> <?php echo htmlspecialchars($location->zone); ?>
-                                                            </div>
-                                                        <?php endif; ?>
-                                                        <?php if ($location->capacity_cubic_feet): ?>
-                                                            <div><strong>Capacity:</strong>
-                                                                <?php echo number_format($location->capacity_cubic_feet, 1); ?> ft³
-                                                            </div>
-                                                        <?php endif; ?>
-                                                        <?php if ($location->climate_controlled): ?>
-                                                            <div><span class="badge badge-info badge-sm">Climate Controlled</span></div>
-                                                        <?php endif; ?>
-                                                    </div>
+                                                    <?php else: ?>
+                                                        <div class="small text-muted">
+                                                            <i class="fas fa-inbox"></i> Empty
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
-                                        <?php endif; ?>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <div class="col-12">
-                                        <div class="text-center py-5">
-                                            <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
-                                            <h5 class="text-muted">No locations found</h5>
-                                            <p class="text-muted">Add your first warehouse location to get started.</p>
+                                            <p class="card-text text-muted mb-2">
+                                                <?php
+                                                // Use clean name for storage locations, original name for others
+                                                if (preg_match('/^[sw]\d+-[a-zA-Z]\d+-[a-zA-Z]\d+$/i', $location->standardized_address ?? $location->location_code)) {
+                                                    echo "Storage Location";
+                                                } else {
+                                                    echo htmlspecialchars($location->location_name);
+                                                }
+                                                ?>
+                                            </p>
+                                            <div class="small text-muted">
+                                                <div><strong>Location:</strong>
+                                                    <?php echo htmlspecialchars($displayInfo['description']); ?></div>
+                                                <?php if ($location->zone): ?>
+                                                    <div><strong>Store Location:</strong>
+                                                        <?php echo htmlspecialchars($location->zone); ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <?php if ($location->capacity_cubic_feet): ?>
+                                                    <div><strong>Capacity:</strong>
+                                                        <?php echo number_format($location->capacity_cubic_feet, 1); ?> ft³
+                                                    </div>
+                                                <?php endif; ?>
+                                                <?php if ($location->climate_controlled): ?>
+                                                    <div><span class="badge badge-info badge-sm">Climate Controlled</span></div>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                     </div>
                                 <?php endif; ?>
-                            </div>
-                        </div>
-
-                        <!-- Individual Type Tabs -->
-                        <?php
-                        $types = [
-                            'dock'      => ['icon' => 'truck', 'color' => 'danger'],
-                            'receiving' => ['icon' => 'inbox', 'color' => 'info'],
-                            'storage'   => ['icon' => 'warehouse', 'color' => 'success'],
-                            'bin'       => ['icon' => 'box', 'color' => 'warning']
-                        ];
-                        ?>
-
-                        <?php foreach ($types as $type => $config): ?>
-                            <div class="tab-pane fade" id="<?php echo $type == 'bin' ? 'bins' : $type; ?>" role="tabpanel">
-                                <div class="location-grid">
-                                    <?php
-                                    $typeLocations = isset($locationsByType[$type]) && is_array($locationsByType[$type]) ? $locationsByType[$type] : [];
-                                    if (!empty($typeLocations)): ?>
-                                        <?php foreach ($typeLocations as $location): ?>
-                                            <?php if (is_object($location)): ?>
-                                                <?php $displayInfo = formatLocationDisplay($location); ?>
-                                                <div class="theme-card location-card location-type-<?php echo $location->location_type; ?> clickable-card"
-                                                    data-location-id="<?php echo $location->location_id; ?>"
-                                                    data-location-code="<?php echo htmlspecialchars($displayInfo['code']); ?>"
-                                                    data-location-name="<?php echo htmlspecialchars($location->location_name); ?>"
-                                                    style="cursor: pointer;"
-                                                    onclick="showLocationItems(<?php echo $location->location_id; ?>, '<?php echo htmlspecialchars($displayInfo['code']); ?>', '<?php echo htmlspecialchars($location->location_name); ?>')">
-                                                    <div class="card-body">
-                                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                                            <div class="flex-grow-1">
-                                                                <h6 class="card-title mb-0">
-                                                                    <strong><?php echo htmlspecialchars($displayInfo['code']); ?></strong>
-                                                                </h6>
-                                                            </div>
-                                                            <div class="text-right">
-                                                                <span
-                                                                    class="badge badge-<?php echo $config['color']; ?> location-badge mb-1">
-                                                                    <?php echo htmlspecialchars($displayInfo['badge']); ?>
-                                                                </span>
-                                                                <?php if (isset($location->item_count) && $location->item_count > 0): ?>
-                                                                    <div class="small text-muted">
-                                                                        <i class="fas fa-boxes"></i>
-                                                                        <?php echo number_format($location->item_count); ?> items
-                                                                    </div>
-                                                                    <div class="small text-muted">
-                                                                        <i class="fas fa-cubes"></i>
-                                                                        <?php echo number_format($location->total_quantity ?? 0); ?> qty
-                                                                    </div>
-                                                                <?php else: ?>
-                                                                    <div class="small text-muted">
-                                                                        <i class="fas fa-inbox"></i> Empty
-                                                                    </div>
-                                                                <?php endif; ?>
-                                                            </div>
-                                                        </div>
-                                                        <p class="card-text text-muted mb-2">
-                                                            <?php
-                                                            // Use clean name for storage locations, original name for others
-                                                            if (preg_match('/^[sw]\d+-[a-zA-Z]\d+-[a-zA-Z]\d+$/i', $location->standardized_address ?? $location->location_code)) {
-                                                                echo "Storage Location";
-                                                            } else {
-                                                                echo htmlspecialchars($location->location_name);
-                                                            }
-                                                            ?>
-                                                        </p>
-                                                        <div class="small text-muted">
-                                                            <div><strong>Location:</strong>
-                                                                <?php echo htmlspecialchars($displayInfo['description']); ?></div>
-                                                            <?php if ($location->zone): ?>
-                                                                <div><strong>Store Location:</strong> <?php echo htmlspecialchars($location->zone); ?>
-                                                                </div>
-                                                            <?php endif; ?>
-                                                            <?php if ($location->capacity_cubic_feet): ?>
-                                                                <div><strong>Capacity:</strong>
-                                                                    <?php echo number_format($location->capacity_cubic_feet, 1); ?> ft³
-                                                                </div>
-                                                            <?php endif; ?>
-                                                            <?php if ($location->climate_controlled): ?>
-                                                                <div><span class="badge badge-info badge-sm">Climate Controlled</span></div>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            <?php endif; ?>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <div class="col-12">
-                                            <div class="text-center py-5">
-                                                <i class="fas fa-<?php echo $config['icon']; ?> fa-3x text-muted mb-3"></i>
-                                                <h5 class="text-muted">No <?php echo $type; ?> locations found</h5>
-                                            </div>
-                                        </div>
-                                    <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No locations found</h5>
+                                    <p class="text-muted">Add your first warehouse location to get started.</p>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -617,7 +599,8 @@ function getBadgeType($location)
                         <div class="mt-2">
                             <small class="text-info">
                                 <i class="fas fa-store mr-1"></i>
-                                <strong>Store Locations:</strong> Each location will be assigned to one of your store locations (Kurukshetra, Ambala, or Panchkula) for multi-location inventory management.
+                                <strong>Store Locations:</strong> Each location will be assigned to one of your store
+                                locations (Kurukshetra, Ambala, or Panchkula) for multi-location inventory management.
                             </small>
                         </div>
                     </div>
@@ -682,7 +665,8 @@ function getBadgeType($location)
                                             <label for="single_zone" class="form-label">
                                                 <i class="fas fa-map-marker-alt mr-1"></i>Store Location
                                             </label>
-                                            <select class="form-control form-control-lg" id="single_zone" name="single_zone">
+                                            <select class="form-control form-control-lg" id="single_zone"
+                                                name="single_zone">
                                                 <option value="">Select Store Location</option>
                                                 <!-- Add new store locations here as you expand -->
                                                 <option value="Kurukshetra">🏪 Kurukshetra Store</option>
@@ -1003,6 +987,91 @@ function getBadgeType($location)
         return div.innerHTML;
     }
 
+    // Toggle filter functionality
+    function toggleFilter(button) {
+        const filter = button.getAttribute('data-filter');
+        const isActive = button.classList.contains('active');
+
+        if (filter === 'all') {
+            // If clicking "All", clear other filters and show all
+            if (!isActive) {
+                clearAllFilters();
+                button.classList.add('active');
+                showAllLocations();
+            }
+        } else {
+            // Remove "All" filter if selecting specific type
+            const allButton = document.querySelector('[data-filter="all"]');
+            allButton.classList.remove('active');
+
+            // Toggle the clicked filter
+            if (isActive) {
+                button.classList.remove('active');
+            } else {
+                button.classList.add('active');
+            }
+
+            // Update display based on active filters
+            updateLocationDisplay();
+        }
+    }
+
+    function clearAllFilters() {
+        // Remove active class from all filter buttons
+        document.querySelectorAll('.location-filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Activate "All" button
+        const allButton = document.querySelector('[data-filter="all"]');
+        allButton.classList.add('active');
+
+        // Show all locations
+        showAllLocations();
+    }
+
+    function showAllLocations() {
+        const locationCards = document.querySelectorAll('.location-card');
+        locationCards.forEach(card => {
+            card.style.display = 'block';
+        });
+    }
+
+    function updateLocationDisplay() {
+        const activeFilters = [];
+        document.querySelectorAll('.location-filter-btn.active').forEach(btn => {
+            const filter = btn.getAttribute('data-filter');
+            if (filter !== 'all') {
+                activeFilters.push(filter);
+            }
+        });
+
+        const locationCards = document.querySelectorAll('.location-card');
+
+        if (activeFilters.length === 0) {
+            // No specific filters active, show all
+            showAllLocations();
+            return;
+        }
+
+        // Show/hide cards based on active filters
+        locationCards.forEach(card => {
+            const locationType = card.getAttribute('data-location-type');
+            if (activeFilters.includes(locationType)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         // Form mode switching
         const singleMode = document.getElementById('single_mode');
@@ -1063,7 +1132,7 @@ function getBadgeType($location)
             if (section && aisleRack && columnBin) {
                 let name = '';
                 const locationPrefix = storeLocation ? `${storeLocation} - ` : '';
-                
+
                 if (locationType === 'storage' || locationType === 'bin') {
                     const subtypeNames = {
                         'general': 'Storage Location',
@@ -1150,7 +1219,7 @@ function getBadgeType($location)
             // Parse all parts
             const startShop = parseInt(startSection.replace(/[^\d]/g, ''));
             const endShop = parseInt(endSection.replace(/[^\d]/g, ''));
-            
+
             const startAisle = parseLocationPart(startAisleRack);
             const endAisle = parseLocationPart(endAisleRack);
             const startColumn = parseLocationPart(startColumnBin);
@@ -1166,7 +1235,7 @@ function getBadgeType($location)
             // - Racks: 1 to 5 (5 racks)  
             // - Columns: A to C (3 columns)
             // - Bins: 1 to 5 (5 bins)
-            
+
             const aisleCount = (endAisle.letter.charCodeAt(0) - startAisle.letter.charCodeAt(0)) + 1;
             const rackCount = (endAisle.number - startAisle.number) + 1;
             const columnCount = (endColumn.letter.charCodeAt(0) - startColumn.letter.charCodeAt(0)) + 1;
@@ -1174,7 +1243,7 @@ function getBadgeType($location)
 
             // Total locations = aisles × racks × columns × bins
             const totalLocations = aisleCount * rackCount * columnCount * binCount;
-            
+
             console.log('Range calculation:', {
                 aisles: `${startAisle.letter} to ${endAisle.letter} = ${aisleCount}`,
                 racks: `${startAisle.number} to ${endAisle.number} = ${rackCount}`,

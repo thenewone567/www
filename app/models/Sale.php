@@ -11,11 +11,12 @@ class Sale
     public function getSales()
     {
         $this->db->query("
-            SELECT s.*, c.name as customer_name 
+            SELECT s.*, c.customer_name as customer_name 
             FROM sales s 
             LEFT JOIN customers c ON s.customer_id = c.customer_id 
             ORDER BY s.sale_date DESC
         ");
+        $this->db->execute();
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }
@@ -23,23 +24,25 @@ class Sale
     public function getTodaysSales()
     {
         $this->db->query("
-            SELECT s.*, c.name as customer_name 
+            SELECT s.*, c.customer_name as customer_name 
             FROM sales s 
             LEFT JOIN customers c ON s.customer_id = c.customer_id 
             WHERE DATE(s.sale_date) = CURDATE() 
             ORDER BY s.sale_date DESC
         ");
+        $this->db->execute();
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }
 
     public function addSale($data)
     {
-        $this->db->query("INSERT INTO sales (customer_id, total_amount, payment_mode) VALUES (:customer_id, :total_amount, :payment_mode)");
+        $this->db->query("INSERT INTO sales (customer_id, total_amount, payment_mode, sale_date) VALUES (:customer_id, :total_amount, :payment_mode, :sale_date)");
         // Bind values
         $this->db->bind(':customer_id', $data['customer_id']);
         $this->db->bind(':total_amount', $data['total_amount']);
         $this->db->bind(':payment_mode', $data['payment_mode']);
+        $this->db->bind(':sale_date', $data['sale_date'] ?? date('Y-m-d H:i:s'));
 
         // Execute
         if ($this->db->execute()) {
@@ -60,7 +63,9 @@ class Sale
             $this->db->bind(':product_id', $data['product_id']);
             $this->db->bind(':quantity', $data['quantity']);
             $this->db->bind(':unit_price', $data['unit_price']);
-            $this->db->bind(':discount', $data['discount']);
+            // Ensure discount is defined (default 0)
+            $discountVal = isset($data['discount']) ? $data['discount'] : 0;
+            $this->db->bind(':discount', $discountVal);
             $this->db->execute();
 
             // Deduct inventory from inventory
@@ -86,47 +91,48 @@ class Sale
     private function deductInventory($productId, $quantityToDeduct)
     {
         try {
-            // Get available Inventory ordered by location priority and date
+            // Get available inventory ordered by location priority and date
             // Prioritize non-bulk locations (not starting with 'B-')
             $this->db->query("
-                SELECT s.Inventory_id, s.quantity, s.location_id, wl.location_name
-                FROM Inventory s
-                LEFT JOIN locations l ON s.location_id = l.id
-                WHERE s.product_id = :product_id 
-                AND s.quantity > 0
+                SELECT i.inventory_id, i.quantity, i.location_id, l.location_name
+                FROM inventory i
+                LEFT JOIN locations l ON i.location_id = l.location_id
+                WHERE i.product_id = :product_id 
+                AND i.quantity > 0
                 ORDER BY 
-                    CASE WHEN wl.location_name LIKE 'B-%' THEN 1 ELSE 0 END,
-                    s.Inventory_id ASC
+                    CASE WHEN l.location_name LIKE 'B-%' THEN 1 ELSE 0 END,
+                    i.inventory_id ASC
             ");
             $this->db->bind(':product_id', $productId);
-            $InventoryEntries = $this->db->resultSet();
+            $this->db->execute();
+            $inventoryEntries = $this->db->resultSet();
 
             $remainingToDeduct = $quantityToDeduct;
 
-            foreach ($InventoryEntries as $InventoryEntry) {
+            foreach ($inventoryEntries as $inventoryEntry) {
                 if ($remainingToDeduct <= 0)
                     break;
 
-                $deductFromThisEntry = min($InventoryEntry->quantity, $remainingToDeduct);
-                $newQuantity = $InventoryEntry->quantity - $deductFromThisEntry;
+                $deductFromThisEntry = min($inventoryEntry->quantity, $remainingToDeduct);
+                $newQuantity = $inventoryEntry->quantity - $deductFromThisEntry;
 
-                // Update Inventory entry
+                // Update inventory entry
                 $this->db->query("
-                    UPDATE Inventory 
+                    UPDATE inventory 
                     SET quantity = :new_quantity 
-                    WHERE Inventory_id = :Inventory_id
+                    WHERE inventory_id = :inventory_id
                 ");
                 $this->db->bind(':new_quantity', $newQuantity);
-                $this->db->bind(':Inventory_id', $InventoryEntry->Inventory_id);
+                $this->db->bind(':inventory_id', $inventoryEntry->inventory_id);
                 $this->db->execute();
 
-                // Log Inventory movement
+                // Log inventory movement
                 $this->db->query("
-                    INSERT INTO Inventory_movements (product_id, from_location_id, quantity, movement_date) 
+                    INSERT INTO inventory_movements (product_id, from_location_id, quantity, movement_date) 
                     VALUES (:product_id, :location_id, :quantity, NOW())
                 ");
                 $this->db->bind(':product_id', $productId);
-                $this->db->bind(':location_id', $InventoryEntry->location_id);
+                $this->db->bind(':location_id', $inventoryEntry->location_id);
                 $this->db->bind(':quantity', $deductFromThisEntry);
                 $this->db->execute();
 
@@ -135,13 +141,13 @@ class Sale
 
             // Check if we were able to deduct all requested quantity
             if ($remainingToDeduct > 0) {
-                throw new Exception("Insufficient Inventory. Could only deduct " . ($quantityToDeduct - $remainingToDeduct) . " of " . $quantityToDeduct);
+                throw new Exception("Insufficient inventory. Could only deduct " . ($quantityToDeduct - $remainingToDeduct) . " of " . $quantityToDeduct);
             }
 
-            // Update main product Inventory quantity
+            // Update main product inventory quantity
             $this->db->query("
                 UPDATE products 
-                SET Inventory_quantity = Inventory_quantity - :quantity 
+                SET current_inventory = current_inventory - :quantity 
                 WHERE product_id = :product_id
             ");
             $this->db->bind(':quantity', $quantityToDeduct);
@@ -159,6 +165,7 @@ class Sale
     {
         $this->db->query("SELECT * FROM sales WHERE sale_id = :id");
         $this->db->bind(':id', $id);
+        $this->db->execute();
         $result = $this->db->single();
         return $result ? $result : null;
     }
@@ -167,8 +174,27 @@ class Sale
     {
         $this->db->query("SELECT * FROM sale_items WHERE sale_id = :sale_id");
         $this->db->bind(':sale_id', $sale_id);
+        $this->db->execute();
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }
 
+    // =============== BOT HELPER METHODS ===============
+
+    /**
+     * Get today's sales count for bot dashboard
+     */
+    public function getTodaysSalesCount()
+    {
+        try {
+            $this->db->query("SELECT COUNT(*) as count FROM sales WHERE DATE(sale_date) = CURDATE()");
+            $result = $this->db->executeSingle();
+            return $result->count ?? 0;
+        } catch (Exception $e) {
+            error_log('Error getting today\'s sales count: ' . $e->getMessage());
+            return 0;
+        }
+    }
 }
+
+?>

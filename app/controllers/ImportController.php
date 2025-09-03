@@ -450,7 +450,7 @@ class ImportController extends Controller
                     'payment_terms' => $row['payment_terms'] ?? '',
                     'shipping_cost' => floatval($row['shipping_cost'] ?? 0),
                     'discount_percentage' => floatval($row['discount_percentage'] ?? 0),
-                    'is_primary' => (strtolower($row['is_primary'] ?? '') === 'yes') ? 1 : 0,
+                    'is_primary' => 0, // Deprecated: All suppliers start as non-primary (smart selection will handle optimization)
                     'is_active' => 1,
                     'quality_rating' => floatval($row['quality_rating'] ?? 0),
                     'delivery_rating' => floatval($row['delivery_rating'] ?? 0),
@@ -689,7 +689,6 @@ class ImportController extends Controller
             'payment_terms',
             'shipping_cost',
             'discount_percentage',
-            'is_primary',
             'quality_rating',
             'delivery_rating',
             'notes'
@@ -706,10 +705,9 @@ class ImportController extends Controller
                 'Net 30',
                 '500.00',
                 '5.00',
-                'yes',
                 '4.5',
                 '4.2',
-                'Primary supplier for drills'
+                'High-quality supplier for drills'
             ],
             [
                 'DRILL-HD-001',
@@ -721,7 +719,6 @@ class ImportController extends Controller
                 'Net 15',
                 '300.00',
                 '3.00',
-                'no',
                 '4.0',
                 '4.8',
                 'Fast delivery alternative'

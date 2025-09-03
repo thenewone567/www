@@ -600,5 +600,92 @@ class ProductSupplier
         $this->db->execute();
         return $this->db->resultSet();
     }
+
+    /**
+     * Get unlinked products (products without any supplier links)
+     * @param int $page
+     * @param int $perPage
+     * @param string $search
+     * @return array
+     */
+    public function getUnlinkedProducts($page = 1, $perPage = 25, $search = '')
+    {
+        $offset = ($page - 1) * $perPage;
+
+        $searchCondition = '';
+        if (!empty($search)) {
+            $searchCondition = " AND (p.product_name LIKE :search OR p.sku LIKE :search OR c.category_name LIKE :search)";
+        }
+
+        $this->db->query("
+            SELECT
+                p.product_id,
+                p.product_name,
+                COALESCE(p.sku, 'N/A') as sku,
+                p.category_id,
+                COALESCE(c.category_name, 'Uncategorized') as category_name,
+                p.is_active,
+                p.created_at
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.category_id
+            WHERE p.is_active = 1
+            AND p.deleted_at IS NULL
+            AND p.product_id NOT IN (
+                SELECT DISTINCT product_id FROM product_suppliers WHERE is_active = 1
+            )
+            {$searchCondition}
+            ORDER BY p.product_name ASC
+            LIMIT :limit OFFSET :offset
+        ");
+
+        if (!empty($search)) {
+            $this->db->bind(':search', '%' . $search . '%');
+        }
+        $this->db->bind(':limit', (int) $perPage, PDO::PARAM_INT);
+        $this->db->bind(':offset', (int) $offset, PDO::PARAM_INT);
+
+        if (!$this->db->execute()) {
+            error_log("ProductSupplier::getUnlinkedProducts - Query execution failed");
+            return [];
+        }
+
+        $results = $this->db->resultSet();
+        error_log("ProductSupplier::getUnlinkedProducts - Results count: " . count($results));
+
+        return $results;
+    }
+
+    /**
+     * Get total count of unlinked products
+     * @param string $search
+     * @return int
+     */
+    public function getUnlinkedProductsCount($search = '')
+    {
+        $searchCondition = '';
+        if (!empty($search)) {
+            $searchCondition = " AND (p.product_name LIKE :search OR p.sku LIKE :search OR c.category_name LIKE :search)";
+        }
+
+        $this->db->query("
+            SELECT COUNT(*) as total
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.category_id
+            WHERE p.is_active = 1
+            AND p.deleted_at IS NULL
+            AND p.product_id NOT IN (
+                SELECT DISTINCT product_id FROM product_suppliers WHERE is_active = 1
+            )
+            {$searchCondition}
+        ");
+
+        if (!empty($search)) {
+            $this->db->bind(':search', '%' . $search . '%');
+        }
+
+        $this->db->execute();
+        $result = $this->db->single();
+        return $result ? $result->total : 0;
+    }
 }
 ?>
