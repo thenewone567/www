@@ -63,6 +63,15 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                 </a>
             </div>
 
+            <div class="col-6 col-md-4 col-lg-2 mb-3">
+                <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link"
+                    href="<?= URLROOT ?>/admin/references" role="button">
+                    <div class="text-success mb-2"><i class="fas fa-handshake fa-2x"></i></div>
+                    <div class="font-weight-bold">References</div>
+                    <small class="text-muted">Commission system</small>
+                </a>
+            </div>
+
             <!-- Roles & Permissions card removed per request -->
 
             <div class="col-6 col-md-4 col-lg-2 mb-3">
@@ -129,8 +138,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                     <th>Role</th>
                                     <th>Category</th>
                                     <th>Status</th>
-                                    <th>Last Login</th>
-                                    <th>Created</th>
+                                    <th>Unique ID</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -285,23 +293,12 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                             </td>
                                             <td>
                                                 <?php
-                                                $lastLogin = isset($user->last_login) ? trim((string) $user->last_login) : '';
-                                                if ($lastLogin !== '') {
-                                                    $ts = strtotime($lastLogin);
-                                                    echo $ts ? date('M j, Y g:i A', $ts) : 'Invalid date';
+                                                $uniqueId = isset($user->unique_id) ? trim((string) $user->unique_id) : '';
+                                                if ($uniqueId !== '') {
+                                                    echo '<span class="badge unique-id-badge" title="Unique Tracking ID">' .
+                                                        htmlspecialchars($uniqueId) . '</span>';
                                                 } else {
-                                                    echo 'Never';
-                                                }
-                                                ?>
-                                            </td>
-                                            <td>
-                                                <?php
-                                                $createdAt = isset($user->created_at) ? trim((string) $user->created_at) : '';
-                                                if ($createdAt !== '') {
-                                                    $ts2 = strtotime($createdAt);
-                                                    echo $ts2 ? date('M j, Y', $ts2) : 'Unknown';
-                                                } else {
-                                                    echo 'Unknown';
+                                                    echo '<span class="badge unique-id-badge not-assigned" title="No unique ID assigned">Not Assigned</span>';
                                                 }
                                                 ?>
                                             </td>

@@ -283,9 +283,9 @@ class Purchase
     }
 
     /**
-     * Mark PO as arrived at dock (first step in receiving workflow)
+     * Mark PO as arrived at facility (first step in receiving workflow)
      */
-    public function markAsArrivedAtDock($purchaseId, $dockLocationId = null, $notes = '')
+    public function markAsArrivedAtFacility($purchaseId, $dockLocationId = null, $notes = '')
     {
         try {
             $this->db->query('
@@ -297,7 +297,7 @@ class Purchase
                     dock_assignment_notes = ?
                 WHERE purchase_id = ?
             ');
-            $this->db->bind(1, 'arrived_at_dock');
+            $this->db->bind(1, 'off-loading');
             $this->db->bind(2, $dockLocationId);
             $this->db->bind(3, $notes);
             $this->db->bind(4, $purchaseId);
@@ -307,15 +307,15 @@ class Purchase
             if ($result) {
                 $this->logStatusChange(
                     $purchaseId,
-                    'arrived_at_dock',
+                    'off-loading',
                     'purchases',
-                    "PO arrived at dock" . ($notes ? " - Notes: $notes" : "")
+                    "Off-loading started" . ($notes ? " - Notes: $notes" : "")
                 );
             }
 
             return $result;
         } catch (Exception $e) {
-            error_log("Error marking PO as arrived at dock: " . $e->getMessage());
+            error_log("Error marking PO as arrived at facility: " . $e->getMessage());
             return false;
         }
     }
@@ -672,6 +672,30 @@ class Purchase
         return $this->db->resultSet();
     }
 
+    // Get purchases that can be returned (received purchases only)
+    public function getReturnablePurchases()
+    {
+        $this->db->query("
+            SELECT p.purchase_id, p.po_number, p.supplier_id, p.purchase_date, 
+                   p.expected_date, p.total_amount, p.received_at,
+                   s.supplier_name
+            FROM purchases p
+            LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+            WHERE p.status = 'received' 
+            AND p.deleted_at IS NULL
+            AND p.purchase_id NOT IN (
+                SELECT DISTINCT pr.purchase_id 
+                FROM purchase_returns pr 
+                WHERE pr.purchase_id IS NOT NULL
+            )
+            ORDER BY p.received_at DESC, p.purchase_date DESC
+            LIMIT 50
+        ");
+
+        $this->db->execute();
+        return $this->db->resultSet();
+    }
+
     // Generate PO Number
     public function generatePONumber()
     {
@@ -898,8 +922,8 @@ class Purchase
             $summary['pending'] = $statusValues['pending'] ?? 0;
             $summary['pending_count'] = $statusCounts['pending'] ?? 0;
 
-            $summary['sent'] = $statusValues['sent'] ?? 0;
-            $summary['sent_count'] = $statusCounts['sent'] ?? 0;
+            $summary['email_received'] = $statusValues['email_received'] ?? 0;
+            $summary['email_received_count'] = $statusCounts['email_received'] ?? 0;
 
             $summary['in_transit'] = ($statusValues['in_transit'] ?? 0) +
                 ($statusValues['shipped'] ?? 0) +
@@ -1020,7 +1044,7 @@ class Purchase
                        p.tracking_number, s.supplier_name
                 FROM purchases p
                 LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
-                WHERE p.status IN ('pending', 'sent', 'in_transit', 'ready_to_receive')
+                WHERE p.status IN ('pending', 'email_received', 'in_transit', 'ready_to_receive')
                   AND ((p.po_number LIKE :query1 OR p.po_number = :exact_query1 OR p.po_number LIKE :starts_with1)
                        OR s.supplier_name LIKE :query2
                        OR p.tracking_number LIKE :query3
@@ -1158,7 +1182,7 @@ class Purchase
      */
     public function bulkUpdateStatus($orderIds, $status)
     {
-        $validStatuses = ['pending', 'sent', 'partially_received', 'received', 'cancelled'];
+        $validStatuses = ['pending', 'email_received', 'partially_received', 'received', 'cancelled'];
 
         if (!in_array($status, $validStatuses) || empty($orderIds)) {
             return false;

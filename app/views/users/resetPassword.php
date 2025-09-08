@@ -70,7 +70,7 @@
     </div>
 
     <div class="login-footer">
-        <strong><?php echo SITENAME; ?></strong><br>
+        <strong><?php echo company_name(); ?></strong><br>
         <small>Powered by <?php echo APP_NAME; ?></small>
     </div>
 </div>

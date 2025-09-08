@@ -460,7 +460,6 @@ class Product
                 p.sku,
                 p.model_number,
                 p.image_path,
-                p.description,
                 p.min_inventory_level,
                 p.reorder_level,
                 c.category_name,
@@ -2330,6 +2329,48 @@ class Product
         } catch (Exception $e) {
             error_log("Error linking supplier to product: " . $e->getMessage());
             error_log("LinkSupplier exception stack trace: " . $e->getTraceAsString());
+            return false;
+        }
+    }
+
+    /**
+     * Unlink a supplier from a product (soft delete by setting is_active = 0)
+     * @param int $productId
+     * @param int $supplierId
+     * @return bool
+     */
+    public function unlinkSupplier($productId, $supplierId)
+    {
+        try {
+            // Log the parameters being passed
+            error_log("UnlinkSupplier parameters: productId=$productId, supplierId=$supplierId");
+
+            // Check if the relationship exists
+            $existingLink = $this->getProductSupplierLink($productId, $supplierId);
+
+            if (!$existingLink) {
+                error_log("UnlinkSupplier: No relationship found between product $productId and supplier $supplierId");
+                return false;
+            }
+
+            // Soft delete by setting is_active = 0
+            $this->db->query("
+                UPDATE product_suppliers SET 
+                    is_active = 0,
+                    updated_at = NOW()
+                WHERE product_id = :product_id AND supplier_id = :supplier_id
+            ");
+
+            $this->db->bind(':product_id', (int) $productId);
+            $this->db->bind(':supplier_id', (int) $supplierId);
+
+            $result = $this->db->execute();
+            error_log("UnlinkSupplier execute result: " . ($result ? 'success' : 'failed'));
+
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error unlinking supplier from product: " . $e->getMessage());
+            error_log("UnlinkSupplier exception stack trace: " . $e->getTraceAsString());
             return false;
         }
     }

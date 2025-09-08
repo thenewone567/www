@@ -81,11 +81,16 @@ class AdminController extends BaseController
         $recentActivity = $this->userModel->getRecentActivity(10);
         $systemHealth = $this->getSystemHealth();
 
+        // Get users data for the dashboard table
+        $users = $this->userModel->getAllUsersWithCategories();
+
         $data = [
             'title' => 'Admin Panel',
             'stats' => $stats,
             'recent_activity' => $recentActivity,
-            'system_health' => $systemHealth
+            'system_health' => $systemHealth,
+            'users' => $users,
+            'activity_logs' => $recentActivity // Use the same data for both activity displays
         ];
 
         $this->view('admin/dashboard', $data);
@@ -107,6 +112,354 @@ class AdminController extends BaseController
         ];
 
         $this->view('admin/users', $data);
+    }
+
+    /**
+     * References and Commission Management
+     */
+    public function references()
+    {
+        $referenceModel = $this->model('Reference');
+
+        // Get all references with contractor and customer details
+        $references = $referenceModel->getAllReferences();
+
+        // Get contractors and customers for creating new references
+        $contractors = $referenceModel->getAllContractors();
+        $customers = $referenceModel->getAllCustomers();
+
+        // Get commission summary (traditional)
+        $commissions = $referenceModel->getCommissionSummary(50);
+
+        // Get target-based commission data
+        $targetCommissions = $referenceModel->getTargetCommissionSummary(50);
+        $commissionTiers = $referenceModel->getCommissionTargetTiers();
+
+        $data = [
+            'title' => 'References & Commission Management',
+            'references' => $references,
+            'contractors' => $contractors,
+            'customers' => $customers,
+            'commissions' => $commissions,
+            'target_commissions' => $targetCommissions,
+            'commission_tiers' => $commissionTiers
+        ];
+
+        $this->view('admin/references', $data);
+    }
+
+    /**
+     * Create new customer reference
+     */
+    public function createReference()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            error_log('Initiating reference creation...');
+
+            try {
+                $referenceModel = $this->model('Reference');
+
+                $contractorId = filter_input(INPUT_POST, 'contractor_id', FILTER_VALIDATE_INT);
+                $customerId = filter_input(INPUT_POST, 'customer_id', FILTER_VALIDATE_INT);
+                $notes = trim($_POST['notes'] ?? '');
+
+                if (!$contractorId || !$customerId) {
+                    throw new Exception('Invalid contractor or customer ID');
+                }
+
+                $referenceId = $referenceModel->createReference($contractorId, $customerId, $notes);
+
+                if ($referenceId) {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Reference created successfully!',
+                        'reference_id' => $referenceId
+                    ]);
+                } else {
+                    throw new Exception('Failed to create reference - may already exist');
+                }
+            } catch (Exception $e) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+            exit();
+        }
+    }
+
+    /**
+     * Delete customer reference
+     */
+    public function deleteReference()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            error_log('Initiating reference deletion...');
+
+            try {
+                $referenceModel = $this->model('Reference');
+
+                $referenceId = filter_input(INPUT_POST, 'reference_id', FILTER_VALIDATE_INT);
+
+                if (!$referenceId) {
+                    throw new Exception('Invalid reference ID');
+                }
+
+                if ($referenceModel->deleteReference($referenceId)) {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Reference deleted successfully!'
+                    ]);
+                } else {
+                    throw new Exception('Failed to delete reference');
+                }
+            } catch (Exception $e) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+            exit();
+        }
+    }
+
+    /**
+     * Update commission status
+     */
+    public function updateCommissionStatus()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            error_log('Initiating commission status update...');
+
+            try {
+                $referenceModel = $this->model('Reference');
+
+                $commissionId = filter_input(INPUT_POST, 'commission_id', FILTER_VALIDATE_INT);
+                $status = trim($_POST['status'] ?? '');
+                $paymentDate = $_POST['payment_date'] ?? null;
+
+                if (!$commissionId || !$status) {
+                    throw new Exception('Invalid commission ID or status');
+                }
+
+                if (!in_array($status, ['pending', 'approved', 'paid', 'cancelled'])) {
+                    throw new Exception('Invalid status value');
+                }
+
+                if ($referenceModel->updateCommissionStatus($commissionId, $status, $paymentDate)) {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Commission status updated successfully!'
+                    ]);
+                } else {
+                    throw new Exception('Failed to update commission status');
+                }
+            } catch (Exception $e) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+            exit();
+        }
+    }
+
+    /**
+     * Add sale transaction for target-based commission calculation
+     */
+    public function addSaleTransaction()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            error_log('Initiating sale transaction addition...');
+
+            try {
+                $referenceModel = $this->model('Reference');
+
+                $contractorId = filter_input(INPUT_POST, 'contractor_id', FILTER_VALIDATE_INT);
+                $saleAmount = filter_input(INPUT_POST, 'sale_amount', FILTER_VALIDATE_FLOAT);
+                $transactionType = trim($_POST['transaction_type'] ?? 'referred_sale');
+                $customerId = filter_input(INPUT_POST, 'customer_id', FILTER_VALIDATE_INT);
+                $saleId = filter_input(INPUT_POST, 'sale_id', FILTER_VALIDATE_INT);
+                $transactionDate = $_POST['transaction_date'] ?? null;
+
+                if (!$contractorId || !$saleAmount || $saleAmount <= 0) {
+                    throw new Exception('Invalid contractor ID or sale amount');
+                }
+
+                if (!in_array($transactionType, ['referred_sale', 'own_purchase'])) {
+                    throw new Exception('Invalid transaction type');
+                }
+
+                $transactionId = $referenceModel->addSaleTransaction(
+                    $contractorId,
+                    $saleAmount,
+                    $transactionType,
+                    $customerId,
+                    $saleId,
+                    $transactionDate
+                );
+
+                if ($transactionId) {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Sale transaction added successfully!',
+                        'transaction_id' => $transactionId
+                    ]);
+                } else {
+                    throw new Exception('Failed to add sale transaction');
+                }
+            } catch (Exception $e) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+            exit();
+        }
+    }
+
+    /**
+     * Finalize monthly commissions
+     */
+    public function finalizeMonthlyCommissions()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            error_log('Initiating monthly commission finalization...');
+
+            try {
+                $referenceModel = $this->model('Reference');
+                $month = trim($_POST['month'] ?? '');
+
+                if (!$month || !preg_match('/^\d{4}-\d{2}$/', $month)) {
+                    throw new Exception('Invalid month format (required: YYYY-MM)');
+                }
+
+                if ($referenceModel->finalizeMonthlyCommissions($month)) {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => true,
+                        'message' => "Monthly commissions for $month finalized successfully!"
+                    ]);
+                } else {
+                    throw new Exception('Failed to finalize monthly commissions');
+                }
+            } catch (Exception $e) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+            exit();
+        }
+    }
+
+    /**
+     * Mark commission as paid
+     */
+    public function markCommissionPaid()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            error_log('Initiating commission payment marking...');
+
+            try {
+                $referenceModel = $this->model('Reference');
+                $summaryId = filter_input(INPUT_POST, 'summary_id', FILTER_VALIDATE_INT);
+
+                if (!$summaryId) {
+                    throw new Exception('Invalid summary ID');
+                }
+
+                if ($referenceModel->markCommissionAsPaid($summaryId)) {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Commission marked as paid successfully!'
+                    ]);
+                } else {
+                    throw new Exception('Failed to mark commission as paid');
+                }
+            } catch (Exception $e) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+            exit();
+        }
+    }
+
+    /**
+     * Get contractor monthly performance
+     */
+    public function getContractorPerformance()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                $referenceModel = $this->model('Reference');
+                $contractorId = filter_input(INPUT_GET, 'contractor_id', FILTER_VALIDATE_INT);
+                $month = $_GET['month'] ?? date('Y-m');
+
+                if (!$contractorId) {
+                    throw new Exception('Invalid contractor ID');
+                }
+
+                $performance = $referenceModel->getContractorMonthlyPerformance($contractorId, $month);
+
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'data' => $performance
+                ]);
+            } catch (Exception $e) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+            exit();
+        }
+    }
+
+    /**
+     * AJAX endpoint to get system stats
+     */
+    public function getSystemStatsAjax()
+    {
+        try {
+            $stats = $this->getSystemStats();
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'data' => $stats
+            ]);
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to load system stats: ' . $e->getMessage()
+            ]);
+        }
+        exit();
     }
 
     /**
@@ -1819,6 +2172,117 @@ class AdminController extends BaseController
                 'message' => 'Sales bot error: ' . $e->getMessage(),
                 'action' => 'error'
             ];
+        }
+    }
+
+    // Get monthly performance data
+    public function getMonthlyPerformance()
+    {
+        header('Content-Type: application/json');
+
+        try {
+            $referenceModel = $this->model('Reference');
+            $data = $referenceModel->getMonthlyPerformance();
+            echo json_encode(['success' => true, 'data' => $data]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    // Get commission tiers
+    public function getCommissionTiers()
+    {
+        header('Content-Type: application/json');
+
+        try {
+            $referenceModel = $this->model('Reference');
+            $tiers = $referenceModel->getCommissionTargetTiers();
+            echo json_encode(['success' => true, 'data' => $tiers]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    // Create commission tier
+    public function createCommissionTier()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $referenceModel = $this->model('Reference');
+
+                $data = [
+                    'tier_name' => $_POST['tier_name'] ?? '',
+                    'min_sales' => floatval($_POST['min_sales'] ?? 0),
+                    'commission_rate' => floatval($_POST['commission_rate'] ?? 0)
+                ];
+
+                if (empty($data['tier_name']) || $data['min_sales'] < 0 || $data['commission_rate'] < 0) {
+                    throw new Exception('Invalid tier data provided');
+                }
+
+                $result = $referenceModel->createCommissionTier($data);
+                echo json_encode(['success' => $result, 'message' => $result ? 'Tier created successfully' : 'Failed to create tier']);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        }
+    }
+
+    // Update commission tier
+    public function updateCommissionTier()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $referenceModel = $this->model('Reference');
+
+                $data = [
+                    'tier_id' => intval($_POST['tier_id'] ?? 0),
+                    'tier_name' => $_POST['tier_name'] ?? '',
+                    'min_sales' => floatval($_POST['min_sales'] ?? 0),
+                    'commission_rate' => floatval($_POST['commission_rate'] ?? 0)
+                ];
+
+                if ($data['tier_id'] <= 0 || empty($data['tier_name']) || $data['min_sales'] < 0 || $data['commission_rate'] < 0) {
+                    throw new Exception('Invalid tier data provided');
+                }
+
+                $result = $referenceModel->updateCommissionTier($data);
+                echo json_encode(['success' => $result, 'message' => $result ? 'Tier updated successfully' : 'Failed to update tier']);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        }
+    }
+
+    // Delete commission tier
+    public function deleteCommissionTier()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $referenceModel = $this->model('Reference');
+                $tierId = intval($_POST['tier_id'] ?? 0);
+
+                if ($tierId <= 0) {
+                    throw new Exception('Invalid tier ID');
+                }
+
+                $result = $referenceModel->deleteCommissionTier($tierId);
+                echo json_encode(['success' => $result, 'message' => $result ? 'Tier deleted successfully' : 'Failed to delete tier']);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
         }
     }
 }

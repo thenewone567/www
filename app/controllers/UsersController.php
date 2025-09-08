@@ -26,19 +26,19 @@ class UsersController extends BaseController
                 }
             }
             $data = [
-                'username'             => trim($_POST['username']),
-                'email'                => trim($_POST['email'] ?? ''),
-                'password'             => trim($_POST['password']),
-                'role_id'              => trim($_POST['role_id']),
-                'profile_picture'      => $profilePicturePath,
-                'address'              => trim($_POST['address'] ?? ''),
-                'job_title'            => trim($_POST['job_title'] ?? ''),
-                'birthday'             => trim($_POST['birthday'] ?? ''),
-                'education'            => trim($_POST['education'] ?? ''),
-                'username_err'         => '',
-                'password_err'         => '',
+                'username' => trim($_POST['username']),
+                'email' => trim($_POST['email'] ?? ''),
+                'password' => trim($_POST['password']),
+                'role_id' => trim($_POST['role_id']),
+                'profile_picture' => $profilePicturePath,
+                'address' => trim($_POST['address'] ?? ''),
+                'job_title' => trim($_POST['job_title'] ?? ''),
+                'birthday' => trim($_POST['birthday'] ?? ''),
+                'education' => trim($_POST['education'] ?? ''),
+                'username_err' => '',
+                'password_err' => '',
                 'confirm_password_err' => '',
-                'email_err'            => ''
+                'email_err' => ''
             ];
             // Validation (add more as needed)
             if (empty($data['username'])) {
@@ -67,20 +67,20 @@ class UsersController extends BaseController
             $this->renderLayout('users/register', $data);
         } else {
             $data = [
-                'username'             => '',
-                'email'                => '',
-                'password'             => '',
-                'confirm_password'     => '',
-                'role_id'              => '',
-                'profile_picture'      => '',
-                'address'              => '',
-                'job_title'            => '',
-                'birthday'             => '',
-                'education'            => '',
-                'username_err'         => '',
-                'password_err'         => '',
+                'username' => '',
+                'email' => '',
+                'password' => '',
+                'confirm_password' => '',
+                'role_id' => '',
+                'profile_picture' => '',
+                'address' => '',
+                'job_title' => '',
+                'birthday' => '',
+                'education' => '',
+                'username_err' => '',
+                'password_err' => '',
                 'confirm_password_err' => '',
-                'email_err'            => ''
+                'email_err' => ''
             ];
             $this->renderLayout('users/register', $data);
         }
@@ -129,19 +129,19 @@ class UsersController extends BaseController
                 }
             }
             $data = [
-                'user_id'         => $user->user_id,
+                'user_id' => $user->user_id,
                 'profile_picture' => $profilePicturePath,
-                'full_name'       => trim($_POST['full_name']),
+                'full_name' => trim($_POST['full_name']),
                 // Use the username from the user object, not from POST (readonly field)
-                'username'        => $user->username,
-                'email'           => trim($_POST['email']),
-                'address'         => trim($_POST['address'] ?? ''),
-                'job_title'       => trim($_POST['job_title'] ?? ''),
-                'birthday'        => trim($_POST['birthday'] ?? ''),
-                'education'       => trim($_POST['education'] ?? ''),
-                'full_name_err'   => '',
-                'username_err'    => '',
-                'email_err'       => ''
+                'username' => $user->username,
+                'email' => trim($_POST['email']),
+                'address' => trim($_POST['address'] ?? ''),
+                'job_title' => trim($_POST['job_title'] ?? ''),
+                'birthday' => trim($_POST['birthday'] ?? ''),
+                'education' => trim($_POST['education'] ?? ''),
+                'full_name_err' => '',
+                'username_err' => '',
+                'email_err' => ''
             ];
             if (empty($data['full_name'])) {
                 $data['full_name_err'] = 'Full name is required';
@@ -178,9 +178,9 @@ class UsersController extends BaseController
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'username'     => isset($_POST['username']) ? trim($_POST['username']) : '',
-                'password'     => isset($_POST['password']) ? trim($_POST['password']) : '',
-                'remember_me'  => isset($_POST['remember_me']) ? true : false,
+                'username' => isset($_POST['username']) ? trim($_POST['username']) : '',
+                'password' => isset($_POST['password']) ? trim($_POST['password']) : '',
+                'remember_me' => isset($_POST['remember_me']) ? true : false,
                 'username_err' => '',
                 'password_err' => '',
             ];
@@ -222,16 +222,14 @@ class UsersController extends BaseController
                 } else {
                     $data['password_err'] = 'Password is incorrect. Please try again.';
                     // Add company branding data
-                    $settings = $this->model('Setting')->getSettings();
-                    $data['company_name'] = $settings['company_name'] ?? SITENAME;
-                    $data['company_logo'] = $settings['company_logo'] ?? '';
+                    $data['company_name'] = company_name();
+                    $data['company_logo'] = company_logo();
                     $this->renderLayout('users/login', $data, false); // no sidebar layout on login
                 }
             } else {
                 // Load view with errors
-                $settings = $this->model('Setting')->getSettings();
-                $data['company_name'] = $settings['company_name'] ?? SITENAME;
-                $data['company_logo'] = $settings['company_logo'] ?? '';
+                $data['company_name'] = company_name();
+                $data['company_logo'] = company_logo();
                 $this->renderLayout('users/login', $data, false);
             }
 
@@ -248,16 +246,15 @@ class UsersController extends BaseController
 
             // Init data for GET request
             $data = [
-                'username'     => '',
-                'password'     => '',
+                'username' => '',
+                'password' => '',
                 'username_err' => '',
                 'password_err' => '',
             ];
 
             // Load view
-            $settings = $this->model('Setting')->getSettings();
-            $data['company_name'] = $settings['company_name'] ?? SITENAME;
-            $data['company_logo'] = $settings['company_logo'] ?? '';
+            $data['company_name'] = company_name();
+            $data['company_logo'] = company_logo();
             $this->renderLayout('users/login', $data, false); // prevent sidebar rendering
         }
     }
@@ -383,11 +380,11 @@ class UsersController extends BaseController
 
             // Init data
             $data = [
-                'current_password'     => trim($_POST['current_password']),
-                'new_password'         => trim($_POST['new_password']),
-                'confirm_password'     => trim($_POST['confirm_password']),
+                'current_password' => trim($_POST['current_password']),
+                'new_password' => trim($_POST['new_password']),
+                'confirm_password' => trim($_POST['confirm_password']),
                 'current_password_err' => '',
-                'new_password_err'     => '',
+                'new_password_err' => '',
                 'confirm_password_err' => ''
             ];
 
@@ -437,11 +434,11 @@ class UsersController extends BaseController
         } else {
             // Init data
             $data = [
-                'current_password'     => '',
-                'new_password'         => '',
-                'confirm_password'     => '',
+                'current_password' => '',
+                'new_password' => '',
+                'confirm_password' => '',
                 'current_password_err' => '',
-                'new_password_err'     => '',
+                'new_password_err' => '',
                 'confirm_password_err' => ''
             ];
 
@@ -461,11 +458,11 @@ class UsersController extends BaseController
             $username = trim($_POST['username'] ?? '');
 
             $data = [
-                'email'        => $email,
-                'username'     => $username,
-                'email_err'    => '',
+                'email' => $email,
+                'username' => $username,
+                'email_err' => '',
                 'username_err' => '',
-                'success'      => false
+                'success' => false
             ];
 
             // Validate inputs
@@ -539,10 +536,10 @@ class UsersController extends BaseController
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'token'                => $token,
-                'password'             => trim($_POST['password']),
-                'confirm_password'     => trim($_POST['confirm_password']),
-                'password_err'         => '',
+                'token' => $token,
+                'password' => trim($_POST['password']),
+                'confirm_password' => trim($_POST['confirm_password']),
+                'password_err' => '',
                 'confirm_password_err' => ''
             ];
 
@@ -578,10 +575,10 @@ class UsersController extends BaseController
             $this->renderLayout('users/resetPassword', $data, false);
         } else {
             $data = [
-                'token'                => $token,
-                'password'             => '',
-                'confirm_password'     => '',
-                'password_err'         => '',
+                'token' => $token,
+                'password' => '',
+                'confirm_password' => '',
+                'password_err' => '',
                 'confirm_password_err' => ''
             ];
 
@@ -613,7 +610,7 @@ class UsersController extends BaseController
                 <p>This link will expire in 1 hour.</p>
                 <p>If you did not request this password reset, please ignore this email.</p>
                 <br>
-                <p>Best regards,<br>" . SITENAME . " Team</p>
+                <p>Best regards,<br>" . company_name() . " Team</p>
             </body>
             </html>
             ";
@@ -621,7 +618,7 @@ class UsersController extends BaseController
             $headers = [
                 'MIME-Version: 1.0',
                 'Content-type: text/html; charset=utf-8',
-                'From: ' . SITENAME . ' <noreply@' . $_SERVER['HTTP_HOST'] . '>',
+                'From: ' . company_name() . ' <noreply@' . $_SERVER['HTTP_HOST'] . '>',
                 'Reply-To: noreply@' . $_SERVER['HTTP_HOST'],
                 'X-Mailer: PHP/' . phpversion()
             ];
@@ -645,13 +642,13 @@ class UsersController extends BaseController
             $_POST = sanitizePost($_POST);
 
             $data = [
-                'username'             => trim($_POST['username'] ?? ''),
-                'password'             => trim($_POST['password'] ?? ''),
-                'confirm_password'     => trim($_POST['confirm_password'] ?? ''),
-                'username_err'         => '',
-                'password_err'         => '',
+                'username' => trim($_POST['username'] ?? ''),
+                'password' => trim($_POST['password'] ?? ''),
+                'confirm_password' => trim($_POST['confirm_password'] ?? ''),
+                'username_err' => '',
+                'password_err' => '',
                 'confirm_password_err' => '',
-                'success'              => false
+                'success' => false
             ];
 
             // Validate username

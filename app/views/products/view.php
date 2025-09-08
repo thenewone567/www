@@ -350,7 +350,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                     return;
                                 }
 
-                                const baseUrl = (window.URLROOT && window.URLROOT.length) ? window.URLROOT : '<?php echo URLROOT; ?>';
+                                const baseUrl = (window.URLROOT && window.URLROOT.length) ? window.URLROOT.replace(/\/$/, '') : '<?php echo URLROOT; ?>'.replace(/\/$/, '');
                                 fetch(`${baseUrl}/products/getProductSuppliers/${productId}`)
                                     .then(async res => {
                                         const ct = res.headers.get('content-type') || '';
@@ -485,8 +485,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                 formData.append('product_id', productId);
                                 formData.append('purchase_price', purchasePrice);
 
-                                const baseUrl = (window.URLROOT && window.URLROOT.length) ? window.URLROOT : '<?php echo URLROOT; ?>';
-                                // POST to the controller action that handles create/update of product-supplier links
+                                const baseUrl = (window.URLROOT && window.URLROOT.length) ? window.URLROOT.replace(/\/$/, '') : '<?php echo URLROOT; ?>'.replace(/\/$/, '');
                                 fetch(`${baseUrl}/suppliers/linkProduct`, {
                                     method: 'POST',
                                     body: formData,
@@ -536,7 +535,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                 const formData = new FormData();
                                 formData.append('product_id', productId);
                                 formData.append('supplier_id', supplierId);
-                                const baseUrl = (window.URLROOT && window.URLROOT.length) ? window.URLROOT : '<?php echo URLROOT; ?>';
+                                const baseUrl = (window.URLROOT && window.URLROOT.length) ? window.URLROOT.replace(/\/$/, '') : '<?php echo URLROOT; ?>'.replace(/\/$/, '');
                                 fetch(`${baseUrl}/products/unlinkSupplier`, {
                                     method: 'POST',
                                     body: formData,
@@ -660,7 +659,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                 `;
 
                                 searchTimeout = setTimeout(() => {
-                                    const baseUrl = (window.URLROOT && window.URLROOT.length) ? window.URLROOT : '<?php echo URLROOT; ?>';
+                                    const baseUrl = (window.URLROOT && window.URLROOT.length) ? window.URLROOT.replace(/\/$/, '') : '<?php echo URLROOT; ?>'.replace(/\/$/, '');
 
                                     fetch(`${baseUrl}/api/getSuppliers.php?search=${encodeURIComponent(query.trim())}`)
                                         .then(response => response.json())
@@ -759,7 +758,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                     return;
                                 }
 
-                                const baseUrl = (window.URLROOT && window.URLROOT.length) ? window.URLROOT : '<?php echo URLROOT; ?>';
+                                const baseUrl = (window.URLROOT && window.URLROOT.length) ? window.URLROOT.replace(/\/$/, '') : '<?php echo URLROOT; ?>'.replace(/\/$/, '');
                                 const formData = new FormData();
                                 formData.append('product_id', productId);
                                 formData.append('supplier_id', selectedSupplierId);
@@ -820,6 +819,10 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                 div.textContent = text;
                                 return div.innerHTML;
                             }
+                        </script>
+                        <script>
+                            // Set global URLROOT for AJAX calls
+                            window.URLROOT = '<?php echo URLROOT; ?>';
                         </script>
                         <?php
                     endif;

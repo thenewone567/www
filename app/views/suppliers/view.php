@@ -513,6 +513,58 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                 <?php endif; ?>
                             </div>
                         </div>
+
+                        <!-- Order Summary and Timeline under Supplier Products -->
+                        <?php if (!empty($data['supplier_stats'])): ?>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light mb-4">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-muted mb-3"><i class="fas fa-chart-bar mr-2"></i>Order
+                                                Summary
+                                            </h6>
+                                            <div class="row text-center">
+                                                <div class="col-6">
+                                                    <div class="h4 mb-0 text-primary">
+                                                        <?php echo number_format($data['supplier_stats']->total_orders ?? 0); ?>
+                                                    </div>
+                                                    <small class="text-muted">Total Orders</small>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="h4 mb-0 text-success">
+                                                        <?php echo formatCurrency($data['supplier_stats']->total_purchased ?? 0, 2); ?>
+                                                    </div>
+                                                    <small class="text-muted">Total Value</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light mb-4">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-muted mb-3"><i class="fas fa-calendar mr-2"></i>Order
+                                                Timeline
+                                            </h6>
+                                            <div class="row text-center">
+                                                <div class="col-6">
+                                                    <div class="h6 mb-0 text-info">
+                                                        <?php echo !empty($data['supplier_stats']->first_order_date) ? date('d-m-Y', strtotime($data['supplier_stats']->first_order_date)) : '-'; ?>
+                                                    </div>
+                                                    <small class="text-muted">First Order</small>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="h6 mb-0 text-warning">
+                                                        <?php echo !empty($data['supplier_stats']->last_order_date) ? date('d-m-Y', strtotime($data['supplier_stats']->last_order_date)) : '-'; ?>
+                                                    </div>
+                                                    <small class="text-muted">Last Order</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Purchase Order History Section - Right Side -->
@@ -779,56 +831,6 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                         </div>
                     </div>
                 </div>
-
-                <!-- Summary Statistics Row -->
-                <?php if (!empty($data['supplier_stats'])): ?>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card border-0 bg-light mb-4">
-                                <div class="card-body">
-                                    <h6 class="card-title text-muted mb-3"><i class="fas fa-chart-bar mr-2"></i>Order Summary
-                                    </h6>
-                                    <div class="row text-center">
-                                        <div class="col-6">
-                                            <div class="h4 mb-0 text-primary">
-                                                <?php echo number_format($data['supplier_stats']->total_orders ?? 0); ?>
-                                            </div>
-                                            <small class="text-muted">Total Orders</small>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="h4 mb-0 text-success">
-                                                <?php echo formatCurrency($data['supplier_stats']->total_purchased ?? 0, 2); ?>
-                                            </div>
-                                            <small class="text-muted">Total Value</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card border-0 bg-light mb-4">
-                                <div class="card-body">
-                                    <h6 class="card-title text-muted mb-3"><i class="fas fa-calendar mr-2"></i>Order Timeline
-                                    </h6>
-                                    <div class="row text-center">
-                                        <div class="col-6">
-                                            <div class="h6 mb-0 text-info">
-                                                <?php echo !empty($data['supplier_stats']->first_order_date) ? date('d-m-Y', strtotime($data['supplier_stats']->first_order_date)) : '-'; ?>
-                                            </div>
-                                            <small class="text-muted">First Order</small>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="h6 mb-0 text-warning">
-                                                <?php echo !empty($data['supplier_stats']->last_order_date) ? date('d-m-Y', strtotime($data['supplier_stats']->last_order_date)) : '-'; ?>
-                                            </div>
-                                            <small class="text-muted">Last Order</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                <?php endif; ?>
             <?php else: ?>
                 <div class="alert alert-danger">
                     <h4><i class="fas fa-exclamation-triangle"></i> Supplier Not Found</h4>

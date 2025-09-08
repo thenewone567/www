@@ -3591,6 +3591,13 @@
      background-color: var(--danger);
  }
 
+ .badge-offloading {
+     color: #fff;
+     background-color: #87CEEB;
+     /* Light blue color for off-loading */
+     border: 1px solid #5DADE2;
+ }
+
  /* === ACTIVITY COMPONENTS === */
  .activity-list {
      display: flex;
@@ -6725,4 +6732,276 @@
  .table-layout-fixed td {
      word-wrap: break-word;
      overflow-wrap: break-word;
+ }
+
+ /* === COMPETITION REPORT STYLES === */
+ .bg-warning-light {
+     background-color: rgba(255, 193, 7, 0.1);
+     border: 1px solid var(--warning);
+ }
+
+ [data-theme="dark"] .bg-warning-light {
+     background-color: rgba(255, 212, 59, 0.15);
+     border: 1px solid var(--warning);
+ }
+
+ .supplier-price-card {
+     transition: all 0.2s ease;
+     min-height: 40px;
+     line-height: 1.2;
+ }
+
+ .supplier-price-card:hover {
+     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+ }
+
+ .supplier-price-card .small {
+     font-size: 0.85rem;
+ }
+
+ .supplier-price-card .badge-sm {
+     font-size: 0.7rem;
+     padding: 0.2rem 0.4rem;
+ }
+
+ .competition-product-section:last-child {
+     border-bottom: none !important;
+     padding-bottom: 0 !important;
+ }
+
+ .target-price-container {
+     max-width: 140px;
+ }
+
+ .target-price-input {
+     font-size: 0.8rem;
+ }
+
+ .update-target-btn {
+     border-left: none;
+     padding: 0.2rem 0.4rem;
+ }
+
+ .savings-updating {
+     opacity: 0.6;
+     transition: opacity 0.3s ease;
+ }
+
+ /* Compact negotiation opportunities styling */
+ .opportunity-card {
+     border: 1px solid var(--warning);
+     line-height: 1.2;
+     min-height: 60px;
+     overflow: visible;
+ }
+
+ .opportunity-card .supplier-info {
+     min-height: 35px;
+ }
+
+ .opportunity-card .row {
+     margin-left: -0.25rem;
+     margin-right: -0.25rem;
+ }
+
+ .opportunity-card .row>[class*="col-"] {
+     padding-left: 0.25rem;
+     padding-right: 0.25rem;
+ }
+
+ .opportunity-card .no-gutters {
+     margin-right: 0;
+     margin-left: 0;
+ }
+
+ .opportunity-card .no-gutters>[class*="col-"] {
+     padding-right: 0.25rem;
+     padding-left: 0.25rem;
+ }
+
+ .opportunity-card .small {
+     font-size: 0.8rem;
+ }
+
+ .opportunity-card .form-control-sm {
+     font-size: 0.8rem;
+     padding: 0.2rem 0.4rem;
+     height: auto;
+ }
+
+ .opportunity-card .input-group-text {
+     font-size: 0.75rem;
+     padding: 0.2rem 0.3rem;
+ }
+
+ .opportunity-card .btn-sm {
+     padding: 0.15rem 0.3rem;
+     font-size: 0.75rem;
+ }
+
+ .opportunity-card small {
+     font-size: 0.75rem;
+ }
+
+ .contact-actions {
+     padding-top: 8px;
+     border-top: 1px solid var(--card-border);
+     font-size: 0.8rem;
+     min-height: 30px;
+     display: flex;
+     align-items: center;
+     justify-content: flex-end;
+     flex-wrap: wrap;
+ }
+
+ .contact-actions .btn-sm {
+     padding: 0.15rem 0.3rem;
+     font-size: 0.75rem;
+     white-space: nowrap;
+     margin-bottom: 2px;
+ }
+
+ .email-btn {
+     display: inline-block !important;
+     visibility: visible !important;
+ }
+
+ .savings-info {
+     text-align: right;
+ }
+
+ .delivery-time-container {
+     max-width: 100px;
+ }
+
+ /* Competition report responsive styles */
+ @media (max-width: 768px) {
+     .opportunity-card {
+         min-height: 90px;
+     }
+
+     .target-price-container {
+         max-width: 100%;
+     }
+
+     .savings-info {
+         text-align: left;
+         margin-top: 8px;
+     }
+
+     .opportunity-card .row {
+         margin-bottom: 0;
+     }
+
+     .opportunity-card .col-sm-6,
+     .opportunity-card .col-sm-12 {
+         margin-bottom: 8px;
+     }
+
+     .contact-actions {
+         margin-top: 5px;
+         border-top: none;
+         padding-top: 0;
+     }
+ }
+
+ @media (max-width: 576px) {
+     .opportunity-card {
+         min-height: 120px;
+     }
+
+     .supplier-price-card .d-flex {
+         flex-direction: column;
+         align-items: flex-start !important;
+     }
+
+     .supplier-price-card .text-right {
+         text-align: left !important;
+         margin-top: 5px;
+     }
+
+     .contact-actions {
+         justify-content: flex-start;
+         padding-top: 5px;
+         border-top: none;
+     }
+
+     .opportunity-card .row>[class*="col-"] {
+         margin-bottom: 8px;
+     }
+ }
+
+ /* === PUTAWAY 5-COLUMN LAYOUT === */
+ @media (min-width: 1200px) {
+     .putaway-stats-grid .col-xl-2 {
+         flex: 0 0 20%;
+         max-width: 20%;
+     }
+
+     .putaway-stats-grid .col-xl-3 {
+         flex: 0 0 20%;
+         max-width: 20%;
+     }
+ }
+
+ /* === PUTAWAY QUEUE STYLING === */
+ #putaway-queue .list-group-item {
+     transition: var(--theme-transition);
+     border-left: 3px solid transparent;
+ }
+
+ #putaway-queue .list-group-item:hover {
+     background-color: var(--bg-secondary);
+     border-left-color: var(--primary);
+     transform: translateX(2px);
+ }
+
+ .putaway-priority-normal {
+     border-left-color: var(--success) !important;
+ }
+
+ .putaway-priority-warning {
+     border-left-color: var(--warning) !important;
+ }
+
+ .putaway-priority-urgent {
+     border-left-color: var(--danger) !important;
+ }
+
+ .putaway-queue-stats {
+     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+     border-radius: var(--border-radius);
+ }
+
+ /* Unique ID Badge Styling */
+ .unique-id-badge {
+     font-family: 'Courier New', monospace;
+     font-size: 0.85rem;
+     font-weight: 600;
+     letter-spacing: 0.5px;
+     padding: 0.35rem 0.6rem;
+     border-radius: var(--border-radius-sm);
+     background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+     color: #ffffff;
+     border: 1px solid rgba(255, 255, 255, 0.2);
+     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+     transition: var(--transition);
+ }
+
+ .unique-id-badge:hover {
+     transform: translateY(-1px);
+     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+ }
+
+ .unique-id-badge.not-assigned {
+     background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+     font-style: italic;
+     font-family: inherit;
+     letter-spacing: normal;
+ }
+
+ @media print {
+     .bg-warning-light {
+         background-color: #fff3cd !important;
+     }
  }

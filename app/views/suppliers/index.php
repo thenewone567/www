@@ -58,7 +58,7 @@ function buildPaginationUrl($page, $perPage = null)
     <!-- Enhanced KPI Summary Cards in 6x2 Grid -->
     <!-- Row 1: Primary KPIs -->
     <div class="row mb-4">
-        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="col-2 mb-3">
             <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
@@ -71,7 +71,7 @@ function buildPaginationUrl($page, $perPage = null)
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="col-2 mb-3">
             <div class="kpi-card kpi-gradient-success shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
@@ -84,7 +84,7 @@ function buildPaginationUrl($page, $perPage = null)
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="col-2 mb-3">
             <div class="kpi-card kpi-gradient-info shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
@@ -97,7 +97,7 @@ function buildPaginationUrl($page, $perPage = null)
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="col-2 mb-3">
             <div class="kpi-card kpi-gradient-warning shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
@@ -110,7 +110,7 @@ function buildPaginationUrl($page, $perPage = null)
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="col-2 mb-3">
             <div class="kpi-card kpi-gradient-success shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
@@ -123,7 +123,7 @@ function buildPaginationUrl($page, $perPage = null)
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="col-2 mb-3">
             <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
@@ -139,7 +139,7 @@ function buildPaginationUrl($page, $perPage = null)
 
     <!-- Row 2: Secondary KPIs -->
     <div class="row mb-4">
-        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="col-2 mb-3">
             <div class="kpi-card kpi-gradient-danger shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
@@ -152,7 +152,7 @@ function buildPaginationUrl($page, $perPage = null)
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="col-2 mb-3">
             <div class="kpi-card kpi-gradient-info shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
@@ -165,7 +165,7 @@ function buildPaginationUrl($page, $perPage = null)
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="col-2 mb-3">
             <div class="kpi-card kpi-gradient-secondary shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
@@ -178,7 +178,7 @@ function buildPaginationUrl($page, $perPage = null)
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="col-2 mb-3">
             <div class="kpi-card kpi-gradient-success shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
@@ -191,7 +191,7 @@ function buildPaginationUrl($page, $perPage = null)
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="col-2 mb-3">
             <div class="kpi-card kpi-gradient-warning shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
@@ -204,7 +204,7 @@ function buildPaginationUrl($page, $perPage = null)
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="col-2 mb-3">
             <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
                 <div class="kpi-body">
                     <div class="kpi-count">
@@ -213,129 +213,6 @@ function buildPaginationUrl($page, $perPage = null)
                     <div class="kpi-value small">Products Supplied</div>
                     <div class="kpi-small-spark" aria-hidden="true"></div>
                     <i class="fas fa-boxes kpi-icon" aria-hidden="true"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Top Performers Section -->
-    <div class="row mb-4">
-        <div class="col-lg-4 mb-3">
-            <div class="kpi-card kpi-gradient-success shadow h-100">
-                <div class="kpi-body p-0">
-                    <div class="list-group list-group-flush">
-                        <div class="list-group-item bg-transparent border-0 px-3 py-2">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <i class="fas fa-trophy fa-lg mr-2"></i>
-                                    <strong>Top Performers</strong>
-                                </div>
-                                <small class="text-white-50">Top 3</small>
-                            </div>
-                        </div>
-                        <?php if (!empty($data['top_performers'])): ?>
-                            <?php foreach (array_slice($data['top_performers'], 0, 3) as $index => $supplier): ?>
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($supplier->supplier_name); ?></strong>
-                                        <br><small
-                                            class="text-muted"><?php echo number_format($supplier->on_time_delivery_rate ?? 0, 1); ?>%
-                                            on-time</small>
-                                    </div>
-                                    <span
-                                        class="badge badge-<?php echo $index === 0 ? 'warning' : ($index === 1 ? 'secondary' : 'primary'); ?> badge-pill">
-                                        <?php echo $index + 1; ?>
-                                    </span>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="list-group-item text-center text-muted">
-                                No performance data available
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4 mb-3">
-            <div class="kpi-card kpi-gradient-warning shadow h-100">
-                <div class="kpi-body p-0">
-                    <div class="list-group list-group-flush">
-                        <div class="list-group-item bg-transparent border-0 px-3 py-2">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <i class="fas fa-exclamation-triangle fa-lg mr-2"></i>
-                                    <strong>Needs Attention</strong>
-                                </div>
-                                <small class="text-white-50">Action Required</small>
-                            </div>
-                        </div>
-                        <?php if (!empty($data['poor_performers'])): ?>
-                            <?php foreach (array_slice($data['poor_performers'], 0, 3) as $supplier): ?>
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($supplier->supplier_name); ?></strong>
-                                        <br><small
-                                            class="text-muted"><?php echo number_format($supplier->on_time_delivery_rate ?? 0, 1); ?>%
-                                            on-time</small>
-                                    </div>
-                                    <span class="badge badge-danger badge-pill">
-                                        <i class="fas fa-arrow-down"></i>
-                                    </span>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="list-group-item text-center text-muted">
-                                All suppliers performing well
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4 mb-3">
-            <div class="kpi-card kpi-gradient-info shadow h-100">
-                <div class="kpi-body p-0">
-                    <div class="list-group list-group-flush">
-                        <div class="list-group-item bg-transparent border-0 px-3 py-2">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <i class="fas fa-clock fa-lg mr-2"></i>
-                                    <strong>Recent Deliveries</strong>
-                                </div>
-                                <small class="text-white-50">Latest</small>
-                            </div>
-                        </div>
-                        <?php if (!empty($data['recent_deliveries'])): ?>
-                            <?php foreach (array_slice($data['recent_deliveries'], 0, 3) as $delivery): ?>
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between">
-                                        <strong><?php echo htmlspecialchars($delivery->supplier_name); ?></strong>
-                                        <span
-                                            class="badge badge-<?php echo $delivery->days_early_late > 0 ? 'danger' : ($delivery->days_early_late < 0 ? 'success' : 'primary'); ?>">
-                                            <?php
-                                            if ($delivery->days_early_late > 0) {
-                                                echo '+' . $delivery->days_early_late . ' days';
-                                            } elseif ($delivery->days_early_late < 0) {
-                                                echo abs($delivery->days_early_late) . ' days early';
-                                            } else {
-                                                echo 'On time';
-                                            }
-                                            ?>
-                                        </span>
-                                    </div>
-                                    <small
-                                        class="text-muted"><?php echo date('M d, Y', strtotime($delivery->actual_delivery_date)); ?></small>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="list-group-item text-center text-muted">
-                                No recent deliveries
-                            </div>
-                        <?php endif; ?>
-                    </div>
                 </div>
             </div>
         </div>

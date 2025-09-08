@@ -27,7 +27,7 @@
     }
 </script>
 <style>
-    /* Custom CSS for Enhanced Quick Receive UI */
+    /* Custom CSS for Enhanced Quick Off-load UI */
     .step-item {
         text-align: center;
         flex: 1;
@@ -223,6 +223,89 @@
         border: none;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
+
+    /* Copy PO Number Button Styles */
+    .copy-po-btn {
+        font-size: 0.75rem;
+        padding: 0.15rem 0.3rem;
+        line-height: 1;
+        border-radius: 0.2rem;
+        transition: all 0.2s ease;
+    }
+
+    .copy-po-btn:hover {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-xs {
+        padding: 0.15rem 0.3rem;
+        font-size: 0.75rem;
+        line-height: 1;
+        border-radius: 0.15rem;
+    }
+
+    /* Copy Notification Styles */
+    .copy-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        transform: translateX(400px);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .copy-notification.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .copy-notification-error {
+        background: #dc3545;
+    }
+
+    .copy-notification-info {
+        background: #17a2b8;
+    }
+
+    .copy-notification i {
+        font-size: 16px;
+    }
+
+    /* Paste ready indicator */
+    .paste-ready {
+        border-color: #28a745 !important;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+        background-color: rgba(40, 167, 69, 0.05) !important;
+        animation: paste-pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes paste-pulse {
+
+        0%,
+        100% {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+
+        50% {
+            border-color: #20c997;
+            box-shadow: 0 0 0 0.3rem rgba(32, 201, 151, 0.35);
+        }
+    }
 </style>
 
 <div class="container-fluid theme-container theme-unified">
@@ -299,7 +382,7 @@
         </div>
     </div>
 
-    <!-- Quick Receive Purchase Order Section - COMPACT UI -->
+    <!-- Quick Off-load Purchase Order Section - COMPACT UI -->
     <div class="row mb-3">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
@@ -307,8 +390,8 @@
                     <div class="row align-items-center">
                         <div class="col">
                             <h6 class="mb-0 font-weight-bold">
-                                <i class="fas fa-shipping-fast mr-2"></i>
-                                Quick Receive Purchase Order
+                                <i class="fas fa-truck-loading mr-2"></i>
+                                Quick Off-load Purchase Order
                             </h6>
                         </div>
                         <div class="col-auto">
@@ -324,9 +407,11 @@
                             <!-- Main Input Section -->
                             <div class="input-group mb-2">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text bg-success text-white border-success">
-                                        <i class="fas fa-search"></i>
-                                    </span>
+                                    <button class="btn btn-outline-success border-success" type="button"
+                                        onclick="pastePONumber()" data-toggle="tooltip"
+                                        title="Paste PO Number from clipboard">
+                                        <i class="fas fa-paste"></i>
+                                    </button>
                                 </div>
                                 <input type="text" class="form-control border-success" id="poSearchInputMain"
                                     placeholder="Enter PO Number (e.g., PO-2024-005)" autocomplete="off">
@@ -346,40 +431,17 @@
                                 <button class="btn btn-outline-info btn-sm mr-1" onclick="showRecentPOs()">
                                     <i class="fas fa-history mr-1"></i>Recent
                                 </button>
-                                <button class="btn btn-outline-warning btn-sm" onclick="bulkReceive()">
+                                <button class="btn btn-outline-warning btn-sm" onclick="bulkOffload()">
                                     <i class="fas fa-list mr-1"></i>Bulk
                                 </button>
                             </div>
 
-                            <!-- Location Assignment Panel - Compact -->
-                            <div id="locationSelectionMain" class="border rounded p-2 bg-light mb-2"
-                                style="display: none;">
-                                <div class="row">
-                                    <div class="col-md-4 mb-2">
-                                        <label class="small text-muted mb-1">Dock Location</label>
-                                        <select class="form-control" id="dockSelectMain"
-                                            style="height: auto; min-height: 38px; line-height: 1.5;">
-                                            <option value="">Select Dock...</option>
-                                            <option value="17">🚛 Dock 1</option>
-                                            <option value="18">🚛 Dock 2</option>
-                                            <option value="19">🚛 Dock 3</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4 mb-2">
-                                        <label class="small text-muted mb-1">Receiving Area</label>
-                                        <select class="form-control" id="receivingAreaSelectMain"
-                                            style="height: auto; min-height: 38px; line-height: 1.5;">
-                                            <option value="">Select Area...</option>
-                                            <option value="20">📦 Area 1</option>
-                                            <option value="21">📦 Area 2</option>
-                                            <option value="22">📦 Area 3</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4 mb-2">
-                                        <label class="small text-muted mb-1">Notes</label>
-                                        <input type="text" class="form-control" id="notesInputMain"
-                                            placeholder="Optional notes" style="height: auto; min-height: 38px;">
-                                    </div>
+                            <!-- Quick Search Instructions -->
+                            <div class="alert alert-light border-primary mb-2 py-2">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-info-circle text-primary mr-2"></i>
+                                    <small class="text-muted mb-0">Search for a PO number to start the 2-step
+                                        off-loading process</small>
                                 </div>
                             </div>
 
@@ -395,13 +457,40 @@
                             </div>
                         </div>
 
-                        <!-- Right Side Compact Info -->
+                        <!-- Right Side - Ongoing Off-loading POs Table -->
                         <div class="col-lg-4">
-                            <div class="text-center bg-light rounded p-3 h-100">
-                                <i class="fas fa-truck-loading fa-2x text-success mb-2"></i>
-                                <h6 class="text-dark mb-1">Lightning Fast</h6>
-                                <p class="text-muted small mb-2">Receive POs in seconds</p>
-                                <div class="row text-center small">
+                            <div class="bg-light rounded p-3 h-100">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h6 class="text-dark mb-0">
+                                        <i class="fas fa-truck-loading text-success mr-2"></i>
+                                        Active Off-loading
+                                    </h6>
+                                    <span id="offloadingCount" class="badge badge-success">0</span>
+                                </div>
+
+                                <!-- Ongoing Off-loading Table -->
+                                <div id="ongoingOffloadingContainer" style="max-height: 200px; overflow-y: auto;">
+                                    <div id="noOffloadingMessage" class="text-center text-muted py-3">
+                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                        <div class="small">No active off-loading</div>
+                                    </div>
+                                    <div id="offloadingTable" class="d-none">
+                                        <table class="table table-sm table-borderless mb-0">
+                                            <thead>
+                                                <tr class="text-muted" style="font-size: 0.75rem;">
+                                                    <th class="border-0 pb-1">PO</th>
+                                                    <th class="border-0 pb-1 text-right">Duration</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="offloadingTableBody">
+                                                <!-- Dynamic rows will be added here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Stats row -->
+                                <div class="row text-center small mt-2 pt-2 border-top">
                                     <div class="col-6">
                                         <strong class="text-success">99%</strong>
                                         <br><small class="text-muted">Success</small>
@@ -426,35 +515,32 @@
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <h6 class="alert-heading mb-2">
-                            <i class="fas fa-info-circle mr-2"></i>Receiving Workflow Clarification
+                            <i class="fas fa-info-circle mr-2"></i>Off-loading Workflow: Arrived at Facility
                         </h6>
                         <p class="mb-2 small">
-                            <strong>Important:</strong> We have separate processes for dock operations and receiving
-                            area operations:
+                            <strong>This page:</strong> Use Quick Off-load to mark POs as "arrived at facility" when
+                            they reach your dock.
                         </p>
                         <div class="row small">
-                            <div class="col-md-6">
-                                <strong class="text-primary">Dock Operations:</strong>
+                            <div class="col-md-8">
+                                <strong class="text-primary">Quick Off-load Process:</strong>
                                 <ul class="list-unstyled mb-0 ml-3">
-                                    <li><i class="fas fa-truck text-warning"></i> PO arrives at dock</li>
-                                    <li><i class="fas fa-map-marker-alt text-info"></i> Dock assignment</li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <strong class="text-success">Receiving Area:</strong>
-                                <ul class="list-unstyled mb-0 ml-3">
-                                    <li><i class="fas fa-warehouse text-primary"></i> Products transferred to receiving
-                                    </li>
-                                    <li><i class="fas fa-check-circle text-success"></i> Individual product processing
-                                    </li>
+                                    <li><i class="fas fa-truck text-warning"></i> PO delivery arrives at facility</li>
+                                    <li><i class="fas fa-map-marker-alt text-info"></i> Assign to dock location</li>
+                                    <li><i class="fas fa-clipboard-check text-success"></i> Status: "arrived at
+                                        facility"</li>
                                 </ul>
                             </div>
                         </div>
+                        <p class="mt-2 small text-muted">
+                            <i class="fas fa-arrow-right mr-1"></i>Next step: Use the inventory receiving system to
+                            process individual products.
+                        </p>
                     </div>
                     <div class="col-md-4 text-center">
                         <div class="btn-group-vertical">
                             <a href="<?php echo URLROOT; ?>/inventory/receiving" class="btn btn-primary btn-sm">
-                                <i class="fas fa-warehouse mr-1"></i>Go to Receiving Area
+                                <i class="fas fa-warehouse mr-1"></i>Go to Inventory Receiving
                             </a>
                             <button class="btn btn-outline-secondary btn-sm mt-1" onclick="showWorkflowDetails()">
                                 <i class="fas fa-question-circle mr-1"></i>View Full Workflow
@@ -501,12 +587,24 @@
                                 <?php
                                 // Get purchase orders data (uses 'orders' for backward compatibility)
                                 $purchaseOrders = isset($data['orders']) && is_array($data['orders']) ? $data['orders'] : [];
+                                $hasValidOrders = false;
+
                                 if (!empty($purchaseOrders)):
-                                    ?>
-                                    <?php foreach (array_slice($purchaseOrders, 0, 10) as $purchaseOrder): ?>
-                                        <?php if (is_object($purchaseOrder)): ?>
+                                    foreach (array_slice($purchaseOrders, 0, 10) as $purchaseOrder):
+                                        if (is_object($purchaseOrder)):
+                                            $hasValidOrders = true;
+                                            ?>
                                             <tr>
-                                                <td><strong><?php echo htmlspecialchars($purchaseOrder->po_number ?? $purchaseOrder->purchase_id ?? 'N/A'); ?></strong>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <strong
+                                                            class="mr-2"><?php echo htmlspecialchars($purchaseOrder->po_number ?? $purchaseOrder->purchase_id ?? 'N/A'); ?></strong>
+                                                        <button class="btn btn-outline-secondary btn-xs copy-po-btn"
+                                                            onclick="copyPONumber('<?php echo htmlspecialchars($purchaseOrder->po_number ?? $purchaseOrder->purchase_id ?? 'N/A'); ?>')"
+                                                            data-toggle="tooltip" title="Copy PO Number">
+                                                            <i class="fas fa-copy"></i>
+                                                        </button>
+                                                    </div>
                                                 </td>
                                                 <td><?php echo htmlspecialchars($purchaseOrder->supplier_name ?? 'N/A'); ?></td>
                                                 <td><?php echo date('M j, Y', strtotime($purchaseOrder->purchase_date ?? 'now')); ?>
@@ -522,9 +620,9 @@
                                                             $statusClass = 'badge-warning';
                                                             $statusDisplay = 'Pending';
                                                             break;
-                                                        case 'sent':
+                                                        case 'email_received':
                                                             $statusClass = 'badge-info';
-                                                            $statusDisplay = 'Sent to Supplier';
+                                                            $statusDisplay = 'Email Received';
                                                             break;
                                                         case 'in_transit':
                                                             $statusClass = 'badge-primary';
@@ -533,6 +631,10 @@
                                                         case 'arrived_at_dock':
                                                             $statusClass = 'badge-warning';
                                                             $statusDisplay = 'Arrived at Dock';
+                                                            break;
+                                                        case 'off-loading':
+                                                            $statusClass = 'badge-offloading';
+                                                            $statusDisplay = 'Off-loading';
                                                             break;
                                                         case 'dock_assigned':
                                                             $statusClass = 'badge-info';
@@ -569,8 +671,8 @@
 
                                                     // Add workflow stage indicator
                                                     $workflowStage = '';
-                                                    if (in_array($status, ['arrived_at_dock', 'dock_assigned'])) {
-                                                        $workflowStage = '<br><small class="text-muted"><i class="fas fa-truck"></i> Dock Phase</small>';
+                                                    if (in_array($status, ['arrived_at_dock', 'off-loading', 'dock_assigned'])) {
+                                                        $workflowStage = '<br><small class="text-muted"><i class="fas fa-truck"></i> Off-loading Phase</small>';
                                                     } elseif (in_array($status, ['ready_to_receive', 'receiving_in_progress', 'partially_received'])) {
                                                         $workflowStage = '<br><small class="text-primary"><i class="fas fa-warehouse"></i> Receiving Phase</small>';
                                                     } elseif (in_array($status, ['received', 'completed'])) {
@@ -614,16 +716,13 @@
                                                     </div>
                                                 </td>
                                             </tr>
-                                        <?php endif; ?>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="8" class="text-center text-muted py-4">
-                                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
-                                            No purchase orders found
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
+                                            <?php
+                                        endif;
+                                    endforeach;
+                                endif;
+
+                                // Don't add empty state row - let DataTables handle it
+                                ?>
                             </tbody>
                         </table>
                     </div>
@@ -651,51 +750,110 @@
         console.log('Document ready - jQuery is working');
         console.log('jQuery version:', $.fn.jquery);
 
-        // Initialize DataTables
-        if ($('#activeOrdersTable').length > 0) {
-            $('#activeOrdersTable').DataTable({
-                "order": [[2, "desc"]], // Sort by Date column descending
-                "pageLength": 10,
-                "responsive": true,
-                "columnDefs": [
-                    { "orderable": false, "targets": [7] }, // Disable sorting on Actions column
-                ],
-                "language": {
-                    "search": "Search orders:",
-                    "lengthMenu": "Show _MENU_ orders per page",
-                    "info": "Showing _START_ to _END_ of _TOTAL_ orders"
-                }
-            });
+        // Function to safely initialize DataTable
+        function initializeDataTable() {
+            const $table = $('#activeOrdersTable');
+
+            // Destroy existing DataTable if it exists
+            if ($.fn.DataTable.isDataTable($table)) {
+                console.log('Destroying existing DataTable...');
+                $table.DataTable().destroy();
+            }
+
+            // Clear any DataTable classes that might interfere
+            $table.removeClass('dataTable');
+            $table.find('thead, tbody, tfoot').removeClass('dataTable');
+
+            return initializeDataTableCore();
         }
 
-        // Initialize tooltips
-        $('[data-toggle="tooltip"]').tooltip();
+        // Core DataTable initialization function
+        function initializeDataTableCore() {
+            const $table = $('#activeOrdersTable');
 
-        // Load dock and receiving area options
+            if ($table.length === 0) {
+                console.warn('Table #activeOrdersTable not found');
+                return false;
+            }
+
+            if (!$.fn.DataTable) {
+                console.warn('DataTable library not available');
+                return false;
+            }
+
+            try {
+                // Debug table structure
+                const headerCols = $table.find('thead tr th').length;
+                const allRows = $table.find('tbody tr');
+
+                console.log('Table structure debug:');
+                console.log('- Header columns:', headerCols);
+                console.log('- Total body rows:', allRows.length);
+
+                // Check each row for column count consistency
+                let inconsistentRows = 0;
+
+                allRows.each(function (index) {
+                    const cols = $(this).find('td').length;
+                    if (cols !== headerCols) {
+                        console.warn(`Row ${index} has ${cols} columns, expected ${headerCols}`);
+                        inconsistentRows++;
+                    }
+                });
+
+                if (inconsistentRows > 0) {
+                    console.error(`Found ${inconsistentRows} rows with incorrect column count`);
+                    return false; // Don't initialize DataTable
+                }
+
+                // Verify we have the expected 8 columns
+                if (headerCols !== 8) {
+                    console.error('Column count mismatch: Expected 8 columns, found', headerCols);
+                    console.log('Header columns:', $table.find('thead tr th').map(function () { return $(this).text().trim(); }).get());
+                    return false;
+                }
+
+                const dataTableConfig = {
+                    "order": [[2, "desc"]], // Sort by Date column descending
+                    "pageLength": 10,
+                    "responsive": true,
+                    "columnDefs": [
+                        { "orderable": false, "targets": [7] }, // Disable sorting on Actions column (8th column, index 7)
+                    ],
+                    "language": {
+                        "search": "Search orders:",
+                        "lengthMenu": "Show _MENU_ orders per page",
+                        "info": "Showing _START_ to _END_ of _TOTAL_ orders",
+                        "emptyTable": '<div class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x mb-2"></i><br>No purchase orders found</div>',
+                        "zeroRecords": '<div class="text-center text-muted py-4"><i class="fas fa-search fa-2x mb-2"></i><br>No matching purchase orders found</div>'
+                    }
+                };
+
+                $table.DataTable(dataTableConfig);
+                console.log('DataTable initialized successfully with', headerCols, 'columns');
+                return true;
+
+            } catch (e) {
+                console.error('Failed to initialize DataTable:', e);
+                console.log('Error details:', e.message);
+                return false;
+            }
+        }
+
+        // Wait a moment for any dynamic content to load, then initialize
+        setTimeout(function () {
+            if (!initializeDataTable()) {
+                console.log('DataTable initialization failed, falling back to basic table functionality');
+            }
+
+            // Initialize tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+        }, 150); // Increased delay to ensure DOM is fully ready
+
+        // Load dock location options
         console.log('About to call loadLocationOptions');
         loadLocationOptions();
-        // Keep duplicate selects in sync if both are present
-        $(document).on('change', '#dockSelectMain', function () {
-            if ($('#dockSelectInCard').length) {
-                $('#dockSelectInCard').val($(this).val());
-            }
-        });
-        $(document).on('change', '#dockSelectInCard', function () {
-            if ($('#dockSelectMain').length) {
-                $('#dockSelectMain').val($(this).val());
-            }
-        });
-        $(document).on('change', '#receivingAreaSelectMain', function () {
-            if ($('#receivingAreaSelectInCard').length) {
-                $('#receivingAreaSelectInCard').val($(this).val());
-            }
-        });
-        $(document).on('change', '#receivingAreaSelectInCard', function () {
-            if ($('#receivingAreaSelectMain').length) {
-                $('#receivingAreaSelectMain').val($(this).val());
-            }
-        });
-    });    // Load dock and receiving area options
+    });    // Load dock location options
     function loadLocationOptions() {
         console.log('Starting to load location options...');
         $.ajax({
@@ -706,38 +864,23 @@
                 console.log('API Response:', response);
                 if (response.success) {
                     const docks = response.data.docks;
-                    const receivingAreas = response.data.receiving_areas;
 
                     console.log('Docks:', docks);
-                    console.log('Receiving Areas:', receivingAreas);
 
-                    // Check if dropdowns exist
-                    console.log('Dock dropdown exists:', $('#dockSelectMain').length);
-                    console.log('Receiving area dropdown exists:', $('#receivingAreaSelectMain').length);
+                    // Check if dock dropdown exists
+                    console.log('In-card dock dropdown exists:', $('#dockSelectInCard').length);
 
                     // Populate dock dropdown
                     let dockOptions = '<option value="">Select Dock...</option>';
                     docks.forEach(dock => {
                         dockOptions += `<option value="${dock.location_id}">${dock.location_name}</option>`;
                     });
-                    $('#dockSelectMain').html(dockOptions);
-                    // Also populate in-card dock select if present
+
+                    // Populate in-card dock select
                     if ($('#dockSelectInCard').length) {
                         $('#dockSelectInCard').html(dockOptions);
                     }
                     console.log('Dock options set:', dockOptions);
-
-                    // Populate receiving area dropdown
-                    let areaOptions = '<option value="">Select Receiving Area...</option>';
-                    receivingAreas.forEach(area => {
-                        areaOptions += `<option value="${area.location_id}">${area.location_name}</option>`;
-                    });
-                    $('#receivingAreaSelectMain').html(areaOptions);
-                    // Also populate in-card receiving area select if present
-                    if ($('#receivingAreaSelectInCard').length) {
-                        $('#receivingAreaSelectInCard').html(areaOptions);
-                    }
-                    console.log('Area options set:', areaOptions);
                 } else {
                     console.error('API returned success: false');
                 }
@@ -746,6 +889,39 @@
                 console.error('Error loading location options:', error);
                 console.error('XHR status:', status);
                 console.error('Response text:', xhr.responseText);
+            }
+        });
+    }
+
+    // Direct function to populate dock dropdown
+    function populateDockDropdown() {
+        console.log('populateDockDropdown called');
+        $.ajax({
+            url: '<?php echo URLROOT; ?>/api/getDockLocations.php',
+            method: 'GET',
+            dataType: 'json',
+            success: function (response) {
+                console.log('Dock API Response:', response);
+                if (response.success && response.data && response.data.docks) {
+                    const docks = response.data.docks;
+                    let dockOptions = '<option value="">Select Dock...</option>';
+                    docks.forEach(dock => {
+                        dockOptions += `<option value="${dock.location_id}">${dock.location_name}</option>`;
+                    });
+
+                    // Find and populate any dock dropdowns
+                    $('select[id^="dockSelectInCard"], select[id*="dockSelect"]').each(function () {
+                        console.log('Populating dropdown:', this.id);
+                        $(this).html(dockOptions);
+                    });
+
+                    console.log('Dock dropdowns populated with options:', dockOptions);
+                } else {
+                    console.error('No dock data received');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error loading dock options:', error);
             }
         });
     }
@@ -764,7 +940,7 @@
         }
     });
 
-    // Main Quick Receive functionality (on the page) - Enhanced Version
+    // Main Quick Off-load functionality (on the page) - Enhanced Version
     function searchPOMain() {
         const searchTerm = $('#poSearchInputMain').val().trim();
         if (!searchTerm) {
@@ -798,89 +974,169 @@
                     const data = response.data;
                     updateStepProgress(3);
 
-                    $('#searchResultsMain').html(`
-                        <div class="card border-success">
-                            <div class="card-header bg-success text-white">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-check-circle mr-2 success-checkmark"></i>
-                                    Purchase Order Found
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <h5 class="text-success mb-3">${data.po_number}</h5>
-                                        <p class="mb-2">
-                                            <strong><i class="fas fa-building text-primary mr-1"></i>Supplier:</strong><br>
-                                            <span class="text-muted">${data.supplier_name}</span>
-                                        </p>
-                                        <p class="mb-2">
-                                            <strong><i class="fas fa-rupee-sign text-success mr-1"></i>Total Amount:</strong><br>
-                                            <span class="text-muted h5">₹${parseFloat(data.total_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                                        </p>
-                                        <p class="mb-2">
-                                            <strong><i class="fas fa-user mr-1"></i>Receiver:</strong><br>
-                                            <span class="text-muted"><?php echo htmlspecialchars($_SESSION['user_full_name'] ?? ''); ?></span>
-                                        </p>
+                    // Check if this PO is stuck in off-loading
+                    if (data.is_offloading && data.stuck_info && data.stuck_info.is_stuck) {
+                        // Show stuck off-loading UI
+                        $('#searchResultsMain').html(`
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        Off-loading In Progress (Stuck): ${data.po_number}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-warning">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-clock fa-2x mr-3"></i>
+                                            <div>
+                                                <h6 class="mb-1">Off-loading has been running for ${data.stuck_info.elapsed_minutes} minutes</h6>
+                                                <p class="mb-0">This may be due to a browser session ending or network interruption.</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="col-md-4 text-center">
-                                        <div class="bg-light rounded p-3">
-                                            <i class="fas fa-clipboard-check fa-3x text-success mb-2"></i>
-                                            <p class="text-muted mb-0">Steps: Select Dock → Start Unloading → Confirm Received</p>
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <h5 class="text-warning mb-3">${data.po_number}</h5>
+                                            <p class="mb-2">
+                                                <strong><i class="fas fa-building text-primary mr-1"></i>Supplier:</strong><br>
+                                                <span class="text-muted">${data.supplier_name}</span>
+                                            </p>
+                                            <p class="mb-2">
+                                                <strong><i class="fas fa-rupee-sign text-success mr-1"></i>Total Amount:</strong><br>
+                                                <span class="text-muted h5">₹${parseFloat(data.total_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                            </p>
+                                            <p class="mb-3">
+                                                <strong><i class="fas fa-clock text-warning mr-1"></i>Off-loading Started:</strong><br>
+                                                <span class="text-muted">${data.dock_arrival_time}</span>
+                                            </p>
+                                            <p class="mb-3">
+                                                <strong><i class="fas fa-stopwatch text-warning mr-1"></i>Elapsed Time:</strong><br>
+                                                <span class="text-muted h5">${data.stuck_info.elapsed_formatted}</span>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-4 text-center">
+                                            <div class="bg-light rounded p-3">
+                                                <i class="fas fa-truck-loading fa-3x text-warning mb-2"></i>
+                                                <p class="text-muted mb-0">Resume the off-loading process or complete it manually</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <div class="alert alert-warning mb-2 py-2">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div>
+                                                        <i class="fas fa-play mr-2"></i>Off-loading resumed...
+                                                        <strong id="timer_${data.po_number}">${data.stuck_info.elapsed_formatted}</strong>
+                                                    </div>
+                                                    <small class="text-muted">Status: Resuming Off-loading</small>
+                                                </div>
+                                            </div>
+                                            <button class="btn btn-success btn-lg" onclick="completeOffloadStep2('${data.po_number}')">
+                                                <i class="fas fa-check mr-2"></i>Complete Off-loading (Resume)
+                                            </button>
+                                            <small class="text-muted ml-3">This will mark the PO as ready for receiving.</small>
                                         </div>
                                     </div>
                                 </div>
-                                <hr>
-                                <div class="row">
-                                    <div class="col-md-4 mb-2">
-                                        <label class="small text-muted mb-1">Dock Location</label>
-                                        <select class="form-control" id="dockSelectInCard" style="height: auto; min-height: 38px; line-height: 1.5;">
-                                            <option value="">Select Dock...</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4 mb-2">
-                                        <label class="small text-muted mb-1">Receiving Area</label>
-                                        <select class="form-control" id="receivingAreaSelectInCard" style="height: auto; min-height: 38px; line-height: 1.5;">
-                                            <option value="">Select Area...</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4 mb-2">
-                                        <label class="small text-muted mb-1">Notes</label>
-                                        <input type="text" class="form-control" id="notesInputInCard" placeholder="Optional notes" style="height: auto; min-height: 38px;">
-                                    </div>
+                            </div>
+                        `);
+
+                        // Start timer from the correct elapsed time
+                        resumeStuckOffloading(data.po_number, data.dock_arrival_time);
+
+                    } else {
+                        // Normal case - show regular off-loading UI
+                        $('#searchResultsMain').html(`
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-check-circle mr-2 success-checkmark"></i>
+                                        Purchase Order Found: Ready to Off-load
+                                    </h6>
                                 </div>
-                                <div class="row mt-3">
-                                    <div class="col-12">
-                                        <button class="btn btn-outline-success btn-lg mr-2" id="startUnloadingBtn" onclick="startUnloading('${searchTerm}')">
-                                            <i class="fas fa-box-open mr-2"></i>Start Unloading
-                                        </button>
-                                        <span id="unloadingTimer" class="ml-3 text-muted" style="font-weight:bold;"></span>
-                                        <button class="btn btn-success btn-lg ml-2" id="confirmReceivedBtn" disabled onclick="confirmReceived('${searchTerm}')">
-                                            <i class="fas fa-check mr-2"></i>Confirm Received & Stage
-                                        </button>
-                                        <!-- Print handled from the receipt view; avoid duplicate print buttons -->
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <h5 class="text-success mb-3">${data.po_number}</h5>
+                                            <p class="mb-2">
+                                                <strong><i class="fas fa-building text-primary mr-1"></i>Supplier:</strong><br>
+                                                <span class="text-muted">${data.supplier_name}</span>
+                                            </p>
+                                            <p class="mb-2">
+                                                <strong><i class="fas fa-rupee-sign text-success mr-1"></i>Total Amount:</strong><br>
+                                                <span class="text-muted h5">₹${parseFloat(data.total_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                            </p>
+                                            <p class="mb-3">
+                                                <strong><i class="fas fa-user mr-1"></i>Ready to Off-load by:</strong><br>
+                                                <span class="text-muted"><?php echo htmlspecialchars($_SESSION['user_full_name'] ?? ''); ?></span>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-4 text-center">
+                                            <div class="bg-light rounded p-3">
+                                                <i class="fas fa-truck-loading fa-3x text-success mb-2"></i>
+                                                <p class="text-muted mb-0">Select dock location and off-load to mark as "Off-loading"</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <label class="small text-muted mb-1">Dock Location</label>
+                                            <select class="form-control" id="dockSelectInCard" style="height: auto; min-height: 38px; line-height: 1.5;">
+                                                <option value="">Select Dock...</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label class="small text-muted mb-1">Notes</label>
+                                            <input type="text" class="form-control" id="notesInputInCard" placeholder="Optional off-loading notes" style="height: auto; min-height: 38px;">
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <div id="offloadStep1_${data.po_number}" style="display: block;">
+                                                <button class="btn btn-primary btn-lg" onclick="startOffloadStep1('${data.po_number}')">
+                                                    <i class="fas fa-truck-loading mr-2"></i>Assign Dock & Start Off-loading
+                                                </button>
+                                            </div>
+                                            <div id="offloadStep2_${data.po_number}" style="display: none;">
+                                                <div class="alert alert-info mb-2 py-2">
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <div>
+                                                            <i class="fas fa-clock mr-2"></i>Off-loading in progress...
+                                                            <strong id="timer_${data.po_number}">00:00</strong>
+                                                        </div>
+                                                        <small class="text-muted">Status: Off-loading</small>
+                                                    </div>
+                                                </div>
+                                                <button class="btn btn-success btn-lg" onclick="completeOffloadStep2('${data.po_number}')">
+                                                    <i class="fas fa-check mr-2"></i>Confirm Off-loading Complete
+                                                </button>
+                                            </div>
+                                            <small class="text-muted ml-3">This will mark the PO as "Off-loading" and ready for inventory receiving.</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    `);
-                    // Hide the top location selector and prefer the in-card controls
-                    $('#locationSelectionMain').hide();
-                    $('#dockSelectMain').prop('disabled', true);
-                    $('#receivingAreaSelectMain').prop('disabled', true);
-                    // If in-card selects are present but empty, copy options from the main selects
+                        `);
+                    }
+
+                    // Show the location selector for dock assignment (no longer hide it)
+                    $('#locationSelectionMain').show();
+                    // Ensure dock select is populated and enabled
                     if ($('#dockSelectInCard').length) {
+                        // Reload dock options if empty
                         if ($('#dockSelectInCard').children().length <= 1) {
-                            $('#dockSelectInCard').html($('#dockSelectMain').html());
+                            loadLocationOptions();
                         }
                         $('#dockSelectInCard').prop('disabled', false);
                     }
-                    if ($('#receivingAreaSelectInCard').length) {
-                        if ($('#receivingAreaSelectInCard').children().length <= 1) {
-                            $('#receivingAreaSelectInCard').html($('#receivingAreaSelectMain').html());
-                        }
-                        $('#receivingAreaSelectInCard').prop('disabled', false);
-                    }
+                    // Also ensure dock dropdown is populated immediately after creating the HTML
+                    setTimeout(function () {
+                        populateDockDropdown();
+                    }, 100);
                 } else {
                     resetStepProgress();
                     $('#searchResultsMain').html(`
@@ -926,7 +1182,7 @@
         });
     }
 
-    const originalMarkAsReceived = function (poNumber, dockLocationId = null, receivingAreaId = null, notes = '') {
+    const originalMarkAsOffloaded = function (poNumber, dockLocationId = null, notes = '') {
         $('#searchResultsMain').html('<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Processing ' + poNumber + '...</div>');
 
         // Prepare data for the API call
@@ -938,15 +1194,11 @@
             requestData.dock_location_id = dockLocationId;
         }
 
-        if (receivingAreaId) {
-            requestData.receiving_area_id = receivingAreaId;
-        }
-
         if (notes) {
             requestData.notes = notes;
         }
 
-        // Make AJAX call to mark purchase order as received
+        // Make AJAX call to mark purchase order as off-loaded at dock
         // Mark initiation flags before starting
         quickReceiveAjaxInitiated = true;
         quickReceiveAjaxActive = true;
@@ -962,9 +1214,6 @@
                     let locationInfo = '';
                     if (data.dock_location) {
                         locationInfo += `<br><strong>Dock:</strong> ${data.dock_location}`;
-                    }
-                    if (data.receiving_area) {
-                        locationInfo += `<br><strong>Receiving Area:</strong> ${data.receiving_area}`;
                     }
                     if (data.notes) {
                         locationInfo += `<br><strong>Notes:</strong> ${data.notes}`;
@@ -1030,20 +1279,15 @@
                     // Do NOT force a location.reload() here because that interrupts opening/printing the receipt.
                     try {
                         if ($.fn.dataTable && $.fn.dataTable.isDataTable('#activeOrdersTable')) {
-                            // If the table was initialized with an AJAX source, reload it
-                            try {
-                                $('#activeOrdersTable').DataTable().ajax.reload(null, false);
-                                console.log('Active orders DataTable reloaded via AJAX');
-                            } catch (e) {
-                                console.warn('DataTable reload failed, falling back to manual refresh button', e);
-                                $('#searchResultsMain .alert-success .mt-2').append(`
-                                    <button class="btn btn-outline-secondary btn-sm ml-2" onclick="location.reload()">
-                                        <i class="fas fa-sync mr-1"></i> Refresh Page
-                                    </button>
-                                `);
-                            }
+                            // Since this table doesn't use AJAX, we'll add a refresh button instead
+                            console.log('DataTable detected - adding refresh option');
+                            $('#searchResultsMain .alert-success .mt-2').append(`
+                                <button class="btn btn-outline-secondary btn-sm ml-2" onclick="location.reload()">
+                                    <i class="fas fa-sync mr-1"></i> Refresh to see updated orders
+                                </button>
+                            `);
                         } else {
-                            // No DataTable ajax source available; show a manual refresh control so users can refresh when ready
+                            // No DataTable; show a manual refresh control so users can refresh when ready
                             $('#searchResultsMain .alert-success .mt-2').append(`
                                 <button class="btn btn-outline-secondary btn-sm ml-2" onclick="location.reload()">
                                     <i class="fas fa-sync mr-1"></i> Refresh Page
@@ -1074,10 +1318,10 @@
         $('#searchResultsMain').html(`
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i> 
-                Please select dock and receiving area assignments for PO: <strong>${poNumber}</strong>
+                Please select dock location for PO: <strong>${poNumber}</strong>
                 <div class="mt-3">
                     <button class="btn btn-success btn-sm" onclick="processWithLocation('${poNumber}')">
-                        <i class="fas fa-check"></i> Receive & Assign
+                        <i class="fas fa-truck-loading"></i> Off-load to Facility
                     </button>
                     <button class="btn btn-outline-secondary btn-sm ml-2" onclick="resetMainSearch()">
                         <i class="fas fa-times"></i> Cancel
@@ -1089,46 +1333,210 @@
 
     function processWithLocation(poNumber) {
         const dockLocationId = $('#dockSelectMain').val();
-        const receivingAreaId = $('#receivingAreaSelectMain').val();
         const notes = $('#notesInputMain').val().trim();
 
-        // Validate at least one location is selected
-        if (!dockLocationId && !receivingAreaId) {
-            alert('Please select at least a dock location or receiving area.');
+        // Validate dock location is selected
+        if (!dockLocationId) {
+            alert('Please select a dock location for off-loading.');
             return;
         }
 
-        markAsReceivedMain(poNumber, dockLocationId, receivingAreaId, notes);
+        markAsOffloadedMain(poNumber, dockLocationId, notes);
+    }
+
+    // Timer tracking for off-loading process
+    let offloadTimers = {};
+
+    function startOffloadStep1(poNumber) {
+        const dockLocationId = $('#dockSelectInCard').val();
+        const notes = $('#notesInputInCard').val().trim();
+
+        console.log('startOffloadStep1 called with:', {
+            poNumber: poNumber,
+            dockLocationId: dockLocationId,
+            notes: notes
+        });
+
+        // Validate dock location is selected
+        if (!dockLocationId) {
+            alert('Please select a dock location for off-loading.');
+            return;
+        }
+
+        // Start the off-loading process
+        $.ajax({
+            url: '<?php echo URLROOT; ?>/api/quickReceivePurchaseOrder.php',
+            method: 'POST',
+            data: {
+                po_number: poNumber,
+                dock_location_id: dockLocationId,
+                notes: notes || '',
+                status: 'off-loading'
+            },
+            dataType: 'json',
+            beforeSend: function () {
+                console.log('Sending AJAX request to API...');
+            },
+            success: function (response) {
+                console.log('API Response:', response);
+                if (response.status === 'success') {
+                    // Hide step 1, show step 2
+                    $(`#offloadStep1_${poNumber}`).hide();
+                    $(`#offloadStep2_${poNumber}`).show();
+
+                    // Start timer
+                    startOffloadTimer(poNumber);
+
+                    // Add to ongoing off-loading table
+                    addToOffloadingTable(poNumber, new Date().toISOString());
+
+                    // Disable dock dropdown
+                    $('#dockSelectIn Card').prop('disabled', true);
+
+                    alert('Off-loading started! Status updated to: Arrived at Facility');
+                } else {
+                    console.error('API Error:', response);
+                    alert('Error starting off-loading: ' + (response.message || 'Unknown error'));
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AJAX Error:', { xhr: xhr, status: status, error: error });
+                console.error('Response Text:', xhr.responseText);
+                alert('Network error starting off-loading. Please try again.');
+            }
+        });
+    }
+
+    function completeOffloadStep2(poNumber) {
+        // Stop timer
+        stopOffloadTimer(poNumber);
+
+        // Remove from ongoing off-loading table
+        removeFromOffloadingTable(poNumber);
+
+        // Complete the off-loading process
+        $.ajax({
+            url: '<?php echo URLROOT; ?>/api/quickReceivePurchaseOrder.php',
+            method: 'POST',
+            data: {
+                po_number: poNumber,
+                status: 'ready_to_receive'
+            },
+            dataType: 'json',
+            success: function (response) {
+                if (response.status === 'success') {
+                    const finalTime = $(`#timer_${poNumber}`).text();
+                    alert(`Off-loading completed in ${finalTime}! Status updated to: Ready to Receive Products`);
+
+                    // Reset the search form
+                    resetMainSearch();
+                } else {
+                    alert('Error completing off-loading: ' + (response.message || 'Unknown error'));
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AJAX Error:', error);
+                alert('Network error completing off-loading. Please try again.');
+            }
+        });
+    }
+
+    function startOffloadTimer(poNumber) {
+        offloadTimers[poNumber] = {
+            startTime: Date.now(),
+            interval: setInterval(() => {
+                const elapsed = Date.now() - offloadTimers[poNumber].startTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                $(`#timer_${poNumber}`).text(timeString);
+            }, 1000)
+        };
+    }
+
+    function stopOffloadTimer(poNumber) {
+        if (offloadTimers[poNumber]) {
+            clearInterval(offloadTimers[poNumber].interval);
+            delete offloadTimers[poNumber];
+        }
+    }
+
+    // Function to detect and handle stuck off-loading POs
+    function checkForStuckOffloading(poNumber, status, dockArrivalTime) {
+        // Support both old 'pending_arrival' and new 'off-loading' status during transition
+        if ((status === 'off-loading' || status === 'pending_arrival') && dockArrivalTime) {
+            const startTime = new Date(dockArrivalTime).getTime();
+            const now = Date.now();
+            const elapsed = now - startTime;
+            const minutes = Math.floor(elapsed / 60000);
+
+            // If off-loading has been running for more than 10 minutes, consider it stuck
+            if (minutes > 10) {
+                return {
+                    isStuck: true,
+                    elapsedMinutes: minutes,
+                    elapsedFormatted: formatElapsedTime(elapsed)
+                };
+            }
+        }
+        return { isStuck: false };
+    }
+
+    function formatElapsedTime(elapsed) {
+        const hours = Math.floor(elapsed / 3600000);
+        const minutes = Math.floor((elapsed % 3600000) / 60000);
+        const seconds = Math.floor((elapsed % 60000) / 1000);
+
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
+
+    // Function to resume stuck off-loading with correct elapsed time
+    function resumeStuckOffloading(poNumber, startTime) {
+        // Show step 2 UI
+        $(`#offloadStep1_${poNumber}`).hide();
+        $(`#offloadStep2_${poNumber}`).show();
+
+        // Update the display text
+        $(`#offloadStep2_${poNumber} .alert`).removeClass('alert-info').addClass('alert-warning');
+        $(`#offloadStep2_${poNumber} .alert small`).text('Status: Resuming Off-loading (was stuck)');
+
+        // Add to ongoing off-loading table with original start time
+        addToOffloadingTable(poNumber, startTime);
+
+        // Start timer from the correct elapsed time
+        offloadTimers[poNumber] = {
+            startTime: new Date(startTime).getTime(),
+            interval: setInterval(() => {
+                const elapsed = Date.now() - offloadTimers[poNumber].startTime;
+                const timeString = formatElapsedTime(elapsed);
+                $(`#timer_${poNumber}`).text(timeString);
+            }, 1000)
+        };
+
+        // Change button text to indicate resume
+        $(`#offloadStep2_${poNumber} button`).html('<i class="fas fa-play mr-2"></i>Resume & Complete Off-loading');
+    }
+
+    function processWithLocationFromCard(poNumber) {
+        // Legacy function - replaced by 2-step workflow
+        // Keeping for backward compatibility
+        startOffloadStep1(poNumber);
     }
 
     function resetMainSearch() {
         $('#poSearchInputMain').val('');
-        $('#locationSelectionMain').show();
-        $('#dockSelectMain').val('');
-        $('#receivingAreaSelectMain').val('');
-        $('#dockSelectMain').prop('disabled', false);
-        $('#receivingAreaSelectMain').prop('disabled', false);
-        $('#notesInputMain').val('');
         $('#searchResultsMain').html('<div class="alert alert-info"><i class="fas fa-info-circle"></i> Enter a PO number above to search for available purchase orders</div>');
         resetStepProgress();
-    }
 
-    // Enhanced UI helper functions
-    function processWithLocation(poNumber) {
-        const dockLocation = $('#dockSelectMain').val();
-        const receivingArea = $('#receivingAreaSelectMain').val();
-        const notes = $('#notesInputMain').val();
-
-        if (!dockLocation || !receivingArea) {
-            $('#searchResultsMain').append(`
-                <div class="alert alert-warning mt-3">
-                    <i class="fas fa-exclamation-triangle"></i> Please select both dock location and receiving area before proceeding.
-                </div>
-            `);
-            return;
+        // Clear any running timers and ongoing table
+        for (const poNumber in offloadTimers) {
+            stopOffloadTimer(poNumber);
+            removeFromOffloadingTable(poNumber);
         }
-
-        markAsReceivedMain(poNumber, dockLocation, receivingArea, notes);
     }
 
     // Step progression functions
@@ -1165,7 +1573,17 @@
 
     function showRecentPOs() {
         const recentPOs = ['PO-2024-005', 'PO-2024-004', 'PO-2024-003'];
-        const poList = recentPOs.map(po => `<li><a href="#" onclick="fillPO('${po}')">${po}</a></li>`).join('');
+        const poList = recentPOs.map(po => `
+            <li class="d-flex justify-content-between align-items-center py-1">
+                <a href="#" onclick="fillPO('${po}')">${po}</a>
+                <button class="btn btn-outline-secondary btn-xs ml-2" 
+                        onclick="copyPONumber('${po}')"
+                        data-toggle="tooltip" 
+                        title="Copy PO Number">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </li>
+        `).join('');
 
         $('#searchResultsMain').html(`
             <div class="card border-info">
@@ -1186,61 +1604,241 @@
         searchPOMain();
     }
 
-    function bulkReceive() {
-        alert('Bulk receive feature allows you to process multiple POs at once. This feature is coming soon!');
+    function copyPONumber(poNumber) {
+        // Create a temporary textarea element to copy the text
+        const tempElement = document.createElement('textarea');
+        tempElement.value = poNumber;
+        document.body.appendChild(tempElement);
+        tempElement.select();
+        tempElement.setSelectionRange(0, 99999); // For mobile devices
+
+        try {
+            // Copy the text
+            document.execCommand('copy');
+
+            // Show success notification
+            showCopyNotification(`PO Number "${poNumber}" copied!`);
+        } catch (err) {
+            console.error('Failed to copy PO number:', err);
+            showCopyNotification('Failed to copy PO number', 'error');
+        }
+
+        // Remove the temporary element
+        document.body.removeChild(tempElement);
     }
 
-    // Unloading timer and controls
-    let unloadingTimerInterval = null;
-    let unloadingStartTime = null;
+    function showCopyNotification(message, type = 'success') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `copy-notification copy-notification-${type}`;
 
-    function startUnloading(poNumber) {
-        const dock = $('#dockSelectInCard').val();
-        if (!dock) {
-            alert('Please select a dock before starting unloading.');
+        let icon = 'fa-check-circle';
+        if (type === 'error') icon = 'fa-exclamation-triangle';
+        else if (type === 'info') icon = 'fa-info-circle';
+
+        notification.innerHTML = `
+            <i class="fas ${icon}"></i>
+            <span>${message}</span>
+        `;
+
+        // Add to page
+        document.body.appendChild(notification);
+
+        // Trigger animation
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+
+        // Remove after 3 seconds (longer for info messages)
+        const duration = type === 'info' ? 4000 : 3000;
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    document.body.removeChild(notification);
+                }
+            }, 300);
+        }, duration);
+    }
+
+    // Ongoing Off-loading Table Management Functions
+    let ongoingOffloadingPOs = {};
+
+    function addToOffloadingTable(poNumber, startTime) {
+        ongoingOffloadingPOs[poNumber] = {
+            startTime: new Date(startTime).getTime(),
+            poNumber: poNumber
+        };
+        updateOffloadingTable();
+    }
+
+    function removeFromOffloadingTable(poNumber) {
+        delete ongoingOffloadingPOs[poNumber];
+        updateOffloadingTable();
+    }
+
+    function updateOffloadingTable() {
+        const tableBody = $('#offloadingTableBody');
+        const table = $('#offloadingTable');
+        const noMessage = $('#noOffloadingMessage');
+        const countBadge = $('#offloadingCount');
+
+        const activeCount = Object.keys(ongoingOffloadingPOs).length;
+        countBadge.text(activeCount);
+
+        if (activeCount === 0) {
+            table.addClass('d-none');
+            noMessage.removeClass('d-none');
             return;
         }
 
-        $('#startUnloadingBtn').prop('disabled', true).text('Unloading...');
-        $('#confirmReceivedBtn').prop('disabled', false);
+        table.removeClass('d-none');
+        noMessage.addClass('d-none');
 
-        unloadingStartTime = Date.now();
-        $('#unloadingTimer').text('Elapsed: 00:00');
+        // Clear existing rows
+        tableBody.empty();
 
-        unloadingTimerInterval = setInterval(function () {
-            const diff = Date.now() - unloadingStartTime;
-            const mins = Math.floor(diff / 60000).toString().padStart(2, '0');
-            const secs = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-            $('#unloadingTimer').text('Elapsed: ' + mins + ':' + secs);
-        }, 1000);
+        // Add rows for each ongoing off-loading PO
+        Object.values(ongoingOffloadingPOs).forEach(po => {
+            const elapsed = Date.now() - po.startTime;
+            const timeString = formatElapsedTime(elapsed);
+            const isStuck = elapsed > 600000; // 10 minutes
+
+            const row = $(`
+                <tr id="offloadingRow_${po.poNumber}" class="${isStuck ? 'text-warning' : ''}">
+                    <td class="py-1">
+                        <a href="#" onclick="scrollToPO('${po.poNumber}')" class="text-decoration-none">
+                            ${po.poNumber}
+                        </a>
+                        ${isStuck ? '<i class="fas fa-exclamation-triangle text-warning ml-1" title="Stuck - may need attention"></i>' : ''}
+                    </td>
+                    <td class="text-right py-1">
+                        <span id="offloadingDuration_${po.poNumber}">${timeString}</span>
+                    </td>
+                </tr>
+            `);
+            tableBody.append(row);
+        });
     }
 
-    function confirmReceived(poNumber) {
-        // stop timer
-        if (unloadingTimerInterval) {
-            clearInterval(unloadingTimerInterval);
-            unloadingTimerInterval = null;
+    function scrollToPO(poNumber) {
+        // Scroll to the PO in the search results if it exists
+        const poElement = $(`#offloadStep1_${poNumber}, #offloadStep2_${poNumber}`).first();
+        if (poElement.length > 0) {
+            $('html, body').animate({
+                scrollTop: poElement.offset().top - 100
+            }, 500);
+
+            // Highlight the PO briefly
+            poElement.addClass('border-primary').removeClass('border-primary').addClass('border-primary');
+            setTimeout(() => {
+                poElement.removeClass('border-primary');
+            }, 2000);
+        }
+    }
+
+    // Update durations every second
+    function updateOffloadingDurations() {
+        Object.values(ongoingOffloadingPOs).forEach(po => {
+            const elapsed = Date.now() - po.startTime;
+            const timeString = formatElapsedTime(elapsed);
+            $(`#offloadingDuration_${po.poNumber}`).text(timeString);
+
+            // Update row styling if it becomes stuck
+            const row = $(`#offloadingRow_${po.poNumber}`);
+            if (elapsed > 600000) { // 10 minutes
+                row.addClass('text-warning');
+                if (!row.find('.fa-exclamation-triangle').length) {
+                    row.find('td:first a').after('<i class="fas fa-exclamation-triangle text-warning ml-1" title="Stuck - may need attention"></i>');
+                }
+            }
+        });
+    }
+
+    // Start the duration update interval
+    setInterval(updateOffloadingDurations, 1000);
+
+    async function pastePONumber() {
+        try {
+            // First, focus the input field
+            $('#poSearchInputMain').focus();
+
+            // Check if the Clipboard API is available and we have permissions
+            if (navigator.clipboard && navigator.clipboard.readText) {
+                try {
+                    const clipboardText = await navigator.clipboard.readText();
+                    if (clipboardText.trim()) {
+                        $('#poSearchInputMain').val(clipboardText.trim());
+                        showCopyNotification(`PO Number "${clipboardText.trim()}" pasted!`);
+                        return;
+                    } else {
+                        // Clipboard is empty, try alternative method
+                        tryAlternativePaste();
+                    }
+                } catch (clipboardError) {
+                    console.log('Clipboard API failed, trying alternative:', clipboardError);
+                    tryAlternativePaste();
+                }
+            } else {
+                // Clipboard API not available, try alternative
+                tryAlternativePaste();
+            }
+        } catch (err) {
+            console.error('Failed to paste:', err);
+            tryAlternativePaste();
+        }
+    }
+
+    function tryAlternativePaste() {
+        // Create a temporary input that we can paste into
+        const tempInput = document.createElement('input');
+        tempInput.style.position = 'absolute';
+        tempInput.style.left = '-9999px';
+        tempInput.style.opacity = '0';
+        document.body.appendChild(tempInput);
+
+        // Focus the temp input and try to paste
+        tempInput.focus();
+        tempInput.select();
+
+        // Try to execute paste command
+        try {
+            const success = document.execCommand('paste');
+            if (success && tempInput.value.trim()) {
+                $('#poSearchInputMain').val(tempInput.value.trim());
+                $('#poSearchInputMain').focus();
+                showCopyNotification(`PO Number "${tempInput.value.trim()}" pasted!`);
+                document.body.removeChild(tempInput);
+                return;
+            }
+        } catch (e) {
+            console.log('execCommand paste failed:', e);
         }
 
-        const dock = $('#dockSelectInCard').val();
-        const area = $('#receivingAreaSelectInCard').val();
-        const notes = $('#notesInputInCard').val() || '';
+        // Clean up temp input
+        document.body.removeChild(tempInput);
 
-        if (!dock && !area) {
-            alert('Please select at least a dock or receiving area to stage the items.');
-            return;
-        }
+        // Final fallback - show helpful message and focus input
+        $('#poSearchInputMain').focus();
+        showCopyNotification('Click here and press Ctrl+V to paste', 'info');
 
-        // Use the existing receive flow to mark the PO as received and staged
-        markAsReceivedMain(poNumber, dock, area, notes);
+        // Add a temporary visual indicator
+        $('#poSearchInputMain').addClass('paste-ready');
+        setTimeout(() => {
+            $('#poSearchInputMain').removeClass('paste-ready');
+        }, 3000);
+    }
+
+    function bulkOffload() {
+        alert('Bulk off-load feature allows you to process multiple POs at once. This feature is coming soon!');
     }
 
     // Flags used to detect AJAX initiation and activity for quick receive
     let quickReceiveAjaxInitiated = false;
     let quickReceiveAjaxActive = false;
 
-    // Enhanced markAsReceivedMain function to handle step progression
-    function markAsReceivedMain(poNumber, dockLocationId = null, receivingAreaId = null, notes = '') {
+    // Enhanced markAsOffloadedMain function to handle step progression
+    function markAsOffloadedMain(poNumber, dockLocationId = null, notes = '') {
         // Preserve the enhanced step UI, then delegate to the original implementation which
         // contains the receipt handling/printing logic.
         updateStepProgress(4);
@@ -1250,14 +1848,14 @@
                 <div class="card-body text-center">
                     <div class="loading-spinner mb-3" style="width: 40px; height: 40px;"></div>
                     <h5>Processing Purchase Order</h5>
-                    <p class="text-muted">Please wait while we receive ${poNumber}...</p>
+           <p class="text-muted">Please wait while we off-load ${poNumber}...</p>
                 </div>
             </div>
         `);
 
-        // Delegate the actual receive flow (including printing) to the original function
+        // Delegate the actual off-load flow to the original function
         // which performs the AJAX call and handles receipt_url when returned.
-        return originalMarkAsReceived(poNumber, dockLocationId, receivingAreaId, notes);
+        return originalMarkAsOffloaded(poNumber, dockLocationId, notes);
     }
 
     // Show detailed workflow explanation
@@ -1307,13 +1905,13 @@
                                     </div>
                                     <div class="col-md-6">
                                         <h6 class="text-success">
-                                            <i class="fas fa-warehouse"></i> Receiving Area Operations
+                                            <i class="fas fa-warehouse"></i> Inventory Receiving Operations
                                         </h6>
                                         <div class="list-group list-group-flush">
                                             <div class="list-group-item d-flex align-items-center">
                                                 <span class="badge badge-warning mr-3">4</span>
                                                 <div>
-                                                    <strong>Transfer to Receiving</strong>
+                                                    <strong>Process Into Inventory</strong>
                                                     <br><small class="text-muted">Status: "Receiving in Progress"</small>
                                                 </div>
                                             </div>
@@ -1346,7 +1944,7 @@
                         </div>
                         <div class="modal-footer">
                             <a href="<?php echo URLROOT; ?>/inventory/receiving" class="btn btn-primary">
-                                <i class="fas fa-warehouse mr-1"></i>Go to Receiving Area
+                                <i class="fas fa-warehouse mr-1"></i>Go to Inventory Receiving
                             </a>
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         </div>
@@ -1390,4 +1988,32 @@
             alert('Tracking number copied: ' + text);
         });
     }
+
+    // Load existing off-loading POs when page loads
+    function loadExistingOffloadingPOs() {
+        $.ajax({
+            url: '<?php echo URLROOT; ?>/api/searchPurchaseOrder.php',
+            method: 'POST',
+            data: {
+                action: 'get_offloading_pos'
+            },
+            dataType: 'json',
+            success: function (response) {
+                if (response.status === 'success' && response.offloading_pos) {
+                    response.offloading_pos.forEach(function (po) {
+                        addToOffloadingTable(po.po_number, po.dock_arrival_time);
+                    });
+                    console.log('Loaded existing off-loading POs:', response.offloading_pos.length);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log('Could not load existing off-loading POs:', error);
+            }
+        });
+    }
+
+    // Load existing off-loading POs when document is ready
+    $(document).ready(function () {
+        loadExistingOffloadingPOs();
+    });
 </script>

@@ -2,6 +2,7 @@
 class CompanyProfileController extends Controller
 {
     public $settingModel;
+    public $companyModel;
 
     public function __construct()
     {
@@ -9,21 +10,25 @@ class CompanyProfileController extends Controller
             redirect('users/login');
         }
         $this->settingModel = $this->model('Setting');
+        $this->companyModel = $this->model('Company');
     }
 
     public function index()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = sanitizePost($_POST);
+            // load existing company record and settings
+            $existingCompany = $this->companyModel->getCompany(1);
             $existing = $this->settingModel->getSettings();
             $data = [
-                'company_name' => isset($_POST['company_name']) ? trim($_POST['company_name']) : ($existing['company_name'] ?? ''),
-                'company_logo' => $existing['company_logo'] ?? '', // default to existing; may be replaced by upload
-                'company_gst' => isset($_POST['company_gst']) ? trim($_POST['company_gst']) : ($existing['company_gst'] ?? ''),
+                // Use company table fields when available, fallback to settings or empty
+                'company_name' => isset($_POST['company_name']) ? trim($_POST['company_name']) : ($existingCompany->company_name ?? $existing['company_name'] ?? ''),
+                'company_logo' => $existingCompany->logo_path ?? $existing['company_logo'] ?? '', // may be replaced by upload
+                'company_gst' => isset($_POST['company_gst']) ? trim($_POST['company_gst']) : ($existingCompany->tax_number ?? $existing['company_gst'] ?? ''),
                 'currency' => isset($_POST['currency']) ? trim($_POST['currency']) : ($existing['currency'] ?? ''),
-                'company_address' => isset($_POST['company_address']) ? trim($_POST['company_address']) : ($existing['company_address'] ?? ''),
-                'company_email' => isset($_POST['company_email']) ? trim($_POST['company_email']) : ($existing['company_email'] ?? ''),
-                'company_phone' => isset($_POST['company_phone']) ? trim($_POST['company_phone']) : ($existing['company_phone'] ?? ''),
+                'company_address' => isset($_POST['company_address']) ? trim($_POST['company_address']) : ($existingCompany->address ?? $existing['company_address'] ?? ''),
+                'company_email' => isset($_POST['company_email']) ? trim($_POST['company_email']) : ($existingCompany->email ?? $existing['company_email'] ?? ''),
+                'company_phone' => isset($_POST['company_phone']) ? trim($_POST['company_phone']) : ($existingCompany->phone ?? $existing['company_phone'] ?? ''),
                 'errors' => [],
                 'mode' => 'edit'
             ];
@@ -85,37 +90,57 @@ class CompanyProfileController extends Controller
             }
 
             if (empty($data['errors'])) {
-                $toSave = $data;
-                unset($toSave['errors'], $toSave['mode']);
-                if ($this->settingModel->updateSettings($toSave)) {
+                // Prepare arrays for company table and settings table
+                $companySave = [
+                    'company_name' => $data['company_name'],
+                    'address' => $data['company_address'],
+                    'phone' => $data['company_phone'],
+                    'email' => $data['company_email'],
+                    'tax_number' => $data['company_gst'],
+                    'logo_path' => $data['company_logo']
+                ];
+                // Save to companies table (company_id 1)
+                try {
+                    $okCompany = $this->companyModel->saveCompany(1, $companySave);
+                } catch (Exception $e) {
+                    $okCompany = false;
+                    $data['errors']['general'] = 'Save failed: ' . $e->getMessage();
+                }
+
+                // Also persist currency into settings (no company column for currency)
+                $okSettings = true;
+                if (!empty($data['currency'])) {
+                    $okSettings = $this->settingModel->updateSettings(['currency' => $data['currency']]);
+                }
+
+                if ($okCompany && $okSettings) {
+                    // Use flash for user-visible message and redirect back to view
                     flash('company_profile_message', 'Company Profile Updated');
                     redirect('company-profile');
                 } else {
-                    $data['errors']['general'] = 'Save failed';
+                    if (empty($data['errors']['general'])) {
+                        $data['errors']['general'] = 'Save failed';
+                    }
                 }
             }
             $this->view('company-profile/index', $data);
         } else {
             $settings = $this->settingModel->getSettings();
+            $company = $this->companyModel->getCompany(1);
             if (!$settings || !is_array($settings)) {
                 $settings = [];
             }
-            $mode = isset($_GET['edit']) ? 'edit' : 'view';
             $data = [
-                'company_name' => $settings['company_name'] ?? '',
-                'company_logo' => $settings['company_logo'] ?? '',
-                'company_gst' => $settings['company_gst'] ?? '',
+                // Prefer company table values, fallback to settings
+                'company_name' => $company->company_name ?? $settings['company_name'] ?? '',
+                'company_logo' => $company->logo_path ?? $settings['company_logo'] ?? '',
+                'company_gst' => $company->tax_number ?? $settings['company_gst'] ?? '',
                 'currency' => $settings['currency'] ?? '',
-                'company_address' => $settings['company_address'] ?? '',
-                'company_email' => $settings['company_email'] ?? '',
-                'company_phone' => $settings['company_phone'] ?? '',
-                'errors' => [],
-                'mode' => $mode
+                'company_address' => $company->address ?? $settings['company_address'] ?? '',
+                'company_email' => $company->email ?? $settings['company_email'] ?? '',
+                'company_phone' => $company->phone ?? $settings['company_phone'] ?? '',
+                'errors' => []
             ];
-            // If no profile data yet, jump straight to edit mode for convenience
-            if ($mode === 'view' && empty($data['company_name']) && empty($data['company_email']) && empty($data['company_phone'])) {
-                $data['mode'] = 'edit';
-            }
             $this->view('company-profile/index', $data);
         }
     }

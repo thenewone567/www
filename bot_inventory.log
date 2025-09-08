@@ -522,3 +522,47 @@
 2025-09-03 12:16:05 - updateStock called for product_id=108 existing_inventory_id=32 existing_quantity=38 quantityChange=-1
 2025-09-03 12:16:05 - updateStock result for product_id=108 inventory_id=32 new_quantity=37 success=true
 2025-09-03 12:16:05 - createSmartSale after update product_id=108 total_inventory=37
+2025-09-05 13:39:16 - updateStock called for product_id=1 existing_inventory_id=53 existing_quantity=36 quantityChange=6
+2025-09-05 13:39:16 - updateStock result for product_id=1 inventory_id=53 new_quantity=42 success=true
+2025-09-05 13:39:21 - updateStock called for product_id=1 existing_inventory_id=53 existing_quantity=42 quantityChange=1
+2025-09-05 13:39:21 - updateStock result for product_id=1 inventory_id=53 new_quantity=43 success=true
+2025-09-05 13:39:22 - updateStock called for product_id=1 existing_inventory_id=53 existing_quantity=43 quantityChange=1
+2025-09-05 13:39:22 - updateStock result for product_id=1 inventory_id=53 new_quantity=44 success=true
+2025-09-05 13:39:23 - updateStock called for product_id=1 existing_inventory_id=53 existing_quantity=44 quantityChange=6
+2025-09-05 13:39:23 - updateStock result for product_id=1 inventory_id=53 new_quantity=50 success=true
+2025-09-05 13:39:24 - updateStock called for product_id=1 existing_inventory_id=53 existing_quantity=50 quantityChange=6
+2025-09-05 13:39:24 - updateStock result for product_id=1 inventory_id=53 new_quantity=56 success=true
+2025-09-05 13:39:25 - updateStock called for product_id=1 existing_inventory_id=53 existing_quantity=56 quantityChange=7
+2025-09-05 13:39:25 - updateStock result for product_id=1 inventory_id=53 new_quantity=63 success=true
+2025-09-05 13:39:26 - updateStock called for product_id=1 existing_inventory_id=53 existing_quantity=63 quantityChange=6
+2025-09-05 13:39:26 - updateStock result for product_id=1 inventory_id=53 new_quantity=69 success=true
+2025-09-05 13:39:28 - updateStock called for product_id=1 existing_inventory_id=53 existing_quantity=69 quantityChange=10
+2025-09-05 13:39:28 - updateStock result for product_id=1 inventory_id=53 new_quantity=79 success=true
+2025-09-05 13:40:09 - createSmartSale before update product_id=139 total_inventory=54
+2025-09-05 13:40:09 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-2
+2025-09-05 13:40:09 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-05 13:40:09 - createSmartSale after update product_id=139 total_inventory=54
+2025-09-05 13:40:10 - createSmartSale before update product_id=139 total_inventory=52
+2025-09-05 13:40:10 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-2
+2025-09-05 13:40:10 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-05 13:40:10 - createSmartSale after update product_id=139 total_inventory=52
+2025-09-05 13:40:11 - createSmartSale before update product_id=139 total_inventory=49
+2025-09-05 13:40:11 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-3
+2025-09-05 13:40:11 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-05 13:40:11 - createSmartSale after update product_id=139 total_inventory=49
+2025-09-05 13:40:12 - createSmartSale before update product_id=139 total_inventory=48
+2025-09-05 13:40:12 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-1
+2025-09-05 13:40:12 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-05 13:40:12 - createSmartSale after update product_id=139 total_inventory=48
+2025-09-05 13:40:13 - createSmartSale before update product_id=139 total_inventory=45
+2025-09-05 13:40:13 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-3
+2025-09-05 13:40:13 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-05 13:40:13 - createSmartSale after update product_id=139 total_inventory=45
+2025-09-05 13:40:14 - createSmartSale before update product_id=139 total_inventory=43
+2025-09-05 13:40:14 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-2
+2025-09-05 13:40:14 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-05 13:40:14 - createSmartSale after update product_id=139 total_inventory=43
+2025-09-05 13:40:15 - createSmartSale before update product_id=139 total_inventory=42
+2025-09-05 13:40:15 - updateStock called for product_id=139 existing_inventory_id=56 existing_quantity=0 quantityChange=-1
+2025-09-05 13:40:15 - updateStock result for product_id=139 inventory_id=56 new_quantity=0 success=true
+2025-09-05 13:40:15 - createSmartSale after update product_id=139 total_inventory=42

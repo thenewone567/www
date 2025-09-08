@@ -3,7 +3,7 @@
 <div class="login-container">
     <div class="login-card">
         <div class="login-header">
-            <div class="login-logo"><?php echo SITENAME; ?></div>
+            <div class="login-logo"><?php echo company_name(); ?></div>
             <div class="login-subtitle">Create your account</div>
         </div>
 

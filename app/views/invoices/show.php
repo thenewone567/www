@@ -12,11 +12,11 @@
             <div class="col-sm-6">
                 <h6 class="mb-3">From:</h6>
                 <div>
-                    <strong><?php echo $data['settings']['company_name'] ?? ''; ?></strong>
+                    <strong><?php echo ($data['company']->company_name ?? $data['settings']['company_name'] ?? company_name()); ?></strong>
                 </div>
-                <div><?php echo $data['settings']['company_address'] ?? ''; ?></div>
-                <div>Email: <?php echo $data['settings']['company_email'] ?? ''; ?></div>
-                <div>Phone: <?php echo $data['settings']['company_phone'] ?? ''; ?></div>
+                <div><?php echo ($data['company']->address ?? $data['settings']['company_address'] ?? ''); ?></div>
+                <div>Email: <?php echo ($data['company']->email ?? $data['settings']['company_email'] ?? ''); ?></div>
+                <div>Phone: <?php echo ($data['company']->phone ?? $data['settings']['company_phone'] ?? ''); ?></div>
             </div>
 
             <div class="col-sm-6">

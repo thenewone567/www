@@ -1,11 +1,16 @@
 <?php
+require_once APPROOT . DS . 'app' . DS . 'helpers' . DS . 'UniqueIdGenerator.php';
+
 class User
 {
   private $db;
+  private $uniqueIdGenerator;
 
   public function __construct()
   {
     $this->db = new Database();
+    require_once APPROOT . '/app/helpers/UniqueIdGenerator.php';
+    $this->uniqueIdGenerator = new UniqueIdGenerator();
   }
 
   // Minimal update profile
@@ -150,6 +155,7 @@ class User
         customer_id as user_id,
         customer_name as name,
         customer_name as username,
+        unique_id,
         contact_info,
         status as customer_status,
         CASE WHEN status = 'active' THEN 1 ELSE 0 END as is_active,
@@ -199,6 +205,7 @@ class User
           contractor_id as user_id,
           contractor_name as name,
           contractor_name as username,
+          unique_id,
           COALESCE(email, '') as email,
           COALESCE(phone, '') as phone,
           is_active,
@@ -259,6 +266,11 @@ class User
       $this->db->execute();
       $hasUserCategoryColumn = (bool) $this->db->single();
 
+      // Check if users table has unique_id column
+      $this->db->query("SHOW COLUMNS FROM users LIKE 'unique_id'");
+      $this->db->execute();
+      $hasUniqueIdColumn = (bool) $this->db->single();
+
       // Base select
       $select = [
         "u.user_id",
@@ -269,6 +281,13 @@ class User
         "u.is_active AS status",
         "COALESCE(r.role_name, 'User') AS role_name"
       ];
+
+      // Add unique_id if available
+      if ($hasUniqueIdColumn) {
+        $select[] = "u.unique_id";
+      } else {
+        $select[] = "NULL AS unique_id";
+      }
 
       // Add user_category if available
       if ($hasUserCategoryColumn) {
@@ -519,14 +538,18 @@ class User
   public function addUser($data)
   {
     try {
+      // Generate unique ID for the new user
+      $uniqueId = $this->uniqueIdGenerator->generateUniqueId('user');
+
       $this->db->query("
         INSERT INTO users (
-          full_name, username, email, password_hash, role_id, is_active, created_at
+          unique_id, full_name, username, email, password_hash, role_id, is_active, created_at
         ) VALUES (
-          :full_name, :username, :email, :password_hash, :role_id, :is_active, NOW()
+          :unique_id, :full_name, :username, :email, :password_hash, :role_id, :is_active, NOW()
         )
       ");
 
+      $this->db->bind(':unique_id', $uniqueId);
       $this->db->bind(':full_name', $data['name']);
       $this->db->bind(':username', $data['username']);
       $this->db->bind(':email', $data['email']);
@@ -534,7 +557,14 @@ class User
       $this->db->bind(':role_id', $data['role_id']);
       $this->db->bind(':is_active', ($data['status'] === 'active') ? 1 : 0);
 
-      return $this->db->execute();
+      if ($this->db->execute()) {
+        // Log successful user creation with unique ID
+        error_log("User created successfully with unique ID: {$uniqueId}");
+        return true;
+      }
+
+      return false;
+
     } catch (Exception $e) {
       error_log('addUser error: ' . $e->getMessage());
       return false;
@@ -977,8 +1007,8 @@ class User
         case 'customers':
           // For customers, update the contact_info JSON and customer_name
           $contactInfo = [
-            'email'          => $data['email'] ?? '',
-            'phone'          => $data['phone'] ?? '',
+            'email' => $data['email'] ?? '',
+            'phone' => $data['phone'] ?? '',
             'contact_person' => $data['name'] ?? ''
           ];
 

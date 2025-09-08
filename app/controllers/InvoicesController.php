@@ -47,12 +47,18 @@ class InvoicesController extends Controller
         $saleItems = $this->saleModel->getSaleItemsBySaleId($invoice->sale_id);
         $customer = $this->customerModel->getCustomerById($sale->customer_id);
         $settings = $this->settingModel->getSettings();
+
+        // Get company information
+        $companyModel = $this->model('Company');
+        $company = $companyModel->getCompany(1);
+
         $data = [
             'invoice' => $invoice,
             'sale' => $sale,
             'saleItems' => is_array($saleItems) ? $saleItems : [],
             'customer' => $customer,
-            'settings' => $settings
+            'settings' => $settings,
+            'company' => $company
         ];
         $this->view('invoices/show', $data);
     }

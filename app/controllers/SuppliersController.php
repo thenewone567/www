@@ -800,6 +800,11 @@ class SuppliersController extends Controller
      */
     public function competitionReport()
     {
+        // Initialize session for competition targets if not exists
+        if (!isset($_SESSION['competition_targets'])) {
+            $_SESSION['competition_targets'] = [];
+        }
+
         // Get all products with multiple suppliers
         $competitionData = $this->getCompetitionAnalysis();
 
@@ -850,10 +855,12 @@ class SuppliersController extends Controller
                     s.contact_person,
                     s.email,
                     s.phone,
+                    s.default_delivery_days,
                     ps.purchase_price,
                     ps.is_primary,
                     ps.lead_time_days,
-                    ps.quality_rating as supplier_rating
+                    ps.quality_rating as supplier_rating,
+                    ps.lead_time_days as delivery_time
                 FROM product_suppliers ps
                 INNER JOIN suppliers s ON ps.supplier_id = s.supplier_id
                 WHERE ps.product_id = :product_id
@@ -1020,9 +1027,9 @@ class SuppliersController extends Controller
     }
 
     /**
-     * Clear all custom target prices
+     * Update delivery time for competition analysis
      */
-    public function clearTargetPrices()
+    public function updateDeliveryTime()
     {
         header('Content-Type: application/json');
 
@@ -1031,15 +1038,42 @@ class SuppliersController extends Controller
                 throw new Exception('Method not allowed');
             }
 
-            // Clear target prices from session
-            if (isset($_SESSION['competition_targets'])) {
-                unset($_SESSION['competition_targets']);
+            $productId = $_POST['product_id'] ?? null;
+            $supplierId = $_POST['supplier_id'] ?? null;
+            $deliveryTime = $_POST['delivery_time'] ?? null;
+
+            if (!$productId || !$supplierId) {
+                throw new Exception('Product ID and Supplier ID are required');
             }
 
-            echo json_encode([
-                'success' => true,
-                'message' => 'All custom target prices cleared successfully'
-            ]);
+            if (!$deliveryTime || $deliveryTime < 1 || $deliveryTime > 365) {
+                throw new Exception('Valid delivery time (1-365 days) is required');
+            }
+
+            // Update delivery time in database
+            $db = new Database();
+            $db->query("
+                UPDATE product_suppliers 
+                SET lead_time_days = :delivery_time 
+                WHERE product_id = :product_id 
+                AND supplier_id = :supplier_id
+            ");
+
+            $db->bind(':delivery_time', intval($deliveryTime));
+            $db->bind(':product_id', $productId);
+            $db->bind(':supplier_id', $supplierId);
+
+            if ($db->execute()) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Delivery time updated successfully',
+                    'new_delivery_time' => $deliveryTime,
+                    'product_id' => $productId,
+                    'supplier_id' => $supplierId
+                ]);
+            } else {
+                throw new Exception('Failed to update delivery time in database');
+            }
 
         } catch (Exception $e) {
             echo json_encode([
@@ -1224,5 +1258,38 @@ class SuppliersController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Ensure delivery time consistency when creating product-supplier relationships
+     * This function should be called after creating new product-supplier links
+     */
+    private function ensureDeliveryTimeConsistency($productId = null, $supplierId = null)
+    {
+        $db = new Database();
+
+        $whereClause = "WHERE s.default_delivery_days IS NOT NULL AND s.default_delivery_days > 0";
+        $params = [];
+
+        if ($productId && $supplierId) {
+            $whereClause .= " AND ps.product_id = :product_id AND ps.supplier_id = :supplier_id";
+            $params[':product_id'] = $productId;
+            $params[':supplier_id'] = $supplierId;
+        }
+
+        $db->query("
+            UPDATE product_suppliers ps
+            INNER JOIN suppliers s ON ps.supplier_id = s.supplier_id
+            SET ps.lead_time_days = s.default_delivery_days,
+                ps.updated_at = NOW()
+            {$whereClause}
+            AND (ps.lead_time_days IS NULL OR ps.lead_time_days = 0 OR ps.lead_time_days = 7)
+        ");
+
+        foreach ($params as $param => $value) {
+            $db->bind($param, $value);
+        }
+
+        return $db->execute();
     }
 }

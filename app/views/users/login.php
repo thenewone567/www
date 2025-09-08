@@ -11,7 +11,7 @@
             <?php endif; ?>
             <div class="login-logo"
                 style="font-family:'Inter',sans-serif;font-weight:600;font-size:1.9rem;letter-spacing:.5px;">
-                <?php echo htmlspecialchars($data['company_name'] ?? SITENAME); ?>
+                <?php echo htmlspecialchars($data['company_name'] ?? company_name()); ?>
             </div>
             <div class="login-subtitle" style="font-size:.95rem;color:var(--text-muted);margin-top:4px;">Sign in to your
                 account</div>
@@ -119,7 +119,7 @@
     </div>
 
     <div class="login-footer">
-        <strong><?php echo htmlspecialchars($data['company_name'] ?? SITENAME); ?></strong><br>
+        <strong><?php echo htmlspecialchars($data['company_name'] ?? company_name()); ?></strong><br>
         <small>Powered by <?php echo APP_NAME; ?></small>
     </div>
 </div>

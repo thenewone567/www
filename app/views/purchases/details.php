@@ -12,7 +12,7 @@
                     <a href="<?php echo URLROOT; ?>/purchases/history" class="btn btn-info">
                         <i class="fas fa-history mr-1"></i>View History
                     </a>
-                    <?php if (isset($data['purchase']->status) && in_array($data['purchase']->status, ['pending', 'sent']) && empty($data['purchase']->tracking_number)): ?>
+                    <?php if (isset($data['purchase']->status) && in_array($data['purchase']->status, ['pending', 'email_received']) && empty($data['purchase']->tracking_number)): ?>
                         <button type="button" class="btn btn-primary"
                             onclick="showTrackingModal(<?php echo $data['purchase']->purchase_id; ?>, '<?php echo htmlspecialchars($data['purchase']->po_number ?? 'N/A'); ?>')">
                             <i class="fas fa-truck mr-1"></i>Add Tracking Number
@@ -176,30 +176,57 @@
                                     <?php
                                     $status = $data['purchase']->status ?? 'pending';
                                     $statusClass = '';
+                                    $statusDisplay = '';
                                     switch ($status) {
                                         case 'pending':
                                             $statusClass = 'badge-warning';
+                                            $statusDisplay = 'Pending';
                                             break;
-                                        case 'approved':
+                                        case 'email_received':
                                             $statusClass = 'badge-info';
+                                            $statusDisplay = 'Email Received';
+                                            break;
+                                        case 'off-loading':
+                                            $statusClass = 'badge-offloading';
+                                            $statusDisplay = 'Off-loading';
+                                            break;
+                                        case 'in_transit':
+                                            $statusClass = 'badge-primary';
+                                            $statusDisplay = 'In Transit';
+                                            break;
+                                        case 'ready_to_receive':
+                                            $statusClass = 'badge-primary';
+                                            $statusDisplay = 'Ready for Receiving';
+                                            break;
+                                        case 'receiving_in_progress':
+                                            $statusClass = 'badge-warning';
+                                            $statusDisplay = 'Receiving in Progress';
+                                            break;
+                                        case 'partially_received':
+                                            $statusClass = 'badge-info';
+                                            $statusDisplay = 'Partially Received';
                                             break;
                                         case 'received':
                                         case 'completed':
                                             $statusClass = 'badge-success';
+                                            $statusDisplay = 'Received';
                                             break;
                                         case 'cancelled':
                                         case 'deleted':
                                             $statusClass = 'badge-danger';
+                                            $statusDisplay = 'Cancelled';
                                             break;
-                                        case 'in_transit':
-                                            $statusClass = 'badge-primary';
+                                        case 'approved':
+                                            $statusClass = 'badge-info';
+                                            $statusDisplay = 'Approved';
                                             break;
                                         default:
                                             $statusClass = 'badge-secondary';
+                                            $statusDisplay = ucfirst(str_replace('_', ' ', $status));
                                     }
                                     ?>
                                     <span class="badge <?php echo $statusClass; ?>">
-                                        <?php echo ucfirst(str_replace('_', ' ', $status)); ?>
+                                        <?php echo $statusDisplay; ?>
                                     </span>
                                 </td>
                             </tr>

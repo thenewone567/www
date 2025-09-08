@@ -52,7 +52,7 @@
     <thead>
         <tr>
             <th>ID</th>
-            <th>Purchase ID</th>
+            <th>PO Number</th>
             <th>Date</th>
             <th>Reason</th>
         </tr>
@@ -62,9 +62,14 @@
             <?php foreach ($data['purchase_returns'] as $return): ?>
                 <tr>
                     <td><?php echo $return->purchase_return_id; ?></td>
-                    <td><?php echo $return->purchase_id; ?></td>
-                    <td><?php echo $return->return_date; ?></td>
-                    <td><?php echo $return->reason; ?></td>
+                    <td>
+                        <?php echo $return->po_number ? $return->po_number : 'PO-' . $return->purchase_id; ?>
+                        <?php if (!empty($return->supplier_name)): ?>
+                            <small class="text-muted d-block"><?php echo $return->supplier_name; ?></small>
+                        <?php endif; ?>
+                    </td>
+                    <td><?php echo date('M j, Y', strtotime($return->return_date)); ?></td>
+                    <td><?php echo $return->reason ?: '<em class="text-muted">No reason provided</em>'; ?></td>
                 </tr>
             <?php endforeach; ?>
         <?php else: ?>

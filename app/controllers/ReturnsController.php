@@ -96,28 +96,51 @@ class ReturnsController extends Controller
 
             // Validate purchase id
             if (empty($data['purchase_id'])) {
-                $data['purchase_id_err'] = 'Please enter purchase id';
+                $data['purchase_id_err'] = 'Please select a purchase order';
+            } else {
+                // Verify that the purchase exists and can be returned
+                $purchaseModel = $this->model('Purchase');
+                $purchase = $purchaseModel->getPurchaseById($data['purchase_id']);
+                if (!$purchase) {
+                    $data['purchase_id_err'] = 'Invalid purchase order selected';
+                } elseif ($purchase->status === 'cancelled') {
+                    $data['purchase_id_err'] = 'Cannot return a cancelled purchase order';
+                }
             }
+
             // Validate return date
             if (empty($data['return_date'])) {
                 $data['return_date_err'] = 'Please enter return date';
+            } elseif (strtotime($data['return_date']) > time()) {
+                $data['return_date_err'] = 'Return date cannot be in the future';
             }
 
             if (empty($data['purchase_id_err']) && empty($data['return_date_err'])) {
                 if ($this->returnModel->addPurchaseReturn($data)) {
-                    flash('return_message', 'Purchase Return Added');
+                    flash('return_message', 'Purchase Return Added Successfully', 'alert alert-success');
                     redirect('returns');
                 } else {
-                    die('Something went wrong');
+                    flash('return_message', 'Error adding purchase return', 'alert alert-danger');
+                    redirect('returns');
                 }
             } else {
+                // Get available purchases for the dropdown
+                $purchaseModel = $this->model('Purchase');
+                $data['available_purchases'] = $purchaseModel->getReturnablePurchases();
                 $this->view('returns/addpurchase', $data);
             }
         } else {
+            // Get available purchases for the dropdown
+            $purchaseModel = $this->model('Purchase');
+            $availablePurchases = $purchaseModel->getReturnablePurchases();
+
             $data = [
                 'purchase_id' => '',
-                'return_date' => '',
-                'reason' => ''
+                'return_date' => date('Y-m-d'), // Default to today
+                'reason' => '',
+                'purchase_id_err' => '',
+                'return_date_err' => '',
+                'available_purchases' => $availablePurchases
             ];
             $this->view('returns/addpurchase', $data);
         }

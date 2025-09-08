@@ -30,7 +30,7 @@ try {
     // Initialize database
     $db = new Database();
 
-    // Get PO details with products
+    // Get PO details with products (include sent and in_transit statuses)
     $db->query('
         SELECT p.purchase_id, p.po_number, p.supplier_id, p.purchase_date, 
                p.expected_date, p.status, p.total_amount, p.notes,
@@ -41,8 +41,7 @@ try {
         LEFT JOIN locations dl ON p.dock_location_id = dl.location_id
         LEFT JOIN locations rl ON p.receiving_area_id = rl.location_id
         WHERE p.purchase_id = ? 
-        AND (p.status IN ("ready_to_receive", "receiving_in_progress", "partially_received", "received", "at_dock"))
-        AND (p.status != "received" OR p.dock_location_id IS NOT NULL)
+        AND (p.status IN ("ready_to_receive", "receiving_in_progress", "partially_received", "received", "at_dock", "sent", "in_transit"))
         LIMIT 1
     ');
     $db->bind(1, $poId);
@@ -73,30 +72,30 @@ try {
     // Format response
     $response = [
         'success' => true,
-        'data'    => [
-            'po'    => [
-                'purchase_id'         => $po->purchase_id,
-                'po_number'           => $po->po_number,
-                'supplier_name'       => $po->supplier_name,
-                'purchase_date'       => date('M j, Y', strtotime($po->purchase_date)),
-                'expected_date'       => $po->expected_date ? date('M j, Y', strtotime($po->expected_date)) : 'Not set',
-                'status'              => $po->status,
-                'total_amount'        => $po->total_amount,
-                'notes'               => $po->notes,
-                'dock_location_id'    => $po->dock_location_id,
-                'dock_name'           => $po->dock_name,
-                'receiving_area_id'   => $po->receiving_area_id,
+        'data' => [
+            'po' => [
+                'purchase_id' => $po->purchase_id,
+                'po_number' => $po->po_number,
+                'supplier_name' => $po->supplier_name,
+                'purchase_date' => date('M j, Y', strtotime($po->purchase_date)),
+                'expected_date' => $po->expected_date ? date('M j, Y', strtotime($po->expected_date)) : 'Not set',
+                'status' => $po->status,
+                'total_amount' => $po->total_amount,
+                'notes' => $po->notes,
+                'dock_location_id' => $po->dock_location_id,
+                'dock_name' => $po->dock_name,
+                'receiving_area_id' => $po->receiving_area_id,
                 'receiving_area_name' => $po->receiving_area_name
             ],
             'items' => array_map(function ($product) {
                 return [
-                    'product_id'       => $product->product_id,
-                    'product_name'     => $product->product_name,
-                    'sku'              => $product->sku,
-                    'quantity'         => (int) $product->quantity,
+                    'product_id' => $product->product_id,
+                    'product_name' => $product->product_name,
+                    'sku' => $product->sku,
+                    'quantity' => (int) $product->quantity,
                     'already_received' => 0,
-                    'remaining_qty'    => (int) $product->quantity,
-                    'unit_price'       => (float) $product->unit_price
+                    'remaining_qty' => (int) $product->quantity,
+                    'unit_price' => (float) $product->unit_price
                 ];
             }, $products)
         ]

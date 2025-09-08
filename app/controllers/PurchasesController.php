@@ -896,7 +896,7 @@ class PurchasesController extends Controller
             redirect('purchases/approvals');
         }
 
-        if ($this->purchaseModel->updateStatus($poId, 'sent')) {
+        if ($this->purchaseModel->updateStatus($poId, 'email_received')) {
             flash('purchase_message', 'Purchase order approved successfully', 'alert alert-success');
         } else {
             flash('purchase_message', 'Failed to approve purchase order', 'alert alert-danger');
@@ -918,7 +918,7 @@ class PurchasesController extends Controller
                 redirect('purchases/approvals');
             }
 
-            if ($this->purchaseModel->bulkUpdateStatus($orderIds, 'sent')) {
+            if ($this->purchaseModel->bulkUpdateStatus($orderIds, 'email_received')) {
                 flash('purchase_message', count($orderIds) . ' purchase orders approved', 'alert alert-success');
             } else {
                 flash('purchase_message', 'Failed to approve purchase orders', 'alert alert-danger');

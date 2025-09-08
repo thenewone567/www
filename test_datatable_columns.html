@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>DataTable Column Test</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        table {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        .debug {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <h3>DataTable Column Count Test</h3>
+
+    <div class="debug">
+        <strong>Test 1: Correct Table (8 columns)</strong>
+    </div>
+
+    <table class="table" id="correctTable">
+        <thead>
+            <tr>
+                <th>PO Number</th>
+                <th>Supplier</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Expected</th>
+                <th>Tracking</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>PO-250905-140201</td>
+                <td>Test Supplier</td>
+                <td>Sep 5, 2025</td>
+                <td>Ready</td>
+                <td>$1,000.00</td>
+                <td>Sep 10</td>
+                <td>TRK123</td>
+                <td><button>View</button></td>
+            </tr>
+            <tr>
+                <td colspan="8" style="text-align: center;">No more orders</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="debug">
+        <strong>Test 2: Incorrect Table (7 columns header, 8 columns data)</strong>
+    </div>
+
+    <table class="table" id="incorrectTable">
+        <thead>
+            <tr>
+                <th>PO Number</th>
+                <th>Supplier</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Expected</th>
+                <th>Actions</th>
+                <!-- Missing Tracking column -->
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>PO-250905-140201</td>
+                <td>Test Supplier</td>
+                <td>Sep 5, 2025</td>
+                <td>Ready</td>
+                <td>$1,000.00</td>
+                <td>Sep 10</td>
+                <td>TRK123</td>
+                <td><button>View</button></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div id="results"></div>
+
+    <script>
+        $(document).ready(function () {
+            $('#results').append('<h4>Test Results:</h4>');
+
+            // Test correct table
+            try {
+                $('#correctTable').DataTable();
+                $('#results').append('<p style="color: green;">✓ Correct Table: DataTable initialized successfully</p>');
+            } catch (e) {
+                $('#results').append('<p style="color: red;">❌ Correct Table Error: ' + e.message + '</p>');
+            }
+
+            // Test incorrect table  
+            try {
+                $('#incorrectTable').DataTable();
+                $('#results').append('<p style="color: green;">✓ Incorrect Table: DataTable initialized (unexpected)</p>');
+            } catch (e) {
+                $('#results').append('<p style="color: red;">❌ Incorrect Table Error: ' + e.message + '</p>');
+            }
+
+            // Debug info
+            $('#results').append('<h5>Debug Info:</h5>');
+            $('#results').append('<p>Correct table header cols: ' + $('#correctTable thead th').length + '</p>');
+            $('#results').append('<p>Correct table first row cols: ' + $('#correctTable tbody tr:first td').length + '</p>');
+            $('#results').append('<p>Incorrect table header cols: ' + $('#incorrectTable thead th').length + '</p>');
+            $('#results').append('<p>Incorrect table first row cols: ' + $('#incorrectTable tbody tr:first td').length + '</p>');
+        });
+    </script>
+</body>
+
+</html>

@@ -2,10 +2,13 @@
 class Customer
 {
     private $db;
+    private $uniqueIdGenerator;
 
     public function __construct()
     {
         $this->db = new Database;
+        require_once APPROOT . '/app/helpers/UniqueIdGenerator.php';
+        $this->uniqueIdGenerator = new UniqueIdGenerator();
     }
 
     public function getCustomers()
@@ -18,32 +21,47 @@ class Customer
 
     public function addCustomer($data)
     {
-        // Map controller data to database fields
-        // Use contact person name as customer name when company name is not provided
-        $customerName = !empty($data['company_name']) ? $data['company_name'] : ($data['contact_person'] ?? '');
-        $contactInfo = json_encode([
-            'contact_person' => $data['contact_person'] ?? '',
-            'email' => $data['email'] ?? '',
-            'phone' => $data['phone'] ?? '',
-            'address' => $data['address'] ?? '',
-            'city' => $data['city'] ?? '',
-            'state' => $data['state'] ?? '',
-            'zip_code' => $data['zip_code'] ?? '',
-            'discount_type' => $data['discount_type'] ?? 'percentage',
-            'discount_value' => $data['discount_value'] ?? 0,
-            'payment_terms' => $data['payment_terms'] ?? 30
-        ]);
-        $creditLimit = $data['credit_limit'] ?? 0;
+        try {
+            // Generate unique ID for the new customer
+            $uniqueId = $this->uniqueIdGenerator->generateUniqueId('customer');
 
-        $this->db->query("INSERT INTO customers (customer_name, contact_info, credit_limit, status) VALUES (:customer_name, :contact_info, :credit_limit, 'active')");
+            // Map controller data to database fields
+            // Use contact person name as customer name when company name is not provided
+            $customerName = !empty($data['company_name']) ? $data['company_name'] : ($data['contact_person'] ?? '');
+            $contactInfo = json_encode([
+                'contact_person' => $data['contact_person'] ?? '',
+                'email' => $data['email'] ?? '',
+                'phone' => $data['phone'] ?? '',
+                'address' => $data['address'] ?? '',
+                'city' => $data['city'] ?? '',
+                'state' => $data['state'] ?? '',
+                'zip_code' => $data['zip_code'] ?? '',
+                'discount_type' => $data['discount_type'] ?? 'percentage',
+                'discount_value' => $data['discount_value'] ?? 0,
+                'payment_terms' => $data['payment_terms'] ?? 30
+            ]);
+            $creditLimit = $data['credit_limit'] ?? 0;
 
-        // Bind values
-        $this->db->bind(':customer_name', $customerName);
-        $this->db->bind(':contact_info', $contactInfo);
-        $this->db->bind(':credit_limit', $creditLimit);
+            $this->db->query("INSERT INTO customers (unique_id, customer_name, contact_info, credit_limit, status) VALUES (:unique_id, :customer_name, :contact_info, :credit_limit, 'active')");
 
-        // Execute
-        return $this->db->execute();
+            // Bind values
+            $this->db->bind(':unique_id', $uniqueId);
+            $this->db->bind(':customer_name', $customerName);
+            $this->db->bind(':contact_info', $contactInfo);
+            $this->db->bind(':credit_limit', $creditLimit);
+
+            // Execute
+            if ($this->db->execute()) {
+                error_log("Customer created successfully with unique ID: {$uniqueId}");
+                return true;
+            }
+
+            return false;
+
+        } catch (Exception $e) {
+            error_log('addCustomer error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function getCustomerById($id)

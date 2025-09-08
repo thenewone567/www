@@ -10,7 +10,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
             </h1>
             <small class="text-muted">Identify opportunities to negotiate better prices with suppliers</small>
         </div>
-        <div class="col-12 col-md-4 text-md-right mt-3 mt-md-0">
+        <div class="col-12 col-md-4 text-right mt-3 mt-md-0">
             <a href="<?php echo URLROOT; ?>/suppliers" class="btn btn-secondary btn-lg mr-2">
                 <i class="fas fa-arrow-left"></i> Back to Suppliers
             </a>
@@ -129,22 +129,22 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                 </div>
 
                                 <!-- Current Suppliers Overview -->
-                                <div class="row mb-3">
+                                <div class="row mb-2">
                                     <div class="col-12">
-                                        <h6 class="text-muted mb-2">Current Supplier Prices:</h6>
+                                        <h6 class="text-muted mb-1">Current Supplier Prices:</h6>
                                         <div class="row">
                                             <?php foreach ($productData['suppliers'] as $supplier): ?>
-                                                <div class="col-md-4 mb-2">
-                                                    <div class="supplier-price-card p-2 border rounded <?php echo $supplier->supplier_id == $productData['lowest_supplier']->supplier_id ? 'border-success theme-bg-secondary' : ''; ?>">
+                                                <div class="col-lg-4 col-md-6 mb-1">
+                                                    <div class="supplier-price-card p-1 border rounded <?php echo $supplier->supplier_id == $productData['lowest_supplier']->supplier_id ? 'border-success theme-bg-secondary' : ''; ?>">
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <div>
-                                                                <strong class="text-primary"><?php echo htmlspecialchars($supplier->supplier_name); ?></strong>
+                                                                <strong class="text-primary small"><?php echo htmlspecialchars($supplier->supplier_name); ?></strong>
                                                                 <?php if ($supplier->supplier_id == $productData['lowest_supplier']->supplier_id): ?>
                                                                     <span class="badge badge-success badge-sm ml-1">Lowest</span>
                                                                 <?php endif; ?>
                                                             </div>
                                                             <div class="text-right">
-                                                                <strong class="<?php echo $supplier->supplier_id == $productData['lowest_supplier']->supplier_id ? 'text-success' : 'price-display'; ?>">
+                                                                <strong class="<?php echo $supplier->supplier_id == $productData['lowest_supplier']->supplier_id ? 'text-success small' : 'price-display small'; ?>">
                                                                     ₹<?php echo number_format($supplier->purchase_price, 2); ?>
                                                                 </strong>
                                                             </div>
@@ -159,35 +159,34 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                 <!-- Negotiation Opportunities -->
                                 <?php if (!empty($productData['competition_opportunities'])): ?>
                                     <div class="negotiation-opportunities">
-                                        <h6 class="text-warning mb-3">
+                                        <h6 class="text-warning mb-2">
                                             <i class="fas fa-handshake mr-2"></i>Negotiation Opportunities:
                                         </h6>
                                         
                                         <?php foreach ($productData['competition_opportunities'] as $opportunity): ?>
-                                            <div class="opportunity-card bg-warning-light p-3 mb-2 rounded">
+                                            <div class="opportunity-card bg-warning-light p-2 mb-1 rounded">
                                                 <div class="row align-items-center">
-                                                    <div class="col-md-3">
-                                                        <strong class="text-primary"><?php echo htmlspecialchars($opportunity['supplier']->supplier_name); ?></strong>
-                                                        <br>
-                                                        <small class="text-muted">
+                                                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-1">
+                                                        <div class="supplier-info">
+                                                            <strong class="text-primary d-block"><?php echo htmlspecialchars($opportunity['supplier']->supplier_name); ?></strong>
                                                             <?php if (!empty($opportunity['supplier']->contact_person)): ?>
-                                                                Contact: <?php echo htmlspecialchars($opportunity['supplier']->contact_person); ?>
+                                                                <small class="text-muted d-block"><?php echo htmlspecialchars($opportunity['supplier']->contact_person); ?></small>
                                                             <?php endif; ?>
-                                                        </small>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-md-2">
-                                                        <small class="text-muted">Current Price:</small><br>
-                                                        <strong class="text-danger">₹<?php echo number_format($opportunity['current_price'], 2); ?></strong>
+                                                    <div class="col-xl-1 col-lg-2 col-md-2 col-sm-3 mb-1">
+                                                        <small class="text-muted d-block">Current:</small>
+                                                        <strong class="text-danger d-block">₹<?php echo number_format($opportunity['current_price'], 2); ?></strong>
                                                     </div>
-                                                    <div class="col-md-2">
-                                                        <small class="text-muted">Target Price:</small><br>
+                                                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-1">
+                                                        <small class="text-muted d-block">Target:</small>
                                                         <div class="target-price-container">
                                                             <div class="input-group input-group-sm">
                                                                 <div class="input-group-prepend">
                                                                     <span class="input-group-text">₹</span>
                                                                 </div>
                                                                 <input type="number" 
-                                                                       class="form-control target-price-input" 
+                                                                       class="form-control form-control-sm target-price-input" 
                                                                        step="0.01" 
                                                                        min="0"
                                                                        value="<?php echo number_format($opportunity['target_price'], 2, '.', ''); ?>"
@@ -196,75 +195,111 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                                                        data-current-price="<?php echo $opportunity['current_price']; ?>"
                                                                        data-market-price="<?php echo $productData['lowest_supplier']->purchase_price; ?>">
                                                                 <div class="input-group-append">
-                                                                    <button class="btn btn-outline-primary btn-sm update-target-btn" type="button" title="Update Target Price">
+                                                                    <button class="btn btn-outline-primary btn-sm update-target-btn" type="button" title="Update">
                                                                         <i class="fas fa-check"></i>
                                                                     </button>
-                                                                    <?php if (isset($opportunity['custom_target']) && $opportunity['custom_target']): ?>
-                                                                        <button class="btn btn-outline-secondary btn-sm reset-target-btn" type="button" title="Reset to Market Price">
-                                                                            <i class="fas fa-undo"></i>
-                                                                        </button>
-                                                                    <?php endif; ?>
                                                                 </div>
                                                             </div>
-                                                            <?php if (isset($opportunity['custom_target']) && $opportunity['custom_target']): ?>
-                                                                <small class="text-info"><i class="fas fa-edit"></i> Custom target</small>
-                                                            <?php else: ?>
-                                                                <small class="text-muted"><i class="fas fa-chart-line"></i> Market lowest</small>
-                                                            <?php endif; ?>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-2">
-                                                        <small class="text-muted">Delivery Time:</small><br>
+                                                    <div class="col-xl-1 col-lg-2 col-md-2 col-sm-3 mb-1">
+                                                        <small class="text-muted d-block">Delivery:</small>
                                                         <div class="delivery-time-container">
                                                             <div class="input-group input-group-sm">
                                                                 <input type="number" 
-                                                                       class="form-control delivery-time-input" 
+                                                                       class="form-control form-control-sm delivery-time-input" 
                                                                        step="1" 
                                                                        min="1"
                                                                        max="365"
-                                                                       value="<?php echo isset($opportunity['supplier']->delivery_time) ? $opportunity['supplier']->delivery_time : '7'; ?>"
+                                                                       value="<?php 
+                                                                           // Get delivery time - controller now provides the correct value
+                                                                           $deliveryTime = isset($opportunity['supplier']->delivery_time) && $opportunity['supplier']->delivery_time > 0 
+                                                                               ? $opportunity['supplier']->delivery_time 
+                                                                               : 7;
+                                                                           echo $deliveryTime;
+                                                                       ?>"
                                                                        data-product-id="<?php echo $productData['product']->product_id; ?>"
                                                                        data-supplier-id="<?php echo $opportunity['supplier']->supplier_id; ?>"
-                                                                       placeholder="Days">
+                                                                       placeholder="Days"
+                                                                       title="Delivery time in days for this supplier">
                                                                 <div class="input-group-append">
-                                                                    <span class="input-group-text">days</span>
-                                                                    <button class="btn btn-outline-success btn-sm update-delivery-btn" type="button" title="Update Delivery Time">
-                                                                        <i class="fas fa-truck"></i>
+                                                                    <span class="input-group-text">d</span>
+                                                                    <button class="btn btn-outline-success btn-sm update-delivery-btn" type="button" title="Update delivery time">
+                                                                        <i class="fas fa-clock"></i>
                                                                     </button>
                                                                 </div>
                                                             </div>
-                                                            <small class="text-muted"><i class="fas fa-clock"></i> Lead time</small>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-3 text-right">
-                                                        <div class="savings-info">
-                                                            <div class="savings-amount">
-                                                                <strong class="text-success">Save ₹<?php echo number_format($opportunity['potential_savings'], 2); ?></strong>
-                                                            </div>
-                                                            <div class="savings-percentage">
-                                                                <span class="badge badge-warning">
-                                                                    <?php echo number_format($opportunity['savings_percentage'], 1); ?>% reduction
-                                                                </span>
-                                                            </div>
+                                                    <div class="col-xl-2 col-lg-2 col-md-3 col-sm-4 mb-1">
+                                                        <div class="savings-info text-right">
+                                                            <strong class="text-success d-block">₹<?php echo number_format($opportunity['potential_savings'], 2); ?></strong>
+                                                            <span class="badge badge-warning">
+                                                                <?php echo number_format($opportunity['savings_percentage'], 1); ?>% off
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                
-                                                <!-- Contact Information -->
-                                                <div class="row mt-2">
-                                                    <div class="col-12">
+                                                    <div class="col-xl-4 col-lg-12 col-md-9 col-sm-8 mb-1">
                                                         <div class="contact-actions">
-                                                            <small class="text-muted">Contact Information:</small>
                                                             <?php if (!empty($opportunity['supplier']->email)): ?>
-                                                                <a href="mailto:<?php echo $opportunity['supplier']->email; ?>?subject=Price Review Request - <?php echo urlencode($productData['product']->product_name); ?>&body=Dear <?php echo urlencode($opportunity['supplier']->contact_person ?: $opportunity['supplier']->supplier_name); ?>,%0A%0AI hope this email finds you well.%0A%0AAs part of our regular supplier price review, I wanted to reach out regarding <?php echo urlencode($productData['product']->product_name); ?> (SKU: <?php echo urlencode($productData['product']->sku); ?>).%0A%0ACurrent Details:%0A- Your current price: ₹<?php echo $opportunity['current_price']; ?>%0A- Market competitive price: ₹<?php echo $opportunity['target_price']; ?>%0A- Potential savings: ₹<?php echo number_format($opportunity['potential_savings'], 2); ?> (<?php echo number_format($opportunity['savings_percentage'], 1); ?>%25)%0A%0AWe value our long-term partnership and would prefer to continue sourcing this product from you. Would you be able to review your pricing and provide a competitive quote that matches or improves upon the market rate?%0A%0AAdditional considerations:%0A- We are open to discussing volume commitments%0A- Flexible payment terms if needed%0A- Long-term contract arrangements%0A%0APlease let me know your thoughts and if you would like to schedule a call to discuss this further.%0A%0AThank you for your continued partnership.%0A%0ABest regards" 
-                                                                   class="btn btn-sm btn-outline-primary mr-2">
-                                                                    <i class="fas fa-envelope"></i> Send Negotiation Email
+                                                                <?php
+                                                                // Create impressive email template with proper encoding
+                                                                $emailSubject = "Strategic Partnership Opportunity - Price Review for " . $productData['product']->product_name;
+                                                                
+                                                                $contactName = !empty($opportunity['supplier']->contact_person) ? $opportunity['supplier']->contact_person : "Partner";
+                                                                $productName = $productData['product']->product_name;
+                                                                $productSku = $productData['product']->sku;
+                                                                $currentPrice = number_format($opportunity['current_price'], 2);
+                                                                $marketPrice = number_format($productData['lowest_supplier']->purchase_price, 2);
+                                                                $targetPrice = number_format($opportunity['target_price'], 2, '.', '');
+                                                                $supplierName = $opportunity['supplier']->supplier_name;
+                                                                $currentDate = date('F d, Y');
+                                                                
+                                                                $emailBody = "Dear {$contactName},
+
+I hope this message finds you well. I am reaching out regarding a strategic partnership opportunity that could benefit both our organizations.
+
+PRODUCT DETAILS:
+• Product: {$productName}
+• SKU: {$productSku}
+• Current Quote: ₹{$currentPrice}
+
+MARKET ANALYSIS:
+We have conducted a comprehensive market analysis and found that the current market competitive price for this product is ₹{$marketPrice}.
+
+PARTNERSHIP PROPOSAL:
+We value our long-term relationship with {$supplierName} and would like to discuss the possibility of better pricing in the competitive market rate of ₹{$targetPrice} for this product.
+
+MUTUAL BENEFITS:
+• Strengthen our strategic partnership
+• Increase order volume potential
+• Long-term business commitment
+• Consistent monthly orders
+
+NEXT STEPS:
+We would appreciate the opportunity to discuss this proposal and explore how we can continue growing our successful partnership.
+
+Could we schedule a brief call this week to discuss the pricing adjustment and explore additional collaboration opportunities?
+
+Looking forward to your positive response.
+
+Best regards,
+Procurement Team
+Hardware Store Management
+
+---
+{$currentDate}";
+                                                                ?>
+                                                                <a href="mailto:<?php echo htmlspecialchars($opportunity['supplier']->email); ?>?subject=<?php echo rawurlencode($emailSubject); ?>&body=<?php echo rawurlencode($emailBody); ?>" 
+                                                                   class="btn btn-outline-primary btn-sm email-btn mr-2"
+                                                                   title="Send professional negotiation email">
+                                                                    <i class="fas fa-envelope"></i> Email
                                                                 </a>
                                                             <?php endif; ?>
                                                             <?php if (!empty($opportunity['supplier']->phone)): ?>
-                                                                <span class="text-muted">
+                                                                <small class="text-muted">
                                                                     <i class="fas fa-phone"></i> <?php echo htmlspecialchars($opportunity['supplier']->phone); ?>
-                                                                </span>
+                                                                </small>
                                                             <?php endif; ?>
                                                         </div>
                                                     </div>
@@ -316,68 +351,6 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         </div>
     <?php endif; ?>
 </div>
-
-<style>
-@media print {
-    .btn, .card-header { color-adjust: exact; }
-    .bg-warning-light { background-color: #fff3cd !important; }
-    .theme-card { border: 1px solid #ddd !important; }
-}
-
-.bg-warning-light {
-    background-color: rgba(255, 193, 7, 0.1);
-    border: 1px solid var(--warning);
-}
-
-/* Dark mode adjustments for warning background */
-[data-theme="dark"] .bg-warning-light {
-    background-color: rgba(255, 212, 59, 0.15);
-    border: 1px solid var(--warning);
-}
-
-.supplier-price-card {
-    transition: all 0.2s ease;
-}
-
-.supplier-price-card:hover {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.opportunity-card {
-    border: 1px solid var(--warning);
-}
-
-.savings-info {
-    text-align: right;
-}
-
-.contact-actions {
-    padding-top: 10px;
-    border-top: 1px solid var(--card-border);
-}
-
-.competition-product-section:last-child {
-    border-bottom: none !important;
-    padding-bottom: 0 !important;
-}
-
-.target-price-container {
-    max-width: 150px;
-}
-
-.target-price-input {
-    font-size: 0.875rem;
-}
-
-.update-target-btn {
-    border-left: none;
-}
-
-.savings-updating {
-    opacity: 0.6;
-    transition: opacity 0.3s ease;
-}
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

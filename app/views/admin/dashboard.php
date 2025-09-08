@@ -511,10 +511,10 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                     <?php foreach ($data['activity_logs'] as $log): ?>
                                         <tr>
                                             <td>
-                                                <?= date('M j, Y g:i A', strtotime($log->created_at ?? '')) ?>
+                                                <?= !empty($log->created_at) ? date('M j, Y g:i A', strtotime($log->created_at)) : 'N/A' ?>
                                             </td>
                                             <td>
-                                                <strong><?= htmlspecialchars($log->user_name ?? 'System') ?></strong>
+                                                <strong><?= htmlspecialchars($log->full_name ?? $log->username ?? 'System') ?></strong>
                                             </td>
                                             <td>
                                                 <span class="activity-badge badge badge-primary">
@@ -675,14 +675,10 @@ $(document).ready(function() {
     // Initialize tab switching
     initializeTabs();
     
-    // Initialize DataTables for better table functionality
-    if ($.fn.DataTable) {
-        $('#usersTable, #activityLogsTable').DataTable({
-            pageLength: 10,
-            responsive: true,
-            order: [[0, 'desc']]
-        });
-    }
+    // Initialize DataTables for better table functionality with a slight delay
+    setTimeout(function() {
+        initializeDataTables();
+    }, 100);
     
     // Load initial data
     loadDashboardData();
@@ -690,6 +686,85 @@ $(document).ready(function() {
     // Auto-refresh dashboard data every 30 seconds
     setInterval(loadDashboardData, 30000);
 });
+
+function initializeDataTables() {
+    if ($.fn.DataTable) {
+        try {
+            // Initialize users table only if it exists and has proper structure
+            const usersTable = $('#usersTable');
+            if (usersTable.length > 0 && !$.fn.DataTable.isDataTable('#usersTable')) {
+                // Check if table has proper header structure
+                const headerCells = usersTable.find('thead tr:first th').length;
+                const bodyRows = usersTable.find('tbody tr').length;
+                const firstRowCells = usersTable.find('tbody tr:first td').length;
+                
+                console.log('Users table - Header cells:', headerCells, 'Body rows:', bodyRows, 'First row cells:', firstRowCells);
+                
+                if (headerCells === 6 && (bodyRows === 0 || firstRowCells === 6 || firstRowCells === 1)) {
+                    try {
+                        usersTable.DataTable({
+                            pageLength: 10,
+                            responsive: true,
+                            order: [[0, 'asc']],
+                            columnDefs: [
+                                { orderable: false, targets: [5] } // Disable sorting on Actions column
+                            ],
+                            language: {
+                                emptyTable: "No users found",
+                                zeroRecords: "No matching users found"
+                            },
+                            // Add additional safety options
+                            autoWidth: false,
+                            processing: true,
+                            deferRender: true,
+                            destroy: true // Allow re-initialization
+                        });
+                        console.log('Users DataTable initialized successfully');
+                    } catch (userTableError) {
+                        console.error('Users DataTable initialization error:', userTableError);
+                    }
+                } else {
+                    console.warn('Users table structure mismatch - Header:', headerCells, 'Body cells:', firstRowCells);
+                }
+            }
+            
+            // Initialize activity logs table only if it exists and has proper structure
+            const activityTable = $('#activityLogsTable');
+            if (activityTable.length > 0 && !$.fn.DataTable.isDataTable('#activityLogsTable')) {
+                const activityHeaderCells = activityTable.find('thead tr:first th').length;
+                const activityBodyRows = activityTable.find('tbody tr').length;
+                const activityFirstRowCells = activityTable.find('tbody tr:first td').length;
+                
+                console.log('Activity table - Header cells:', activityHeaderCells, 'Body rows:', activityBodyRows, 'First row cells:', activityFirstRowCells);
+                
+                if (activityHeaderCells === 5 && (activityBodyRows === 0 || activityFirstRowCells === 5 || activityFirstRowCells === 1)) {
+                    try {
+                        activityTable.DataTable({
+                            pageLength: 10,
+                            responsive: true,
+                            order: [[0, 'desc']],
+                            language: {
+                                emptyTable: "No activity logs found",
+                                zeroRecords: "No matching activity logs found"
+                            },
+                            autoWidth: false,
+                            processing: true,
+                            deferRender: true,
+                            destroy: true
+                        });
+                        console.log('Activity DataTable initialized successfully');
+                    } catch (activityTableError) {
+                        console.error('Activity DataTable initialization error:', activityTableError);
+                    }
+                } else {
+                    console.warn('Activity table structure mismatch - Header:', activityHeaderCells, 'Body cells:', activityFirstRowCells);
+                }
+            }
+        } catch (error) {
+            console.error('DataTable initialization error:', error);
+        }
+    }
+}
 
 function initializeTabs() {
     // Handle tab switching
@@ -715,7 +790,7 @@ function initializeTabs() {
 function loadDashboardData() {
     // Update system statistics
     $.ajax({
-        url: '<?= URLROOT ?>/admin/getSystemStats',
+        url: '<?= URLROOT ?>/admin/getSystemStatsAjax',
         method: 'GET',
         success: function(response) {
             if (response.success) {

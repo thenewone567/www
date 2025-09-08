@@ -17,7 +17,13 @@ class ReturnOrder
 
     public function getPurchaseReturns()
     {
-        $this->db->query("SELECT * FROM purchase_returns");
+        $this->db->query("
+            SELECT pr.*, p.po_number, s.supplier_name 
+            FROM purchase_returns pr
+            LEFT JOIN purchases p ON pr.purchase_id = p.purchase_id
+            LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+            ORDER BY pr.return_date DESC
+        ");
         $result = $this->db->resultSet();
         return $result ? $result : [];
     }

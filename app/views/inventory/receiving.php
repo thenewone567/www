@@ -23,11 +23,11 @@ $systemRole = $roleIdMapping[$roleId] ?? 'viewer';
 
 // Check permissions for receiving
 $permissions = [
-    'admin'             => ['can_receive' => true],
+    'admin' => ['can_receive' => true],
     'warehouse_manager' => ['can_receive' => true],
-    'receiving_clerk'   => ['can_receive' => true],
-    'inventory_clerk'   => ['can_receive' => false],
-    'viewer'            => ['can_receive' => false]
+    'receiving_clerk' => ['can_receive' => true],
+    'inventory_clerk' => ['can_receive' => false],
+    'viewer' => ['can_receive' => false]
 ];
 
 $userPermissions = $permissions[$systemRole] ?? $permissions['viewer'];
@@ -40,10 +40,10 @@ if (!$userPermissions['can_receive']) {
 
 // Use data passed from controller
 $receivingStats = $data['receivingStats'] ?? [
-    'deliveries_today'     => 0,
+    'deliveries_today' => 0,
     'items_received_today' => 0,
-    'pending_items'        => 0,
-    'completed_items'      => 0
+    'pending_items' => 0,
+    'completed_items' => 0
 ];
 ?>
 
@@ -167,12 +167,13 @@ $receivingStats = $data['receivingStats'] ?? [
 
     <!-- Step 3: Complete -->
     <div id="step-3-content" class="theme-card p-4 mb-4 d-none">
-        <h4 class="mb-3"><i class="fas fa-check-circle mr-2"></i>Step 3: Complete Receiving & Assign Locations</h4>
+        <h4 class="mb-3"><i class="fas fa-check-circle mr-2"></i>Step 3: Complete Receiving & Assign Receiving Area
+            Locations</h4>
 
         <!-- Location Assignment Section -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5><i class="fas fa-map-marker-alt mr-2"></i>Assign Storage Locations</h5>
+                <h5><i class="fas fa-map-marker-alt mr-2"></i>Assign Receiving Area Locations</h5>
             </div>
             <div class="card-body">
                 <div id="location-assignments"></div>
@@ -206,7 +207,7 @@ $receivingStats = $data['receivingStats'] ?? [
 
     // Load available purchase orders
     function loadAvailablePOs() {
-        fetch('<?= URLROOT ?>/api/getAvailablePOs.php?status=ready_to_receive,receiving_in_progress,received,at_dock')
+        fetch('<?= URLROOT ?>/api/getAvailablePOs.php?status=ready_to_receive,receiving_in_progress,at_dock,off-loading,sent,in_transit')
             .then(response => response.json())
             .then(data => {
                 console.log('PO API Response:', data); // Debug log
@@ -394,17 +395,18 @@ $receivingStats = $data['receivingStats'] ?? [
 
     // Load available locations and create assignment interface
     function loadLocationAssignments() {
-        fetch('<?= URLROOT ?>/api/getLocations.php')
+        fetch('<?= URLROOT ?>/api/getDockLocations.php')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    createLocationAssignmentInterface(data.data); // Use data.data instead of data.locations
+                    // Use only receiving area locations for assignment
+                    createLocationAssignmentInterface(data.data.receiving_areas);
                 } else {
-                    console.error('Failed to load locations');
+                    console.error('Failed to load receiving locations');
                 }
             })
             .catch(error => {
-                console.error('Error loading locations:', error);
+                console.error('Error loading receiving locations:', error);
             });
     }
 

@@ -314,13 +314,35 @@ function getCostingMethodExample($currentInventory, $currentPrice, $newQuantity,
 }
 
 // === Company Branding Helpers (company_name, company_logo, company_initials) ===
+
+if (!function_exists('clear_company_cache')) {
+  function clear_company_cache()
+  {
+    // Clear the static cache variables in the helper functions
+    company_name(true);  // Force refresh
+    company_logo(true);  // Force refresh
+  }
+}
+
 if (!function_exists('company_name')) {
-  function company_name()
+  function company_name($refresh = false)
   {
     static $cached = null;
+    if ($refresh) {
+      $cached = null;
+    }
     if ($cached !== null)
       return $cached;
     try {
+      // Try Company model first
+      if (class_exists('Company')) {
+        $company = (new Company())->getCompany(1);
+        if ($company && !empty($company->company_name)) {
+          $cached = $company->company_name;
+          return $cached;
+        }
+      }
+      // Fallback to Settings
       if (class_exists('Setting')) {
         $settings = (new Setting())->getSettings();
         if (!empty($settings['company_name'])) {
@@ -336,9 +358,12 @@ if (!function_exists('company_name')) {
 }
 
 if (!function_exists('company_logo')) {
-  function company_logo()
+  function company_logo($refresh = false)
   {
     static $cachedLogo = null;
+    if ($refresh) {
+      $cachedLogo = null;
+    }
     if ($cachedLogo !== null)
       return $cachedLogo;
     $fallbacks = [
@@ -346,6 +371,23 @@ if (!function_exists('company_logo')) {
       'uploads/logos/mlogo.png'
     ];
     try {
+      // Try Company model first
+      if (class_exists('Company')) {
+        $company = (new Company())->getCompany(1);
+        if ($company && !empty($company->logo_path)) {
+          $path = $company->logo_path;
+          $fsPath = APPROOT . DS . str_replace(['/', '\\'], DS, $path);
+          if (file_exists($fsPath)) {
+            $cachedLogo = $path;
+            return $cachedLogo;
+          }
+          if (preg_match('/^https?:\/\//i', $path)) {
+            $cachedLogo = $path;
+            return $cachedLogo;
+          }
+        }
+      }
+      // Fallback to Settings
       if (class_exists('Setting')) {
         $settings = (new Setting())->getSettings();
         if (!empty($settings['company_logo'])) {

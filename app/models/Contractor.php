@@ -6,10 +6,13 @@
 class Contractor
 {
     private $db;
+    private $uniqueIdGenerator;
 
     public function __construct()
     {
         $this->db = new Database();
+        require_once APPROOT . '/app/helpers/UniqueIdGenerator.php';
+        $this->uniqueIdGenerator = new UniqueIdGenerator();
     }
 
     /**
@@ -53,36 +56,51 @@ class Contractor
      */
     public function addContractor($data)
     {
-        $sql = 'INSERT INTO contractors (
-            contractor_name, company_name, email, phone, address, city, state, postal_code, 
-            specialization, license_number, commission_type, commission_rate, 
-            is_active, created_at
-        ) VALUES (
-            :contractor_name, :company_name, :email, :phone, :address, :city, :state, :postal_code,
-            :specialization, :license_number, :commission_type, :commission_rate,
-            :is_active, NOW()
-        )';
+        try {
+            // Generate unique ID for the new contractor
+            $uniqueId = $this->uniqueIdGenerator->generateUniqueId('contractor');
 
-        $this->db->query($sql);
+            $sql = 'INSERT INTO contractors (
+                unique_id, contractor_name, company_name, email, phone, address, city, state, postal_code, 
+                specialization, license_number, commission_type, commission_rate, 
+                is_active, created_at
+            ) VALUES (
+                :unique_id, :contractor_name, :company_name, :email, :phone, :address, :city, :state, :postal_code,
+                :specialization, :license_number, :commission_type, :commission_rate,
+                :is_active, NOW()
+            )';
 
-        // Use contact_person as contractor_name if no specific contractor_name
-        $contractorName = $data['contact_person'] ?? $data['contractor_name'] ?? '';
+            $this->db->query($sql);
 
-        $this->db->bind(':contractor_name', $contractorName);
-        $this->db->bind(':company_name', $data['company_name'] ?? '');
-        $this->db->bind(':email', $data['email'] ?? '');
-        $this->db->bind(':phone', $data['phone'] ?? '');
-        $this->db->bind(':address', $data['address'] ?? '');
-        $this->db->bind(':city', $data['city'] ?? '');
-        $this->db->bind(':state', $data['state'] ?? '');
-        $this->db->bind(':postal_code', $data['zip_code'] ?? '');
-        $this->db->bind(':specialization', $data['specialty'] ?? '');
-        $this->db->bind(':license_number', $data['license_number'] ?? '');
-        $this->db->bind(':commission_type', $data['commission_type'] ?? 'percentage');
-        $this->db->bind(':commission_rate', $data['commission_value'] ?? 0);
-        $this->db->bind(':is_active', $data['is_active'] ?? 1);
+            // Use contact_person as contractor_name if no specific contractor_name
+            $contractorName = $data['contact_person'] ?? $data['contractor_name'] ?? '';
 
-        return $this->db->execute();
+            $this->db->bind(':unique_id', $uniqueId);
+            $this->db->bind(':contractor_name', $contractorName);
+            $this->db->bind(':company_name', $data['company_name'] ?? '');
+            $this->db->bind(':email', $data['email'] ?? '');
+            $this->db->bind(':phone', $data['phone'] ?? '');
+            $this->db->bind(':address', $data['address'] ?? '');
+            $this->db->bind(':city', $data['city'] ?? '');
+            $this->db->bind(':state', $data['state'] ?? '');
+            $this->db->bind(':postal_code', $data['zip_code'] ?? '');
+            $this->db->bind(':specialization', $data['specialty'] ?? '');
+            $this->db->bind(':license_number', $data['license_number'] ?? '');
+            $this->db->bind(':commission_type', $data['commission_type'] ?? 'percentage');
+            $this->db->bind(':commission_rate', $data['commission_value'] ?? 0);
+            $this->db->bind(':is_active', $data['is_active'] ?? 1);
+
+            if ($this->db->execute()) {
+                error_log("Contractor created successfully with unique ID: {$uniqueId}");
+                return true;
+            }
+
+            return false;
+
+        } catch (Exception $e) {
+            error_log('addContractor error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**

@@ -15,8 +15,49 @@ try {
         throw new Exception('Only POST method allowed');
     }
 
-    // Get the input
+    // Get the input - check both JSON and form data
     $input = json_decode(file_get_contents('php://input'), true);
+    if (!$input) {
+        $input = $_POST;
+    }
+
+    $action = $input['action'] ?? '';
+
+    // Handle different actions
+    if ($action === 'get_offloading_pos') {
+        // Return all POs currently in off-loading status
+        $purchaseModel = new Purchase();
+
+        // Use the working approach: get all purchases and filter manually
+        $allPurchases = $purchaseModel->getHistory();
+        $result = [];
+
+        foreach ($allPurchases as $purchase) {
+            // Check for off-loading status
+            $status = strtolower($purchase->status ?? '');
+            if ($status === 'off-loading') {
+                // Get full details for this PO to access dock_arrival_time
+                $fullPO = $purchaseModel->getPurchaseByPONumber($purchase->order_no);
+                if ($fullPO && !empty($fullPO->dock_arrival_time)) {
+                    $result[] = [
+                        'po_number' => $purchase->order_no,
+                        'dock_arrival_time' => $fullPO->dock_arrival_time
+                    ];
+                }
+            }
+        }
+
+        // Clean any unwanted output
+        ob_end_clean();
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Retrieved off-loading POs',
+            'offloading_pos' => $result
+        ]);
+        exit;
+    }
+
+    // Original PO search functionality
     $poNumber = $input['po_number'] ?? '';
 
     if (empty($poNumber)) {
@@ -40,14 +81,33 @@ try {
         exit;
     }
 
-    // Check if the purchase order can be received
+    // Check if the purchase order can be received or is already in off-loading
     $status = strtolower($purchase->status ?? '');
-    $canReceive = in_array($status, ['pending', 'sent', 'in_transit', 'shipped']);
+    $canReceive = in_array($status, ['pending', 'email_received', 'in_transit', 'shipped']);
+    // Check for off-loading status
+    $isOffloading = ($status === 'off-loading');
+
+    // Check for stuck off-loading
+    $stuckInfo = null;
+    if ($isOffloading && !empty($purchase->dock_arrival_time)) {
+        $startTime = strtotime($purchase->dock_arrival_time);
+        $now = time();
+        $elapsedMinutes = ($now - $startTime) / 60;
+
+        if ($elapsedMinutes > 10) {
+            $stuckInfo = [
+                'is_stuck' => true,
+                'elapsed_minutes' => floor($elapsedMinutes),
+                'dock_arrival_time' => $purchase->dock_arrival_time,
+                'elapsed_formatted' => gmdate($elapsedMinutes >= 60 ? 'H:i:s' : 'i:s', $now - $startTime)
+            ];
+        }
+    }
 
     // Clean any unwanted output before sending response
     ob_end_clean();
 
-    if (!$canReceive) {
+    if (!$canReceive && !$isOffloading) {
         echo json_encode([
             'success' => false,
             'message' => "Purchase Order cannot be received. Current status: " . ucfirst($status),
@@ -62,14 +122,17 @@ try {
     // Return purchase order details
     echo json_encode([
         'success' => true,
-        'message' => 'Purchase Order found and ready to receive',
+        'message' => $isOffloading ? 'Purchase Order is currently off-loading' : 'Purchase Order found and ready to receive',
         'data' => [
             'purchase' => $purchase,
-            'can_receive' => true,
+            'can_receive' => $canReceive,
+            'is_offloading' => $isOffloading,
+            'stuck_info' => $stuckInfo,
             'po_number' => $purchase->po_number ?? 'PO-' . $purchase->purchase_id,
             'supplier_name' => $purchase->supplier_name ?? 'Unknown',
             'total_amount' => $purchase->total_amount ?? 0,
-            'status' => ucfirst($status)
+            'status' => ucfirst($status),
+            'dock_arrival_time' => $purchase->dock_arrival_time ?? null
         ]
     ]);
 

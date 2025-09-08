@@ -13,7 +13,7 @@ try {
     // Create placeholders for prepared statement
     $placeholders = str_repeat('?,', count($statuses) - 1) . '?';
 
-    // Build query to include dock-received POs that need detailed receiving and have products
+    // Build query to get POs that are ready for receiving (exclude fully completed POs)
     $query = "SELECT p.purchase_id, p.po_number, p.status, p.total_amount, p.dock_location_id, 
                      s.supplier_name, l.location_name as dock_name
               FROM purchases p 
@@ -22,9 +22,9 @@ try {
               WHERE p.status IN ($placeholders)
               AND EXISTS (SELECT 1 FROM purchase_items pi WHERE pi.purchase_id = p.purchase_id)";
 
-    // For 'received' status, only include those that were received at dock (have dock_location_id)
+    // Exclude fully received POs unless they still need location assignment
     if (in_array('received', $statuses)) {
-        $query .= " AND (p.status != 'received' OR p.dock_location_id IS NOT NULL)";
+        $query .= " AND p.status != 'received'";
     }
 
     $query .= " ORDER BY p.updated_at DESC LIMIT 20";
@@ -43,21 +43,21 @@ try {
     if ($purchases) {
         foreach ($purchases as $purchase) {
             $result[] = [
-                'purchase_id'      => $purchase->purchase_id,
-                'po_number'        => $purchase->po_number,
-                'status'           => $purchase->status,
-                'total_amount'     => $purchase->total_amount,
-                'supplier_name'    => $purchase->supplier_name ?? 'Unknown',
+                'purchase_id' => $purchase->purchase_id,
+                'po_number' => $purchase->po_number,
+                'status' => $purchase->status,
+                'total_amount' => $purchase->total_amount,
+                'supplier_name' => $purchase->supplier_name ?? 'Unknown',
                 'dock_location_id' => $purchase->dock_location_id,
-                'dock_name'        => $purchase->dock_name
+                'dock_name' => $purchase->dock_name
             ];
         }
     }
 
     echo json_encode([
         'success' => true,
-        'data'    => $result,
-        'count'   => count($result)
+        'data' => $result,
+        'count' => count($result)
     ]);
 
 } catch (Exception $e) {
