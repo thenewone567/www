@@ -218,7 +218,10 @@ class User
           0 as role_id,
           COALESCE(commission_type, '') as commission_type,
           COALESCE(commission_rate, 0) as commission_rate,
-          COALESCE(total_commission_earned, 0) as total_commission_earned
+          COALESCE(total_commission_earned, 0) as total_commission_earned,
+          COALESCE(current_tier_achievement, 1) as current_tier_achievement,
+          COALESCE(quarterly_revenue_generated, 0) as quarterly_revenue_generated,
+          COALESCE(tier_earned_quarter, '') as tier_earned_quarter
           FROM contractors 
           ORDER BY contractor_id DESC");
 
@@ -899,7 +902,20 @@ class User
             'Contractor' as role_name,
             7 as role_id,
             'contractor' as user_category,
-            'contractors' as source_table
+            'contractors' as source_table,
+            COALESCE(current_tier_achievement, 1) as current_tier_achievement,
+            COALESCE(quarterly_revenue_generated, 0) as quarterly_revenue_generated,
+            COALESCE(tier_earned_quarter, '') as tier_earned_quarter,
+            COALESCE(commission_type, '') as commission_type,
+            COALESCE(commission_rate, 0) as commission_rate,
+            COALESCE(total_commission_earned, 0) as total_commission_earned,
+            COALESCE(company_name, '') as company_name,
+            COALESCE(address, '') as address,
+            COALESCE(city, '') as city,
+            COALESCE(state, '') as state,
+            COALESCE(postal_code, '') as postal_code,
+            COALESCE(license_number, '') as license_number,
+            COALESCE(created_at, NOW()) as created_at
             FROM contractors
             WHERE contractor_id = :user_id");
           $this->db->bind(':user_id', $userId);

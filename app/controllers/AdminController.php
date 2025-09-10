@@ -97,16 +97,16 @@ class AdminController extends BaseController
     }
 
     /**
-     * User management
+     * User management - System users only
      */
     public function users()
     {
-        // Use the new method that gets users from all three tables
-        $users = $this->userModel->getAllUsersWithCategories();
+        // Get only system users (officials/employees) from users table
+        $users = $this->userModel->getAllUsersWithRoles();
         $roles = $this->roleModel->getAllRoles();
 
         $data = [
-            'title' => 'User Management',
+            'title' => 'System User Management',
             'users' => $users,
             'roles' => $roles
         ];
@@ -405,40 +405,6 @@ class AdminController extends BaseController
     }
 
     /**
-     * Get contractor monthly performance
-     */
-    public function getContractorPerformance()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            try {
-                $referenceModel = $this->model('Reference');
-                $contractorId = filter_input(INPUT_GET, 'contractor_id', FILTER_VALIDATE_INT);
-                $month = $_GET['month'] ?? date('Y-m');
-
-                if (!$contractorId) {
-                    throw new Exception('Invalid contractor ID');
-                }
-
-                $performance = $referenceModel->getContractorMonthlyPerformance($contractorId, $month);
-
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => true,
-                    'data' => $performance
-                ]);
-            } catch (Exception $e) {
-                header('Content-Type: application/json');
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ]);
-            }
-            exit();
-        }
-    }
-
-    /**
      * AJAX endpoint to get system stats
      */
     public function getSystemStatsAjax()
@@ -472,8 +438,16 @@ class AdminController extends BaseController
             redirect('admin/users');
         }
 
-        // Get user data from any of the tables (users, customers, contractors)
-        $user = $this->userModel->getUserById($userId);
+        // Get source table from query parameter if provided
+        $sourceTable = $_GET['source'] ?? null;
+
+        // Get user data from the specified table or search all tables
+        if ($sourceTable && in_array($sourceTable, ['users', 'customers', 'contractors'])) {
+            $user = $this->userModel->getUserByIdAndTable($userId, $sourceTable);
+        } else {
+            // Fallback to searching all tables (existing behavior)
+            $user = $this->userModel->getUserById($userId);
+        }
 
         if (!$user) {
             flash('user_message', 'User not found', 'alert alert-danger');
@@ -563,6 +537,54 @@ class AdminController extends BaseController
         ];
 
         $this->renderLayout('admin/editUserProfile', $data);
+    }
+
+    /**
+     * View customer details
+     */
+    public function viewCustomer($customerId = null)
+    {
+        if (!$customerId) {
+            flash('customer_message', 'Customer ID not provided', 'alert alert-danger');
+            redirect('customer');
+        }
+
+        // Get customer model
+        $customerModel = $this->model('Customer');
+        $customer = $customerModel->getCustomerById($customerId);
+
+        if (!$customer) {
+            flash('customer_message', 'Customer not found', 'alert alert-danger');
+            redirect('customer');
+        }
+
+        // Get customer transactions
+        $db = new Database();
+        $customerTransactions = [];
+        try {
+            $db->query("SELECT 
+                           s.sale_id as transaction_id,
+                           s.sale_date as transaction_date,
+                           s.total_amount as amount,
+                           s.payment_mode as payment_method,
+                           'Sale' as transaction_type
+                       FROM sales s 
+                       WHERE s.customer_id = :customer_id 
+                       ORDER BY s.sale_date DESC");
+            $db->bind(':customer_id', $customerId);
+            $db->execute();
+            $customerTransactions = $db->resultSet();
+        } catch (Exception $e) {
+            error_log('Error getting customer transactions: ' . $e->getMessage());
+        }
+
+        $data = [
+            'title' => 'Customer Details - ' . $customer->customer_name,
+            'customer' => $customer,
+            'transactions' => $customerTransactions
+        ];
+
+        $this->view('admin/viewCustomer', $data);
     }
 
     /**
@@ -1038,65 +1060,6 @@ class AdminController extends BaseController
     }
 
     /**
-     * Add Contractor
-     */
-    public function addContractor()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            ob_clean();
-            header('Content-Type: application/json');
-
-            try {
-                $_POST = sanitizePost($_POST);
-
-                // Contractor data
-                $contractorData = [
-                    'company_name' => trim($_POST['company_name'] ?? ''),
-                    'contact_person' => trim($_POST['contact_person'] ?? ''),
-                    'email' => trim($_POST['email'] ?? ''),
-                    'phone' => trim($_POST['phone'] ?? ''),
-                    'address' => trim($_POST['address'] ?? ''),
-                    'city' => trim($_POST['city'] ?? ''),
-                    'state' => trim($_POST['state'] ?? ''),
-                    'zip_code' => trim($_POST['zip_code'] ?? ''),
-                    'specialty' => trim($_POST['specialty'] ?? ''),
-                    'license_number' => trim($_POST['license_number'] ?? ''),
-                    'commission_type' => $_POST['commission_type'] ?? 'percentage',
-                    'commission_value' => floatval($_POST['commission_value'] ?? 0),
-                    'payment_terms' => intval($_POST['payment_terms'] ?? 30),
-                    'is_active' => 1
-                ];
-
-                $errors = $this->validateContractorData($contractorData);
-
-                if (empty($errors)) {
-                    $contractorModel = new Contractor();
-                    if ($contractorModel->addContractor($contractorData)) {
-                        echo json_encode([
-                            'success' => true,
-                            'message' => 'Contractor created successfully',
-                            'redirect' => 'admin/users'
-                        ]);
-                    } else {
-                        echo json_encode(['success' => false, 'message' => 'Failed to create contractor']);
-                    }
-                } else {
-                    echo json_encode(['success' => false, 'message' => implode(', ', $errors)]);
-                }
-            } catch (Exception $e) {
-                echo json_encode(['success' => false, 'message' => 'Server error occurred']);
-            }
-            exit();
-        }
-
-        // GET request - show form
-        $data = [
-            'title' => 'Add Contractor'
-        ];
-        $this->view('admin/add_contractor', $data);
-    }
-
-    /**
      * Validation helpers
      */
     private function validateOfficialData($data)
@@ -1138,27 +1101,6 @@ class AdminController extends BaseController
             $errors[] = 'Phone number is required';
         if ($data['discount_value'] < 0 || $data['discount_value'] > 100) {
             $errors[] = 'Discount value must be between 0 and 100';
-        }
-
-        return $errors;
-    }
-
-    private function validateContractorData($data)
-    {
-        $errors = [];
-        if (empty($data['company_name']))
-            $errors[] = 'Company name is required';
-        if (empty($data['contact_person']))
-            $errors[] = 'Contact person is required';
-        if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'Valid email is required';
-        }
-        if (empty($data['phone']))
-            $errors[] = 'Phone number is required';
-        if (empty($data['specialty']))
-            $errors[] = 'Specialty is required';
-        if ($data['commission_value'] < 0 || $data['commission_value'] > 100) {
-            $errors[] = 'Commission value must be between 0 and 100';
         }
 
         return $errors;

@@ -14,12 +14,15 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         <div class="row align-items-center">
             <div class="col-md-8">
                 <h1 class="h2 mb-0">
-                    <i class="fas fa-users"></i> User Management
+                    <i class="fas fa-user-tie"></i> System User Management
                 </h1>
-                <p class="mb-0 mt-2 opacity-75">Manage users, roles, and permissions</p>
+                <p class="mb-0 mt-2 opacity-75">Manage system administrators, managers, and employees</p>
             </div>
             <div class="col-md-4 text-md-right">
                 <div class="btn-group" role="group">
+                    <a href="<?php echo URLROOT; ?>/admin" class="btn btn-outline-secondary btn-sm mr-2">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
                     <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">
                         <i class="fas fa-plus"></i> Add User
@@ -65,6 +68,24 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
             <div class="col-6 col-md-4 col-lg-2 mb-3">
                 <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link"
+                    href="<?= URLROOT ?>/contractor" role="button">
+                    <div class="text-warning mb-2"><i class="fas fa-hard-hat fa-2x"></i></div>
+                    <div class="font-weight-bold">Contractors</div>
+                    <small class="text-muted">Tier directory</small>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-2 mb-3">
+                <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link"
+                    href="<?= URLROOT ?>/customer" role="button">
+                    <div class="text-info mb-2"><i class="fas fa-shopping-cart fa-2x"></i></div>
+                    <div class="font-weight-bold">Customers</div>
+                    <small class="text-muted">Client directory</small>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-2 mb-3">
+                <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link"
                     href="<?= URLROOT ?>/admin/references" role="button">
                     <div class="text-success mb-2"><i class="fas fa-handshake fa-2x"></i></div>
                     <div class="font-weight-bold">References</div>
@@ -101,30 +122,12 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                 <div class="card-header py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-users"></i> System Users
+                            <i class="fas fa-user-tie"></i> System Users (Officials & Employees)
                         </h6>
                         <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-outline-primary active" data-filter="all"
-                                onclick="filterUsers('all')">
-                                <i class="fas fa-users"></i> All Users
-                                <span class="badge badge-primary ml-1"
-                                    id="count-all"><?= isset($users) ? count($users) : 0 ?></span>
-                            </button>
-                            <button type="button" class="btn btn-outline-primary" data-filter="official"
-                                onclick="filterUsers('official')">
-                                <i class="fas fa-user-tie"></i> Officials
-                                <span class="badge badge-primary ml-1" id="count-official">0</span>
-                            </button>
-                            <button type="button" class="btn btn-outline-success" data-filter="customer"
-                                onclick="filterUsers('customer')">
-                                <i class="fas fa-shopping-cart"></i> Customers
-                                <span class="badge badge-success ml-1" id="count-customer">0</span>
-                            </button>
-                            <button type="button" class="btn btn-outline-warning" data-filter="contractor"
-                                onclick="filterUsers('contractor')">
-                                <i class="fas fa-hard-hat"></i> Contractors
-                                <span class="badge badge-warning ml-1" id="count-contractor">0</span>
-                            </button>
+                            <span class="badge badge-primary p-2">
+                                <i class="fas fa-users"></i> Total Users: <?= isset($users) ? count($users) : 0 ?>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -136,7 +139,6 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                     <th>User</th>
                                     <th>Email</th>
                                     <th>Role</th>
-                                    <th>Category</th>
                                     <th>Status</th>
                                     <th>Unique ID</th>
                                     <th>Actions</th>
@@ -216,6 +218,18 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                                     <div>
                                                         <div class="font-weight-bold">
                                                             <?= htmlspecialchars($displayName ?: ($user->username ?? '')) ?>
+                                                            <?php if (strtolower($userCategory) === 'contractor' && isset($user->current_tier_achievement)): ?>
+                                                                <?php
+                                                                $tierLevel = (int) ($user->current_tier_achievement ?? 1);
+                                                                $tierNames = [1 => 'Bronze', 2 => 'Silver', 3 => 'Gold', 4 => 'Platinum', 5 => 'Diamond'];
+                                                                $tierName = $tierNames[$tierLevel] ?? 'Bronze';
+                                                                $tierClass = 'tier-' . strtolower($tierName);
+                                                                ?>
+                                                                <span class="tier-badge <?= $tierClass ?> ml-2">
+                                                                    <span class="tier-icon"></span>
+                                                                    <?= $tierName ?>
+                                                                </span>
+                                                            <?php endif; ?>
                                                         </div>
                                                         <small
                                                             class="text-muted">@<?= htmlspecialchars($user->username ?? $user->user_name ?? 'N/A') ?></small>
@@ -228,63 +242,6 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                                     class="badge role-badge badge-<?= $roleNameLower === 'admin' ? 'danger' : ($roleNameLower === 'manager' ? 'warning' : 'info') ?>">
                                                     <?= ucfirst((string) ($user->role_name ?? 'user')) ?>
                                                 </span>
-                                            </td>
-                                            <td>
-                                                <span class="d-none"><?= strtolower($userCategory) ?></span>
-                                                <?php
-                                                // Use a stable per-row source table variable for actions.
-                                                // Avoid overwriting the canonical $sourceTable used above.
-                                                $rowSourceTable = $sourceTable;
-                                                $canChangeCategory = ($rowSourceTable === 'users'); // Only users from users table can change category
-                                                ?>
-
-                                                <?php if ($canChangeCategory): ?>
-                                                    <!-- Editable category selector for users table -->
-                                                    <div class="btn-group btn-group-sm category-selector" role="group">
-                                                        <button type="button"
-                                                            class="btn btn-sm category-btn <?= strtolower($userCategory) === 'official' ? 'btn-primary' : 'btn-outline-primary' ?>"
-                                                            data-category="official" data-user-id="<?= $user->user_id ?>"
-                                                            onclick="changeUserCategory(<?= $user->user_id ?>, 'official')"
-                                                            title="Official">
-                                                            <i class="fas fa-user-tie"></i>
-                                                        </button>
-                                                        <button type="button"
-                                                            class="btn btn-sm category-btn <?= strtolower($userCategory) === 'customer' ? 'btn-success' : 'btn-outline-success' ?>"
-                                                            data-category="customer" data-user-id="<?= $user->user_id ?>"
-                                                            onclick="changeUserCategory(<?= $user->user_id ?>, 'customer')"
-                                                            title="Customer">
-                                                            <i class="fas fa-shopping-cart"></i>
-                                                        </button>
-                                                        <button type="button"
-                                                            class="btn btn-sm category-btn <?= strtolower($userCategory) === 'contractor' ? 'btn-warning' : 'btn-outline-warning' ?>"
-                                                            data-category="contractor" data-user-id="<?= $user->user_id ?>"
-                                                            onclick="changeUserCategory(<?= $user->user_id ?>, 'contractor')"
-                                                            title="Contractor">
-                                                            <i class="fas fa-hard-hat"></i>
-                                                        </button>
-                                                    </div>
-                                                <?php else: ?>
-                                                    <!-- Read-only category display for customers/contractors -->
-                                                    <div class="btn-group btn-group-sm" role="group">
-                                                        <span
-                                                            class="btn btn-sm <?= strtolower($userCategory) === 'official' ? 'btn-primary' : 'btn-outline-primary' ?>"
-                                                            title="Official">
-                                                            <i class="fas fa-user-tie"></i>
-                                                        </span>
-                                                        <span
-                                                            class="btn btn-sm <?= strtolower($userCategory) === 'customer' ? 'btn-success' : 'btn-outline-success' ?>"
-                                                            title="Customer">
-                                                            <i class="fas fa-shopping-cart"></i>
-                                                        </span>
-                                                        <span
-                                                            class="btn btn-sm <?= strtolower($userCategory) === 'contractor' ? 'btn-warning' : 'btn-outline-warning' ?>"
-                                                            title="Contractor">
-                                                            <i class="fas fa-hard-hat"></i>
-                                                        </span>
-                                                    </div>
-                                                    <small class="text-muted d-block">From <?= ucfirst($sourceTable) ?>
-                                                        table</small>
-                                                <?php endif; ?>
                                             </td>
                                             <td>
                                                 <span class="badge badge-<?= $isActive ? 'success' : 'secondary' ?>">
@@ -305,11 +262,12 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                             <td>
                                                 <div class="btn-group" role="group">
                                                     <button type="button" class="btn btn-sm btn-outline-success"
-                                                        onclick="viewUserProfile(<?= $user->user_id ?>)" title="View Profile">
+                                                        onclick="viewUserProfile(<?= $user->user_id ?>, '<?= htmlspecialchars($sourceTable) ?>')"
+                                                        title="View Profile">
                                                         <i class="fas fa-user"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-sm btn-outline-primary"
-                                                        onclick="editUser(<?= htmlspecialchars($user->user_id) ?>, '<?= htmlspecialchars($rowSourceTable) ?>')"
+                                                        onclick="editUser(<?= htmlspecialchars($user->user_id) ?>, '<?= htmlspecialchars($sourceTable) ?>')"
                                                         title="Edit User">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
@@ -321,7 +279,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                                     <button type="button"
                                                         class="btn btn-sm <?= $isActive ? 'btn-warning' : 'btn-outline-success' ?> toggle-status-btn"
                                                         data-user-id="<?= htmlspecialchars($user->user_id) ?>"
-                                                        data-source-table="<?= htmlspecialchars($rowSourceTable) ?>"
+                                                        data-source-table="<?= htmlspecialchars($sourceTable) ?>"
                                                         data-current-status="<?= $isActive ? 'active' : 'inactive' ?>"
                                                         title="<?= $isActive ? 'Deactivate' : 'Activate' ?>">
                                                         <i class="fas fa-<?= $isActive ? 'pause' : 'play' ?>"></i>
@@ -342,7 +300,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="8" class="text-center">No users found</td>
+                                        <td colspan="6" class="text-center">No users found</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -647,7 +605,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
             "pageLength": 25,
             "order": [[0, "asc"]],
             "columnDefs": [
-                { "orderable": false, "targets": [3, 7] }, // Category and Actions columns
+                { "orderable": false, "targets": [5] }, // Actions column (0-indexed: 6 columns total = indices 0-5)
                 { "defaultContent": "", "targets": "_all" } // Provide default content for missing data
             ],
             "language": {
@@ -659,14 +617,12 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                 "zeroRecords": "No matching users found"
             },
             "initComplete": function (settings, json) {
-                // Ensure counts are initialized once when DataTable is ready
-                updateCategoryCounts();
-                // Apply filter button styles for default filter
-                filterUsers('all');
+                // DataTable initialization complete
+                console.log('DataTable initialized successfully');
             },
             "drawCallback": function () {
-                // Update category counts after table is drawn (paging, filtering)
-                updateCategoryCounts();
+                // Table redraw callback
+                console.log('DataTable redrawn');
             },
             "errorCallback": function (settings, techNote, message) {
                 console.error('DataTables error:', {
@@ -677,11 +633,6 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                 alert('DataTables Error: ' + message + '\nPlease refresh the page.');
             }
         });
-
-        // Initialize category counts after a brief delay to ensure DataTable is ready
-        setTimeout(function () {
-            updateCategoryCounts();
-        }, 300);
 
         // Add user form with improved error handling and validation
         $('#addUserForm').submit(function (e) {
@@ -975,10 +926,17 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         });
     });
 
-    function viewUserProfile(userId) {
+    function viewUserProfile(userId, sourceTable = 'users') {
         if (userId) {
-            // Navigate to user details page in the same tab
-            window.location.href = '<?= URLROOT ?>/admin/viewUser/' + encodeURIComponent(userId);
+            // Navigate to appropriate controller based on source table
+            if (sourceTable === 'contractors') {
+                window.location.href = '<?= URLROOT ?>/contractor/viewContractor/' + encodeURIComponent(userId);
+            } else if (sourceTable === 'customers') {
+                window.location.href = '<?= URLROOT ?>/customer/view/' + encodeURIComponent(userId);
+            } else {
+                // Default to admin for users and unknown types
+                window.location.href = '<?= URLROOT ?>/admin/viewUser/' + encodeURIComponent(userId) + '?source=' + encodeURIComponent(sourceTable);
+            }
         } else {
             alert('User ID not available for this user');
         }
@@ -1184,121 +1142,6 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         // Search lowercase category text from hidden span
         const searchTerm = category === 'all' ? '' : category.toLowerCase();
         table.column(3).search(searchTerm).draw();
-    }
-
-    // Change user category
-    function changeUserCategory(userId, newCategory) {
-        console.log('Initiating submission...');
-        $.ajax({
-            url: '<?= URLROOT ?>/admin/saveUserCategories',
-            method: 'POST',
-            data: {
-                categories: JSON.stringify({ [userId]: newCategory })
-            },
-            dataType: 'json',
-            success: function (response) {
-                console.log('Submission successful!', response);
-                if (response.success) {
-                    // Update the row's data attribute
-                    const row = $(`.user-row[data-user-id="${userId}"]`);
-                    row.attr('data-category', newCategory);
-
-                    // Update button states in that row
-                    const categorySelector = row.find('.category-selector');
-                    categorySelector.find('.category-btn').each(function () {
-                        const btnCategory = $(this).data('category');
-                        $(this).removeClass('btn-primary btn-success btn-warning')
-                            .addClass(`btn-outline-${getColorForCategory(btnCategory)}`);
-
-                        if (btnCategory === newCategory) {
-                            $(this).removeClass(`btn-outline-${getColorForCategory(btnCategory)}`)
-                                .addClass(`btn-${getColorForCategory(btnCategory)}`);
-                        }
-                    });
-
-                    // Update counts
-                    updateCategoryCounts();
-
-                    showMessage('User category updated successfully!', 'success');
-                } else {
-                    showMessage('Submission failed! Details: ' + (response.message || 'Unknown'), 'danger');
-                }
-            },
-            error: function (xhr, status, error) {
-                console.log('Submission failed!', error);
-                showMessage('Submission failed! Details: ' + error, 'danger');
-            }
-        });
-    }
-
-    // Update category counts
-    function updateCategoryCounts() {
-        const counts = { all: 0, official: 0, customer: 0, contractor: 0 };
-
-        // Get DataTable instance
-        try {
-            const table = $('#usersTable').DataTable();
-            console.log('updateCategoryCounts: DataTable instance', table);
-
-            // Count all rows (not just visible ones)
-            table.rows().every(function () {
-                const row = this.node();
-                let category = $(row).data('category');
-                // Fallback: hidden span or cell text
-                if (!category || category === '') {
-                    const span = $(row).find('td').eq(3).find('span.d-none').first();
-                    if (span && span.length) category = span.text();
-                }
-                if (!category || category === '') {
-                    // Try raw cell text
-                    category = $(row).find('td').eq(3).text();
-                }
-                category = ('' + (category || '')).toLowerCase().trim();
-                console.log('Row category:', category);
-                counts.all++;
-                if (counts.hasOwnProperty(category)) {
-                    counts[category]++;
-                }
-            });
-        } catch (e) {
-            console.error('DataTable error in updateCategoryCounts:', e);
-            // Fallback to jQuery selector
-            $('.user-row').each(function () {
-                let category = $(this).data('category');
-                if (!category || category === '') {
-                    const span = $(this).find('td').eq(3).find('span.d-none').first();
-                    if (span && span.length) category = span.text();
-                }
-                if (!category || category === '') {
-                    category = $(this).find('td').eq(3).text();
-                }
-                category = ('' + (category || '')).toLowerCase().trim();
-                console.log('Fallback - Row category:', category);
-                counts.all++;
-                if (counts.hasOwnProperty(category)) {
-                    counts[category]++;
-                }
-            });
-        }
-
-        console.log('Final counts:', counts);
-
-        $('#count-all').text(counts.all);
-        $('#count-official').text(counts.official);
-        $('#count-customer').text(counts.customer);
-        $('#count-contractor').text(counts.contractor);
-
-        // Debug visual removed; use console logs for diagnostics
-    }
-
-    // Get color class for category
-    function getColorForCategory(category) {
-        const colors = {
-            'official': 'primary',
-            'customer': 'success',
-            'contractor': 'warning'
-        };
-        return colors[category] || 'primary';
     }
 
     // Show message notification

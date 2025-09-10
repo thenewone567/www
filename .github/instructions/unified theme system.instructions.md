@@ -6,6 +6,15 @@ applyTo: "*www*"
 
 **CRITICAL:** We use a single unified CSS file architecture. NO separate CSS files should be created.
 
+## **DOCUMENTATION ORGANIZATION - MANDATORY**
+
+**CRITICAL RULE:** All new `.md` files MUST be created in the `MD files/` folder.
+
+- ✅ **Location:** `c:\wamp64\www\MD files\`
+- ✅ **All documentation** - Technical docs, guides, summaries, reports
+- ✅ **No exceptions** - Every new .md file goes in this folder
+- ❌ **DO NOT create .md files** in root, docs/, or any other directory
+
 ## **MANDATORY CSS WORKFLOW:**
 
 1. **ALWAYS search existing styles first** - Use `grep_search` or `read_file` to search `public/css/app-unified.css` for existing classes
@@ -44,3 +53,12 @@ applyTo: "*www*"
 - **Main CSS:** `public/css/app-unified.css` (27.8KB)
 - **Documentation:** `public/css/elementcssreffrence.md`
 - **Load in views:** `<link rel="stylesheet" href="<?php echo URLROOT; ?>/public/css/app-unified.css">`
+
+## **Temporary Files Management:**
+
+**CRITICAL:** For any test-related temporary files, use the designated `temp/` folder.
+
+- ✅ **USE TEMP FOLDER:** Create test files in `c:\wamp64\www\temp\` (already in `.gitignore`)
+- ✅ **Clean up after testing** - Remove temporary files when done
+- ❌ **DO NOT leave test files** in root, app/, or other production directories
+- ❌ **DO NOT commit temporary files** to the repository

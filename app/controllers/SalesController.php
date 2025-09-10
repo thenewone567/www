@@ -5,6 +5,7 @@ class SalesController extends Controller
     public $saleModel;
     public $customerModel;
     public $barcodeModel;
+    public $discountCommissionModel;
 
     public function __construct()
     {
@@ -15,6 +16,7 @@ class SalesController extends Controller
         $this->productModel = $this->model('Product');
         $this->customerModel = $this->model('Customer');
         $this->barcodeModel = $this->model('Barcode');
+        $this->discountCommissionModel = $this->model('DiscountCommission');
     }
 
     public function index()
@@ -76,6 +78,46 @@ class SalesController extends Controller
             }
         } else {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        }
+    }
+
+    /**
+     * Unique ID scanning API for discount/commission system
+     */
+    public function scan_unique_id()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            return;
+        }
+
+        try {
+            $uniqueId = trim($_POST['unique_id'] ?? '');
+
+            if (empty($uniqueId)) {
+                echo json_encode(['success' => false, 'message' => 'Unique ID is required']);
+                return;
+            }
+
+            if (strlen($uniqueId) !== 12) {
+                echo json_encode(['success' => false, 'message' => 'Unique ID must be 12 characters']);
+                return;
+            }
+
+            // Use the DiscountCommission model to scan the unique ID
+            $result = $this->discountCommissionModel->scanUniqueId($uniqueId);
+
+            echo json_encode($result);
+
+        } catch (Exception $e) {
+            error_log("Unique ID scan error: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error scanning unique ID'
+            ]);
         }
     }
 
@@ -350,7 +392,7 @@ class SalesController extends Controller
     }
 
     /**
-     * Process POS sale transaction
+     * Process POS sale transaction with discount and commission support
      */
     public function process_sale()
     {
@@ -370,6 +412,12 @@ class SalesController extends Controller
             $cart_items = $input['cart_items'] ?? [];
             $total_amount = $input['total_amount'] ?? 0;
 
+            // Discount and commission data
+            $scanned_user = $input['scanned_user'] ?? null;
+            $discount_credits_used = floatval($input['discount_credits_used'] ?? 0);
+            $applied_discount_amount = floatval($input['applied_discount_amount'] ?? 0);
+            $commission_contractor = $input['commission_contractor'] ?? null;
+
             // Validate input
             if (empty($cart_items)) {
                 echo json_encode(['success' => false, 'message' => 'Cart is empty']);
@@ -381,15 +429,23 @@ class SalesController extends Controller
                 return;
             }
 
-            // Prepare sale data
-            $sale_data = [
-                'customer_id' => !empty($customer_id) ? $customer_id : null,
-                'total_amount' => $total_amount,
-                'payment_mode' => $payment_method,
-                'sale_date' => date('Y-m-d H:i:s')
-            ];
-
             try {
+                // Calculate original amount before discount
+                $original_amount = $total_amount + $applied_discount_amount;
+
+                // Prepare sale data
+                $sale_data = [
+                    'customer_id' => !empty($customer_id) ? $customer_id : null,
+                    'total_amount' => $original_amount, // Store original amount
+                    'discount_amount' => $applied_discount_amount,
+                    'final_amount' => $total_amount, // Final amount after discount
+                    'payment_mode' => $payment_method,
+                    'sale_date' => date('Y-m-d H:i:s'),
+                    'notes' => $this->buildSaleNotes($scanned_user, $discount_credits_used, $commission_contractor)
+                ];
+
+                error_log('Initiating sale processing...');
+
                 // Add the sale
                 $sale_id = $this->saleModel->addSale($sale_data);
 
@@ -402,7 +458,7 @@ class SalesController extends Controller
                             'product_id' => $item['id'],
                             'quantity' => $item['quantity'],
                             'unit_price' => $item['price'],
-                            'discount' => 0 // No discount for POS sales for now
+                            'discount' => 0 // Item-level discount handled at sale level
                         ];
                         $result = $this->saleModel->addSaleItem($sale_item_data);
                         if ($result) {
@@ -413,13 +469,37 @@ class SalesController extends Controller
                     }
 
                     if ($items_added > 0) {
-                        echo json_encode([
-                            'success' => true,
-                            'message' => 'Sale processed successfully',
-                            'sale_id' => $sale_id,
-                            'items_added' => $items_added,
-                            'change' => max(0, $amount_received - $total_amount)
-                        ]);
+                        // Process discount credits and commissions
+                        $rewards_result = $this->processDiscountAndCommission(
+                            $sale_id,
+                            $original_amount,
+                            $scanned_user,
+                            $discount_credits_used,
+                            $commission_contractor
+                        );
+
+                        if ($rewards_result['success']) {
+                            error_log('Sale submission successful! Rewards: ' . json_encode($rewards_result));
+
+                            echo json_encode([
+                                'success' => true,
+                                'message' => 'Sale processed successfully',
+                                'sale_id' => $sale_id,
+                                'items_added' => $items_added,
+                                'change' => max(0, $amount_received - $total_amount),
+                                'rewards' => $rewards_result['results']
+                            ]);
+                        } else {
+                            // Sale was created but rewards processing failed - warn but don't fail
+                            echo json_encode([
+                                'success' => true,
+                                'message' => 'Sale processed but rewards processing failed: ' . $rewards_result['message'],
+                                'sale_id' => $sale_id,
+                                'items_added' => $items_added,
+                                'change' => max(0, $amount_received - $total_amount),
+                                'rewards' => ['credits_used' => 0, 'discount_credits_earned' => 0, 'commission_earned' => 0]
+                            ]);
+                        }
                     } else {
                         echo json_encode(['success' => false, 'message' => 'Sale created but no items were added']);
                     }
@@ -428,11 +508,84 @@ class SalesController extends Controller
                 }
             } catch (Exception $e) {
                 error_log("POS Sale processing error: " . $e->getMessage());
-                echo json_encode(['success' => false, 'message' => 'Error processing sale']);
+                echo json_encode(['success' => false, 'message' => 'Error processing sale: ' . $e->getMessage()]);
             }
         } else {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
         }
+    }
+
+    /**
+     * Process discount credits and commissions for a sale
+     */
+    private function processDiscountAndCommission($sale_id, $sale_amount, $scanned_user, $discount_credits_used, $commission_contractor)
+    {
+        try {
+            $customer_id = null;
+            $contractor_id = null;
+
+            // Determine customer and contractor IDs
+            if ($scanned_user && $scanned_user['type'] === 'customer') {
+                $customer_id = $scanned_user['data']['customer_id'];
+            }
+
+            if ($commission_contractor) {
+                $contractor_id = $commission_contractor['contractor_id'];
+                // If contractor referral, also set customer for commission link
+                if (!$customer_id && $scanned_user && $scanned_user['type'] === 'customer') {
+                    $customer_id = $scanned_user['data']['customer_id'];
+                }
+            }
+
+            // Process discount credits usage first
+            if ($customer_id && $discount_credits_used > 0) {
+                $credits_used = $this->discountCommissionModel->useDiscountCredits($customer_id, $discount_credits_used, $sale_id);
+                if ($credits_used != $discount_credits_used) {
+                    error_log("Warning: Expected to use $discount_credits_used credits but actually used $credits_used");
+                }
+            }
+
+            // Process rewards (credits earned and commissions)
+            $rewards_result = $this->discountCommissionModel->processSaleRewards(
+                $sale_id,
+                $sale_amount,
+                $customer_id,
+                $contractor_id,
+                $discount_credits_used
+            );
+
+            return $rewards_result;
+
+        } catch (Exception $e) {
+            error_log("Discount and commission processing error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error processing rewards: ' . $e->getMessage(),
+                'results' => ['credits_used' => 0, 'discount_credits_earned' => 0, 'commission_earned' => 0]
+            ];
+        }
+    }
+
+    /**
+     * Build sale notes with discount and commission info
+     */
+    private function buildSaleNotes($scanned_user, $discount_credits_used, $commission_contractor)
+    {
+        $notes = [];
+
+        if ($scanned_user) {
+            $notes[] = "Scanned ID: " . $scanned_user['data']['unique_id'] . " (" . $scanned_user['data']['name'] . ")";
+        }
+
+        if ($discount_credits_used > 0) {
+            $notes[] = "Discount credits used: $" . number_format($discount_credits_used, 2);
+        }
+
+        if ($commission_contractor) {
+            $notes[] = "Commission contractor: " . $commission_contractor['unique_id'] . " (" . $commission_contractor['name'] . ")";
+        }
+
+        return implode('; ', $notes);
     }
 
     public function add()

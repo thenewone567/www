@@ -22,6 +22,7 @@ class Contractor
     public function getAllContractors()
     {
         $this->db->query('SELECT * FROM contractors WHERE is_active = 1 ORDER BY contractor_name');
+        $this->db->execute();
         return $this->db->resultSet();
     }
 
@@ -34,6 +35,7 @@ class Contractor
     {
         $this->db->query('SELECT * FROM contractors WHERE contractor_id = :contractor_id');
         $this->db->bind(':contractor_id', $contractorId);
+        $this->db->execute();
         return $this->db->single();
     }
 
@@ -46,6 +48,7 @@ class Contractor
     {
         $this->db->query('SELECT * FROM contractors WHERE email = :email');
         $this->db->bind(':email', $email);
+        $this->db->execute();
         return $this->db->single();
     }
 
@@ -165,6 +168,7 @@ class Contractor
     {
         $this->db->query('SELECT * FROM contractors WHERE contract_type = :contract_type AND is_active = 1 ORDER BY contractor_name');
         $this->db->bind(':contract_type', $type);
+        $this->db->execute();
         return $this->db->resultSet();
     }
 
@@ -181,6 +185,7 @@ class Contractor
                          ORDER BY contractor_name');
         $searchPattern = '%' . $searchTerm . '%';
         $this->db->bind(':search', $searchPattern);
+        $this->db->execute();
         return $this->db->resultSet();
     }
 
@@ -191,6 +196,7 @@ class Contractor
     public function getTotalContractors()
     {
         $this->db->query('SELECT COUNT(*) as count FROM contractors WHERE is_active = 1');
+        $this->db->execute();
         $result = $this->db->single();
         return $result ? (int) $result->count : 0;
     }
@@ -209,6 +215,38 @@ class Contractor
                          COUNT(CASE WHEN contract_type = "freelancer" THEN 1 END) as freelancers,
                          AVG(hourly_rate) as avg_hourly_rate
                          FROM contractors WHERE is_active = 1');
+        $this->db->execute();
+        return $this->db->single();
+    }
+
+    /**
+     * Get monthly performance for contractor
+     * @param int $contractorId
+     * @param int $month
+     * @param int $year
+     * @return object|null
+     */
+    public function getMonthlyPerformance($contractorId, $month, $year)
+    {
+        // This would typically join with projects, sales, or work orders table
+        // For now, returning basic contractor info with sample performance data
+        $this->db->query('SELECT 
+                         c.*,
+                         COUNT(wo.work_order_id) as total_orders,
+                         SUM(wo.total_amount) as total_revenue,
+                         AVG(wo.completion_rating) as avg_rating
+                         FROM contractors c
+                         LEFT JOIN work_orders wo ON c.contractor_id = wo.contractor_id 
+                             AND MONTH(wo.completion_date) = :month 
+                             AND YEAR(wo.completion_date) = :year
+                         WHERE c.contractor_id = :contractor_id
+                         GROUP BY c.contractor_id');
+
+        $this->db->bind(':contractor_id', $contractorId);
+        $this->db->bind(':month', $month);
+        $this->db->bind(':year', $year);
+        $this->db->execute();
+
         return $this->db->single();
     }
 }

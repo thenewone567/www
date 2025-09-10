@@ -88,27 +88,109 @@
             </div>
         </div>
 
-        <!-- Right Panel - Customer & Payment -->
+        <!-- Right Panel - Payment -->
         <div class="col-md-4">
-            <!-- Customer Selection -->
+            <!-- Discount & Commission Scanner -->
             <div class="theme-card mb-4">
-                <div class="card-header bg-info-theme text-white">
-                    <h5 class="mb-0"><i class="fa-solid fa-user"></i> Customer</h5>
+                <div class="card-header bg-gradient text-white"
+                    style="background: linear-gradient(135deg, #6f42c1, #d63384);">
+                    <h5 class="mb-0"><i class="fa-solid fa-qrcode"></i> Scan ID for Rewards</h5>
                 </div>
                 <div class="card-body">
-                    <select id="customer-select" class="form-control form-control-lg">
-                        <option value="">Walk-in Customer</option>
-                        <?php if (isset($data['customers']) && is_array($data['customers'])): ?>
-                            <?php foreach ($data['customers'] as $customer): ?>
-                                <option value="<?php echo $customer->customer_id; ?>">
-                                    <?php echo htmlspecialchars($customer->name); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
-                    <button class="btn btn-outline-info btn-sm mt-2 w-100">
-                        <i class="fa-solid fa-user-plus"></i> Add New Customer
-                    </button>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-scan"></i></span>
+                        <input type="text" id="unique-id-scanner" class="form-control"
+                            placeholder="Scan unique ID (CU/CO prefix)" maxlength="12">
+                        <button class="btn btn-primary" type="button" onclick="scanUniqueId()">
+                            <i class="fa-solid fa-search"></i>
+                        </button>
+                    </div>
+
+                    <!-- Scanned User Info -->
+                    <div id="scanned-user-info" class="d-none">
+                        <div class="alert alert-success p-2 mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong id="scanned-user-name"></strong><br>
+                                    <small id="scanned-user-type" class="text-muted"></small>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger" onclick="clearScannedUser()">
+                                    <i class="fa-solid fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Customer Discount Info -->
+                        <div id="customer-discount-info" class="d-none">
+                            <div class="row text-center mb-2">
+                                <div class="col-6">
+                                    <small class="text-muted">Available Credits</small><br>
+                                    <strong class="text-success">$<span id="available-credits">0.00</span></strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Total Earned</small><br>
+                                    <strong class="text-info">$<span id="total-earned">0.00</span></strong>
+                                </div>
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Use $</span>
+                                <input type="number" id="credits-to-use" class="form-control" placeholder="0.00"
+                                    step="0.01" min="0">
+                                <button class="btn btn-success btn-sm" onclick="applyDiscountCredits()">
+                                    Apply
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Contractor Commission Info -->
+                        <div id="contractor-commission-info" class="d-none">
+                            <div class="row text-center mb-2">
+                                <div class="col-4">
+                                    <small class="text-muted">Tier</small><br>
+                                    <strong class="text-primary"><span id="contractor-tier">Bronze</span></strong>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Commission Rate</small><br>
+                                    <strong class="text-warning"><span id="commission-rate">5.0</span>%</strong>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Pending Balance</small><br>
+                                    <strong class="text-info">$<span id="pending-commission">0.00</span></strong>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-12">
+                                    <small class="text-muted">Total Revenue: $<span
+                                            id="contractor-revenue">0.00</span></small>
+                                    <div class="progress" style="height: 4px;">
+                                        <div id="tier-progress" class="progress-bar bg-primary" role="progressbar"
+                                            style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Commission Calculation Display -->
+                            <div id="commission-calculation" class="d-none">
+                                <div class="alert alert-warning p-2 mb-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span><i class="fa-solid fa-handshake"></i> Commission on Current Sale:</span>
+                                        <strong class="text-warning">$<span
+                                                id="current-commission-amount">0.00</span></strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info p-2 mb-0">
+                                <small><i class="fa-solid fa-info-circle"></i>
+                                    Commission will be calculated on final sale amount</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <small class="text-muted">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        Scan customer ID (CU) for discount credits or contractor ID (CO) for commission tracking
+                    </small>
                 </div>
             </div>
 
@@ -126,6 +208,17 @@
                         <div class="col-6"><strong>Subtotal:</strong></div>
                         <div class="col-6 text-right">$<span id="subtotal">0.00</span></div>
                     </div>
+
+                    <!-- Discount Section -->
+                    <div id="discount-section" class="d-none">
+                        <div class="row mb-3 text-success">
+                            <div class="col-6">
+                                <i class="fa-solid fa-tags"></i> Discount Credits:
+                            </div>
+                            <div class="col-6 text-right">-$<span id="discount-amount">0.00</span></div>
+                        </div>
+                    </div>
+
                     <div class="row mb-3">
                         <div class="col-6">Tax (0%):</div>
                         <div class="col-6 text-right">$<span id="tax">0.00</span></div>
@@ -137,6 +230,16 @@
                         </div>
                         <div class="col-6 text-right">
                             <h5><strong>$<span id="total">0.00</span></strong></h5>
+                        </div>
+                    </div>
+
+                    <!-- Credits Earned Preview -->
+                    <div id="credits-earned-preview" class="d-none">
+                        <div class="alert alert-success p-2 mb-0">
+                            <small>
+                                <i class="fa-solid fa-gift"></i>
+                                You'll earn $<span id="credits-will-earn">0.00</span> in discount credits!
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -275,7 +378,7 @@
     }
 
     #search-results-dropdown .list-group-item:hover {
-        background-color: #f8f9fa;
+        background-color: #133c64ff;
     }
 </style>
 
@@ -766,6 +869,383 @@
             })
             .catch(error => {
                 console.error('Error:', error);
+                alert('Error processing payment');
+            })
+            .finally(() => {
+                // Re-enable the pay button
+                payButton.disabled = false;
+                payButton.innerHTML = '<i class="fa-solid fa-money-bill"></i> Process Payment';
+            });
+    }
+
+    // Discount and Commission System Variables
+    let scannedUser = null;
+    let appliedDiscountAmount = 0;
+    let discountCreditsToUse = 0;
+    let commissionContractor = null;
+
+    // Unique ID Scanner functionality
+    const uniqueIdInput = document.getElementById('unique-id-scanner');
+    if (uniqueIdInput) {
+        uniqueIdInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                scanUniqueId();
+            }
+        });
+
+        uniqueIdInput.addEventListener('input', function (e) {
+            // Auto-format and validate as user types
+            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            e.target.value = value;
+
+            // Auto-scan when reaches 12 characters
+            if (value.length === 12) {
+                setTimeout(scanUniqueId, 100);
+            }
+        });
+    }
+
+    function scanUniqueId() {
+        const uniqueId = document.getElementById('unique-id-scanner').value.trim();
+
+        if (!uniqueId || uniqueId.length !== 12) {
+            alert('Please enter a valid 12-character unique ID');
+            return;
+        }
+
+        console.log('Initiating unique ID scan...');
+
+        fetch('<?php echo URLROOT; ?>/sales/scan_unique_id', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'unique_id=' + encodeURIComponent(uniqueId)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Unique ID scan response:', data);
+
+                if (data.success) {
+                    console.log('Unique ID scan successful!', data);
+                    displayScannedUser(data);
+                    updateOrderSummary(); // Refresh calculations
+                } else {
+                    console.log('Unique ID scan failed:', data.message);
+                    alert('Scan failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Unique ID scan error:', error);
+                alert('Error scanning unique ID');
+            });
+    }
+
+    function displayScannedUser(data) {
+        scannedUser = data;
+
+        // Show user info section
+        document.getElementById('scanned-user-info').classList.remove('d-none');
+        document.getElementById('scanned-user-name').textContent = data.data.name;
+
+        if (data.type === 'customer') {
+            document.getElementById('scanned-user-type').textContent = 'Customer • ' + data.data.unique_id;
+            showCustomerDiscountInfo(data.data);
+            commissionContractor = null; // Clear any contractor
+        } else if (data.type === 'contractor') {
+            document.getElementById('scanned-user-type').textContent = 'Contractor • ' + data.data.unique_id;
+            showContractorCommissionInfo(data.data);
+            commissionContractor = data.data; // Set for commission calculation
+        }
+
+        // Clear the input
+        document.getElementById('unique-id-scanner').value = '';
+    }
+
+    function showCustomerDiscountInfo(customerData) {
+        document.getElementById('customer-discount-info').classList.remove('d-none');
+        document.getElementById('contractor-commission-info').classList.add('d-none');
+
+        document.getElementById('available-credits').textContent = customerData.discount_balance.toFixed(2);
+        document.getElementById('total-earned').textContent = customerData.total_earned.toFixed(2);
+
+        // Set max credits that can be used
+        const maxCredits = Math.min(customerData.discount_balance, cartTotal);
+        document.getElementById('credits-to-use').max = maxCredits.toFixed(2);
+        document.getElementById('credits-to-use').placeholder = 'Max: $' + maxCredits.toFixed(2);
+    }
+
+    function showContractorCommissionInfo(contractorData) {
+        document.getElementById('contractor-commission-info').classList.remove('d-none');
+        document.getElementById('customer-discount-info').classList.add('d-none');
+
+        // Display commission rate with proper formatting based on type
+        const commissionRate = contractorData.commission_rate;
+        const commissionType = contractorData.commission_type || 'percentage';
+        const tierInfo = contractorData.tier_info;
+        const totalRevenue = contractorData.total_revenue || 0;
+
+        // Update commission rate display
+        document.getElementById('commission-rate').textContent = commissionRate.toFixed(1);
+
+        // Update tier information if available
+        console.log('Debug - tierInfo:', tierInfo);
+        console.log('Debug - commissionType:', commissionType);
+        console.log('Debug - condition check:', tierInfo && commissionType === 'tiered');
+
+        if (tierInfo && commissionType === 'tiered') {
+            console.log('Debug - Entering tiered branch');
+            document.getElementById('contractor-tier').textContent = tierInfo.name;
+            document.getElementById('contractor-revenue').textContent = totalRevenue.toFixed(2);
+
+            // Update tier progress bar
+            const progressBar = document.getElementById('tier-progress');
+            const progress = tierInfo.progress_to_next || 0;
+            progressBar.style.width = progress + '%';
+
+            // Color code based on tier
+            const tierColors = {
+                'Bronze': 'bg-secondary',
+                'Silver': 'bg-info',
+                'Gold': 'bg-warning',
+                'Platinum': 'bg-primary',
+                'Diamond': 'bg-success'
+            };
+
+            progressBar.className = 'progress-bar ' + (tierColors[tierInfo.name] || 'bg-primary');
+        } else {
+            // For non-tiered contractors, show basic info
+            console.log('Debug - Entering non-tiered branch');
+            console.log('Debug - commissionType for non-tiered:', commissionType);
+            document.getElementById('contractor-tier').textContent = commissionType === 'fixed' ? 'Fixed' : 'Standard';
+            document.getElementById('contractor-revenue').textContent = totalRevenue.toFixed(2);
+            document.getElementById('tier-progress').style.width = '0%';
+        }
+
+        document.getElementById('pending-commission').textContent = contractorData.pending_balance.toFixed(2);
+
+        // Update commission calculation for current cart
+        updateCommissionCalculation();
+    }
+
+    function updateCommissionCalculation() {
+        if (!commissionContractor) {
+            document.getElementById('commission-calculation').classList.add('d-none');
+            return;
+        }
+
+        const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+        const discount = appliedDiscountAmount;
+        const total = subtotal - discount;
+
+        if (total <= 0) {
+            document.getElementById('commission-calculation').classList.add('d-none');
+            return;
+        }
+
+        let commissionAmount = 0;
+        const commissionType = commissionContractor.commission_type || 'percentage';
+
+        if (commissionType === 'fixed') {
+            commissionAmount = commissionContractor.commission_rate;
+        } else if (commissionType === 'tiered') {
+            // Use the calculated tier-based commission rate
+            commissionAmount = (total * commissionContractor.commission_rate) / 100;
+        } else {
+            // Standard percentage
+            commissionAmount = (total * commissionContractor.commission_rate) / 100;
+        }
+
+        // Show commission calculation
+        document.getElementById('commission-calculation').classList.remove('d-none');
+        document.getElementById('current-commission-amount').textContent = commissionAmount.toFixed(2);
+    }
+
+    function clearScannedUser() {
+        scannedUser = null;
+        commissionContractor = null;
+        appliedDiscountAmount = 0;
+        discountCreditsToUse = 0;
+
+        document.getElementById('scanned-user-info').classList.add('d-none');
+        document.getElementById('customer-discount-info').classList.add('d-none');
+        document.getElementById('contractor-commission-info').classList.add('d-none');
+        document.getElementById('commission-calculation').classList.add('d-none');
+        document.getElementById('credits-to-use').value = '';
+
+        updateOrderSummary();
+    }
+
+    function applyDiscountCredits() {
+        const creditsInput = document.getElementById('credits-to-use');
+        const creditsAmount = parseFloat(creditsInput.value) || 0;
+
+        if (creditsAmount <= 0) {
+            alert('Please enter a valid credit amount');
+            return;
+        }
+
+        if (!scannedUser || scannedUser.type !== 'customer') {
+            alert('Please scan a customer ID first');
+            return;
+        }
+
+        const maxCredits = Math.min(scannedUser.data.discount_balance, cartTotal);
+        if (creditsAmount > maxCredits) {
+            alert('Cannot use more than $' + maxCredits.toFixed(2) + ' in credits');
+            return;
+        }
+
+        discountCreditsToUse = creditsAmount;
+        appliedDiscountAmount = creditsAmount;
+
+        updateOrderSummary();
+
+        // Visual feedback
+        const successMsg = document.createElement('div');
+        successMsg.className = 'alert alert-success alert-dismissible fade show mt-2';
+        successMsg.innerHTML = `
+            <i class="fa-solid fa-check-circle"></i> 
+            Applied $${creditsAmount.toFixed(2)} in discount credits!
+            <button type="button" class="close" onclick="this.parentElement.remove()">
+                <span>&times;</span>
+            </button>
+        `;
+        document.getElementById('customer-discount-info').appendChild(successMsg);
+
+        setTimeout(() => successMsg.remove(), 3000);
+    }
+
+    // Update the existing updateOrderSummary function
+    function updateOrderSummary() {
+        const items = cart.length;
+        const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+        const tax = 0; // No tax for now
+        const discount = appliedDiscountAmount;
+        const total = subtotal - discount + tax;
+
+        // Update display
+        document.getElementById('total-items').textContent = items;
+        document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('tax').textContent = tax.toFixed(2);
+
+        // Show/hide discount section
+        if (discount > 0) {
+            document.getElementById('discount-section').classList.remove('d-none');
+            document.getElementById('discount-amount').textContent = discount.toFixed(2);
+        } else {
+            document.getElementById('discount-section').classList.add('d-none');
+        }
+
+        // Update commission calculation in contractor section
+        updateCommissionCalculation();
+
+        // Show credits earned preview for customers (excluding contractors who can't earn credits)
+        if (total > 0 && (!scannedUser || scannedUser.type === 'customer')) {
+            const creditRate = 2.0; // 2% default - should come from settings
+            const creditsEarned = (total * creditRate) / 100;
+            if (creditsEarned >= 0.01) {
+                document.getElementById('credits-earned-preview').classList.remove('d-none');
+                document.getElementById('credits-will-earn').textContent = creditsEarned.toFixed(2);
+            } else {
+                document.getElementById('credits-earned-preview').classList.add('d-none');
+            }
+        } else {
+            document.getElementById('credits-earned-preview').classList.add('d-none');
+        }
+
+        document.getElementById('total').textContent = total.toFixed(2);
+        cartTotal = total;
+
+        // Enable/disable pay button
+        const payButton = document.getElementById('pay-button');
+        if (payButton) {
+            payButton.disabled = cart.length === 0;
+        }
+    }
+
+    // Update the existing processPayment function to include discount and commission data
+    function processPayment() {
+        if (cart.length === 0) {
+            alert('Cart is empty');
+            return;
+        }
+
+        const customerId = document.getElementById('customer-select').value || null;
+        const paymentMethod = document.getElementById('payment-method').value;
+        const amountReceived = parseFloat(document.getElementById('amount-received').value) || 0;
+
+        if (paymentMethod === 'cash' && amountReceived < cartTotal) {
+            alert('Insufficient payment amount');
+            return;
+        }
+
+        // Disable the pay button to prevent double submission
+        const payButton = document.getElementById('pay-button');
+        payButton.disabled = true;
+        payButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+        // Prepare sale data with discount and commission info
+        const saleData = {
+            customer_id: customerId,
+            payment_method: paymentMethod,
+            amount_received: amountReceived,
+            cart_items: cart,
+            total_amount: cartTotal,
+            // Discount and commission data
+            scanned_user: scannedUser,
+            discount_credits_used: discountCreditsToUse,
+            applied_discount_amount: appliedDiscountAmount,
+            commission_contractor: commissionContractor
+        };
+
+        console.log('Initiating sale submission...', saleData);
+
+        // Send to server
+        fetch('<?php echo URLROOT; ?>/sales/process_sale', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(saleData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Sale submission successful!', data);
+
+                    let alertMessage = `Sale processed successfully!\nSale ID: ${data.sale_id}\nChange: $${data.change.toFixed(2)}`;
+
+                    // Add discount and commission info to success message
+                    if (data.rewards) {
+                        if (data.rewards.credits_used > 0) {
+                            alertMessage += `\n\nDiscount Credits Used: $${data.rewards.credits_used.toFixed(2)}`;
+                        }
+                        if (data.rewards.discount_credits_earned > 0) {
+                            alertMessage += `\nDiscount Credits Earned: $${data.rewards.discount_credits_earned.toFixed(2)}`;
+                        }
+                        if (data.rewards.commission_earned > 0) {
+                            alertMessage += `\nCommission Earned: $${data.rewards.commission_earned.toFixed(2)}`;
+                        }
+                    }
+
+                    alert(alertMessage);
+
+                    // Clear cart and reset everything after successful payment
+                    cart = [];
+                    clearScannedUser();
+                    updateCartDisplay();
+                    updateOrderSummary();
+                    document.getElementById('amount-received').value = '';
+                    document.getElementById('customer-select').value = '';
+                    document.getElementById('unified-search-input').focus();
+                } else {
+                    console.log('Sale submission failed:', data.message);
+                    alert('Error processing sale: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Sale submission error:', error);
                 alert('Error processing payment');
             })
             .finally(() => {

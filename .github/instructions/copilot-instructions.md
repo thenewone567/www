@@ -1,5 +1,24 @@
 # GitHub Copilot Instructions
 
+## Documentation Organization
+
+### **MARKDOWN FILES ORGANIZATION - MANDATORY**
+
+All documentation files must be organized properly:
+
+**CRITICAL RULE:** All new `.md` files MUST be created in the `MD files/` folder.
+
+- ✅ **Location:** `c:\wamp64\www\MD files\`
+- ✅ **All documentation** - Technical docs, guides, summaries, reports
+- ✅ **No exceptions** - Every new .md file goes in this folder
+- ❌ **DO NOT create .md files** in root, docs/, or any other directory
+
+**Before creating documentation:**
+
+1. Always place new .md files in `MD files/` folder
+2. Use descriptive, consistent naming (UPPERCASE for important docs)
+3. Keep documentation organized and accessible
+
 ## CSS Architecture Guidelines
 
 ### **UNIFIED CSS SYSTEM - CRITICAL RULES**
@@ -75,6 +94,7 @@ We routinely find temporary, test, debug, and analysis artifacts left in the rep
 Rules:
 
 - Do not commit temporary files (filename patterns like `*temp*`, `*tmp*`, `*debug*`, `*test*`, `*.log`, `*.zip` created for debugging/analysis) into source-controlled folders.
+- **USE TEMP FOLDER:** For any test-related temporary files, create them in the `temp/` folder which is already included in `.gitignore`
 - If you must run local analysis or debugging that produces artifacts, keep them outside the repository workspace or in a clearly-named local-only folder that is listed in `.gitignore`.
 - Use the provided cleanup script `scripts/archive_temp_files.ps1` to archive and remove temporary analysis artifacts when necessary. Review the archive before deleting it permanently.
 - Prefer logging to the application `storage/logs` with rotation; avoid creating one-off logs in `scripts/` or repository root. If a debug log is created, move it to `storage/logs` or remove it when done.
@@ -90,6 +110,7 @@ Suggested `.gitignore` entries (add to the project root `.gitignore`):
 *.log
 *.zip
 /.archived/
+/temp/
 ```
 
 When removing temporary artifacts commit a short message explaining what was removed and why, e.g. "chore: remove archived temp-scripts.zip and debug logs".

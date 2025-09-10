@@ -63,16 +63,6 @@
                         <span class="info-value"><?php echo $data['user']->user_id; ?></span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label"><i class="fas fa-link text-muted"></i> Composite ID</span>
-                        <span
-                            class="info-value"><?php echo htmlspecialchars(($data['user']->source_table ?? 'users') . ':' . ($data['user']->user_id ?? '0')); ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="fas fa-database text-muted"></i> Source Table</span>
-                        <span
-                            class="info-value"><?php echo htmlspecialchars($data['user']->source_table ?? 'users'); ?></span>
-                    </div>
-                    <div class="info-row">
                         <span class="info-label"><i class="fas fa-user text-muted"></i> Username</span>
                         <span
                             class="info-value">@<?php echo htmlspecialchars($data['user']->username ?? $data['user']->user_name ?? 'N/A'); ?></span>
@@ -181,11 +171,56 @@
                     <?php if (strtolower($data['user']->user_category ?? ($data['user']->source_table ?? '')) === 'contractor' || strtolower($data['user']->source_table ?? '') === 'contractors'): ?>
                         <hr />
                         <h5 class="mb-3"><i class="fas fa-hard-hat text-primary"></i> Contractor Details</h5>
+
+                        <!-- Tier Information -->
+                        <?php if (isset($data['user']->current_tier_achievement)): ?>
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-trophy text-muted"></i> Current Tier</span>
+                                <span class="info-value">
+                                    <?php
+                                    $tierLevel = (int) ($data['user']->current_tier_achievement ?? 1);
+                                    $tierNames = [1 => 'Bronze', 2 => 'Silver', 3 => 'Gold', 4 => 'Platinum', 5 => 'Diamond'];
+                                    $tierName = $tierNames[$tierLevel] ?? 'Bronze';
+                                    $tierClass = 'tier-' . strtolower($tierName);
+                                    ?>
+                                    <span class="tier-badge <?= $tierClass ?>">
+                                        <span class="tier-icon"></span>
+                                        <?= $tierName ?>
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-calendar-quarter text-muted"></i> Quarterly
+                                    Revenue</span>
+                                <span
+                                    class="info-value">$<?php echo number_format($data['user']->quarterly_revenue_generated ?? 0, 2); ?></span>
+                            </div>
+                            <?php if (!empty($data['user']->tier_earned_quarter)): ?>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-award text-muted"></i> Tier Earned</span>
+                                    <span
+                                        class="info-value"><?php echo htmlspecialchars($data['user']->tier_earned_quarter); ?></span>
+                                </div>
+                            <?php endif; ?>
+                        <?php endif; ?>
+
                         <div class="info-row">
                             <span class="info-label"><i class="fas fa-toolbox text-muted"></i> Specialization</span>
                             <span
                                 class="info-value"><?php echo htmlspecialchars($data['user']->specialization ?? 'N/A'); ?></span>
                         </div>
+                        <?php if (!empty($data['user']->company_name)): ?>
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-building text-muted"></i> Company</span>
+                                <span class="info-value"><?php echo htmlspecialchars($data['user']->company_name); ?></span>
+                            </div>
+                        <?php endif; ?>
+                        <?php if (!empty($data['user']->license_number)): ?>
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-certificate text-muted"></i> License Number</span>
+                                <span class="info-value"><?php echo htmlspecialchars($data['user']->license_number); ?></span>
+                            </div>
+                        <?php endif; ?>
                         <div class="info-row">
                             <span class="info-label"><i class="fas fa-coins text-muted"></i> Commission Type</span>
                             <span
@@ -194,12 +229,12 @@
                         <div class="info-row">
                             <span class="info-label"><i class="fas fa-chart-line text-muted"></i> Commission Rate</span>
                             <span
-                                class="info-value"><?php echo htmlspecialchars($data['user']->commission_rate ?? '0'); ?></span>
+                                class="info-value"><?php echo htmlspecialchars($data['user']->commission_rate ?? '0'); ?>%</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label"><i class="fas fa-wallet text-muted"></i> Total Commission Earned</span>
                             <span
-                                class="info-value"><?php echo htmlspecialchars($data['user']->total_commission_earned ?? '0'); ?></span>
+                                class="info-value">$<?php echo number_format($data['user']->total_commission_earned ?? 0, 2); ?></span>
                         </div>
                     <?php endif; ?>
 
@@ -224,11 +259,6 @@
                             load recent activity for this user.</p>
                     </div>
 
-                    <!-- Raw JSON dump for debugging / audit -->
-                    <hr />
-                    <h6 class="mb-2"><i class="fas fa-code text-primary"></i> Raw User Data</h6>
-                    <pre
-                        style="max-height:240px; overflow:auto; background:#f7f7f9; padding:12px; border-radius:4px;"><?php echo htmlspecialchars(json_encode($data['user'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></pre>
                     <?php if (isset($data['user']->last_login) && $data['user']->last_login): ?>
                         <div class="info-row">
                             <span class="info-label"><i class="fas fa-clock text-muted"></i> Last Login</span>

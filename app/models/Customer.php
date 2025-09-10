@@ -75,12 +75,21 @@ class Customer
 
     public function updateCustomer($data)
     {
-        $this->db->query("UPDATE customers SET customer_name = :customer_name, contact_info = :contact_info, credit_limit = :credit_limit WHERE customer_id = :id");
+        $this->db->query("UPDATE customers SET 
+                          customer_name = :customer_name, 
+                          contact_info = :contact_info, 
+                          credit_limit = :credit_limit,
+                          customer_type = :customer_type,
+                          status = :status
+                          WHERE customer_id = :id");
+
         // Bind values
         $this->db->bind(':id', $data['id']);
         $this->db->bind(':customer_name', $data['customer_name']);
-        $this->db->bind(':contact_info', $data['contact_info']);
+        $this->db->bind(':contact_info', $data['contact_info'] ?? '');
         $this->db->bind(':credit_limit', $data['credit_limit']);
+        $this->db->bind(':customer_type', $data['customer_type'] ?? 'business');
+        $this->db->bind(':status', $data['status'] ?? 'active');
 
         // Execute
         return $this->db->execute();
