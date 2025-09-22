@@ -83,9 +83,9 @@ try {
 
     // Check if the purchase order can be received or is already in off-loading
     $status = strtolower($purchase->status ?? '');
-    $canReceive = in_array($status, ['pending', 'email_received', 'in_transit', 'shipped']);
+    $canReceive = in_array($status, ['pending', 'email_received', 'in_transit', 'shipped', 'ready_to_receive', 'receiving_in_progress', 'partially_received']);
     // Check for off-loading status
-    $isOffloading = ($status === 'off-loading');
+    $isOffloading = in_array($status, ['off-loading', 'ready_to_receive', 'receiving_in_progress']);
 
     // Check for stuck off-loading
     $stuckInfo = null;
@@ -108,9 +108,12 @@ try {
     ob_end_clean();
 
     if (!$canReceive && !$isOffloading) {
+        // Format status for display (replace underscores with spaces and capitalize properly)
+        $statusDisplay = ucwords(str_replace('_', ' ', $status));
+
         echo json_encode([
             'success' => false,
-            'message' => "Purchase Order cannot be received. Current status: " . ucfirst($status),
+            'message' => "Purchase Order cannot be received. Current status: " . $statusDisplay,
             'data' => [
                 'purchase' => $purchase,
                 'can_receive' => false

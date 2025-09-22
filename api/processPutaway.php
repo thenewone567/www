@@ -1,7 +1,27 @@
 <?php
 /**
  * Process Putaway API Endpoint
- * Handles putaway operations from receiving areas to storage locations
+ * Handles putaway operations from receivin        // Find product by barcode, SKU, or product ID
+        $db->query("SELECT product_id, product_name, sku, barcode FROM products WHERE barcode = ? OR sku = ? OR CONCAT('P-', product_id) = ? LIMIT 1");
+        $db->bind(1, $itemBarcode);
+        $db->bind(2, $itemBarcode);
+        $db->bind(3, $itemBarcode);
+        $db->execute();
+        $product = $db->single();
+
+        if (!$product) {
+            throw new Exception('Product not found with barcode/SKU: ' . $itemBarcode);
+        }
+
+        // Find storage location
+        $db->query("SELECT location_id, location_name, location_code FROM locations WHERE location_code = ? AND location_type = 'storage'");
+        $db->bind(1, $locationCode);
+        $db->execute();
+        $location = $db->single();
+
+        if (!$location) {
+            throw new Exception('Storage location not found: ' . $locationCode);
+        }ocations
  */
 
 // Prevent PHP from emitting HTML error pages in API responses
@@ -65,18 +85,22 @@ try {
         throw new Exception('Invalid JSON input');
     }
 
-    $itemBarcode = $input['item_barcode'] ?? '';
-    $locationCode = $input['location_code'] ?? '';
-    $quantity = $input['quantity'] ?? 0;
-    $userId = $input['user_id'] ?? 0;
+    $itemBarcode = trim($input['item_barcode'] ?? '');
+    $locationCode = trim($input['location_code'] ?? '');
+    $quantity = (int) ($input['quantity'] ?? 0);
+    $userId = (int) ($input['user_id'] ?? 0);
+    $purchaseItemId = (int) ($input['purchase_item_id'] ?? 0); // Add this for better tracking
 
     // Validate input
     if (empty($itemBarcode) || empty($locationCode) || $quantity <= 0) {
         throw new Exception('Missing required fields: item_barcode, location_code, quantity');
     }
 
+    // Log the putaway request for debugging
+    error_log("Putaway request: Barcode=$itemBarcode, Location=$locationCode, Qty=$quantity, PurchaseItemId=$purchaseItemId");
+
     // Load database
-    require_once '../app/Database.php';
+    require_once __DIR__ . '/../bootstrap.php';
     $db = new Database();
 
     $db->beginTransaction();
@@ -104,19 +128,38 @@ try {
         }
 
         // Check if item exists in putaway queue (pending from receiving)
-        $db->query("
-            SELECT pi.purchase_item_id, pi.quantity, pi.received_quantity, 
-                   COALESCE(pi.putaway_quantity, 0) as putaway_quantity,
-                   po.po_number
-            FROM purchase_items pi
-            JOIN purchases po ON pi.purchase_id = po.purchase_id
-            WHERE pi.product_id = ? 
-            AND pi.received_quantity > COALESCE(pi.putaway_quantity, 0)
-            AND po.status IN ('received', 'receiving_in_progress', 'completed')
-            ORDER BY pi.received_at ASC
-            LIMIT 1
-        ");
-        $db->bind(1, $product->product_id);
+        // If we have a specific purchase_item_id, use it for exact matching
+        if ($purchaseItemId > 0) {
+            $db->query("
+                SELECT pi.purchase_item_id, pi.quantity, pi.received_quantity, 
+                       COALESCE(pi.putaway_quantity, 0) as putaway_quantity,
+                       po.po_number, pi.product_id
+                FROM purchase_items pi
+                JOIN purchases po ON pi.purchase_id = po.purchase_id
+                WHERE pi.purchase_item_id = ? 
+                AND pi.product_id = ?
+                AND pi.received_quantity > COALESCE(pi.putaway_quantity, 0)
+                AND po.status IN ('received', 'receiving_in_progress', 'completed')
+                LIMIT 1
+            ");
+            $db->bind(1, $purchaseItemId);
+            $db->bind(2, $product->product_id);
+        } else {
+            // Fallback to finding by product ID (FIFO)
+            $db->query("
+                SELECT pi.purchase_item_id, pi.quantity, pi.received_quantity, 
+                       COALESCE(pi.putaway_quantity, 0) as putaway_quantity,
+                       po.po_number, pi.product_id
+                FROM purchase_items pi
+                JOIN purchases po ON pi.purchase_id = po.purchase_id
+                WHERE pi.product_id = ? 
+                AND pi.received_quantity > COALESCE(pi.putaway_quantity, 0)
+                AND po.status IN ('received', 'receiving_in_progress', 'completed')
+                ORDER BY pi.received_at ASC
+                LIMIT 1
+            ");
+            $db->bind(1, $product->product_id);
+        }
         $db->execute();
         $pendingItem = $db->single();
 
@@ -132,6 +175,17 @@ try {
             $db->query("UPDATE purchase_items SET putaway_quantity = ? WHERE purchase_item_id = ?");
             $db->bind(1, $newPutawayQty);
             $db->bind(2, $pendingItem->purchase_item_id);
+            $db->execute();
+
+            // Remove quantity from receiving area inventory
+            $db->query("UPDATE inventory SET quantity = quantity - ? 
+                       WHERE product_id = ? 
+                       AND location_id IN (SELECT location_id FROM locations WHERE location_type = 'receiving')
+                       AND quantity >= ?
+                       LIMIT 1");
+            $db->bind(1, $quantity);
+            $db->bind(2, $product->product_id);
+            $db->bind(3, $quantity);
             $db->execute();
 
             $reference = "PO: " . $pendingItem->po_number;
@@ -201,6 +255,12 @@ try {
             error_log("Putaway API stray output (success): " . $buffer);
         }
 
+        // Calculate remaining quantities
+        $remainingInQueue = 0;
+        if ($pendingItem) {
+            $remainingInQueue = $pendingItem->received_quantity - ($pendingItem->putaway_quantity + $quantity);
+        }
+
         echo json_encode([
             'success' => true,
             'message' => "Successfully put away {$quantity} units of {$product->product_name} to {$location->location_name}",
@@ -208,7 +268,11 @@ try {
                 'product_name' => $product->product_name,
                 'quantity' => $quantity,
                 'location' => $location->location_name,
-                'location_code' => $locationCode
+                'location_code' => $locationCode,
+                'remaining_quantity' => $remainingInQueue,
+                'has_remaining' => $remainingInQueue > 0,
+                'total_received' => $pendingItem ? $pendingItem->received_quantity : 0,
+                'total_putaway' => $pendingItem ? ($pendingItem->putaway_quantity + $quantity) : $quantity
             ]
         ]);
 

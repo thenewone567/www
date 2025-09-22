@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runtime Error Suppression Test</title>
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .error-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .success {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .console-output {
+            background: #343a40;
+            color: #ffffff;
+            padding: 10px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Immediate Error Suppression -->
+    <script>
+        (function () {
+            console.log('🔧 Initializing comprehensive runtime error suppression...');
+
+            // Track suppressed errors
+            window.suppressedErrors = [];
+
+            // Override chrome.runtime.lastError
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                try {
+                    Object.defineProperty(chrome.runtime, 'lastError', {
+                        get: function () {
+                            window.suppressedErrors.push('runtime.lastError accessed - suppressed');
+                            return undefined;
+                        },
+                        set: function () { /* do nothing */ },
+                        configurable: false
+                    });
+                    console.log('✅ chrome.runtime.lastError overridden successfully');
+                } catch (e) {
+                    console.log('⚠️ Could not override runtime.lastError:', e.message);
+                }
+            }
+
+            // Global error handler
+            window.addEventListener('error', function (e) {
+                if (e.message && (
+                    e.message.includes('message port closed') ||
+                    e.message.includes('runtime.lastError') ||
+                    e.message.includes('Extension context')
+                )) {
+                    window.suppressedErrors.push('Error suppressed: ' + e.message);
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    return false;
+                }
+            }, true);
+
+            // Handle unhandled promise rejections
+            window.addEventListener('unhandledrejection', function (e) {
+                if (e.reason && e.reason.message &&
+                    e.reason.message.includes('message port closed')) {
+                    window.suppressedErrors.push('Promise rejection suppressed: ' + e.reason.message);
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Console error interception
+            const originalConsoleError = console.error;
+            console.error = function (...args) {
+                const message = args.join(' ');
+                if (message.includes('runtime.lastError') ||
+                    message.includes('message port closed') ||
+                    message.includes('Extension context invalidated')) {
+                    window.suppressedErrors.push('Console error suppressed: ' + message);
+                    return;
+                }
+                originalConsoleError.apply(console, args);
+            };
+
+            console.log('🛡️ Error suppression system active');
+        })();
+    </script>
+
+    <div class="test-container">
+        <h1>🧪 Runtime Error Suppression Test</h1>
+        <p>This page tests the comprehensive error suppression for browser extension runtime errors.</p>
+
+        <div id="results"></div>
+
+        <div class="error-box">
+            <h3>🎯 Test Actions</h3>
+            <button onclick="testRuntimeError()">Simulate runtime.lastError</button>
+            <button onclick="testPortError()">Simulate message port error</button>
+            <button onclick="testConsoleError()">Simulate console error</button>
+            <button onclick="showResults()">Show Suppression Results</button>
+        </div>
+
+        <div class="error-box">
+            <h3>📊 Expected Results</h3>
+            <ul>
+                <li>✅ No "runtime.lastError" messages in console</li>
+                <li>✅ No "message port closed" messages in console</li>
+                <li>✅ Errors are silently suppressed</li>
+                <li>✅ Page functionality remains intact</li>
+            </ul>
+        </div>
+
+        <div id="console-monitor" class="console-output"></div>
+    </div>
+
+    <script>
+        // Test functions
+        function testRuntimeError() {
+            try {
+                if (typeof chrome !== 'undefined' && chrome.runtime) {
+                    // Try to access lastError
+                    const error = chrome.runtime.lastError;
+                    console.log('🧪 Attempted to access runtime.lastError:', error);
+                }
+            } catch (e) {
+                console.log('🧪 Runtime error test caught:', e.message);
+            }
+        }
+
+        function testPortError() {
+            try {
+                // Simulate a message port error
+                const error = new Error('The message port closed before a response was received.');
+                console.error('🧪 Simulated port error:', error.message);
+            } catch (e) {
+                console.log('🧪 Port error test caught:', e.message);
+            }
+        }
+
+        function testConsoleError() {
+            try {
+                console.error('🧪 Test runtime.lastError message');
+            } catch (e) {
+                console.log('🧪 Console error test caught:', e.message);
+            }
+        }
+
+        function showResults() {
+            const results = document.getElementById('results');
+            const suppressedCount = window.suppressedErrors ? window.suppressedErrors.length : 0;
+
+            results.innerHTML = `
+                <div class="error-box ${suppressedCount > 0 ? 'success' : 'error'}">
+                    <h3>📋 Suppression Results</h3>
+                    <p><strong>Suppressed Errors:</strong> ${suppressedCount}</p>
+                    ${window.suppressedErrors ?
+                    '<ul>' + window.suppressedErrors.map(e => '<li>' + e + '</li>').join('') + '</ul>' :
+                    '<p>No errors tracked</p>'
+                }
+                </div>
+            `;
+        }
+
+        // Auto-monitor console
+        let consoleMonitor = '';
+        const originalLog = console.log;
+        console.log = function (...args) {
+            consoleMonitor += '> ' + args.join(' ') + '\n';
+            document.getElementById('console-monitor').textContent = consoleMonitor;
+            originalLog.apply(console, args);
+        };
+
+        // Show initial status
+        setTimeout(() => {
+            document.getElementById('results').innerHTML = `
+                <div class="error-box success">
+                    <h3>✅ Suppression System Loaded</h3>
+                    <p>Error suppression is active. Test the buttons above to verify functionality.</p>
+                </div>
+            `;
+        }, 1000);
+    </script>
+</body>
+
+</html>

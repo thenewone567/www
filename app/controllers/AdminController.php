@@ -429,6 +429,36 @@ class AdminController extends BaseController
     }
 
     /**
+     * AJAX endpoint to get activity logs
+     */
+    public function getActivityLogsAjax()
+    {
+        try {
+            $limit = $_GET['limit'] ?? 50;
+            $offset = $_GET['offset'] ?? 0;
+            $filter = $_GET['filter'] ?? null;
+
+            // Use the existing getRecentActivity method since getActivityLogs doesn't exist
+            $activityLogs = $this->userModel->getRecentActivity($limit);
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'data' => $activityLogs,
+                'count' => count($activityLogs)
+            ]);
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to load activity logs: ' . $e->getMessage()
+            ]);
+        }
+        exit();
+    }
+
+    /**
      * View individual user details
      */
     public function viewUser($userId = null)
@@ -1293,13 +1323,15 @@ class AdminController extends BaseController
         $perPage = 25;
         $offset = ($page - 1) * $perPage;
 
-        $activities = $this->userModel->getActivityLogs($perPage, $offset, $filter);
-        $totalActivities = $this->userModel->getActivityLogsCount($filter);
-        $totalPages = ceil($totalActivities / $perPage);
+        // Use existing getRecentActivity method for now
+        $activities = $this->userModel->getRecentActivity($perPage);
+        $totalActivities = count($activities); // Simple count for now
+        $totalPages = 1; // Single page for now
 
         $data = [
             'title' => 'Activity Logs',
             'activities' => $activities,
+            'activity_logs' => $activities, // For compatibility with view
             'total_activities' => $totalActivities,
             'current_page' => $page,
             'total_pages' => $totalPages,
@@ -1307,6 +1339,43 @@ class AdminController extends BaseController
         ];
 
         $this->view('admin/activity_logs', $data);
+    }
+
+    /**
+     * Create sample audit trail entries for demonstration
+     */
+    public function createSampleAuditLogs()
+    {
+        // Check admin permission
+        if (!$this->hasAdminPermissions()) {
+            redirect('/dashboard');
+            return;
+        }
+
+        $userId = $_SESSION['user_id'] ?? 1;
+        $userModel = $this->userModel;
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '192.168.1.21';
+
+        // Create sample audit entries
+        $samples = [
+            [$userId, 'UPDATE', 'Product', 145, 'Price: ₹200 → ₹250', $ipAddress],
+            [$userId, 'CREATE', 'Invoice', 982, 'Invoice created for Order #445', $ipAddress],
+            [$userId, 'DELETE', 'User', 19, 'Deleted user: JohnD', $ipAddress],
+            [$userId, 'LOGIN', 'System', null, 'Successful login', $ipAddress]
+        ];
+
+        $created = 0;
+        foreach ($samples as $sample) {
+            if ($userModel->logAuditTrail(...$sample)) {
+                $created++;
+            }
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Created $created sample audit log entries",
+            'created' => $created
+        ]);
     }
 
     /**

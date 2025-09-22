@@ -1,6 +1,10 @@
 <?php
+require_once APPROOT . DS . 'app' . DS . 'traits' . DS . 'AuditTrail.php';
+
 class SalesController extends Controller
 {
+    use AuditTrail;
+
     public $productModel;
     public $saleModel;
     public $customerModel;
@@ -481,6 +485,27 @@ class SalesController extends Controller
                         if ($rewards_result['success']) {
                             error_log('Sale submission successful! Rewards: ' . json_encode($rewards_result));
 
+                            // Log audit trail for sale creation
+                            $customerName = 'Walk-in Customer';
+                            if ($customer_id) {
+                                $customer = $this->customerModel->getCustomerById($customer_id);
+                                if ($customer) {
+                                    $customerName = $customer->first_name . ' ' . $customer->last_name;
+                                }
+                            }
+
+                            $details = "Sale completed - Customer: {$customerName}, Items: {$items_added}, Total: $" . number_format($total_amount, 2);
+                            if ($applied_discount_amount > 0) {
+                                $details .= ", Discount Applied: $" . number_format($applied_discount_amount, 2);
+                            }
+
+                            $this->logSalesAudit(
+                                'CREATE',
+                                $sale_id,
+                                $details,
+                                $sale_data
+                            );
+
                             echo json_encode([
                                 'success' => true,
                                 'message' => 'Sale processed successfully',
@@ -611,6 +636,7 @@ class SalesController extends Controller
             if (empty($data['customer_id_err']) && empty($data['total_amount_err'])) {
                 $sale_id = $this->saleModel->addSale($data);
                 if ($sale_id) {
+                    $items_count = 0;
                     foreach ($data['products'] as $product) {
                         if (isset($product['id'], $product['quantity'], $product['price'], $product['discount'])) {
                             $sale_item_data = [
@@ -621,8 +647,28 @@ class SalesController extends Controller
                                 'discount' => $product['discount']
                             ];
                             $this->saleModel->addSaleItem($sale_item_data);
+                            $items_count++;
                         }
                     }
+
+                    // Log audit trail for manual sale creation
+                    $customerName = 'Walk-in Customer';
+                    if ($data['customer_id']) {
+                        $customer = $this->customerModel->getCustomerById($data['customer_id']);
+                        if ($customer) {
+                            $customerName = $customer->first_name . ' ' . $customer->last_name;
+                        }
+                    }
+
+                    $details = "Manual sale created - Customer: {$customerName}, Items: {$items_count}, Total: $" . number_format($data['total_amount'], 2) . ", Payment: " . ucfirst($data['payment_mode']);
+
+                    $this->logSalesAudit(
+                        'CREATE',
+                        $sale_id,
+                        $details,
+                        $data
+                    );
+
                     flash('sale_message', 'Sale Added');
                     redirect('sales');
                 } else {

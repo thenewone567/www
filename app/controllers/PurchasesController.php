@@ -1,6 +1,10 @@
 <?php
+require_once APPROOT . DS . 'app' . DS . 'traits' . DS . 'AuditTrail.php';
+
 class PurchasesController extends Controller
 {
+    use AuditTrail;
+
     public $productModel;
     public $purchaseModel;
     public $supplierModel;
@@ -42,10 +46,17 @@ class PurchasesController extends Controller
         // Get comprehensive purchase summary for KPI cards
         $purchaseSummary = $this->purchaseModel->getPurchaseSummary();
 
+        // Get off-loading statistics for real-time metrics
+        $offloadingStats = $this->purchaseModel->getOffloadingStats();
+        $activeOffloadingOrders = $this->purchaseModel->getActiveOffloadingOrders();
+
         $data = [
             'purchases' => $purchases,
             'orders' => $purchases, // Add for backward compatibility with view
             'summary' => $purchaseSummary, // Add comprehensive summary for KPI cards
+            // Off-loading real-time statistics
+            'offloading_stats' => $offloadingStats,
+            'active_offloading_orders' => $activeOffloadingOrders,
             // Legacy stats for backward compatibility
             'monthly_purchases' => $summaryStats['monthly_purchases'],
             'pending_orders' => $summaryStats['pending_orders'],
@@ -543,6 +554,23 @@ class PurchasesController extends Controller
                 $bulkLocation = $this->purchaseModel->getBulkLocationById($bulkLocationId);
                 $locationName = $bulkLocation ? $bulkLocation->location_name : "Location #$bulkLocationId";
 
+                // Log audit trail for purchase receiving
+                $status = $markComplete ? 'received' : 'partially_received';
+                $details = "Purchase Order processed - Items received: $totalReceived, Status: $status, Location: $locationName";
+
+                $this->logPurchaseAudit(
+                    'UPDATE',
+                    $id,
+                    $details,
+                    [
+                        'total_received' => $totalReceived,
+                        'items_count' => count($receivedItems),
+                        'bulk_location_id' => $bulkLocationId,
+                        'location_name' => $locationName,
+                        'status' => $status
+                    ]
+                );
+
                 flash('receive_message', "Successfully received $totalReceived items and assigned to bulk location $locationName", 'alert alert-success');
             } else {
                 flash('receive_message', 'No items were received', 'alert alert-warning');
@@ -883,6 +911,22 @@ class PurchasesController extends Controller
                 'unit_price' => $item['price']
             ]);
         }
+
+        // Log audit trail for purchase order creation
+        $details = "Purchase Order created - Supplier: " . $supplier->supplier_name . ", Items: " . count($items) . ", Total: $" . number_format($total, 2);
+
+        $this->logPurchaseAudit(
+            'CREATE',
+            $purchase_id,
+            $details,
+            [
+                'supplier_id' => $supplier_id,
+                'total_amount' => $total,
+                'items_count' => count($items),
+                'created_by' => $_SESSION['user_id'] ?? 0
+            ]
+        );
+
         echo json_encode(['success' => true, 'message' => 'Purchase order created successfully.']);
         exit;
     }

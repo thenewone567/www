@@ -68,7 +68,29 @@ try {
         throw new Exception('Product not found with barcode/SKU: ' . $barcode . ' (Total products in DB: ' . ($count->count ?? 0) . ')');
     }
 
-    // Check if item is in receiving areas
+    // Check if item is in putaway queue (from receiving/purchase orders)
+    $db->query("
+        SELECT 
+            pi.received_quantity,
+            COALESCE(pi.putaway_quantity, 0) as putaway_quantity,
+            (pi.received_quantity - COALESCE(pi.putaway_quantity, 0)) as available_quantity,
+            po.po_number,
+            l.location_name as receiving_location_name,
+            l.location_code as receiving_location_code
+        FROM purchase_items pi
+        JOIN purchases po ON pi.purchase_id = po.purchase_id
+        LEFT JOIN locations l ON po.receiving_location_id = l.location_id
+        WHERE pi.product_id = ? 
+        AND pi.received_quantity > COALESCE(pi.putaway_quantity, 0)
+        AND po.status IN ('received', 'receiving_in_progress', 'completed')
+        ORDER BY pi.received_at ASC
+        LIMIT 1
+    ");
+    $db->bind(1, $product->product_id);
+    $db->execute();
+    $putawayQueueItem = $db->single();
+
+    // Also check inventory in receiving areas as fallback
     $db->query("SELECT 
         i.quantity,
         l.location_name,
@@ -82,8 +104,35 @@ try {
     $db->execute();
     $receivingLocation = $db->single();
 
-    if (!$receivingLocation) {
-        throw new Exception('Item not found in receiving areas. Check if it has been received.');
+    // Determine available quantity and location
+    $availableQuantity = 0;
+    $locationInfo = null;
+
+    if ($putawayQueueItem && $putawayQueueItem->available_quantity > 0) {
+        // Use putaway queue data (more accurate)
+        $availableQuantity = $putawayQueueItem->available_quantity;
+        $locationInfo = [
+            'name' => $putawayQueueItem->receiving_location_name ?? 'Receiving Area',
+            'code' => $putawayQueueItem->receiving_location_code ?? 'RECV',
+            'quantity' => $availableQuantity,
+            'source' => 'putaway_queue',
+            'po_number' => $putawayQueueItem->po_number,
+            'total_received' => $putawayQueueItem->received_quantity,
+            'already_putaway' => $putawayQueueItem->putaway_quantity
+        ];
+    } elseif ($receivingLocation) {
+        // Fallback to inventory in receiving areas
+        $availableQuantity = $receivingLocation->quantity;
+        $locationInfo = [
+            'name' => $receivingLocation->location_name,
+            'code' => $receivingLocation->location_code,
+            'quantity' => $availableQuantity,
+            'source' => 'receiving_inventory'
+        ];
+    }
+
+    if (!$locationInfo || $availableQuantity <= 0) {
+        throw new Exception('Item not found in receiving areas or putaway queue. Check if it has been received.');
     }
 
     // Suggest optimal storage location with improved priority logic
@@ -170,10 +219,15 @@ try {
             'category_id' => $product->category_id
         ],
         'receiving_location' => [
-            'name' => $receivingLocation->location_name,
-            'code' => $receivingLocation->location_code,
-            'quantity' => $receivingLocation->quantity
+            'name' => $locationInfo['name'],
+            'code' => $locationInfo['code'],
+            'quantity' => $locationInfo['quantity'],
+            'source' => $locationInfo['source'],
+            'po_number' => $locationInfo['po_number'] ?? null,
+            'total_received' => $locationInfo['total_received'] ?? null,
+            'already_putaway' => $locationInfo['already_putaway'] ?? null
         ],
+        'quantity_available' => $availableQuantity,
         'suggested_location' => $suggestedLocation ? [
             'code' => $suggestedLocation->location_code,
             'name' => $suggestedLocation->location_name,

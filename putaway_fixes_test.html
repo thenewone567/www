@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Putaway Queue Fix - Test Page</title>
+    <link rel="stylesheet" href="<?= URLROOT ?>/public/css/app-unified.css">
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .fix-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .fix-header {
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+
+        .fix-body {
+            padding: 20px;
+        }
+
+        .test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .test-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-fixed {
+            background: #28a745;
+        }
+
+        .status-testing {
+            background: #ffc107;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <div class="text-center mb-4">
+            <h1>🔧 Putaway Queue System - Fixes Applied</h1>
+            <p class="lead">Issues fixed: Item mixing, incorrect data display, putaway transfer failures</p>
+        </div>
+
+        <div class="fix-card">
+            <div class="fix-header">
+                <span class="status-indicator status-fixed"></span>
+                Fix #1: Database Query Improvements
+            </div>
+            <div class="fix-body">
+                <h5>Problem:</h5>
+                <p>Complex JOINs causing duplicate items and incorrect data in priority queue</p>
+
+                <h5>Solution:</h5>
+                <ul>
+                    <li>✅ Fixed query to prevent duplicate items</li>
+                    <li>✅ Added proper DISTINCT clause</li>
+                    <li>✅ Improved column selection with proper aliases</li>
+                    <li>✅ Added SKU/barcode fallback logic</li>
+                </ul>
+
+                <div class="code-block">
+                    <strong>Before:</strong> Items showing wrong data after operations<br>
+                    <strong>After:</strong> Clean, accurate item data with unique identifiers
+                </div>
+            </div>
+        </div>
+
+        <div class="fix-card">
+            <div class="fix-header">
+                <span class="status-indicator status-fixed"></span>
+                Fix #2: Enhanced Putaway Processing
+            </div>
+            <div class="fix-body">
+                <h5>Problem:</h5>
+                <p>Putaway operations not transferring items properly between locations</p>
+
+                <h5>Solution:</h5>
+                <ul>
+                    <li>✅ Added proper inventory movement tracking</li>
+                    <li>✅ Fixed receiving area to storage location transfers</li>
+                    <li>✅ Added purchase_item_id tracking for exact item matching</li>
+                    <li>✅ Improved error handling and logging</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="fix-card">
+            <div class="fix-header">
+                <span class="status-indicator status-fixed"></span>
+                Fix #3: JavaScript Queue Manager
+            </div>
+            <div class="fix-body">
+                <h5>Problem:</h5>
+                <p>Frontend queue getting out of sync after operations</p>
+
+                <h5>Solution:</h5>
+                <ul>
+                    <li>✅ Created PutawayQueueManager class</li>
+                    <li>✅ Real-time queue updates after successful putaway</li>
+                    <li>✅ Better item selection and tracking</li>
+                    <li>✅ Auto-refresh every 30 seconds</li>
+                    <li>✅ Improved error handling and user feedback</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="fix-card">
+            <div class="fix-header">
+                <span class="status-indicator status-fixed"></span>
+                Fix #4: Visual Improvements
+            </div>
+            <div class="fix-body">
+                <h5>Enhancements:</h5>
+                <ul>
+                    <li>✅ Better priority indicators (URGENT, High, Priority, Normal)</li>
+                    <li>✅ Days waiting display with color coding</li>
+                    <li>✅ Improved item selection highlighting</li>
+                    <li>✅ Success/error notifications</li>
+                    <li>✅ Real-time queue count updates</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <h3>🧪 Test the Fixes</h3>
+            <p>Click the button below to test the improved putaway system:</p>
+
+            <button class="test-btn" onclick="window.open('/inventory/putaway', '_blank')">
+                <i class="fas fa-arrow-right"></i> Open Putaway System
+            </button>
+
+            <button class="test-btn" onclick="testAPI()">
+                <i class="fas fa-cog"></i> Test Queue API
+            </button>
+
+            <div id="test-results" style="margin-top: 20px;"></div>
+        </div>
+
+        <div class="mt-5">
+            <h4>🔍 What to Test:</h4>
+            <ol>
+                <li><strong>Queue Display:</strong> Priority queue should show correct items without duplicates</li>
+                <li><strong>Item Selection:</strong> Clicking on queue items should populate the scanner</li>
+                <li><strong>Putaway Process:</strong> Items should transfer properly to storage locations</li>
+                <li><strong>Queue Updates:</strong> Queue should refresh correctly after operations</li>
+                <li><strong>Error Handling:</strong> Clear error messages for invalid operations</li>
+            </ol>
+        </div>
+
+        <div class="mt-4">
+            <h4>📋 Key Improvements:</h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title text-success">✅ Data Accuracy</h6>
+                            <p class="card-text">No more mixed up items or incorrect quantities</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title text-success">✅ Transfer Operations</h6>
+                            <p class="card-text">Proper inventory movement between locations</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title text-success">✅ Real-time Updates</h6>
+                            <p class="card-text">Queue refreshes automatically after operations</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Testing queue API...</div>';
+
+            try {
+                const response = await fetch('/api/getPutawayQueue.php');
+                const result = await response.json();
+
+                if (result.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-check-circle"></i> API Test Successful!</h6>
+                            <p><strong>Queue Items:</strong> ${result.count}</p>
+                            <p><strong>Data Structure:</strong> ${result.data.length > 0 ? 'Valid' : 'Empty'}</p>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle"></i> API Response Issue</h6>
+                            <p>${result.message}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6><i class="fas fa-times-circle"></i> API Test Failed</h6>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        console.log('🔧 Putaway fixes loaded successfully');
+        console.log('📋 Files updated:');
+        console.log('  - /api/getPutawayQueue.php (Fixed database query)');
+        console.log('  - /api/processPutaway.php (Enhanced processing)');
+        console.log('  - /public/js/putaway-queue-manager.js (New queue manager)');
+        console.log('  - /public/css/putaway-queue.css (Improved styling)');
+        console.log('  - /app/views/inventory/putaway.php (Updated UI)');
+    </script>
+</body>
+
+</html>

@@ -16,9 +16,9 @@
         // Build base URL using PHP-provided URLROOT if available, otherwise derive from location
         let baseUrl = '';
         <?php if (defined('URLROOT') && preg_match('#^https?://#i', URLROOT)): ?>
-            baseUrl = '<?php echo rtrim(URLROOT, '/'); ?>';
+                baseUrl = '<?php echo rtrim(URLROOT, '/'); ?>';
         <?php else: ?>
-            baseUrl = window.location.protocol + '//' + window.location.host + '<?php echo isset($_SERVER['SCRIPT_NAME']) ? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\') : ''; ?>';
+                baseUrl = window.location.protocol + '//' + window.location.host + '<?php echo isset($_SERVER['SCRIPT_NAME']) ? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\') : ''; ?>';
         <?php endif; ?>
 
         const url = baseUrl + '/purchases/viewReceipt/' + encodeURIComponent(po);
@@ -465,38 +465,77 @@
                                         <i class="fas fa-truck-loading text-success mr-2"></i>
                                         Active Off-loading
                                     </h6>
-                                    <span id="offloadingCount" class="badge badge-success">0</span>
+                                    <span id="offloadingCount"
+                                        class="badge badge-success"><?php echo $data['offloading_stats']['active_count'] ?? 0; ?></span>
                                 </div>
 
                                 <!-- Ongoing Off-loading Table -->
                                 <div id="ongoingOffloadingContainer" style="max-height: 200px; overflow-y: auto;">
-                                    <div id="noOffloadingMessage" class="text-center text-muted py-3">
-                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                                        <div class="small">No active off-loading</div>
-                                    </div>
-                                    <div id="offloadingTable" class="d-none">
-                                        <table class="table table-sm table-borderless mb-0">
-                                            <thead>
-                                                <tr class="text-muted" style="font-size: 0.75rem;">
-                                                    <th class="border-0 pb-1">PO</th>
-                                                    <th class="border-0 pb-1 text-right">Duration</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="offloadingTableBody">
-                                                <!-- Dynamic rows will be added here -->
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                    <?php if (empty($data['active_offloading_orders'])): ?>
+                                            <div id="noOffloadingMessage" class="text-center text-muted py-3">
+                                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                                <div class="small">No active off-loading</div>
+                                            </div>
+                                    <?php else: ?>
+                                            <div id="offloadingTable">
+                                                <table class="table table-sm table-borderless mb-0">
+                                                    <thead>
+                                                        <tr class="text-muted" style="font-size: 0.75rem;">
+                                                            <th class="border-0 pb-1">PO</th>
+                                                            <th class="border-0 pb-1 text-right">Duration</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="offloadingTableBody">
+                                                        <?php foreach ($data['active_offloading_orders'] as $order): ?>
+                                                                <tr style="font-size: 0.8rem;">
+                                                                    <td class="py-1">
+                                                                        <span
+                                                                            class="font-weight-bold"><?php echo htmlspecialchars($order->po_number); ?></span>
+                                                                        <br><small class="text-muted">
+                                                                            <?php
+                                                                            $statusDisplay = ucfirst(str_replace('_', ' ', $order->status));
+                                                                            switch ($order->status) {
+                                                                                case 'off-loading':
+                                                                                    echo '<span class="text-warning">' . $statusDisplay . '</span>';
+                                                                                    break;
+                                                                                case 'ready_to_receive':
+                                                                                    echo '<span class="text-info">Ready for Receiving</span>';
+                                                                                    break;
+                                                                                case 'receiving_in_progress':
+                                                                                    echo '<span class="text-primary">Receiving in Progress</span>';
+                                                                                    break;
+                                                                                default:
+                                                                                    echo $statusDisplay;
+                                                                            }
+                                                                            ?>
+                                                                        </small>
+                                                                        <?php if (!empty($order->supplier_name)): ?>
+                                                                                <br><small
+                                                                                    class="text-muted"><?php echo htmlspecialchars($order->supplier_name); ?></small>
+                                                                        <?php endif; ?>
+                                                                    </td>
+                                                                    <td class="py-1 text-right">
+                                                                        <span
+                                                                            class="badge badge-warning"><?php echo htmlspecialchars($order->duration_formatted); ?></span>
+                                                                    </td>
+                                                                </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                    <?php endif; ?>
                                 </div>
 
                                 <!-- Stats row -->
                                 <div class="row text-center small mt-2 pt-2 border-top">
                                     <div class="col-6">
-                                        <strong class="text-success">99%</strong>
+                                        <strong
+                                            class="text-success"><?php echo $data['offloading_stats']['success_rate'] ?? 0; ?>%</strong>
                                         <br><small class="text-muted">Success</small>
                                     </div>
                                     <div class="col-6">
-                                        <strong class="text-primary">3sec</strong>
+                                        <strong
+                                            class="text-primary"><?php echo $data['offloading_stats']['avg_time_formatted'] ?? '0min'; ?></strong>
                                         <br><small class="text-muted">Avg Time</small>
                                     </div>
                                 </div>
@@ -594,129 +633,129 @@
                                         if (is_object($purchaseOrder)):
                                             $hasValidOrders = true;
                                             ?>
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <strong
-                                                            class="mr-2"><?php echo htmlspecialchars($purchaseOrder->po_number ?? $purchaseOrder->purchase_id ?? 'N/A'); ?></strong>
-                                                        <button class="btn btn-outline-secondary btn-xs copy-po-btn"
-                                                            onclick="copyPONumber('<?php echo htmlspecialchars($purchaseOrder->po_number ?? $purchaseOrder->purchase_id ?? 'N/A'); ?>')"
-                                                            data-toggle="tooltip" title="Copy PO Number">
-                                                            <i class="fas fa-copy"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                                <td><?php echo htmlspecialchars($purchaseOrder->supplier_name ?? 'N/A'); ?></td>
-                                                <td><?php echo date('M j, Y', strtotime($purchaseOrder->purchase_date ?? 'now')); ?>
-                                                </td>
-                                                <td>
-                                                    <?php
-                                                    $status = strtolower($purchaseOrder->status ?? '');
-                                                    $statusClass = '';
-                                                    $statusDisplay = '';
+                                                        <tr>
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    <strong
+                                                                        class="mr-2"><?php echo htmlspecialchars($purchaseOrder->po_number ?? $purchaseOrder->purchase_id ?? 'N/A'); ?></strong>
+                                                                    <button class="btn btn-outline-secondary btn-xs copy-po-btn"
+                                                                        onclick="copyPONumber('<?php echo htmlspecialchars($purchaseOrder->po_number ?? $purchaseOrder->purchase_id ?? 'N/A'); ?>')"
+                                                                        data-toggle="tooltip" title="Copy PO Number">
+                                                                        <i class="fas fa-copy"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                            <td><?php echo htmlspecialchars($purchaseOrder->supplier_name ?? 'N/A'); ?></td>
+                                                            <td><?php echo date('M j, Y', strtotime($purchaseOrder->purchase_date ?? 'now')); ?>
+                                                            </td>
+                                                            <td>
+                                                                <?php
+                                                                $status = strtolower($purchaseOrder->status ?? '');
+                                                                $statusClass = '';
+                                                                $statusDisplay = '';
 
-                                                    switch ($status) {
-                                                        case 'pending':
-                                                            $statusClass = 'badge-warning';
-                                                            $statusDisplay = 'Pending';
-                                                            break;
-                                                        case 'email_received':
-                                                            $statusClass = 'badge-info';
-                                                            $statusDisplay = 'Email Received';
-                                                            break;
-                                                        case 'in_transit':
-                                                            $statusClass = 'badge-primary';
-                                                            $statusDisplay = 'In Transit';
-                                                            break;
-                                                        case 'arrived_at_dock':
-                                                            $statusClass = 'badge-warning';
-                                                            $statusDisplay = 'Arrived at Dock';
-                                                            break;
-                                                        case 'off-loading':
-                                                            $statusClass = 'badge-offloading';
-                                                            $statusDisplay = 'Off-loading';
-                                                            break;
-                                                        case 'dock_assigned':
-                                                            $statusClass = 'badge-info';
-                                                            $statusDisplay = 'Dock Assigned';
-                                                            break;
-                                                        case 'ready_to_receive':
-                                                            $statusClass = 'badge-primary';
-                                                            $statusDisplay = 'Ready for Receiving';
-                                                            break;
-                                                        case 'receiving_in_progress':
-                                                            $statusClass = 'badge-warning';
-                                                            $statusDisplay = 'Receiving in Progress';
-                                                            break;
-                                                        case 'partially_received':
-                                                            $statusClass = 'badge-info';
-                                                            $statusDisplay = 'Partially Received';
-                                                            break;
-                                                        case 'received':
-                                                            $statusClass = 'badge-success';
-                                                            $statusDisplay = 'Fully Received';
-                                                            break;
-                                                        case 'completed':
-                                                            $statusClass = 'badge-success';
-                                                            $statusDisplay = 'Completed';
-                                                            break;
-                                                        case 'cancelled':
-                                                            $statusClass = 'badge-danger';
-                                                            $statusDisplay = 'Cancelled';
-                                                            break;
-                                                        default:
-                                                            $statusClass = 'badge-secondary';
-                                                            $statusDisplay = ucfirst(str_replace('_', ' ', $status));
-                                                    }
+                                                                switch ($status) {
+                                                                    case 'pending':
+                                                                        $statusClass = 'badge-warning';
+                                                                        $statusDisplay = 'Pending';
+                                                                        break;
+                                                                    case 'email_received':
+                                                                        $statusClass = 'badge-info';
+                                                                        $statusDisplay = 'Email Received';
+                                                                        break;
+                                                                    case 'in_transit':
+                                                                        $statusClass = 'badge-primary';
+                                                                        $statusDisplay = 'In Transit';
+                                                                        break;
+                                                                    case 'arrived_at_dock':
+                                                                        $statusClass = 'badge-warning';
+                                                                        $statusDisplay = 'Arrived at Dock';
+                                                                        break;
+                                                                    case 'off-loading':
+                                                                        $statusClass = 'badge-offloading';
+                                                                        $statusDisplay = 'Off-loading';
+                                                                        break;
+                                                                    case 'dock_assigned':
+                                                                        $statusClass = 'badge-info';
+                                                                        $statusDisplay = 'Dock Assigned';
+                                                                        break;
+                                                                    case 'ready_to_receive':
+                                                                        $statusClass = 'badge-primary';
+                                                                        $statusDisplay = 'Ready for Receiving';
+                                                                        break;
+                                                                    case 'receiving_in_progress':
+                                                                        $statusClass = 'badge-warning';
+                                                                        $statusDisplay = 'Receiving in Progress';
+                                                                        break;
+                                                                    case 'partially_received':
+                                                                        $statusClass = 'badge-info';
+                                                                        $statusDisplay = 'Partially Received';
+                                                                        break;
+                                                                    case 'received':
+                                                                        $statusClass = 'badge-success';
+                                                                        $statusDisplay = 'Fully Received';
+                                                                        break;
+                                                                    case 'completed':
+                                                                        $statusClass = 'badge-success';
+                                                                        $statusDisplay = 'Completed';
+                                                                        break;
+                                                                    case 'cancelled':
+                                                                        $statusClass = 'badge-danger';
+                                                                        $statusDisplay = 'Cancelled';
+                                                                        break;
+                                                                    default:
+                                                                        $statusClass = 'badge-secondary';
+                                                                        $statusDisplay = ucfirst(str_replace('_', ' ', $status));
+                                                                }
 
-                                                    // Add workflow stage indicator
-                                                    $workflowStage = '';
-                                                    if (in_array($status, ['arrived_at_dock', 'off-loading', 'dock_assigned'])) {
-                                                        $workflowStage = '<br><small class="text-muted"><i class="fas fa-truck"></i> Off-loading Phase</small>';
-                                                    } elseif (in_array($status, ['ready_to_receive', 'receiving_in_progress', 'partially_received'])) {
-                                                        $workflowStage = '<br><small class="text-primary"><i class="fas fa-warehouse"></i> Receiving Phase</small>';
-                                                    } elseif (in_array($status, ['received', 'completed'])) {
-                                                        $workflowStage = '<br><small class="text-success"><i class="fas fa-check-circle"></i> Complete</small>';
-                                                    }
-                                                    ?>
-                                                    <span class="badge <?php echo $statusClass; ?>">
-                                                        <?php echo $statusDisplay; ?>
-                                                    </span>
-                                                    <?php echo $workflowStage; ?>
-                                                </td>
-                                                <td><?php echo formatCurrency($purchaseOrder->total_amount ?? 0); ?></td>
-                                                <td>
-                                                    <?php if (!empty($purchaseOrder->expected_date) && $purchaseOrder->expected_date !== '0000-00-00'): ?>
-                                                        <?php echo date('M j', strtotime($purchaseOrder->expected_date)); ?>
-                                                    <?php else: ?>
-                                                        <span class="text-muted">Not set</span>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td>
-                                                    <?php if (!empty($purchaseOrder->tracking_number)): ?>
-                                                        <span class="badge badge-info badge-compact" data-toggle="tooltip"
-                                                            title="<?php echo htmlspecialchars($purchaseOrder->tracking_number); ?> - Click to copy"
-                                                            onclick="copyToClipboard('<?php echo htmlspecialchars($purchaseOrder->tracking_number); ?>')">
-                                                            <i class="fas fa-truck mr-1"></i>
-                                                            <?php echo htmlspecialchars($purchaseOrder->tracking_number); ?>
-                                                        </span>
-                                                    <?php else: ?>
-                                                        <span class="text-muted">
-                                                            <i class="fas fa-minus mr-1"></i> No tracking
-                                                        </span>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td>
-                                                    <div class="btn-group btn-group-sm">
-                                                        <a href="<?php echo URLROOT; ?>/purchases/details/<?php echo $purchaseOrder->purchase_id ?? 0; ?>"
-                                                            class="btn btn-outline-primary btn-sm" data-toggle="tooltip"
-                                                            title="View Details">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <?php
+                                                                // Add workflow stage indicator
+                                                                $workflowStage = '';
+                                                                if (in_array($status, ['arrived_at_dock', 'off-loading', 'dock_assigned'])) {
+                                                                    $workflowStage = '<br><small class="text-muted"><i class="fas fa-truck"></i> Off-loading Phase</small>';
+                                                                } elseif (in_array($status, ['ready_to_receive', 'receiving_in_progress', 'partially_received'])) {
+                                                                    $workflowStage = '<br><small class="text-primary"><i class="fas fa-warehouse"></i> Receiving Phase</small>';
+                                                                } elseif (in_array($status, ['received', 'completed'])) {
+                                                                    $workflowStage = '<br><small class="text-success"><i class="fas fa-check-circle"></i> Complete</small>';
+                                                                }
+                                                                ?>
+                                                                <span class="badge <?php echo $statusClass; ?>">
+                                                                    <?php echo $statusDisplay; ?>
+                                                                </span>
+                                                                <?php echo $workflowStage; ?>
+                                                            </td>
+                                                            <td><?php echo formatCurrency($purchaseOrder->total_amount ?? 0); ?></td>
+                                                            <td>
+                                                                <?php if (!empty($purchaseOrder->expected_date) && $purchaseOrder->expected_date !== '0000-00-00'): ?>
+                                                                        <?php echo date('M j', strtotime($purchaseOrder->expected_date)); ?>
+                                                                <?php else: ?>
+                                                                        <span class="text-muted">Not set</span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <?php if (!empty($purchaseOrder->tracking_number)): ?>
+                                                                        <span class="badge badge-info badge-compact" data-toggle="tooltip"
+                                                                            title="<?php echo htmlspecialchars($purchaseOrder->tracking_number); ?> - Click to copy"
+                                                                            onclick="copyToClipboard('<?php echo htmlspecialchars($purchaseOrder->tracking_number); ?>')">
+                                                                            <i class="fas fa-truck mr-1"></i>
+                                                                            <?php echo htmlspecialchars($purchaseOrder->tracking_number); ?>
+                                                                        </span>
+                                                                <?php else: ?>
+                                                                        <span class="text-muted">
+                                                                            <i class="fas fa-minus mr-1"></i> No tracking
+                                                                        </span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <div class="btn-group btn-group-sm">
+                                                                    <a href="<?php echo URLROOT; ?>/purchases/details/<?php echo $purchaseOrder->purchase_id ?? 0; ?>"
+                                                                        class="btn btn-outline-primary btn-sm" data-toggle="tooltip"
+                                                                        title="View Details">
+                                                                        <i class="fas fa-eye"></i>
+                                                                    </a>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <?php
                                         endif;
                                     endforeach;
                                 endif;
@@ -727,13 +766,13 @@
                         </table>
                     </div>
                     <?php if (!empty($purchaseOrders) && count($purchaseOrders) > 10): ?>
-                        <div class="card-footer bg-light text-center">
-                            <small class="text-muted">Showing first 10 of <?php echo count($purchaseOrders); ?>
-                                purchase orders</small>
-                            <a href="<?php echo URLROOT; ?>/purchases/history" class="btn btn-outline-primary btn-sm ml-2">
-                                <i class="fas fa-list"></i> View All Purchase Orders
-                            </a>
-                        </div>
+                            <div class="card-footer bg-light text-center">
+                                <small class="text-muted">Showing first 10 of <?php echo count($purchaseOrders); ?>
+                                    purchase orders</small>
+                                <a href="<?php echo URLROOT; ?>/purchases/history" class="btn btn-outline-primary btn-sm ml-2">
+                                    <i class="fas fa-list"></i> View All Purchase Orders
+                                </a>
+                            </div>
                     <?php endif; ?>
                 </div>
             </div>

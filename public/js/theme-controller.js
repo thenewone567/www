@@ -2,6 +2,25 @@
    ROBUST THEME SWITCHING JAVASCRIPT
    ============================================== */
 
+// Handle browser extension communication errors
+window.addEventListener('error', function (e) {
+    if (e.message && e.message.includes('message port closed')) {
+        // Suppress browser extension communication errors
+        e.preventDefault();
+        return false;
+    }
+});
+
+// Suppress Chrome extension runtime errors
+if (typeof chrome !== 'undefined' && chrome.runtime) {
+    chrome.runtime.onMessage.addListener(() => {
+        if (chrome.runtime.lastError) {
+            // Silently handle extension communication errors
+            return false;
+        }
+    });
+}
+
 class ThemeController {
     constructor() {
         this.currentTheme = 'light';
@@ -56,64 +75,49 @@ class ThemeController {
     createThemeToggle() {
         // Check if toggle already exists in the navbar
         const existingToggle = document.getElementById('theme-toggle');
-        console.log('Existing navbar toggle found:', existingToggle);
 
         if (existingToggle) {
-            // Use existing button from navbar
-            existingToggle.addEventListener('click', () => this.toggleTheme());
-            this.updateToggleIcon(existingToggle.querySelector('i'), this.currentTheme);
+            // Use existing button from navbar - avoid duplicate event listeners
+            if (!existingToggle.hasAttribute('data-theme-initialized')) {
+                existingToggle.addEventListener('click', () => this.toggleTheme());
+                existingToggle.setAttribute('data-theme-initialized', 'true');
+                this.updateToggleIcon(existingToggle.querySelector('i'), this.currentTheme);
+            }
             return;
         }
 
         // Fallback: create floating toggle if navbar button doesn't exist
-        console.log('Creating floating theme toggle button');
         const toggle = document.createElement('button');
-        // give the floating toggle the canonical id so queries find it consistently
         toggle.id = 'theme-toggle';
-        toggle.className = 'theme-toggle';
+        toggle.className = 'theme-toggle floating-theme-toggle';
         toggle.setAttribute('aria-label', 'Toggle theme');
         toggle.setAttribute('title', 'Toggle between light and dark theme');
+        toggle.setAttribute('data-theme-initialized', 'true');
 
         const icon = document.createElement('i');
         // Set icon to reflect current theme: sun for light, moon for dark
         icon.className = this.currentTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
-        console.log('Initial icon class:', icon.className, 'for theme:', this.currentTheme);
         toggle.appendChild(icon);
 
-        toggle.addEventListener('click', () => {
-            console.log('Floating toggle clicked, current theme:', this.currentTheme);
-            this.toggleTheme();
-        });
+        toggle.addEventListener('click', () => this.toggleTheme());
 
         // Add to body
         document.body.appendChild(toggle);
-        console.log('Floating toggle added to body with id=#theme-toggle');
-
-        // Update icon immediately after creation
-        this.updateToggleIcon(icon, this.currentTheme);
     }
 
     updateToggleIcon(iconElement, theme) {
         if (iconElement) {
             // Set icon to reflect current theme: sun for light, moon for dark
             const newIconClass = theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
-            console.log('Updating icon from', iconElement.className, 'to', newIconClass, 'for theme:', theme);
 
-            // Force a visual refresh by briefly removing and re-adding the class
-            iconElement.className = '';
-            // Use requestAnimationFrame to ensure the change is visible
-            requestAnimationFrame(() => {
+            // Only update if the class is different to avoid unnecessary DOM manipulation
+            if (iconElement.className !== newIconClass) {
                 iconElement.className = newIconClass;
-                // Force reflow
-                iconElement.offsetHeight;
-            });
-        } else {
-            console.log('No icon element found to update');
+            }
         }
     }
 
     applyTheme(theme) {
-        console.log('Applying theme:', theme);
         // Remove existing theme classes
         document.documentElement.removeAttribute('data-theme');
 
@@ -122,18 +126,13 @@ class ThemeController {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // Update toggle icon - check both navbar and floating toggle
-        const navbarIcon = document.querySelector('#theme-toggle i');
-        const floatingIcon = document.querySelector('.theme-toggle i');
-
-        console.log('Found navbar icon:', navbarIcon);
-        console.log('Found floating icon:', floatingIcon);
-
-        if (navbarIcon) {
-            this.updateToggleIcon(navbarIcon, theme);
-        }
-        if (floatingIcon) {
-            this.updateToggleIcon(floatingIcon, theme);
+        // Update toggle icon - find the main theme toggle button
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            const icon = themeToggle.querySelector('i');
+            if (icon) {
+                this.updateToggleIcon(icon, theme);
+            }
         }
 
         // Update charts if they exist
@@ -147,7 +146,6 @@ class ThemeController {
     }
 
     toggleTheme() {
-        console.log('Toggle theme called, current:', this.currentTheme);
         this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
         console.log('New theme:', this.currentTheme);
         this.applyTheme(this.currentTheme);

@@ -7370,3 +7370,427 @@
  .tier-diamond .tier-icon::before {
      content: "💠";
  }
+
+ /* === PUTAWAY SCANNER STYLES === */
+ /* Enhanced 3-step putaway workflow with progress indicators and queue interaction */
+ .putaway-scanner-container {
+     max-width: 800px;
+     margin: 0 auto;
+     padding: 1rem;
+ }
+
+ .putaway-progress-container {
+     margin-bottom: 2rem;
+     padding: 1.5rem;
+     background: var(--card-bg);
+     border-radius: var(--border-radius);
+     box-shadow: var(--card-shadow);
+     border: 1px solid var(--card-border);
+ }
+
+ .putaway-progress-steps {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     margin-bottom: 1rem;
+     position: relative;
+ }
+
+ .putaway-progress-steps::before {
+     content: '';
+     position: absolute;
+     top: 20px;
+     left: 10%;
+     right: 10%;
+     height: 2px;
+     background: var(--card-border);
+     z-index: 1;
+ }
+
+ .putaway-step {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     z-index: 2;
+     background: var(--card-bg);
+     padding: 0 1rem;
+ }
+
+ .putaway-step-circle {
+     width: 40px;
+     height: 40px;
+     border-radius: 50%;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     font-weight: 600;
+     margin-bottom: 0.5rem;
+     border: 2px solid var(--card-border);
+     background: var(--card-bg);
+     color: var(--text-muted);
+     transition: var(--theme-transition);
+ }
+
+ .putaway-step.active .putaway-step-circle {
+     background: var(--primary);
+     border-color: var(--primary);
+     color: white;
+     transform: scale(1.1);
+ }
+
+ .putaway-step.completed .putaway-step-circle {
+     background: var(--success);
+     border-color: var(--success);
+     color: white;
+ }
+
+ .putaway-step-label {
+     font-size: 0.875rem;
+     font-weight: 500;
+     color: var(--text-muted);
+     text-align: center;
+ }
+
+ .putaway-step.active .putaway-step-label {
+     color: var(--primary);
+     font-weight: 600;
+ }
+
+ .putaway-step.completed .putaway-step-label {
+     color: var(--success);
+     font-weight: 600;
+ }
+
+ .putaway-main-section {
+     display: grid;
+     grid-template-columns: 1fr 300px;
+     gap: 2rem;
+     margin-bottom: 2rem;
+ }
+
+ @media (max-width: 768px) {
+     .putaway-main-section {
+         grid-template-columns: 1fr;
+         gap: 1rem;
+     }
+ }
+
+ .putaway-scanner-section {
+     background: var(--card-bg);
+     border-radius: var(--border-radius);
+     padding: 2rem;
+     box-shadow: var(--card-shadow);
+     border: 1px solid var(--card-border);
+ }
+
+ .putaway-current-step {
+     margin-bottom: 2rem;
+     text-align: center;
+ }
+
+ .putaway-current-step h3 {
+     color: var(--text-primary);
+     margin-bottom: 0.5rem;
+ }
+
+ .putaway-current-step .step-description {
+     color: var(--text-muted);
+     font-size: 1rem;
+ }
+
+ .putaway-input-group {
+     margin-bottom: 1.5rem;
+ }
+
+ .putaway-input-group label {
+     display: block;
+     margin-bottom: 0.5rem;
+     font-weight: 600;
+     color: var(--text-primary);
+ }
+
+ .putaway-scanner-input {
+     width: 100%;
+     padding: 0.75rem;
+     font-size: 1.1rem;
+     border: 2px solid var(--card-border);
+     border-radius: var(--border-radius);
+     background: var(--card-bg);
+     color: var(--text-primary);
+     transition: var(--theme-transition);
+ }
+
+ .putaway-scanner-input:focus {
+     outline: none;
+     border-color: var(--primary);
+     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+ }
+
+ .putaway-scanner-input.success {
+     border-color: var(--success);
+     background-color: rgba(40, 167, 69, 0.1);
+ }
+
+ .putaway-scanner-input.error {
+     border-color: var(--danger);
+     background-color: rgba(220, 53, 69, 0.1);
+ }
+
+ .putaway-action-buttons {
+     display: flex;
+     gap: 1rem;
+     justify-content: center;
+     margin-top: 2rem;
+ }
+
+ .putaway-action-btn {
+     padding: 0.75rem 2rem;
+     border: none;
+     border-radius: var(--border-radius);
+     font-weight: 600;
+     cursor: pointer;
+     transition: var(--theme-transition);
+     display: flex;
+     align-items: center;
+     gap: 0.5rem;
+ }
+
+ .putaway-action-btn.primary {
+     background: var(--primary);
+     color: white;
+ }
+
+ .putaway-action-btn.primary:hover {
+     background: #0056b3;
+     transform: translateY(-1px);
+     box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+ }
+
+ .putaway-action-btn.success {
+     background: var(--success);
+     color: white;
+ }
+
+ .putaway-action-btn.success:hover {
+     background: #218838;
+     transform: translateY(-1px);
+     box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+ }
+
+ .putaway-action-btn:disabled {
+     opacity: 0.5;
+     cursor: not-allowed;
+     transform: none !important;
+ }
+
+ .putaway-queue-section {
+     background: var(--card-bg);
+     border-radius: var(--border-radius);
+     padding: 1.5rem;
+     box-shadow: var(--card-shadow);
+     border: 1px solid var(--card-border);
+     height: fit-content;
+ }
+
+ .putaway-queue-header {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     margin-bottom: 1rem;
+     padding-bottom: 0.5rem;
+     border-bottom: 1px solid var(--card-border);
+ }
+
+ .putaway-queue-header h4 {
+     margin: 0;
+     color: var(--text-primary);
+     font-size: 1.1rem;
+ }
+
+ .putaway-queue-count {
+     background: var(--primary);
+     color: white;
+     padding: 0.25rem 0.5rem;
+     border-radius: var(--border-radius-sm);
+     font-size: 0.875rem;
+     font-weight: 600;
+ }
+
+ .putaway-queue-item {
+     padding: 0.75rem;
+     margin-bottom: 0.5rem;
+     background: var(--bg-secondary);
+     border-radius: var(--border-radius-sm);
+     border: 1px solid var(--card-border);
+     cursor: pointer;
+     transition: var(--theme-transition);
+ }
+
+ .putaway-queue-item:hover {
+     background: rgba(0, 123, 255, 0.1);
+     border-color: var(--primary);
+     transform: translateY(-1px);
+ }
+
+ .putaway-queue-item.selected {
+     background: rgba(0, 123, 255, 0.2);
+     border-color: var(--primary);
+     box-shadow: 0 0 0 1px var(--primary);
+ }
+
+ .putaway-queue-item-product {
+     font-weight: 600;
+     color: var(--text-primary);
+     margin-bottom: 0.25rem;
+ }
+
+ .putaway-queue-item-details {
+     font-size: 0.875rem;
+     color: var(--text-muted);
+     display: flex;
+     justify-content: space-between;
+ }
+
+ .putaway-queue-empty {
+     text-align: center;
+     padding: 2rem;
+     color: var(--text-muted);
+ }
+
+ .putaway-queue-empty i {
+     font-size: 3rem;
+     margin-bottom: 1rem;
+     opacity: 0.3;
+ }
+
+ .putaway-alert {
+     padding: 1rem;
+     border-radius: var(--border-radius);
+     margin-bottom: 1rem;
+     border: 1px solid transparent;
+ }
+
+ .putaway-alert.success {
+     background: rgba(40, 167, 69, 0.1);
+     color: var(--success);
+     border-color: rgba(40, 167, 69, 0.2);
+ }
+
+ .putaway-alert.error {
+     background: rgba(220, 53, 69, 0.1);
+     color: var(--danger);
+     border-color: rgba(220, 53, 69, 0.2);
+ }
+
+ .putaway-alert.info {
+     background: rgba(23, 162, 184, 0.1);
+     color: var(--info);
+     border-color: rgba(23, 162, 184, 0.2);
+ }
+
+ .putaway-validation-feedback {
+     margin-top: 0.5rem;
+     font-size: 0.875rem;
+     display: flex;
+     align-items: center;
+     gap: 0.5rem;
+ }
+
+ .putaway-validation-feedback.success {
+     color: var(--success);
+ }
+
+ .putaway-validation-feedback.error {
+     color: var(--danger);
+ }
+
+ .putaway-scan-animation {
+     display: inline-block;
+     animation: putawayScanPulse 1.5s ease-in-out infinite;
+ }
+
+ @keyframes putawayScanPulse {
+
+     0%,
+     100% {
+         opacity: 1;
+         transform: scale(1);
+     }
+
+     50% {
+         opacity: 0.6;
+         transform: scale(1.1);
+     }
+ }
+
+ /* Mobile responsiveness for putaway scanner */
+ @media (max-width: 768px) {
+     .putaway-scanner-container {
+         padding: 0.5rem;
+     }
+
+     .putaway-progress-container {
+         padding: 1rem;
+     }
+
+     .putaway-progress-steps {
+         flex-direction: column;
+         gap: 1rem;
+     }
+
+     .putaway-progress-steps::before {
+         display: none;
+     }
+
+     .putaway-scanner-section {
+         padding: 1rem;
+     }
+
+     .putaway-action-buttons {
+         flex-direction: column;
+     }
+
+     .putaway-action-btn {
+         justify-content: center;
+     }
+ }
+
+ /* Putaway Loading Overlay */
+ .putaway-loading-overlay {
+     position: absolute;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background: rgba(0, 0, 0, 0.7);
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+     z-index: 1000;
+     border-radius: var(--border-radius);
+     color: white;
+ }
+
+ .putaway-loading-overlay .loading-spinner {
+     width: 3rem;
+     height: 3rem;
+     border: 4px solid rgba(255, 255, 255, 0.3);
+     border-top-color: white;
+     border-radius: 50%;
+     animation: spin 1s linear infinite;
+     margin-bottom: 1rem;
+ }
+
+ .putaway-loading-overlay .loading-text {
+     font-size: 1.1rem;
+     font-weight: 600;
+     text-align: center;
+ }
+
+ .putaway-loading-overlay .loading-subtext {
+     font-size: 0.9rem;
+     opacity: 0.8;
+     margin-top: 0.5rem;
+     text-align: center;
+ }

@@ -1,10 +1,14 @@
 <?php
+require_once APPROOT . DS . 'app' . DS . 'traits' . DS . 'AuditTrail.php';
+
 /**
  * Expenses Controller
  * Handles expense management operations
  */
 class ExpensesController extends Controller
 {
+    use AuditTrail;
+
     public $expenseModel;
 
     public function __construct()
@@ -82,7 +86,27 @@ class ExpensesController extends Controller
                 empty($data['expense_date_err']) && empty($data['description_err'])
             ) {
 
-                if ($this->expenseModel->addExpense($data)) {
+                $expense_id = $this->expenseModel->addExpense($data);
+                if ($expense_id) {
+                    // Log audit trail for expense creation
+                    $categories = $this->expenseModel->getExpenseCategories();
+                    $categoryName = 'Unknown Category';
+                    foreach ($categories as $cat) {
+                        if ($cat->id == $data['expense_category_id']) {
+                            $categoryName = $cat->category_name;
+                            break;
+                        }
+                    }
+
+                    $details = "Expense created - Category: {$categoryName}, Amount: $" . number_format($data['amount'], 2) . ", Description: " . $data['description'];
+
+                    $this->logExpenseAudit(
+                        'CREATE',
+                        $expense_id,
+                        $details,
+                        $data
+                    );
+
                     flash('expense_message', 'Expense added successfully');
                     redirect('expenses');
                 } else {

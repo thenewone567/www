@@ -2,3 +2,4 @@
 [2025-08-25 02:09:35] SESSION_destroy: Session fingerprint mismatch - possible hijacking attempt (Session: rt93dqfgqtmjhtchggejnm9hmq, User: 13, IP: ::1)
 [2025-08-25 02:09:38] SESSION_destroy: Session fingerprint mismatch - possible hijacking attempt (Session: ksfomdfibtd38ivg41kg5jg79p, User: guest, IP: ::1)
 [2025-08-27 12:01:18] SESSION_destroy: Session fingerprint mismatch - possible hijacking attempt (Session: fjpe4e6i09on9682btlkn01225, User: 13, IP: 127.0.0.1)
+[2025-09-15 09:39:43] SESSION_destroy: Session fingerprint mismatch - possible hijacking attempt (Session: n3c9feefnbvd6mp94vk4f8lrv3, User: 13, IP: 127.0.0.1)

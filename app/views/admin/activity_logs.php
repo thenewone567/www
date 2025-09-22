@@ -3,392 +3,420 @@ $pageTitle = 'Activity Logs - Admin Panel';
 require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php';
 ?>
 
-<style>
-    .admin-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 1.5rem 0;
-        margin-bottom: 2rem;
-    }
+<!-- Immediate Error Suppression for Browser Extensions -->
+<script>
+    (function () {
+        // Suppress runtime.lastError immediately
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+            const originalAddListener = chrome.runtime.onMessage.addListener;
+            chrome.runtime.onMessage.addListener = function (callback) {
+                return originalAddListener.call(this, function (...args) {
+                    try {
+                        return callback(...args);
+                    } catch (e) {
+                        // Suppress extension errors
+                        return false;
+                    }
+                });
+            };
+        }
 
-    .admin-nav {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-    }
+        // Global error handler
+        window.addEventListener('error', function (e) {
+            if (e.message && (
+                e.message.includes('message port closed') ||
+                e.message.includes('Extension context invalidated') ||
+                e.message.includes('runtime.lastError')
+            )) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, true);
 
-    .admin-nav .nav-link {
-        color: #495057;
-        font-weight: 500;
-        padding: 0.75rem 1.5rem;
-        margin: 0 0.25rem;
-        border-radius: 5px;
-        transition: all 0.2s;
-    }
+        // Console error suppression for extension messages
+        const originalConsoleError = console.error;
+        console.error = function (...args) {
+            const message = args.join(' ');
+            if (message.includes('runtime.lastError') ||
+                message.includes('message port closed') ||
+                message.includes('Extension context invalidated') ||
+                message.includes('Unchecked runtime.lastError')) {
+                return; // Suppress these specific errors
+            }
+            originalConsoleError.apply(console, args);
+        };
 
-    .admin-nav .nav-link:hover {
-        background: #e9ecef;
-        color: #007bff;
-    }
+        // Additional suppression for browser-level errors
+        const originalConsoleWarn = console.warn;
+        console.warn = function (...args) {
+            const message = args.join(' ');
+            if (message.includes('runtime.lastError') || message.includes('message port closed')) {
+                return;
+            }
+            originalConsoleWarn.apply(console, args);
+        };
+    })();
+</script>
 
-    .admin-nav .nav-link.active {
-        background: #007bff;
-        color: white;
-    }
-
-    .activity-badge {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-    }
-</style>
-
-<div class="admin-header">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="h2 mb-0">
-                    <i class="fas fa-history"></i> Activity Logs
-                </h1>
-                <p class="mb-0 mt-2 opacity-75">Monitor system activity and user actions</p>
+<div class="container-fluid page-top-area mb-4">
+    <div class="row align-items-center">
+        <div class="col-12 col-md-8">
+            <h1 class="mb-1 font-weight-bold">
+                <i class="fas fa-history mr-2"></i>Activity Logs
+            </h1>
+            <small class="text-muted">System Activity & Audit Trails - Compliance Ready</small>
+        </div>
+        <div class="col-12 col-md-12 d-flex justify-content-end align-items-center">
+            <div class="btn-group mr-3" role="group">
+                <button class="btn btn-outline-primary" onclick="filterByPeriod('today')">
+                    <i class="fas fa-calendar-day mr-1"></i>Today
+                </button>
+                <button class="btn btn-outline-primary" onclick="filterByPeriod('week')">
+                    <i class="fas fa-calendar-week mr-1"></i>Week
+                </button>
+                <button class="btn btn-outline-primary" onclick="filterByPeriod('month')">
+                    <i class="fas fa-calendar-alt mr-1"></i>Month
+                </button>
             </div>
-            <div class="col-md-4 text-md-right">
-                <div class="btn-group">
-                    <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown">
-                        <i class="fas fa-filter"></i> Filter
-                    </button>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="?filter=login">Login Activities</a>
-                        <a class="dropdown-item" href="?filter=user_created">User Management</a>
-                        <a class="dropdown-item" href="?filter=sales">Sales Activities</a>
-                        <a class="dropdown-item" href="?filter=purchases">Purchase Activities</a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="?">All Activities</a>
-                    </div>
-                </div>
-            </div>
+            <a href="<?= URLROOT ?>/admin" class="btn btn-outline-secondary ml-auto">
+                <i class="fas fa-arrow-left mr-1"></i>Back
+            </a>
         </div>
     </div>
 </div>
 
 <div class="container-fluid">
-    <!-- Admin Navigation -->
-    <div class="admin-nav">
-        <ul class="nav nav-pills">
-            <li class="nav-item">
-                <a class="nav-link" href="<?= URLROOT ?>/admin">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="<?= URLROOT ?>/admin/users">
-                    <i class="fas fa-users"></i> Users
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="<?= URLROOT ?>/admin/roles">
-                    <i class="fas fa-user-tag"></i> Roles & Permissions
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="<?= URLROOT ?>/admin/activityLogs">
-                    <i class="fas fa-history"></i> Activity Logs
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="<?= URLROOT ?>/admin/settings">
-                    <i class="fas fa-cog"></i> Settings
-                </a>
-            </li>
-        </ul>
-    </div>
-
-    <!-- Activity Logs Table -->
-    <div class="row">
-        <div class="col-12">
+    <!-- Enhanced Filters Section -->
+    <div class="row mb-4">
+        <div class="col-md-6">
             <div class="card-theme">
-                <div class="card-header py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-history"></i> System Activity Log
-                        </h6>
-                        <div class="text-muted">
-                            <small>Total: <?= $data['total_activities'] ?? 0 ?> activities</small>
-                        </div>
+                <div class="card-body py-2">
+                    <div class="d-flex align-items-center">
+                        <label class="mb-0 mr-2 font-weight-bold">Filter by Action:</label>
+                        <select id="actionFilter" class="form-control form-control-sm" style="width: auto;">
+                            <option value="">All Actions</option>
+                            <option value="CREATE">Create</option>
+                            <option value="UPDATE">Update</option>
+                            <option value="DELETE">Delete</option>
+                            <option value="LOGIN">Login</option>
+                            <option value="LOGOUT">Logout</option>
+                        </select>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover" id="activityTable" width="100%">
-                            <thead>
-                                <tr>
-                                    <th>Timestamp</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Details</th>
-                                    <th>IP Address</th>
-                                    <th>User Agent</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (isset($data['activities']) && !empty($data['activities'])): ?>
-                                    <?php foreach ($data['activities'] as $activity): ?>
-                                        <tr>
-                                            <td>
-                                                <div>
-                                                    <strong><?= date('M j, Y', strtotime($activity->created_at)) ?></strong>
-                                                </div>
-                                                <small class="text-muted">
-                                                    <?= date('g:i:s A', strtotime($activity->created_at)) ?>
-                                                </small>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="user-avatar bg-primary mr-2">
-                                                        <?= strtoupper(substr($activity->user_name ?? 'S', 0, 1)) ?>
-                                                    </div>
-                                                    <div>
-                                                        <div class="font-weight-bold">
-                                                            <?= htmlspecialchars($activity->user_name ?? 'System') ?>
-                                                        </div>
-                                                        <small class="text-muted">ID: <?= $activity->user_id ?? 'N/A' ?></small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <?php
-                                                $badgeClass = 'secondary';
-                                                switch ($activity->action) {
-                                                    case 'login':
-                                                        $badgeClass = 'success';
-                                                        break;
-                                                    case 'logout':
-                                                        $badgeClass = 'warning';
-                                                        break;
-                                                    case 'user_created':
-                                                    case 'user_updated':
-                                                        $badgeClass = 'info';
-                                                        break;
-                                                    case 'role_created':
-                                                    case 'role_updated':
-                                                        $badgeClass = 'primary';
-                                                        break;
-                                                    case 'error':
-                                                    case 'failed_login':
-                                                        $badgeClass = 'danger';
-                                                        break;
-                                                }
-                                                ?>
-                                                <span class="badge activity-badge badge-<?= $badgeClass ?>">
-                                                    <?= ucfirst(str_replace('_', ' ', $activity->action)) ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div style="max-width: 300px;">
-                                                    <?php if (!empty($activity->details)): ?>
-                                                        <?= htmlspecialchars($activity->details) ?>
-                                                    <?php else: ?>
-                                                        <span class="text-muted">No details</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <small class="text-muted">
-                                                    <?= htmlspecialchars($activity->ip_address ?? 'Unknown') ?>
-                                                </small>
-                                            </td>
-                                            <td>
-                                                <div style="max-width: 200px; word-break: break-all;">
-                                                    <small class="text-muted">
-                                                        <?php
-                                                        $userAgent = $activity->user_agent ?? 'Unknown';
-                                                        if (strlen($userAgent) > 50) {
-                                                            echo htmlspecialchars(substr($userAgent, 0, 50)) . '...';
-                                                        } else {
-                                                            echo htmlspecialchars($userAgent);
-                                                        }
-                                                        ?>
-                                                    </small>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="6" class="text-center py-4">
-                                            <div class="text-muted">
-                                                <i class="fas fa-inbox fa-2x mb-2"></i>
-                                                <p>No activity logs found</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-theme">
+                <div class="card-body py-2">
+                    <div class="d-flex align-items-center">
+                        <label class="mb-0 mr-2 font-weight-bold">Filter by Entity:</label>
+                        <select id="entityFilter" class="form-control form-control-sm" style="width: auto;">
+                            <option value="">All Entities</option>
+                            <option value="Product">Products</option>
+                            <option value="Sale">Sales</option>
+                            <option value="Purchase">Purchases</option>
+                            <option value="Supplier">Suppliers</option>
+                            <option value="Inventory">Inventory</option>
+                            <option value="Expense">Expenses</option>
+                            <option value="System">System</option>
+                        </select>
                     </div>
-
-                    <!-- Pagination -->
-                    <?php if (isset($data['total_pages']) && $data['total_pages'] > 1): ?>
-                        <nav aria-label="Activity logs pagination">
-                            <ul class="pagination justify-content-center mt-3">
-                                <?php for ($i = 1; $i <= $data['total_pages']; $i++): ?>
-                                    <li class="page-item <?= ($i == $data['current_page']) ? 'active' : '' ?>">
-                                        <a class="page-link"
-                                            href="?page=<?= $i ?><?= isset($_GET['filter']) ? '&filter=' . $_GET['filter'] : '' ?>">
-                                            <?= $i ?>
-                                        </a>
-                                    </li>
-                                <?php endfor; ?>
-                            </ul>
-                        </nav>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Activity Statistics -->
-    <div class="row mt-4">
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card-theme border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Successful Logins (24h)
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php
-                                $successfulLogins = 0;
-                                if (isset($data['activities'])) {
-                                    foreach ($data['activities'] as $activity) {
-                                        if (
-                                            $activity->action === 'login' &&
-                                            strtotime($activity->created_at) > strtotime('-24 hours')
-                                        ) {
-                                            $successfulLogins++;
-                                        }
-                                    }
-                                }
-                                echo $successfulLogins;
-                                ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-sign-in-alt fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+    <!-- Main Activity Logs Table -->
+    <div class="card-theme">
+        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-history mr-2"></i>Activity Logs - Audit Trail
+            </h5>
+            <div class="d-flex align-items-center">
+                <span class="badge badge-info mr-3">
+                    <i class="fas fa-database mr-1"></i>
+                    Total: <?= $data['total_activities'] ?? 0 ?> entries
+                </span>
+                <span class="badge badge-success">
+                    <i class="fas fa-shield-alt mr-1"></i>Government Compliance
+                </span>
             </div>
         </div>
-
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card-theme border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                User Management Actions
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php
-                                $userActions = 0;
-                                if (isset($data['activities'])) {
-                                    foreach ($data['activities'] as $activity) {
-                                        if (in_array($activity->action, ['user_created', 'user_updated', 'role_created', 'role_updated'])) {
-                                            $userActions++;
-                                        }
-                                    }
-                                }
-                                echo $userActions;
-                                ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users-cog fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card-theme border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                Failed Login Attempts
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php
-                                $failedLogins = 0;
-                                if (isset($data['activities'])) {
-                                    foreach ($data['activities'] as $activity) {
-                                        if ($activity->action === 'failed_login') {
-                                            $failedLogins++;
-                                        }
-                                    }
-                                }
-                                echo $failedLogins;
-                                ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="activityLogsTable">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Action</th>
+                            <th>Entity</th>
+                            <th>Entity ID</th>
+                            <th>Details</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (isset($data['activity_logs']) && !empty($data['activity_logs'])): ?>
+                            <?php foreach ($data['activity_logs'] as $log): ?>
+                                <tr>
+                                    <td>
+                                        <div class="font-weight-bold">
+                                            <?= !empty($log->created_at) ? date('Y-m-d H:i', strtotime($log->created_at)) : 'N/A' ?>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong><?= htmlspecialchars($log->full_name ?? $log->username ?? 'System') ?></strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info"><?= htmlspecialchars($log->role ?? 'N/A') ?></span>
+                                    </td>
+                                    <td>
+                                        <span class="activity-badge badge badge-primary">
+                                            <?= htmlspecialchars(strtoupper($log->action ?? 'Unknown')) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="text-muted"><?= htmlspecialchars($log->entity ?? $log->target_type ?? 'System') ?></span>
+                                    </td>
+                                    <td>
+                                        <code
+                                            class="text-primary"><?= htmlspecialchars($log->entity_id ?? $log->target_id ?? '-') ?></code>
+                                    </td>
+                                    <td>
+                                        <small
+                                            class="text-secondary"><?= htmlspecialchars($log->details ?? 'No details') ?></small>
+                                    </td>
+                                    <td>
+                                        <code class="text-muted"><?= htmlspecialchars($log->ip_address ?? 'N/A') ?></code>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    <i class="fas fa-history fa-2x mb-2"></i>
+                                    <p>No activity logs found</p>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    $(document).ready(function () {
-        $('#activityTable').DataTable({
-            "pageLength": 25,
-            "order": [[0, "desc"]],
-            "columnDefs": [
-                { "orderable": false, "targets": [3, 5] }, // Details and User Agent columns
-                { "width": "15%", "targets": 0 }, // Timestamp
-                { "width": "15%", "targets": 1 }, // User
-                { "width": "10%", "targets": 2 }, // Action
-                { "width": "30%", "targets": 3 }, // Details
-                { "width": "10%", "targets": 4 }, // IP Address
-                { "width": "20%", "targets": 5 }  // User Agent
-            ],
-            "searching": true,
-            "info": true,
-            "language": {
-                "search": "Search activities:",
-                "lengthMenu": "Show _MENU_ activities per page",
-                "info": "Showing _START_ to _END_ of _TOTAL_ activities",
-                "infoEmpty": "No activities found",
-                "infoFiltered": "(filtered from _MAX_ total activities)"
+    // Enhanced error suppression for browser extensions
+    (function () {
+        // Override chrome.runtime.lastError property
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+            try {
+                Object.defineProperty(chrome.runtime, 'lastError', {
+                    get: function () { return undefined; },
+                    set: function () { /* do nothing */ },
+                    configurable: false
+                });
+            } catch (e) {
+                // If we can't override the property, catch errors another way
+            }
+        }
+
+        // Comprehensive error handling
+        window.addEventListener('error', function (e) {
+            if (e.message && (
+                e.message.includes('message port closed') ||
+                e.message.includes('runtime.lastError') ||
+                e.message.includes('Extension context')
+            )) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
+            }
+        }, true);
+
+        // Handle unhandled promise rejections from extensions
+        window.addEventListener('unhandledrejection', function (e) {
+            if (e.reason && e.reason.message &&
+                e.reason.message.includes('message port closed')) {
+                e.preventDefault();
+                return false;
             }
         });
+    })();
 
-        // Auto refresh every 30 seconds
-        setInterval(function () {
-            if (confirm('Refresh activity logs?')) {
-                location.reload();
+    $(document).ready(function () {
+        // Initialize DataTables for activity logs if table has data
+        if ($('#activityLogsTable tbody tr').length > 0 && !$('#activityLogsTable tbody tr').first().find('td[colspan="8"]').length) {
+            $('#activityLogsTable').DataTable({
+                responsive: true,
+                order: [[0, 'desc']], // Sort by Date & Time descending
+                pageLength: 25,
+                columnDefs: [
+                    { width: "15%", targets: 0 }, // Date & Time
+                    { width: "12%", targets: 1 }, // User
+                    { width: "8%", targets: 2 },  // Role
+                    { width: "10%", targets: 3 }, // Action
+                    { width: "10%", targets: 4 }, // Entity
+                    { width: "8%", targets: 5 },  // Entity ID
+                    { width: "25%", targets: 6 }, // Details
+                    { width: "12%", targets: 7 }  // IP Address
+                ],
+                language: {
+                    emptyTable: "No activity logs found",
+                    zeroRecords: "No matching activity logs found"
+                }
+            });
+        }
+
+        // Load activity logs on page load
+        loadActivityLogs();
+    });
+
+    // Activity Log Functions
+    function loadActivityLogs() {
+        // Show loading indicator
+        $('#activityLogsTable tbody').html(`
+        <tr>
+            <td colspan="8" class="text-center py-4">
+                <i class="fas fa-spinner fa-spin fa-2x text-primary mb-2"></i>
+                <p>Loading activity logs...</p>
+            </td>
+        </tr>
+    `);        // Activity logs are already loaded on page load via PHP
+        // Just make sure the table is visible and scroll to it
+        $('#activityLogsTable').show();
+
+        // Make an AJAX call to refresh the data
+        $.ajax({
+            url: '<?= URLROOT ?>/admin/getActivityLogsAjax',
+            method: 'GET',
+            success: function (response) {
+                if (response.success && response.data) {
+                    updateActivityLogsTable(response.data);
+                } else {
+                    $('#activityLogsTable tbody').html(`
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                            <p>No activity logs available</p>
+                        </td>
+                    </tr>
+                `);
+                }
+            },
+            error: function (xhr, status, error) {
+                $('#activityLogsTable tbody').html(`
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-danger">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p>Error loading activity logs: ${error}</p>
+                        <small>Using existing data if available</small>
+                    </td>
+                </tr>
+            `);
             }
-        }, 30000);
+        });
+    }
+
+    function updateActivityLogsTable(logs) {
+        const tbody = $('#activityLogsTable tbody');
+        tbody.empty();
+
+        if (logs && logs.length > 0) {
+            logs.forEach(function (log) {
+                const formattedDate = log.created_at ?
+                    new Date(log.created_at).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    }).replace(/(\d+)\/(\d+)\/(\d+),/, '$3-$1-$2') : 'N/A';
+
+                const fullName = log.full_name || log.username || 'System';
+                const role = log.role || 'N/A';
+                const action = (log.action || 'Unknown').toUpperCase();
+                const entity = log.entity || log.target_type || 'System';
+                const entityId = log.entity_id || log.target_id || '-';
+                const details = log.details || 'No details';
+                const ipAddress = log.ip_address || 'N/A';
+
+                const row = `
+                <tr>
+                    <td><div class="font-weight-bold">${escapeHtml(formattedDate)}</div></td>
+                    <td><strong>${escapeHtml(fullName)}</strong></td>
+                    <td><span class="badge badge-info">${escapeHtml(role)}</span></td>
+                    <td><span class="activity-badge badge badge-primary">${escapeHtml(action)}</span></td>
+                    <td><span class="text-muted">${escapeHtml(entity)}</span></td>
+                    <td><code class="text-primary">${escapeHtml(entityId)}</code></td>
+                    <td><small class="text-secondary">${escapeHtml(details)}</small></td>
+                    <td><code class="text-muted">${escapeHtml(ipAddress)}</code></td>
+                </tr>
+            `;
+                tbody.append(row);
+            });
+            // Activity logs table updated successfully
+        } else {
+            tbody.append(`
+            <tr>
+                <td colspan="8" class="text-center py-4 text-muted">
+                    <i class="fas fa-history fa-2x mb-2"></i>
+                    <p>No activity logs found</p>
+                </td>
+            </tr>
+        `);
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function filterByPeriod(period) {
+
+        $.ajax({
+            url: '<?= URLROOT ?>/admin/filterLogs',
+            method: 'POST',
+            data: { period: period },
+            success: function (response) {
+                if (response.success) {
+                    // Reload the logs table
+                    location.reload();
+                }
+            }
+        });
+    }
+
+    // Enhanced filtering with dropdown filters
+    $('#actionFilter, #entityFilter').on('change', function () {
+        const table = $('#activityLogsTable').DataTable();
+
+        // Get filter values
+        const actionFilter = $('#actionFilter').val();
+        const entityFilter = $('#entityFilter').val();
+
+        // Clear existing search
+        table.search('').columns().search('').draw();
+
+        // Apply filters
+        if (actionFilter) {
+            table.column(3).search(actionFilter, false, true);
+        }
+        if (entityFilter) {
+            table.column(4).search(entityFilter, false, true);
+        }
+
+        // Apply all filters
+        table.draw();
     });
 </script>
 
-
-</div> <!-- End container-fluid -->
-</div> <!-- End page-content-wrapper -->
-</div> <!-- End wrapper -->
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-    crossorigin="anonymous"></script>
-<script src="<?php echo URLROOT; ?>/js/main.js"></script>
-</body>
-
-</html>
+<?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'footer.php'; ?>

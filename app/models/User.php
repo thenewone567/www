@@ -424,7 +424,22 @@ class User
       $hasLog = (bool) $this->db->single();
 
       if ($hasLog) {
-        $this->db->query('SELECT ual.*, u.username, u.full_name FROM user_activity_log ual LEFT JOIN users u ON u.user_id = ual.user_id ORDER BY ual.created_at DESC LIMIT :limit');
+        $this->db->query('
+          SELECT 
+            ual.*, 
+            u.username, 
+            u.full_name,
+            r.role_name as role,
+            ual.target_type as entity,
+            ual.target_id as entity_id,
+            ual.ip_address,
+            ual.details
+          FROM user_activity_log ual 
+          LEFT JOIN users u ON u.user_id = ual.user_id 
+          LEFT JOIN roles r ON r.role_id = u.role_id
+          ORDER BY ual.created_at DESC 
+          LIMIT :limit
+        ');
         $this->db->bind(':limit', (int) $limit);
         if ($this->db->execute()) {
           return $this->db->resultSet();
@@ -800,6 +815,49 @@ class User
     } catch (Exception $e) {
       // If activity_logs table doesn't exist, just log to error log and return true
       error_log('logActivity: ' . $e->getMessage());
+      return true; // Don't fail the main operation if logging fails
+    }
+  }
+
+  /**
+   * Enhanced audit logging for compliance
+   * @param int $userId
+   * @param string $action (CREATE, UPDATE, DELETE, LOGIN, etc.)
+   * @param string $entity (Product, Invoice, User, System, etc.)
+   * @param mixed $entityId
+   * @param string $details
+   * @param string $ipAddress
+   * @return bool
+   */
+  public function logAuditTrail($userId, $action, $entity = 'System', $entityId = null, $details = '', $ipAddress = null)
+  {
+    try {
+      // Try to insert into user_activity_log table first (if it exists)
+      $this->db->query("SHOW TABLES LIKE 'user_activity_log'");
+      $this->db->execute();
+      $hasUserActivityLog = (bool) $this->db->single();
+
+      if ($hasUserActivityLog) {
+        $this->db->query("
+          INSERT INTO user_activity_log (
+            user_id, action, target_type, target_id, details, ip_address, created_at
+          ) VALUES (
+            :user_id, :action, :target_type, :target_id, :details, :ip_address, NOW()
+          )
+        ");
+        $this->db->bind(':user_id', $userId);
+        $this->db->bind(':action', $action);
+        $this->db->bind(':target_type', $entity);
+        $this->db->bind(':target_id', $entityId);
+        $this->db->bind(':details', $details);
+        $this->db->bind(':ip_address', $ipAddress ?: ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+        return $this->db->execute();
+      }
+
+      // Fallback to activity_logs table
+      return $this->logActivity($userId, $action, $details);
+    } catch (Exception $e) {
+      error_log('logAuditTrail: ' . $e->getMessage());
       return true; // Don't fail the main operation if logging fails
     }
   }

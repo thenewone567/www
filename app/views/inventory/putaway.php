@@ -89,20 +89,40 @@ try {
     // Get putaway queue data - items currently in receiving areas waiting for putaway
     $putawayQueue = [];
     try {
-        // Query actual inventory in receiving locations - this is the REAL putaway queue
+        // Query actual inventory in receiving locations - group by product and PO to reduce duplicates
         $db->query("SELECT 
-            i.product_id,
-            i.quantity as pending_quantity,
-            i.location_id,
+            p.product_id,
             p.product_name,
             p.sku,
-            l.location_code,
-            l.location_name
+            SUM(i.quantity) as total_pending_quantity,
+            GROUP_CONCAT(CONCAT(l.location_name, ': ', i.quantity, ' units') ORDER BY i.quantity DESC SEPARATOR ' | ') as location_breakdown,
+            (SELECT l_first.location_name FROM inventory i_first 
+             JOIN locations l_first ON i_first.location_id = l_first.location_id 
+             WHERE i_first.product_id = p.product_id AND l_first.location_type = 'receiving' AND i_first.quantity > 0
+             ORDER BY i_first.quantity DESC LIMIT 1) as primary_location,
+            (SELECT i_first.quantity FROM inventory i_first 
+             JOIN locations l_first ON i_first.location_id = l_first.location_id 
+             WHERE i_first.product_id = p.product_id AND l_first.location_type = 'receiving' AND i_first.quantity > 0
+             ORDER BY i_first.quantity DESC LIMIT 1) as primary_quantity,
+            (SELECT pi_inner.received_quantity FROM purchase_items pi_inner 
+             JOIN purchases pu_inner ON pi_inner.purchase_id = pu_inner.purchase_id
+             WHERE pi_inner.product_id = p.product_id 
+             ORDER BY pi_inner.received_at DESC LIMIT 1) as total_received,
+            (SELECT IFNULL(pi_inner.putaway_quantity, 0) FROM purchase_items pi_inner 
+             JOIN purchases pu_inner ON pi_inner.purchase_id = pu_inner.purchase_id
+             WHERE pi_inner.product_id = p.product_id 
+             ORDER BY pi_inner.received_at DESC LIMIT 1) as putaway_quantity,
+            (SELECT pu_inner.po_number FROM purchase_items pi_inner 
+             JOIN purchases pu_inner ON pi_inner.purchase_id = pu_inner.purchase_id
+             WHERE pi_inner.product_id = p.product_id 
+             ORDER BY pi_inner.received_at DESC LIMIT 1) as po_number
             FROM inventory i
             JOIN locations l ON i.location_id = l.location_id
-            LEFT JOIN products p ON i.product_id = p.product_id
+            JOIN products p ON i.product_id = p.product_id
             WHERE l.location_type = 'receiving' 
             AND i.quantity > 0
+            GROUP BY p.product_id, p.product_name, p.sku
+            ORDER BY p.product_name, SUM(i.quantity) DESC
             LIMIT 10");
 
         if ($db->execute()) {
@@ -113,8 +133,8 @@ try {
                 $productName = $item->product_name ?? ('Product #' . $item->product_id);
                 $sku = $item->sku ?? ('SKU' . str_pad($item->product_id, 4, '0', STR_PAD_LEFT));
 
-                // Use the actual receiving location name
-                $receivingArea = $item->location_name ?? $item->location_code ?? 'Receiving';
+                // Use the primary receiving location name (largest quantity)
+                $receivingArea = $item->primary_location ?? 'Receiving';
 
                 // Suggested storage location: pick an active storage location
                 try {
@@ -131,16 +151,25 @@ try {
 
                 $priorityClass = $hoursWaiting < 4 ? 'success' : ($hoursWaiting < 24 ? 'warning' : 'danger');
 
+                // Calculate remaining quantity from PO data (separate from current inventory)
+                $totalReceived = $item->total_received ?? 0;
+                $putawayQuantity = $item->putaway_quantity ?? 0;
+                $remainingQuantity = $totalReceived > 0 ? ($totalReceived - $putawayQuantity) : 0;
+
                 $putawayQueue[] = (object) [
                     'product_name' => $productName,
                     'sku' => $sku,
-                    'pending_quantity' => $item->pending_quantity,
+                    'pending_quantity' => $item->total_pending_quantity, // Total across all locations
+                    'primary_quantity' => $item->primary_quantity, // Largest single location
+                    'location_breakdown' => $item->location_breakdown, // Full location details
+                    'total_received' => $totalReceived,
+                    'putaway_quantity' => $putawayQuantity,
+                    'remaining_quantity' => $remainingQuantity,
                     'receiving_area' => $receivingArea,
                     'hours_waiting' => $hoursWaiting,
                     'priority_class' => $priorityClass,
-                    'po_number' => 'INV-' . $item->product_id, // Since we don't have PO data in this query
+                    'po_number' => $item->po_number ?? ('INV-' . $item->product_id),
                     'suggested_location' => $suggestedLocation,
-                    'location_id' => $item->location_id,
                     'product_id' => $item->product_id
                 ];
             }
@@ -153,6 +182,10 @@ try {
                     'product_name' => 'Hammer - 16oz',
                     'sku' => 'HAM001',
                     'pending_quantity' => 25,
+                    'total_received' => 50,
+                    'putaway_quantity' => 25,
+                    'remaining_quantity' => 25,
+                    'po_number' => 'PO-2025-001',
                     'receiving_area' => 'Receiving Area 1',
                     'hours_waiting' => 2,
                     'priority_class' => 'success',
@@ -162,6 +195,10 @@ try {
                     'product_name' => 'Screwdriver Set',
                     'sku' => 'SCR015',
                     'pending_quantity' => 12,
+                    'total_received' => 24,
+                    'putaway_quantity' => 12,
+                    'remaining_quantity' => 12,
+                    'po_number' => 'PO-2025-002',
                     'receiving_area' => 'Receiving Area 2',
                     'hours_waiting' => 6,
                     'priority_class' => 'warning',
@@ -171,6 +208,10 @@ try {
                     'product_name' => 'Paint Brush 2"',
                     'sku' => 'PNT201',
                     'pending_quantity' => 50,
+                    'total_received' => 100,
+                    'putaway_quantity' => 50,
+                    'remaining_quantity' => 50,
+                    'po_number' => 'PO-2025-003',
                     'receiving_area' => 'Receiving Area 3',
                     'hours_waiting' => 25,
                     'priority_class' => 'danger',
@@ -187,6 +228,10 @@ try {
                 'product_name' => 'Hammer - 16oz',
                 'sku' => 'HAM001',
                 'pending_quantity' => 25,
+                'total_received' => 50,
+                'putaway_quantity' => 25,
+                'remaining_quantity' => 25,
+                'po_number' => 'PO-2025-001',
                 'receiving_area' => 'Receiving Area 1',
                 'hours_waiting' => 2,
                 'priority_class' => 'success',
@@ -196,6 +241,10 @@ try {
                 'product_name' => 'Screwdriver Set',
                 'sku' => 'SCR015',
                 'pending_quantity' => 12,
+                'total_received' => 24,
+                'putaway_quantity' => 12,
+                'remaining_quantity' => 12,
+                'po_number' => 'PO-2025-002',
                 'receiving_area' => 'Receiving Area 2',
                 'hours_waiting' => 6,
                 'priority_class' => 'warning',
@@ -205,6 +254,10 @@ try {
                 'product_name' => 'Paint Brush 2"',
                 'sku' => 'PNT201',
                 'pending_quantity' => 50,
+                'total_received' => 100,
+                'putaway_quantity' => 50,
+                'remaining_quantity' => 50,
+                'po_number' => 'PO-2025-003',
                 'receiving_area' => 'Receiving Area 3',
                 'hours_waiting' => 25,
                 'priority_class' => 'danger',
@@ -319,205 +372,195 @@ try {
 
     <!-- Putaway Operations -->
     <div class="row">
-        <!-- Scanner Section -->
+        <!-- Enhanced Scanner Section -->
         <div class="col-lg-6 mb-4">
             <div class="theme-card">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fas fa-qrcode"></i> Putaway Scanner</h5>
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-qrcode"></i> Smart Putaway Scanner</h5>
+                    <div class="scanner-mode-toggle">
+                        <button id="mode-toggle" class="btn btn-sm btn-outline-light" onclick="toggleScannerMode()">
+                            <i class="fas fa-exchange-alt"></i> <span id="mode-text">Queue Mode</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <form id="putaway-form">
-                        <div class="form-group">
-                            <label for="item-scan">Scan Item to Put Away</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control scanner-input" id="item-scan"
-                                    placeholder="Scan item barcode" autofocus>
+                    <!-- Workflow Progress Indicator -->
+                    <div class="putaway-workflow mb-4">
+                        <div class="workflow-steps d-flex justify-content-between">
+                            <div class="step active" id="step-item">
+                                <div class="step-circle">1</div>
+                                <div class="step-label">Scan Item</div>
+                            </div>
+                            <div class="step-connector"></div>
+                            <div class="step" id="step-location">
+                                <div class="step-circle">2</div>
+                                <div class="step-label">Scan Location</div>
+                            </div>
+                            <div class="step-connector"></div>
+                            <div class="step" id="step-quantity">
+                                <div class="step-circle">3</div>
+                                <div class="step-label">Confirm Quantity</div>
+                            </div>
+                            <div class="step-connector"></div>
+                            <div class="step" id="step-complete">
+                                <div class="step-circle">4</div>
+                                <div class="step-label">Complete</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Scanner Interface -->
+                    <div id="scanner-interface">
+                        <!-- Step 1: Item Scanning -->
+                        <div id="item-scan-step" class="scan-step active">
+                            <div class="scan-prompt text-center mb-3">
+                                <div class="scan-icon mb-2">
+                                    <i class="fas fa-barcode fa-3x text-info"></i>
+                                </div>
+                                <h5 class="text-info">Scan Item Barcode</h5>
+                                <p class="text-muted">Point scanner at item barcode or type manually</p>
+                            </div>
+
+                            <div class="input-group input-group-lg">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-info text-white">
+                                        <i class="fas fa-cube"></i>
+                                    </span>
+                                </div>
+                                <input type="text" class="form-control scanner-input-large" id="item-scan"
+                                    placeholder="Scan or type item barcode..." autofocus>
                                 <div class="input-group-append">
-                                    <button class="btn-theme btn-info-theme" type="button" onclick="lookupItem()">
-                                        <i class="fas fa-search"></i> Lookup
+                                    <button class="btn btn-info" type="button" onclick="manualItemLookup()">
+                                        <i class="fas fa-search"></i>
                                     </button>
                                 </div>
                             </div>
+
+                            <div class="scanner-tips mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-lightbulb"></i>
+                                    Press Enter after scanning or click items from the queue →
+                                </small>
+                            </div>
                         </div>
 
-                        <div id="item-details" class="d-none">
-                            <div class="alert alert-info">
-                                <h6><i class="fas fa-info-circle"></i> Item Information</h6>
-                                <div id="item-info"></div>
+                        <!-- Step 2: Location Scanning -->
+                        <div id="location-scan-step" class="scan-step" style="display: none;">
+                            <div id="item-confirmation" class="alert alert-info mb-3">
+                                <!-- Item details will be inserted here -->
                             </div>
 
-                            <div class="form-group">
-                                <label for="suggested-location">Suggested Location</label>
-                                <input type="text" class="form-theme" id="suggested-location" readonly>
-                                <small id="location-suggestion-help" class="form-text text-muted"></small>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="location-scan">Scan Storage Location</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control scanner-input" id="location-scan"
-                                        placeholder="Scan location barcode">
-                                    <div class="input-group-append">
-                                        <button class="btn-theme btn-success-theme" type="submit">
-                                            <i class="fas fa-check"></i> Put Away
-                                        </button>
-                                    </div>
+                            <div class="scan-prompt text-center mb-3">
+                                <div class="scan-icon mb-2">
+                                    <i class="fas fa-map-marker-alt fa-3x text-warning"></i>
                                 </div>
+                                <h5 class="text-warning">Scan Storage Location</h5>
+                                <p class="text-muted">Scan the target storage location barcode</p>
                             </div>
 
-                            <div class="form-group">
-                                <label for="putaway-quantity">Quantity to Put Away</label>
-                                <input type="number" class="form-theme" id="putaway-quantity" value="1" min="1">
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Putaway Queue -->
-        <div class="col-lg-6 mb-4">
-            <div class="theme-card">
-                <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-list"></i> Putaway Queue</h5>
-                    <span class="badge badge-light"><?php echo count($putawayQueue); ?> items</span>
-                </div>
-                <div class="card-body">
-                    <div id="putaway-queue">
-                        <?php if (!empty($putawayQueue)): ?>
-                            <div class="list-group">
-                                <?php foreach ($putawayQueue as $item): ?>
-                                    <div
-                                        class="list-group-item d-flex justify-content-between align-items-center putaway-priority-<?php echo $item->priority_class === 'success' ? 'normal' : ($item->priority_class === 'warning' ? 'warning' : 'urgent'); ?>">
-                                        <div class="flex-grow-1">
-                                            <strong><?php echo htmlspecialchars($item->product_name); ?></strong>
-                                            <br>
-                                            <small class="text-muted">
-                                                SKU: <?php echo htmlspecialchars($item->sku); ?> |
-                                                Qty: <?php echo $item->pending_quantity; ?>
-                                                <?php if (!empty($item->receiving_area)): ?>
-                                                    | From: <?php echo htmlspecialchars($item->receiving_area); ?>
-                                                <?php endif; ?>
-                                            </small>
-                                            <?php if (isset($item->hours_waiting)): ?>
-                                                <br>
-                                                <small class="text-muted">
-                                                    <i class="fas fa-clock"></i> Waiting: <?php echo $item->hours_waiting; ?> hours
-                                                </small>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="d-flex flex-column align-items-end">
-                                            <span class="badge badge-<?php echo $item->priority_class ?? 'warning'; ?> mb-1">
-                                                <?php
-                                                if (isset($item->hours_waiting)) {
-                                                    if ($item->hours_waiting < 4)
-                                                        echo 'Normal';
-                                                    elseif ($item->hours_waiting < 24)
-                                                        echo 'Priority';
-                                                    else
-                                                        echo 'Urgent';
-                                                } else {
-                                                    echo 'Waiting';
-                                                }
-                                                ?>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="input-group input-group-lg">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-warning text-white">
+                                                <i class="fas fa-warehouse"></i>
                                             </span>
-                                            <button class="btn btn-sm btn-outline-primary"
-                                                onclick="selectForPutaway('<?php echo htmlspecialchars($item->sku); ?>', '<?php echo htmlspecialchars($item->product_name); ?>', '<?php echo htmlspecialchars($item->suggested_location ?? ''); ?>')">
-                                                <i class="fas fa-arrow-right"></i> Select
+                                        </div>
+                                        <input type="text" class="form-control scanner-input-large" id="location-scan"
+                                            placeholder="Scan storage location...">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-success btn-lg" type="button"
+                                                onclick="proceedToQuantity()" disabled id="location-next-btn">
+                                                <i class="fas fa-arrow-right"></i> Next
                                             </button>
                                         </div>
                                     </div>
-                                <?php endforeach; ?>
+                                </div>
                             </div>
 
-                            <!-- Queue Statistics -->
-                            <div class="mt-3 p-2 putaway-queue-stats">
-                                <div class="row text-center">
-                                    <div class="col-4">
-                                        <small class="text-success">
-                                            <strong><?php echo count(array_filter($putawayQueue, function ($item) {
-                                                return ($item->priority_class ?? 'warning') === 'success';
-                                            })); ?></strong><br>
-                                            Normal
-                                        </small>
+                            <!-- Location Suggestion -->
+                            <div id="location-suggestion" class="mt-3" style="display: none;">
+                                <div class="card border-success">
+                                    <div class="card-header bg-success text-white py-2">
+                                        <h6 class="mb-0"><i class="fas fa-lightbulb"></i> Suggested Location</h6>
                                     </div>
-                                    <div class="col-4">
-                                        <small class="text-warning">
-                                            <strong><?php echo count(array_filter($putawayQueue, function ($item) {
-                                                return ($item->priority_class ?? 'warning') === 'warning';
-                                            })); ?></strong><br>
-                                            Priority
-                                        </small>
-                                    </div>
-                                    <div class="col-4">
-                                        <small class="text-danger">
-                                            <strong><?php echo count(array_filter($putawayQueue, function ($item) {
-                                                return ($item->priority_class ?? 'warning') === 'danger';
-                                            })); ?></strong><br>
-                                            Urgent
-                                        </small>
+                                    <div class="card-body py-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong id="suggested-location-code"></strong>
+                                                <br>
+                                                <small id="suggestion-reason" class="text-muted"></small>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-success" onclick="useSuggestion()">
+                                                <i class="fas fa-arrow-down"></i> Use This
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        <?php else: ?>
-                            <div class="text-center py-4">
-                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                                <h6 class="text-muted">All caught up!</h6>
-                                <p class="text-muted">No items waiting for putaway</p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Location Map -->
-    <div class="row">
-        <div class="col-lg-8 mb-4">
-            <div class="theme-card">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0"><i class="fas fa-map"></i> Warehouse Location Map</h5>
-                </div>
-                <div class="card-body">
-                    <div class="warehouse-map">
-                        <div class="row text-center">
-                            <div class="col-2">
-                                <div class="location-zone border p-2 mb-2 bg-light">
-                                    <strong>Zone A</strong>
-                                    <br><small>A1-A20</small>
+                            <div class="mt-2">
+                                <button class="btn btn-outline-secondary" onclick="restartScan()">
+                                    <i class="fas fa-undo"></i> Scan Different Item
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Quantity Confirmation -->
+                        <div id="quantity-step" class="scan-step" style="display: none; position: relative;">
+                            <!-- Loading Overlay -->
+                            <div id="putaway-loading-overlay" class="putaway-loading-overlay" style="display: none;">
+                                <div class="loading-spinner"></div>
+                                <div class="loading-text">Processing Putaway...</div>
+                                <div class="loading-subtext">Please wait while we store your item</div>
+                            </div>
+
+                            <div id="location-confirmation" class="alert alert-success mb-3">
+                                <!-- Location details will be inserted here -->
+                            </div>
+
+                            <div class="scan-prompt text-center mb-3">
+                                <div class="scan-icon mb-2">
+                                    <i class="fas fa-calculator fa-3x text-info"></i>
+                                </div>
+                                <h5 class="text-info">Confirm Quantity</h5>
+                                <p class="text-muted">Enter the quantity to put away</p>
+                            </div>
+
+                            <div class="row justify-content-center">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="putaway-quantity"
+                                            class="font-weight-bold text-center d-block">Quantity to Put Away</label>
+                                        <input type="number" class="form-control form-control-lg text-center"
+                                            id="putaway-quantity" value="1" min="1">
+                                        <small class="form-text text-muted text-center mt-2">
+                                            <span id="quantity-available">Available: -- units</span>
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-2">
-                                <div class="location-zone border p-2 mb-2 bg-light">
-                                    <strong>Zone B</strong>
-                                    <br><small>B1-B20</small>
-                                </div>
+
+                            <div class="text-center">
+                                <button class="btn btn-success btn-lg mr-3" onclick="completePutaway()"
+                                    id="complete-btn">
+                                    <i class="fas fa-check"></i> Complete Putaway
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="goBackToLocation()">
+                                    <i class="fas fa-arrow-left"></i> Back to Location
+                                </button>
                             </div>
-                            <div class="col-2">
-                                <div class="location-zone border p-2 mb-2 bg-light">
-                                    <strong>Zone C</strong>
-                                    <br><small>C1-C20</small>
-                                </div>
-                            </div>
-                            <div class="col-2">
-                                <div class="location-zone border p-2 mb-2 bg-success text-white">
-                                    <strong>Zone D</strong>
-                                    <br><small>D1-D20</small>
-                                    <br><span class="badge badge-light">Active</span>
-                                </div>
-                            </div>
-                            <div class="col-2">
-                                <div class="location-zone border p-2 mb-2 bg-light">
-                                    <strong>Zone E</strong>
-                                    <br><small>E1-E20</small>
-                                </div>
-                            </div>
-                            <div class="col-2">
-                                <div class="location-zone border p-2 mb-2 bg-light">
-                                    <strong>Zone F</strong>
-                                    <br><small>F1-F20</small>
-                                </div>
+                        </div>
+
+                        <!-- Step 4: Completion -->
+                        <div id="completion-step" class="scan-step text-center" style="display: none;">
+                            <div class="completion-animation">
+                                <i class="fas fa-check-circle fa-5x text-success mb-3"></i>
+                                <h4 class="text-success">Putaway Complete!</h4>
+                                <p class="text-muted mb-4">Item successfully stored</p>
+                                <button class="btn btn-primary btn-lg" onclick="startNewPutaway()">
+                                    <i class="fas fa-plus"></i> Put Away Another Item
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -525,88 +568,220 @@ try {
             </div>
         </div>
 
-        <!-- Recent Putaway Activity -->
-        <div class="col-lg-4 mb-4">
-            <div class="theme-card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-history"></i> Recent Activity</h5>
-                </div>
-                <div class="card-body">
-                    <div class="timeline">
-                        <div class="timeline-item">
-                            <div class="timeline-marker bg-success"></div>
-                            <div class="timeline-content">
-                                <h6 class="mb-1">Hammer - 16oz</h6>
-                                <small class="text-muted">Put away at W1-D5-A2</small>
-                                <br><small class="text-muted">2 minutes ago</small>
-                            </div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-marker bg-success"></div>
-                            <div class="timeline-content">
-                                <h6 class="mb-1">Drill Bits Set</h6>
-                                <small class="text-muted">Put away at W1-C8-B1</small>
-                                <br><small class="text-muted">5 minutes ago</small>
-                            </div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-marker bg-success"></div>
-                            <div class="timeline-content">
-                                <h6 class="mb-1">Safety Goggles</h6>
-                                <small class="text-muted">Put away at W1-A2-C3</small>
-                                <br><small class="text-muted">8 minutes ago</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Alert container for notifications -->
+        <div class="col-lg-6 mb-4">
+            <div id="alert-container"></div>
+            <!-- Selected item info -->
+            <div id="selected-item-info"></div>
         </div>
     </div>
 </div>
 
+
+
+</div>
+
 <script>
-    // Handle item scanning
-    document.getElementById('item-scan').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            lookupItem();
+    // Enhanced Putaway Scanner Workflow
+    let currentStep = 1;
+    let currentItemData = null;
+    let scannerMode = 'queue'; // 'queue' or 'manual'
+
+    // Scanner workflow management
+    function updateWorkflowStep(step) {
+        // Reset all steps
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active', 'completed'));
+        document.querySelectorAll('.scan-step').forEach(s => s.style.display = 'none');
+
+        // Update current step
+        currentStep = step;
+
+        // Update visual indicators
+        for (let i = 1; i <= step; i++) {
+            const stepEl = document.getElementById(`step-${i === 1 ? 'item' : i === 2 ? 'location' : i === 3 ? 'quantity' : 'complete'}`);
+            if (i < step) {
+                stepEl.classList.add('completed');
+            } else if (i === step) {
+                stepEl.classList.add('active');
+            }
         }
-    });
+
+        // Show current step interface
+        if (step === 1) {
+            document.getElementById('item-scan-step').style.display = 'block';
+            document.getElementById('item-scan').focus();
+        } else if (step === 2) {
+            document.getElementById('location-scan-step').style.display = 'block';
+            document.getElementById('location-scan').focus();
+        } else if (step === 3) {
+            document.getElementById('quantity-step').style.display = 'block';
+            document.getElementById('putaway-quantity').focus();
+            document.getElementById('putaway-quantity').select();
+        } else if (step === 4) {
+            document.getElementById('completion-step').style.display = 'block';
+        }
+    }
+
+    // Toggle between queue mode and manual mode
+    function toggleScannerMode() {
+        scannerMode = scannerMode === 'queue' ? 'manual' : 'queue';
+        const modeText = document.getElementById('mode-text');
+        const toggleBtn = document.getElementById('mode-toggle');
+
+        if (scannerMode === 'queue') {
+            modeText.textContent = 'Queue Mode';
+            toggleBtn.classList.remove('btn-outline-success');
+            toggleBtn.classList.add('btn-outline-light');
+        } else {
+            modeText.textContent = 'Manual Mode';
+            toggleBtn.classList.remove('btn-outline-light');
+            toggleBtn.classList.add('btn-outline-success');
+        }
+    }
+
+    // Lookup item function
+    function lookupItem(barcode) {
+        if (!barcode) {
+            showAlert('Please provide a barcode', 'warning');
+            return;
+        }
+
+        showLoadingMessage('Looking up item...');
+
+        // API call to lookup item
+        fetch('<?php echo URLROOT; ?>/api/itemLookup.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                barcode: barcode
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                hideLoadingMessage();
+
+                if (data.success) {
+                    currentItemData = data;
+                    showItemConfirmation(data);
+                    updateWorkflowStep(2);
+                } else {
+                    showAlert('Item not found: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                hideLoadingMessage();
+                console.error('Lookup error:', error);
+                showAlert('Item lookup failed: ' + error.message, 'danger');
+            });
+    }
+
+    // Show item confirmation
+    function showItemConfirmation(data) {
+        const confirmationEl = document.getElementById('item-confirmation');
+
+        // Prepare availability info
+        let availabilityInfo = '';
+        if (data.receiving_location.source === 'putaway_queue') {
+            availabilityInfo = `
+            <small class="text-muted d-block"><strong>Available:</strong> ${data.quantity_available} units</small>
+            <small class="text-info d-block"><strong>PO:</strong> ${data.receiving_location.po_number} (${data.receiving_location.total_received} received, ${data.receiving_location.already_putaway} already stored)</small>
+        `;
+        } else {
+            availabilityInfo = `<small class="text-muted d-block"><strong>Available:</strong> ${data.quantity_available} units</small>`;
+        }
+
+        const poDisplayItem = (data.po_number && data.po_number !== '')
+            ? `<small class="text-info d-block"><strong>PO #:</strong> ${data.po_number}</small>`
+            : '';
+
+        confirmationEl.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="mr-3">
+                <i class="fas fa-check-circle fa-2x text-success"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="mb-1">${data.product.name || data.product_name}</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted d-block"><strong>SKU:</strong> ${data.product.sku || data.sku}</small>
+                        <small class="text-muted d-block"><strong>Location:</strong> ${data.receiving_location.name}</small>
+                        ${poDisplayItem}
+                    </div>
+                    <div class="col-md-6">
+                        ${availabilityInfo}
+                        <small class="text-success d-block"><strong>Ready for putaway</strong></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+        // Show location suggestion if available
+        if (data.suggested_location && data.suggested_location.code) {
+            showLocationSuggestion(data.suggested_location);
+        }
+    }
+
+    // Show location suggestion
+    function showLocationSuggestion(suggestion) {
+        const suggestionEl = document.getElementById('location-suggestion');
+        const codeEl = document.getElementById('suggested-location-code');
+        const reasonEl = document.getElementById('suggestion-reason');
+
+        codeEl.textContent = suggestion.code || suggestion;
+        reasonEl.textContent = suggestion.suggestion_reason || 'Optimal storage location';
+
+        suggestionEl.style.display = 'block';
+    }
+
+    // Use suggested location
+    function useSuggestion() {
+        const suggestedCode = document.getElementById('suggested-location-code').textContent;
+        const locationInput = document.getElementById('location-scan');
+
+        locationInput.value = suggestedCode;
+        validateLocation().then(() => {
+            if (locationInput.classList.contains('is-valid')) {
+                document.getElementById('location-next-btn').disabled = false;
+            }
+        });
+    }
 
     // Handle location scanning
     document.getElementById('location-scan').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            const locationCode = this.value;
-            if (locationCode && !this.classList.contains('is-valid')) {
-                // Validate first, then process after validation
-                validateLocation().then(() => {
-                    if (this.classList.contains('is-valid')) {
-                        processPutaway();
-                    }
-                });
-            } else if (this.classList.contains('is-valid')) {
-                processPutaway();
+            validateLocation().then(() => {
+                if (this.classList.contains('is-valid')) {
+                    proceedToQuantity();
+                }
+            });
+        }
+    });
+
+    // Validate location as user types
+    document.getElementById('location-scan').addEventListener('input', function () {
+        this.classList.remove('is-valid', 'is-invalid');
+        document.getElementById('location-next-btn').disabled = true;
+
+        if (this.value.length > 2) {
+            validateLocation();
+        }
+    });
+
+    // Handle quantity confirmation
+    document.getElementById('putaway-quantity').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (!document.getElementById('complete-btn').disabled) {
+                completePutaway();
             }
         }
     });
 
-    // Handle location input changes (clear validation state when user types)
-    document.getElementById('location-scan').addEventListener('input', function () {
-        this.classList.remove('is-valid', 'is-invalid');
-    });
-
-    // Helper function to safely insert alerts
-    function safeInsertAlert(alert) {
-        const formElement = document.querySelector('#putaway-form');
-        if (formElement && formElement.parentNode) {
-            formElement.parentNode.insertBefore(alert, formElement);
-            return true;
-        }
-        return false;
-    }
-
-    // Add location validation function
+    // Validate location
     function validateLocation() {
         const locationCode = document.getElementById('location-scan').value;
 
@@ -614,7 +789,6 @@ try {
             return Promise.resolve(false);
         }
 
-        // Validate location via API
         return fetch('<?php echo URLROOT; ?>/api/locationValidation.php', {
             method: 'POST',
             headers: {
@@ -626,59 +800,22 @@ try {
         })
             .then(response => response.json())
             .then(data => {
+                const locationInput = document.getElementById('location-scan');
+                const nextBtn = document.getElementById('location-next-btn');
+
                 if (data.success) {
-                    // Show location validation success
-                    const locationInput = document.getElementById('location-scan');
                     locationInput.classList.remove('is-invalid');
                     locationInput.classList.add('is-valid');
+                    nextBtn.disabled = false;
 
-                    // Show location info
-                    let statusClass = 'success';
-                    if (data.capacity.status === 'nearly_full') statusClass = 'warning';
-                    if (data.capacity.status === 'getting_full') statusClass = 'info';
-
-                    const alert = document.createElement('div');
-                    alert.className = `alert alert-${statusClass} alert-dismissible fade show mt-2`;
-                    alert.innerHTML = `
-                    <strong>Location Valid!</strong> ${data.location.name}<br>
-                    <small>Zone: ${data.location.zone || 'N/A'} | Current items: ${data.capacity.product_count} | 
-                    Utilization: ${data.capacity.utilization_percent}%</small>
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
-                `;
-                    safeInsertAlert(alert);
-
-                    setTimeout(() => {
-                        if (alert.parentNode) {
-                            alert.remove();
-                        }
-                    }, 4000);
-
+                    showAlert(`Location valid: ${data.location.name}`, 'success', 3000);
                     return true;
-
                 } else {
-                    // Show location validation error
-                    const locationInput = document.getElementById('location-scan');
                     locationInput.classList.remove('is-valid');
                     locationInput.classList.add('is-invalid');
+                    nextBtn.disabled = true;
 
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-danger alert-dismissible fade show mt-2';
-                    alert.innerHTML = `
-                    <strong>Invalid Location!</strong> ${data.message}
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
-                `;
-                    safeInsertAlert(alert);
-
-                    setTimeout(() => {
-                        if (alert.parentNode) {
-                            alert.remove();
-                        }
-                    }, 5000);
-
+                    showAlert(`Invalid location: ${data.message}`, 'danger', 5000);
                     return false;
                 }
             })
@@ -687,302 +824,87 @@ try {
                 const locationInput = document.getElementById('location-scan');
                 locationInput.classList.remove('is-valid');
                 locationInput.classList.add('is-invalid');
+                document.getElementById('location-next-btn').disabled = true;
                 return false;
             });
     }
 
-    // Handle form submission
-    document.getElementById('putaway-form').addEventListener('submit', function (e) {
-        e.preventDefault();
-        processPutaway();
-    });
+    // Proceed to quantity step
+    function proceedToQuantity() {
+        const locationCode = document.getElementById('location-scan').value;
 
-    function lookupItem() {
-        const barcode = document.getElementById('item-scan').value;
-
-        if (!barcode) {
-            alert('Please scan or enter an item barcode');
+        if (!locationCode || !currentItemData) {
+            showAlert('Missing location information', 'warning');
             return;
         }
 
-        // Show loading indicator
-        const lookupBtn = document.querySelector('button[onclick="lookupItem()"]');
-        const originalText = lookupBtn.innerHTML;
-        lookupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...';
-        lookupBtn.disabled = true;
+        // Show location confirmation
+        const locationConfirmation = document.getElementById('location-confirmation');
+        const poDisplay = currentItemData.po_number && currentItemData.po_number !== ''
+            ? `<small class="text-info d-block"><strong>PO #:</strong> ${currentItemData.po_number}</small>`
+            : '';
 
-        // Real API call to lookup item
-        fetch('<?php echo URLROOT; ?>/api/itemLookup.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                barcode: barcode
-            })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.text();
-            })
-            .then(text => {
-                try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    console.error('Invalid JSON response:', text);
-                    throw new Error('Server returned invalid response. Please check server logs.');
-                }
-            })
-            .then(data => {
-                if (data.success) {
-                    // Show item details with real data
-                    document.getElementById('item-info').innerHTML = `
-                    <strong>${data.product.name}</strong><br>
-                    SKU: ${data.product.sku}<br>
-                    Currently in: ${data.receiving_location.name} (${data.receiving_location.quantity} units)
-                `;
+        locationConfirmation.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="mr-3">
+                <i class="fas fa-map-marker-alt fa-2x text-success"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="mb-1">Location Confirmed</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted d-block"><strong>Location:</strong> ${locationCode}</small>
+                        <small class="text-muted d-block"><strong>Item:</strong> ${currentItemData.product?.name || currentItemData.product_name}</small>
+                        ${poDisplay}
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block"><strong>SKU:</strong> ${currentItemData.product?.sku || currentItemData.sku}</small>
+                        <small class="text-success d-block"><strong>Ready for quantity confirmation</strong></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 
-                    // Enhanced suggested location display with reasoning
-                    const suggestedLocationInput = document.getElementById('suggested-location');
-                    const suggestionHelp = document.getElementById('location-suggestion-help');
+        // Update quantity available display
+        const maxQty = currentItemData.quantity_available || currentItemData.receiving_location?.quantity || 1;
+        document.getElementById('quantity-available').textContent = `Available: ${maxQty} units`;
 
-                    if (data.suggested_location && data.suggested_location.code !== 'No suitable location found') {
-                        suggestedLocationInput.value = data.suggested_location.code;
-                        suggestedLocationInput.title = `${data.suggested_location.name} - ${data.suggested_location.suggestion_reason}. Available space: ${data.suggested_location.available_space}`;
-                        suggestionHelp.textContent = data.suggested_location.suggestion_reason;
+        // Set quantity limits and default value
+        const qtyInput = document.getElementById('putaway-quantity');
+        qtyInput.max = maxQty;
+        qtyInput.value = Math.min(maxQty, 1); // Default to 1 or available if less than 1
 
-                        // Add visual indicator based on suggestion reason
-                        if (data.suggested_location.this_product_qty > 0) {
-                            suggestedLocationInput.className = 'form-theme border-warning'; // Product consolidation
-                            suggestionHelp.className = 'form-text text-warning';
-                        } else if (data.suggested_location.current_inventory == 0) {
-                            suggestedLocationInput.className = 'form-theme border-success'; // Empty location
-                            suggestionHelp.className = 'form-text text-success';
-                        } else {
-                            suggestedLocationInput.className = 'form-theme border-info'; // Available capacity
-                            suggestionHelp.className = 'form-text text-info';
-                        }
-                    } else {
-                        suggestedLocationInput.value = 'Manual assignment required';
-                        suggestedLocationInput.className = 'form-theme border-danger';
-                        suggestedLocationInput.title = 'All storage locations are at capacity';
-                        suggestionHelp.textContent = 'All storage locations are at capacity';
-                        suggestionHelp.className = 'form-text text-danger';
-                    }
+        // Add validation message for partial quantities
+        if (maxQty > 1) {
+            const validationMsg = document.getElementById('quantity-validation') || document.createElement('div');
+            validationMsg.id = 'quantity-validation';
+            validationMsg.className = 'text-info mt-2';
+            validationMsg.innerHTML = `<i class="fas fa-info-circle"></i> You can put away any amount up to ${maxQty} units. Remaining items will stay in the queue.`;
+            qtyInput.parentNode.appendChild(validationMsg);
+        }
 
-                    document.getElementById('item-details').classList.remove('d-none');
-
-                    // Set max quantity based on what's available in receiving
-                    const qtyInput = document.getElementById('putaway-quantity');
-                    qtyInput.max = data.receiving_location.quantity;
-                    qtyInput.value = Math.min(1, data.receiving_location.quantity);
-
-                    document.getElementById('location-scan').focus();
-
-                    // Show success message
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-success alert-dismissible fade show mt-2';
-                    alert.innerHTML = `
-                    <strong>Item Found!</strong> ${data.product.name} located in ${data.receiving_location.name}
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
-                `;
-                    safeInsertAlert(alert);
-
-                    setTimeout(() => {
-                        if (alert.parentNode) {
-                            alert.remove();
-                        }
-                    }, 3000);
-
-                } else {
-                    alert('Item lookup failed: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Lookup error:', error);
-                alert('Item lookup failed: ' + error.message);
-            })
-            .finally(() => {
-                // Restore button
-                lookupBtn.innerHTML = originalText;
-                lookupBtn.disabled = false;
-            });
+        // Move to quantity step
+        updateWorkflowStep(3);
     }
 
-    function selectForPutaway(sku, productName, suggestedLocation = null) {
-        // Auto-fill the scanner with the selected item's SKU
-        document.getElementById('item-scan').value = sku;
-
-        // Show a loading message
-        const alert = document.createElement('div');
-        alert.className = 'alert alert-info alert-dismissible fade show mt-2';
-        alert.innerHTML = `
-            <strong>Loading...</strong> Looking up ${productName}
-            <button type="button" class="close" data-dismiss="alert">
-                <span>&times;</span>
-            </button>
-        `;
-        safeInsertAlert(alert);
-
-        // Try the API lookup, but if it fails, use fallback data
-        fetch('<?php echo URLROOT; ?>/api/itemLookup.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                barcode: sku
-            })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.text();
-            })
-            .then(text => {
-                try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    console.error('Invalid JSON response from selectForPutaway:', text);
-                    throw new Error('Server returned invalid response. Using fallback data.');
-                }
-            })
-            .then(data => {
-                // Remove loading alert
-                if (alert.parentNode) {
-                    alert.remove();
-                }
-
-                if (data.success) {
-                    // Use real API data
-                    document.getElementById('item-info').innerHTML = `
-                    <strong>${data.product.name}</strong><br>
-                    SKU: ${data.product.sku}<br>
-                    Currently in: ${data.receiving_location.name} (${data.receiving_location.quantity} units)<br>
-                    Source: Putaway Queue
-                `;
-                    // Enhanced suggested location display for queue data
-                    const suggestedLocationInput = document.getElementById('suggested-location');
-                    const suggestionHelp = document.getElementById('location-suggestion-help');
-
-                    if (data.suggested_location && typeof data.suggested_location === 'object') {
-                        suggestedLocationInput.value = data.suggested_location.code;
-                        suggestedLocationInput.title = `${data.suggested_location.name} - ${data.suggested_location.suggestion_reason || 'API suggestion'}`;
-                        suggestionHelp.textContent = data.suggested_location.suggestion_reason || 'API suggestion';
-
-                        if (data.suggested_location.this_product_qty > 0) {
-                            suggestedLocationInput.className = 'form-theme border-warning';
-                            suggestionHelp.className = 'form-text text-warning';
-                        } else if (data.suggested_location.current_inventory == 0) {
-                            suggestedLocationInput.className = 'form-theme border-success';
-                            suggestionHelp.className = 'form-text text-success';
-                        } else {
-                            suggestedLocationInput.className = 'form-theme border-info';
-                            suggestionHelp.className = 'form-text text-info';
-                        }
-                    } else {
-                        suggestedLocationInput.value = data.suggested_location.code || data.suggested_location;
-                        suggestedLocationInput.className = 'form-theme';
-                        suggestionHelp.textContent = 'Queue suggestion';
-                        suggestionHelp.className = 'form-text text-muted';
-                    }
-                } else {
-                    // Fallback to queue data
-                    document.getElementById('item-info').innerHTML = `
-                    <strong>${productName}</strong><br>
-                    SKU: ${sku}<br>
-                    Source: Putaway Queue (Database lookup failed)
-                `;
-                    document.getElementById('suggested-location').value = suggestedLocation || 'S1-A1-A1';
-                }
-
-                document.getElementById('item-details').classList.remove('d-none');
-                document.getElementById('location-scan').focus();
-
-                // Show selection success message
-                const successAlert = document.createElement('div');
-                successAlert.className = 'alert alert-success alert-dismissible fade show mt-2';
-                successAlert.innerHTML = `
-                <strong>Item Selected!</strong> ${productName} loaded for putaway.
-                <button type="button" class="close" data-dismiss="alert">
-                    <span>&times;</span>
-                </button>
-            `;
-                safeInsertAlert(successAlert);
-
-                setTimeout(() => {
-                    if (successAlert.parentNode) {
-                        successAlert.remove();
-                    }
-                }, 3000);
-            })
-            .catch(error => {
-                console.error('Lookup error:', error);
-
-                // Remove loading alert
-                if (alert.parentNode) {
-                    alert.remove();
-                }
-
-                // Use fallback data when API fails
-                document.getElementById('item-info').innerHTML = `
-                <strong>${productName}</strong><br>
-                SKU: ${sku}<br>
-                Source: Putaway Queue (API Error: ${error.message})
-            `;
-                document.getElementById('suggested-location').value = suggestedLocation || 'S1-A1-A1';
-                document.getElementById('item-details').classList.remove('d-none');
-                document.getElementById('location-scan').focus();
-
-                // Show error but don't block the workflow
-                const errorAlert = document.createElement('div');
-                errorAlert.className = 'alert alert-warning alert-dismissible fade show mt-2';
-                errorAlert.innerHTML = `
-                <strong>Note:</strong> Using queue data (API temporarily unavailable)
-                <button type="button" class="close" data-dismiss="alert">
-                    <span>&times;</span>
-                </button>
-            `;
-                safeInsertAlert(errorAlert);
-
-                setTimeout(() => {
-                    if (errorAlert.parentNode) {
-                        errorAlert.remove();
-                    }
-                }, 4000);
-            });
+    // Go back to location step
+    function goBackToLocation() {
+        updateWorkflowStep(2);
     }
 
-    function processPutaway() {
+    // Complete putaway
+    function completePutaway() {
         const itemBarcode = document.getElementById('item-scan').value;
         const location = document.getElementById('location-scan').value;
         const quantity = document.getElementById('putaway-quantity').value;
 
-        if (!itemBarcode || !location) {
-            alert('Please scan both item and location');
+        if (!itemBarcode || !location || !currentItemData) {
+            showAlert('Missing required information', 'warning');
             return;
         }
 
-        // Validate location first before processing
-        const locationInput = document.getElementById('location-scan');
-        if (!locationInput.classList.contains('is-valid')) {
-            alert('Please validate the location by scanning or entering it first');
-            validateLocation();
-            return;
-        }
-
-        console.log('Initiating submission...');
-
-        // Show processing indicator
-        const submitBtn = document.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        submitBtn.disabled = true;
+        showLoadingMessage('Processing putaway...');
 
         // API call to process putaway
         fetch('<?php echo URLROOT; ?>/api/processPutaway.php', {
@@ -994,63 +916,236 @@ try {
                 item_barcode: itemBarcode,
                 location_code: location,
                 quantity: parseInt(quantity),
-                user_id: <?php echo $userId; ?>
+                user_id: <?php echo $userId ?? 1; ?>
             })
         })
             .then(response => response.json())
             .then(data => {
-                console.log('Putaway response:', data);
+                hideLoadingMessage();
 
                 if (data.success) {
-                    console.log('Submission successful!');
+                    updateWorkflowStep(4);
 
-                    // Show success message
-                    const successAlert = document.createElement('div');
-                    successAlert.className = 'alert alert-success alert-dismissible fade show';
-                    successAlert.innerHTML = `
-                    <strong>Submission successful!</strong> ${data.data.product_name} (${quantity} units) put away at ${data.data.location}
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
+                    // Prepare completion message
+                    let completionMessage = `${data.data.quantity} units stored at <strong>${data.data.location}</strong>`;
+                    let remainingMessage = '';
+                    let actionButtons = '';
+
+                    // Check if there are remaining items to put away
+                    if (data.data.has_remaining && data.data.remaining_quantity > 0) {
+                        remainingMessage = `
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Remaining:</strong> ${data.data.remaining_quantity} units still need to be put away
+                        <br><small>Total received: ${data.data.total_received} | Total put away: ${data.data.total_putaway}</small>
+                    </div>
+                `;
+
+                        actionButtons = `
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="btn btn-warning" onclick="continueWithRemaining()">
+                            <i class="fas fa-arrow-right"></i> Put Away Remaining (${data.data.remaining_quantity})
+                        </button>
+                        <button class="btn btn-primary" onclick="startNewPutaway()">
+                            <i class="fas fa-plus"></i> Put Away Different Item
+                        </button>
+                    </div>
+                `;
+                    } else {
+                        actionButtons = `
+                    <button class="btn btn-primary btn-lg" onclick="startNewPutaway()">
+                        <i class="fas fa-plus"></i> Put Away Another Item
                     </button>
                 `;
-                    safeInsertAlert(successAlert);
+                    }
 
-                    // Clear form and reset validation states
-                    document.getElementById('putaway-form').reset();
-                    document.getElementById('item-details').classList.add('d-none');
-                    document.getElementById('location-scan').classList.remove('is-valid', 'is-invalid');
-                    document.getElementById('item-scan').focus();
+                    // Update completion message
+                    const completionStep = document.getElementById('completion-step');
+                    const poDisplayCompletion = currentItemData.po_number && currentItemData.po_number !== ''
+                        ? `<p class="text-info mb-1"><small><i class="fas fa-file-invoice"></i> PO #: ${currentItemData.po_number}</small></p>`
+                        : '';
 
-                    // Auto-dismiss success message
-                    setTimeout(() => {
-                        if (successAlert.parentNode) {
-                            successAlert.remove();
-                        }
-                    }, 5000);
+                    completionStep.innerHTML = `
+                <div class="completion-animation">
+                    <i class="fas fa-check-circle fa-5x text-success mb-3 animate__animated animate__bounceIn"></i>
+                    <h4 class="text-success">Putaway Complete!</h4>
+                    <div class="completion-details mb-4">
+                        <p class="mb-2"><strong>${data.data.product_name}</strong></p>
+                        ${poDisplayCompletion}
+                        <p class="text-muted">${completionMessage}</p>
+                        ${remainingMessage}
+                    </div>
+                    ${actionButtons}
+                </div>
+            `;
 
-                    // Refresh the putaway queue
-                    setTimeout(() => {
-                        location.reload();
-                    }, 3000);
+                    // Store remaining data for potential continuation
+                    if (data.data.has_remaining) {
+                        window.remainingPutawayData = {
+                            product_name: data.data.product_name,
+                            item_barcode: itemBarcode,
+                            remaining_quantity: data.data.remaining_quantity,
+                            po_number: currentItemData.po_number || ''
+                        };
+                    }
+
+                    // Auto-start new putaway after delay only if no remaining items
+                    if (!data.data.has_remaining) {
+                        setTimeout(() => {
+                            startNewPutaway();
+                        }, 3000);
+                    }
+
+                    // Putaway completed successfully
 
                 } else {
-                    console.error('Submission failed! Details:', data.message);
-                    alert('Submission failed! Details: ' + (data.message || 'Unknown error'));
+                    showAlert('Putaway failed: ' + data.message, 'danger');
                 }
             })
             .catch(error => {
-                console.error('Submission failed! Details:', error.message);
-                alert('Submission failed! Details: ' + error.message);
-            })
-            .finally(() => {
-                // Restore button
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+                hideLoadingMessage();
+                console.error('Putaway error:', error);
+                showAlert('Putaway failed: ' + error.message, 'danger');
             });
     }
 
-    // Auto-focus on scanner input
-    document.getElementById('item-scan').focus();
+    // Start new putaway
+    function startNewPutaway() {
+        // Reset form
+        document.getElementById('item-scan').value = '';
+        document.getElementById('location-scan').value = '';
+        document.getElementById('putaway-quantity').value = 1;
+        document.getElementById('location-scan').classList.remove('is-valid', 'is-invalid');
+        document.getElementById('complete-btn').disabled = true;
+        document.getElementById('location-suggestion').style.display = 'none';
+
+        // Reset workflow
+        currentItemData = null;
+        window.remainingPutawayData = null;
+        updateWorkflowStep(1);
+
+        // Focus on item scan input
+        document.getElementById('item-scan').focus();
+    }
+
+    // Continue with remaining quantity from previous putaway
+    function continueWithRemaining() {
+        if (!window.remainingPutawayData) {
+            showAlert('No remaining items data found', 'error');
+            return;
+        }
+
+        // Set up form with remaining item data
+        document.getElementById('item-scan').value = window.remainingPutawayData.item_barcode;
+        document.getElementById('location-scan').value = '';
+        document.getElementById('putaway-quantity').value = window.remainingPutawayData.remaining_quantity;
+        document.getElementById('location-scan').classList.remove('is-valid', 'is-invalid');
+        document.getElementById('complete-btn').disabled = true;
+        document.getElementById('location-suggestion').style.display = 'none';
+
+        // Look up the item again to get fresh data
+        lookupItem(window.remainingPutawayData.item_barcode);
+
+        // Show alert about continuing with remaining
+        const poInfo = window.remainingPutawayData.po_number && window.remainingPutawayData.po_number !== ''
+            ? ` (PO #${window.remainingPutawayData.po_number})`
+            : '';
+        showAlert(`Continuing with remaining ${window.remainingPutawayData.remaining_quantity} units of ${window.remainingPutawayData.product_name}${poInfo}`, 'info', 5000);
+    }
+
+    // Restart scan (go back to step 1)
+    function restartScan() {
+        startNewPutaway();
+    }
+
+    // Utility functions
+    function showAlert(message, type = 'info', duration = 5000) {
+        const alertEl = document.createElement('div');
+        alertEl.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        alertEl.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px;';
+        alertEl.innerHTML = `
+        ${message}
+        <button type="button" class="close" data-dismiss="alert">
+            <span>&times;</span>
+        </button>
+    `;
+
+        document.body.appendChild(alertEl);
+
+        setTimeout(() => {
+            if (alertEl.parentNode) {
+                alertEl.remove();
+            }
+        }, duration);
+    }
+
+    function showLoadingMessage(message) {
+        const overlay = document.getElementById('putaway-loading-overlay');
+        if (overlay) {
+            const textElement = overlay.querySelector('.loading-text');
+            if (textElement) {
+                textElement.textContent = message;
+            }
+            overlay.style.display = 'flex';
+        }
+    }
+
+    function hideLoadingMessage() {
+        const overlay = document.getElementById('putaway-loading-overlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Handle item scanning - MAIN ENTRY POINT FOR SCANNER
+    document.getElementById('item-scan').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            processItemScan();
+        }
+    });
+
+    // Process item scan - the key function that was missing
+    function processItemScan() {
+        const barcode = document.getElementById('item-scan').value.trim();
+
+        if (!barcode) {
+            showAlert('Please scan or enter an item barcode', 'warning');
+            return;
+        }
+
+        showLoadingMessage('Looking up item...');
+        lookupItem(barcode);
+    }
+
+    // Manual item lookup button handler
+    function manualItemLookup() {
+        processItemScan();
+    }
+
+    // Initialize the workflow
+    document.addEventListener('DOMContentLoaded', function () {
+        updateWorkflowStep(1);
+
+        // Set global user ID for putaway operations
+        window.currentUserId = <?= $userId ?>;
+
+        // Focus on item scan input when page loads
+        document.getElementById('item-scan').focus();
+    });
 </script>
 
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'footer.php'; ?>

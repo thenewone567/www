@@ -148,16 +148,6 @@
                 </div>
             </div>
         </div>
-
-        <div class="col-xl-2 col-lg-2 col-md-2 col-sm-4 col-6 mb-3">
-            <div class="kpi-card kpi-gradient-primary shadow-sm h-100">
-                <div class="kpi-body">
-                    <div class="kpi-count" data-metric="new_customers"><?php echo $data['new_customers'] ?? 0; ?></div>
-                    <div class="kpi-value small">New Customers • This month</div>
-                    <div class="kpi-small-spark" aria-hidden="true"></div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Dashboard Analytics Row -->

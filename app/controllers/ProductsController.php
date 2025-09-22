@@ -1,9 +1,10 @@
 <?php
 require_once 'app/helpers.php';
-
+require_once APPROOT . DS . 'app' . DS . 'traits' . DS . 'AuditTrail.php';
 
 class ProductsController extends Controller
 {
+    use AuditTrail;
     public $productModel;
     public $categoryModel;
     public $brandModel;
@@ -252,8 +253,12 @@ class ProductsController extends Controller
 
                 $result = $this->productModel->addProduct($data);
                 if ($result) {
-                    // Log the activity
-                    $this->logActivity('product_add', 'product', $result, 'Product "' . $data['product_name'] . '" added successfully');
+                    // Enhanced audit logging
+                    $this->logProductAudit(
+                        'CREATE',
+                        $result,
+                        'Product created: "' . $data['product_name'] . '" (SKU: ' . $data['sku'] . ')'
+                    );
 
                     // Set success message for display
                     $data['success'] = 'Product "' . $data['product_name'] . '" (SKU: ' . $data['sku'] . ') was created successfully! Product ID: ' . $result;
@@ -419,7 +424,19 @@ class ProductsController extends Controller
                 empty($data['product_name_err']) && empty($data['sku_err']) &&
                 empty($data['category_id_err']) && empty($data['product_type_err'])
             ) {
+                // Get old product data for audit comparison
+                $oldProduct = $this->productModel->getProductById($id);
+
                 if ($this->productModel->updateProduct($id, $data)) {
+                    // Enhanced audit logging with before/after comparison
+                    $this->logProductAudit(
+                        'UPDATE',
+                        $id,
+                        'Product updated: "' . $data['product_name'] . '" (SKU: ' . $data['sku'] . ')',
+                        (array) $oldProduct,
+                        $data
+                    );
+
                     flash('product_message', 'Product Updated Successfully');
                     redirect('products');
                 } else {
@@ -510,7 +527,31 @@ class ProductsController extends Controller
             (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)
         );
 
+        // Get product data before deletion for audit trail
+        $productData = $this->productModel->getProductById($id);
+        if (!$productData) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Product not found']);
+                return;
+            }
+            flash('product_message', 'Product not found', 'alert alert-danger');
+            redirect('products');
+            return;
+        }
+
         $result = $this->productModel->deleteProduct($id);
+
+        // Log audit trail for product deletion/deactivation
+        if ($result) {
+            $this->logProductAudit(
+                'DELETE',
+                $id,
+                'Product deactivated: ' . $productData->product_name . ' (SKU: ' . $productData->sku . ')',
+                null, // No after data for deletion
+                $productData // Before data
+            );
+        }
 
         if ($isAjax) {
             header('Content-Type: application/json');

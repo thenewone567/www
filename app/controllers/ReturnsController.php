@@ -1,6 +1,10 @@
 <?php
+require_once APPROOT . DS . 'app' . DS . 'traits' . DS . 'AuditTrail.php';
+
 class ReturnsController extends Controller
 {
+    use AuditTrail;
+
     public $returnModel;
 
     public function __construct()
@@ -62,7 +66,18 @@ class ReturnsController extends Controller
             }
 
             if (empty($data['sale_id_err']) && empty($data['return_date_err'])) {
-                if ($this->returnModel->addSaleReturn($data)) {
+                $return_id = $this->returnModel->addSaleReturn($data);
+                if ($return_id) {
+                    // Log audit trail for sale return
+                    $details = "Sale return processed - Sale ID: " . $data['sale_id'] . ", Refund Amount: $" . number_format($data['refund_amount'], 2) . ", Reason: " . $data['reason'];
+
+                    $this->logReturnAudit(
+                        'CREATE',
+                        $return_id,
+                        $details,
+                        $data
+                    );
+
                     flash('return_message', 'Sale Return Added');
                     redirect('returns');
                 } else {
@@ -116,7 +131,18 @@ class ReturnsController extends Controller
             }
 
             if (empty($data['purchase_id_err']) && empty($data['return_date_err'])) {
-                if ($this->returnModel->addPurchaseReturn($data)) {
+                $return_id = $this->returnModel->addPurchaseReturn($data);
+                if ($return_id) {
+                    // Log audit trail for purchase return
+                    $details = "Purchase return processed - Purchase ID: " . $data['purchase_id'] . ", Reason: " . $data['reason'];
+
+                    $this->logReturnAudit(
+                        'CREATE',
+                        $return_id,
+                        $details,
+                        $data
+                    );
+
                     flash('return_message', 'Purchase Return Added Successfully', 'alert alert-success');
                     redirect('returns');
                 } else {

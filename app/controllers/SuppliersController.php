@@ -1,6 +1,10 @@
 <?php
+require_once APPROOT . DS . 'app' . DS . 'traits' . DS . 'AuditTrail.php';
+
 class SuppliersController extends Controller
 {
+    use AuditTrail;
+
     private $supplierModel;
     private $productSupplierModel;
     private $productModel;
@@ -353,7 +357,24 @@ class SuppliersController extends Controller
             }
 
             if (empty($data['supplier_name_err']) && empty($data['email_err']) && empty($data['gst_number_err'])) {
-                if ($this->supplierModel->addSupplier($data)) {
+                $supplier_id = $this->supplierModel->addSupplier($data);
+                if ($supplier_id) {
+                    // Log audit trail for supplier creation
+                    $details = "Supplier created - Name: " . $data['supplier_name'];
+                    if (!empty($data['contact_person'])) {
+                        $details .= ", Contact: " . $data['contact_person'];
+                    }
+                    if (!empty($data['phone'])) {
+                        $details .= ", Phone: " . $data['phone'];
+                    }
+
+                    $this->logSupplierAudit(
+                        'CREATE',
+                        $supplier_id,
+                        $details,
+                        $data
+                    );
+
                     flash('supplier_message', 'Supplier Added');
                     redirect('suppliers');
                 } else {
@@ -427,7 +448,21 @@ class SuppliersController extends Controller
             }
 
             if (empty($data['supplier_name_err']) && empty($data['email_err']) && empty($data['gst_number_err'])) {
+                // Get current supplier data for before/after comparison
+                $beforeData = $this->supplierModel->getSupplierById($id);
+
                 if ($this->supplierModel->updateSupplier($data)) {
+                    // Log audit trail for supplier update
+                    $details = "Supplier updated - Name: " . $data['supplier_name'];
+
+                    $this->logSupplierAudit(
+                        'UPDATE',
+                        $id,
+                        $details,
+                        $data, // After data
+                        $beforeData // Before data
+                    );
+
                     flash('supplier_message', 'Supplier Updated');
                     redirect('suppliers');
                 } else {

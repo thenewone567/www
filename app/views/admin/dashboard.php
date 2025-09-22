@@ -21,7 +21,9 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 <div class="container-fluid mb-4">
     <div class="row align-items-stretch admin-action-grid">
         <div class="col-6 col-md-4 col-lg-3 mb-3">
-            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center active" id="dashboard-tab" data-toggle="pill" href="#dashboard" role="tab" aria-controls="dashboard" aria-selected="true">
+            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center active"
+                id="dashboard-tab" data-toggle="tab" href="#dashboard" role="tab" aria-controls="dashboard"
+                aria-selected="true">
                 <div class="text-primary mb-2"><i class="fas fa-tachometer-alt fa-2x"></i></div>
                 <div class="font-weight-bold">Dashboard</div>
                 <small class="text-muted">Overview</small>
@@ -29,7 +31,8 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         </div>
 
         <div class="col-6 col-md-4 col-lg-3 mb-3">
-            <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link" href="<?= URLROOT ?>/admin/priceManagement" role="button">
+            <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link"
+                href="<?= URLROOT ?>/admin/priceManagement" role="button">
                 <div class="text-success mb-2"><i class="fas fa-dollar-sign fa-2x"></i></div>
                 <div class="font-weight-bold">Price Management</div>
                 <small class="text-muted">Pricing rules & audits</small>
@@ -38,7 +41,8 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
         <!-- Price Bot card (scheduled pricing adjustments) -->
         <div class="col-6 col-md-4 col-lg-3 mb-3">
-            <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link" href="<?= URLROOT ?>/admin/pricing_dashboard" role="button">
+            <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link"
+                href="<?= URLROOT ?>/admin/pricing_dashboard" role="button">
                 <div class="text-info mb-2"><i class="fas fa-robot fa-2x"></i></div>
                 <div class="font-weight-bold">Price Bot</div>
                 <small class="text-muted">Automated pricing</small>
@@ -46,7 +50,8 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         </div>
 
         <div class="col-6 col-md-4 col-lg-3 mb-3">
-            <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link" href="<?= URLROOT ?>/admin/users" role="link">
+            <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link"
+                href="<?= URLROOT ?>/admin/users" role="link">
                 <div class="text-primary mb-2"><i class="fas fa-users fa-2x"></i></div>
                 <div class="font-weight-bold">Users</div>
                 <small class="text-muted">Manage accounts</small>
@@ -54,31 +59,29 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
         </div>
 
         <div class="col-6 col-md-4 col-lg-3 mb-3">
-            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center" id="roles-tab" data-toggle="pill" href="#roles" role="tab" aria-controls="roles" aria-selected="false">
+            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center"
+                id="roles-tab" data-toggle="tab" href="#roles" role="tab" aria-controls="roles" aria-selected="false">
                 <div class="text-info mb-2"><i class="fas fa-user-tag fa-2x"></i></div>
                 <div class="font-weight-bold">Roles</div>
                 <small class="text-muted">Role definitions</small>
             </a>
         </div>
 
-        <div class="col-6 col-md-4 col-lg-3 mb-3">
-            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center" id="permissions-tab" data-toggle="pill" href="#permissions" role="tab" aria-controls="permissions" aria-selected="false">
-                <div class="text-warning mb-2"><i class="fas fa-user-shield fa-2x"></i></div>
-                <div class="font-weight-bold">Permissions</div>
-                <small class="text-muted">Access control</small>
-            </a>
-        </div>
+        <!-- Permissions nav button removed: permissions management moved to dedicated page -->
 
         <div class="col-6 col-md-4 col-lg-3 mb-3">
-            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center" id="logs-tab" data-toggle="pill" href="#logs" role="tab" aria-controls="logs" aria-selected="false">
+            <a class="card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center nav-link"
+                href="<?= URLROOT ?>/admin/activityLogs" role="button">
                 <div class="text-muted mb-2"><i class="fas fa-history fa-2x"></i></div>
-                <div class="font-weight-bold">Activity Logs</div>
-                <small class="text-muted">Audit trail</small>
+                <div class="font-weight-bold">Audit trails</div>
+                <small class="text-muted">Activity Logs</small>
             </a>
         </div>
 
         <div class="col-6 col-md-4 col-lg-3 mb-3">
-            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center" id="settings-tab" data-toggle="pill" href="#settings" role="tab" aria-controls="settings" aria-selected="false">
+            <a class="nav-link card-theme d-flex flex-column align-items-center justify-content-center p-3 h-100 text-center"
+                id="settings-tab" data-toggle="tab" href="#settings" role="tab" aria-controls="settings"
+                aria-selected="false">
                 <div class="text-dark mb-2"><i class="fas fa-cog fa-2x"></i></div>
                 <div class="font-weight-bold">Settings</div>
                 <small class="text-muted">System prefs</small>
@@ -89,7 +92,7 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 
 <div class="container-fluid">
     <div class="tab-content" id="adminTabContent">
-        
+
         <!-- DASHBOARD TAB -->
         <div class="tab-pane fade show active admin-section" id="dashboard" role="tabpanel">
             <!-- System Statistics -->
@@ -155,156 +158,22 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                 </div>
             </div>
 
-            <!-- Recent Activity -->
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="card-theme mb-4">
-                        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
-                            <h6 class="m-0 font-weight-bold text-primary">
-                                <i class="fas fa-clock mr-2"></i>Recent Activity
-                            </h6>
-                        </div>
-                        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                            <?php if (isset($data['recent_activity']) && !empty($data['recent_activity'])): ?>
-                                <?php foreach ($data['recent_activity'] as $activity): ?>
-                                    <?php
-                                        // Safe coercions to avoid passing null to htmlspecialchars()/strtotime()
-                                        $actor = htmlspecialchars((string)($activity->user_name ?? 'System'));
-                                        $action = htmlspecialchars((string)($activity->action ?? ''));
-                                        $details = htmlspecialchars((string)($activity->details ?? ''));
-                                        $createdAt = $activity->created_at ?? null;
-                                        $createdLabel = 'Unknown';
-                                        if (!empty($createdAt)) {
-                                            $ts = strtotime($createdAt);
-                                            if ($ts !== false && $ts !== -1) {
-                                                $createdLabel = date('M j, g:i A', $ts);
-                                            }
-                                        }
-                                    ?>
-                                    <div class="border-left border-primary bg-light p-3 mb-2 rounded-right">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <strong><?= $actor ?></strong>
-                                                <span class="text-muted">performed</span>
-                                                <strong><?= $action ?></strong>
-                                            </div>
-                                            <small class="text-muted">
-                                                <?= $createdLabel ?>
-                                            </small>
-                                        </div>
-                                        <?php if (!empty($details)): ?>
-                                            <div class="mt-1">
-                                                <small class="text-muted"><?= $details ?></small>
-                                            </div>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <div class="text-center py-4 text-muted">
-                                    <i class="fas fa-inbox fa-2x mb-2"></i>
-                                    <p>No recent activity</p>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Recent Activity removed: moved to a dedicated activity panel or API-driven widget -->
         </div>
 
         <!-- PRICE MANAGEMENT TAB - Moved to separate page -->
         <!-- Price Management is now available at <?= URLROOT ?>/admin/priceManagement -->
 
-        <!-- USERS TAB -->
-        <div class="tab-pane fade admin-section" id="users" role="tabpanel">
-            <div class="card-theme">
-                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
-                    <h5 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-users mr-2"></i>User Management
-                    </h5>
-                    <button class="btn-theme btn-primary-theme" data-toggle="modal" data-target="#addUserModal">
-                        <i class="fas fa-plus mr-2"></i>Add New User
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="usersTable">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>User</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Last Login</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (isset($data['users']) && !empty($data['users'])): ?>
-                                    <?php foreach ($data['users'] as $user): ?>
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="user-avatar" style="background: linear-gradient(45deg, #667eea, #764ba2);">
-                                                        <?= strtoupper(substr($user->name ?? $user->username ?? 'U', 0, 1)) ?>
-                                                    </div>
-                                                    <div>
-                                                        <strong><?= htmlspecialchars($user->name ?? $user->username ?? 'Unknown') ?></strong>
-                                                        <br>
-                                                        <small class="text-muted"><?= htmlspecialchars($user->username ?? '') ?></small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td><?= htmlspecialchars($user->email ?? 'N/A') ?></td>
-                                            <td>
-                                                <span class="badge badge-<?= ($user->role_name ?? 'user') === 'admin' ? 'danger' : 'primary' ?>">
-                                                    <?= ucfirst($user->role_name ?? 'User') ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-<?= ($user->status ?? 'active') === 'active' ? 'success' : 'secondary' ?>">
-                                                    <?= ucfirst($user->status ?? 'Active') ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <?php if (!empty($user->last_login)): ?>
-                                                    <?= date('M j, Y g:i A', strtotime($user->last_login)) ?>
-                                                <?php else: ?>
-                                                    <span class="text-muted">Never</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group" role="group">
-                                                    <button class="btn btn-sm btn-outline-primary" onclick="editUser(<?= $user->user_id ?? 0 ?>)">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(<?= $user->user_id ?? 0 ?>)">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="6" class="text-center py-4 text-muted">
-                                            <i class="fas fa-users fa-2x mb-2"></i>
-                                            <p>No users found</p>
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- USERS TAB removed: moved to a separate page or view -->
+        <!-- User management UI has been relocated to <?= URLROOT ?>/admin/users or a dedicated view -->
 
         <!-- ROLES TAB -->
         <div class="tab-pane fade admin-section" id="roles" role="tabpanel">
             <div class="row">
                 <div class="col-lg-8">
                     <div class="card-theme">
-                        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                        <div
+                            class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
                             <h5 class="m-0 font-weight-bold text-primary">
                                 <i class="fas fa-user-tag mr-2"></i>System Roles
                             </h5>
@@ -338,10 +207,12 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                                     </td>
                                                     <td>
                                                         <div class="btn-group" role="group">
-                                                            <button class="btn btn-sm btn-outline-primary" onclick="editRole(<?= $role->role_id ?? 0 ?>)">
+                                                            <button class="btn btn-sm btn-outline-primary"
+                                                                onclick="editRole(<?= $role->role_id ?? 0 ?>)">
                                                                 <i class="fas fa-edit"></i>
                                                             </button>
-                                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteRole(<?= $role->role_id ?? 0 ?>)">
+                                                            <button class="btn btn-sm btn-outline-danger"
+                                                                onclick="deleteRole(<?= $role->role_id ?? 0 ?>)">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
                                                         </div>
@@ -384,165 +255,11 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
             </div>
         </div>
 
-        <!-- PERMISSIONS TAB -->
-        <div class="tab-pane fade admin-section" id="permissions" role="tabpanel">
-            <div class="card-theme">
-                <div class="card-header bg-white border-bottom">
-                    <h5 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-user-shield mr-2"></i>User Permissions Management
-                    </h5>
-                    <small class="text-muted">Control which pages each user can access</small>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>User</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th width="50%">Permissions</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (isset($data['users']) && !empty($data['users'])): ?>
-                                    <?php foreach ($data['users'] as $user): ?>
-                                        <tr id="user-row-<?= $user->user_id ?? 0 ?>">
-                                            <td>
-                                                <div>
-                                                    <strong><?= htmlspecialchars($user->name ?? $user->username ?? 'Unknown') ?></strong>
-                                                    <br>
-                                                    <small class="text-muted"><?= htmlspecialchars($user->email ?? '') ?></small>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-<?= ($user->role_name ?? 'user') === 'admin' ? 'danger' : 'primary' ?>">
-                                                    <?= ucfirst($user->role_name ?? 'User') ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-<?= ($user->status ?? 'active') === 'active' ? 'success' : 'secondary' ?>">
-                                                    <?= ucfirst($user->status ?? 'Active') ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="checkbox" value="dashboard" <?= in_array('dashboard', $user->permissions ?? []) ? 'checked' : '' ?>>
-                                                            <label class="form-check-label">Dashboard</label>
-                                                        </div>
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="checkbox" value="products" <?= in_array('products', $user->permissions ?? []) ? 'checked' : '' ?>>
-                                                            <label class="form-check-label">Products</label>
-                                                        </div>
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="checkbox" value="inventory" <?= in_array('inventory', $user->permissions ?? []) ? 'checked' : '' ?>>
-                                                            <label class="form-check-label">Inventory</label>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="checkbox" value="reports" <?= in_array('reports', $user->permissions ?? []) ? 'checked' : '' ?>>
-                                                            <label class="form-check-label">Reports</label>
-                                                        </div>
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="checkbox" value="settings" <?= in_array('settings', $user->permissions ?? []) ? 'checked' : '' ?>>
-                                                            <label class="form-check-label">Settings</label>
-                                                        </div>
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="checkbox" value="admin" <?= in_array('admin', $user->permissions ?? []) ? 'checked' : '' ?>>
-                                                            <label class="form-check-label">Admin</label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-primary" onclick="updatePermissions(<?= $user->user_id ?? 0 ?>)">
-                                                    <i class="fas fa-save"></i> Save
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4 text-muted">
-                                            <i class="fas fa-user-shield fa-2x mb-2"></i>
-                                            <p>No users found</p>
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- PERMISSIONS TAB removed: User permissions management moved to dedicated page -->
+        <!-- User Permissions Management is now available at <?= URLROOT ?>/admin/permissions or a dedicated view -->
 
-        <!-- ACTIVITY LOGS TAB -->
-        <div class="tab-pane fade admin-section" id="logs" role="tabpanel">
-            <div class="card-theme">
-                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
-                    <h5 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-history mr-2"></i>Activity Logs
-                    </h5>
-                    <div class="btn-group" role="group">
-                        <button class="btn btn-outline-primary" onclick="filterLogs('today')">Today</button>
-                        <button class="btn btn-outline-primary" onclick="filterLogs('week')">This Week</button>
-                        <button class="btn btn-outline-primary" onclick="filterLogs('month')">This Month</button>
-                        <button class="btn btn-outline-danger" onclick="clearLogs()">Clear Logs</button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="activityLogsTable">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Timestamp</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Details</th>
-                                    <th>IP Address</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (isset($data['activity_logs']) && !empty($data['activity_logs'])): ?>
-                                    <?php foreach ($data['activity_logs'] as $log): ?>
-                                        <tr>
-                                            <td>
-                                                <?= !empty($log->created_at) ? date('M j, Y g:i A', strtotime($log->created_at)) : 'N/A' ?>
-                                            </td>
-                                            <td>
-                                                <strong><?= htmlspecialchars($log->full_name ?? $log->username ?? 'System') ?></strong>
-                                            </td>
-                                            <td>
-                                                <span class="activity-badge badge badge-primary">
-                                                    <?= htmlspecialchars($log->action ?? 'Unknown') ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <small><?= htmlspecialchars($log->details ?? 'No details') ?></small>
-                                            </td>
-                                            <td>
-                                                <code><?= htmlspecialchars($log->ip_address ?? 'N/A') ?></code>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4 text-muted">
-                                            <i class="fas fa-history fa-2x mb-2"></i>
-                                            <p>No activity logs found</p>
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- ACTIVITY LOGS TAB removed: Activity logs moved to dedicated page -->
+        <!-- Activity Logs are now available at <?= URLROOT ?>/admin/activity_logs -->
 
         <!-- SETTINGS TAB -->
         <div class="tab-pane fade admin-section" id="settings" role="tabpanel">
@@ -558,18 +275,19 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="site_name">Site Name</label>
-                                        <input type="text" class="form-theme" id="site_name" name="site_name" 
-                                               value="<?= $data['settings']['site_name'] ?? 'Hardware Store' ?>">
+                                        <input type="text" class="form-theme" id="site_name" name="site_name"
+                                            value="<?= $data['settings']['site_name'] ?? 'Hardware Store' ?>">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="site_description">Site Description</label>
-                                        <input type="text" class="form-theme" id="site_description" name="site_description" 
-                                               value="<?= $data['settings']['site_description'] ?? 'Professional Hardware Management' ?>">
+                                        <input type="text" class="form-theme" id="site_description"
+                                            name="site_description"
+                                            value="<?= $data['settings']['site_description'] ?? 'Professional Hardware Management' ?>">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="admin_email">Admin Email</label>
-                                        <input type="email" class="form-theme" id="admin_email" name="admin_email" 
-                                               value="<?= $data['settings']['admin_email'] ?? 'admin@example.com' ?>">
+                                        <input type="email" class="form-theme" id="admin_email" name="admin_email"
+                                            value="<?= $data['settings']['admin_email'] ?? 'admin@example.com' ?>">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="timezone">Timezone</label>
@@ -594,18 +312,20 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="max_upload_size">Max Upload Size (MB)</label>
-                                        <input type="number" class="form-theme" id="max_upload_size" name="max_upload_size" 
-                                               value="<?= $data['settings']['max_upload_size'] ?? '10' ?>">
+                                        <input type="number" class="form-theme" id="max_upload_size"
+                                            name="max_upload_size"
+                                            value="<?= $data['settings']['max_upload_size'] ?? '10' ?>">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="session_timeout">Session Timeout (minutes)</label>
-                                        <input type="number" class="form-theme" id="session_timeout" name="session_timeout" 
-                                               value="<?= $data['settings']['session_timeout'] ?? '30' ?>">
+                                        <input type="number" class="form-theme" id="session_timeout"
+                                            name="session_timeout"
+                                            value="<?= $data['settings']['session_timeout'] ?? '30' ?>">
                                     </div>
                                     <div class="col-md-12 mb-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="enable_logging" name="enable_logging" 
-                                                   <?= ($data['settings']['enable_logging'] ?? true) ? 'checked' : '' ?>>
+                                            <input class="form-check-input" type="checkbox" id="enable_logging"
+                                                name="enable_logging" <?= ($data['settings']['enable_logging'] ?? true) ? 'checked' : '' ?>>
                                             <label class="form-check-label" for="enable_logging">
                                                 Enable Activity Logging
                                             </label>
@@ -613,8 +333,8 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                     </div>
                                     <div class="col-md-12 mb-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="maintenance_mode" name="maintenance_mode" 
-                                                   <?= ($data['settings']['maintenance_mode'] ?? false) ? 'checked' : '' ?>>
+                                            <input class="form-check-input" type="checkbox" id="maintenance_mode"
+                                                name="maintenance_mode" <?= ($data['settings']['maintenance_mode'] ?? false) ? 'checked' : '' ?>>
                                             <label class="form-check-label" for="maintenance_mode">
                                                 Maintenance Mode
                                             </label>
@@ -635,13 +355,16 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
                                 <button type="submit" class="btn btn-success btn-block mb-2">
                                     <i class="fas fa-save mr-2"></i>Save Settings
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary btn-block mb-2" onclick="resetToDefaults()">
+                                <button type="button" class="btn btn-outline-secondary btn-block mb-2"
+                                    onclick="resetToDefaults()">
                                     <i class="fas fa-undo mr-2"></i>Reset to Defaults
                                 </button>
-                                <button type="button" class="btn btn-outline-info btn-block mb-2" onclick="exportSettings()">
+                                <button type="button" class="btn btn-outline-info btn-block mb-2"
+                                    onclick="exportSettings()">
                                     <i class="fas fa-download mr-2"></i>Export Settings
                                 </button>
-                                <button type="button" class="btn btn-outline-warning btn-block" onclick="importSettings()">
+                                <button type="button" class="btn btn-outline-warning btn-block"
+                                    onclick="importSettings()">
                                     <i class="fas fa-upload mr-2"></i>Import Settings
                                 </button>
                             </div>
@@ -670,386 +393,352 @@ require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'header.php'
 </div>
 
 <script>
-// Admin Dashboard JavaScript
-$(document).ready(function() {
-    // Initialize tab switching
-    initializeTabs();
-    
-    // Initialize DataTables for better table functionality with a slight delay
-    setTimeout(function() {
-        initializeDataTables();
-    }, 100);
-    
-    // Load initial data
-    loadDashboardData();
-    
-    // Auto-refresh dashboard data every 30 seconds
-    setInterval(loadDashboardData, 30000);
-});
+    // Admin Dashboard JavaScript
+    $(document).ready(function () {
+        console.log('Document ready - jQuery version:', $.fn.jquery);
+        console.log('Bootstrap tab function available:', typeof $().tab);
 
-function initializeDataTables() {
-    if ($.fn.DataTable) {
-        try {
-            // Initialize users table only if it exists and has proper structure
-            const usersTable = $('#usersTable');
-            if (usersTable.length > 0 && !$.fn.DataTable.isDataTable('#usersTable')) {
-                // Check if table has proper header structure
-                const headerCells = usersTable.find('thead tr:first th').length;
-                const bodyRows = usersTable.find('tbody tr').length;
-                const firstRowCells = usersTable.find('tbody tr:first td').length;
-                
-                console.log('Users table - Header cells:', headerCells, 'Body rows:', bodyRows, 'First row cells:', firstRowCells);
-                
-                if (headerCells === 6 && (bodyRows === 0 || firstRowCells === 6 || firstRowCells === 1)) {
-                    try {
-                        usersTable.DataTable({
-                            pageLength: 10,
-                            responsive: true,
-                            order: [[0, 'asc']],
-                            columnDefs: [
-                                { orderable: false, targets: [5] } // Disable sorting on Actions column
-                            ],
-                            language: {
-                                emptyTable: "No users found",
-                                zeroRecords: "No matching users found"
-                            },
-                            // Add additional safety options
-                            autoWidth: false,
-                            processing: true,
-                            deferRender: true,
-                            destroy: true // Allow re-initialization
-                        });
-                        console.log('Users DataTable initialized successfully');
-                    } catch (userTableError) {
-                        console.error('Users DataTable initialization error:', userTableError);
+        // Test Bootstrap tab functionality
+        if (typeof $().tab === 'undefined') {
+            console.error('Bootstrap tabs not loaded!');
+            alert('Bootstrap tabs not loaded! The tab functionality will not work.');
+        }
+
+        // Initialize tab switching
+        initializeTabs();
+
+        // Initialize DataTables for better table functionality with a slight delay
+        setTimeout(function () {
+            initializeDataTables();
+        }, 100);
+
+        // Load initial data
+        loadDashboardData();
+
+        // Auto-refresh dashboard data every 30 seconds
+        setInterval(loadDashboardData, 30000);
+
+        // Add debug click handler to the logs tab specifically
+        $('#logs-tab').on('click', function (e) {
+            console.log('Direct logs tab click detected!');
+            console.log('Element:', this);
+            console.log('Href:', $(this).attr('href'));
+            console.log('Data-toggle:', $(this).attr('data-toggle'));
+        });
+
+        // Add debug click handler to force Bootstrap tab show for logs (non-invasive)
+        $('#logs-tab').on('click.forceShow', function (e) {
+            try {
+                console.log('Force-show handler: attempting $(this).tab("show")');
+                $(this).tab('show');
+                console.log('Force-show handler: tab("show") called successfully');
+
+                // Ensure the target pane is visible and active (fallback)
+                const target = $(this).attr('href');
+                const pane = $(target);
+                if (pane.length) {
+                    if (!pane.hasClass('show') || !pane.hasClass('active')) {
+                        pane.addClass('show active');
+                        console.log('Force-show handler: added show/active classes to pane:', target);
                     }
-                } else {
-                    console.warn('Users table structure mismatch - Header:', headerCells, 'Body cells:', firstRowCells);
+                    // Brief visual highlight
+                    pane.css('outline', '3px solid rgba(0,123,255,0.25)');
+                    setTimeout(() => pane.css('outline', ''), 1500);
+
+                    // Scroll into view
+                    $('html, body').animate({ scrollTop: pane.offset().top - 80 }, 250);
                 }
+            } catch (err) {
+                console.error('Force-show handler error:', err);
             }
-            
-            // Initialize activity logs table only if it exists and has proper structure
-            const activityTable = $('#activityLogsTable');
-            if (activityTable.length > 0 && !$.fn.DataTable.isDataTable('#activityLogsTable')) {
-                const activityHeaderCells = activityTable.find('thead tr:first th').length;
-                const activityBodyRows = activityTable.find('tbody tr').length;
-                const activityFirstRowCells = activityTable.find('tbody tr:first td').length;
-                
-                console.log('Activity table - Header cells:', activityHeaderCells, 'Body rows:', activityBodyRows, 'First row cells:', activityFirstRowCells);
-                
-                if (activityHeaderCells === 5 && (activityBodyRows === 0 || activityFirstRowCells === 5 || activityFirstRowCells === 1)) {
-                    try {
-                        activityTable.DataTable({
-                            pageLength: 10,
-                            responsive: true,
-                            order: [[0, 'desc']],
-                            language: {
-                                emptyTable: "No activity logs found",
-                                zeroRecords: "No matching activity logs found"
-                            },
-                            autoWidth: false,
-                            processing: true,
-                            deferRender: true,
-                            destroy: true
-                        });
-                        console.log('Activity DataTable initialized successfully');
-                    } catch (activityTableError) {
-                        console.error('Activity DataTable initialization error:', activityTableError);
+        });
+    });
+
+    function initializeDataTables() {
+        if ($.fn.DataTable) {
+            try {
+                // Initialize users table only if it exists and has proper structure
+                const usersTable = $('#usersTable');
+                if (usersTable.length > 0 && !$.fn.DataTable.isDataTable('#usersTable')) {
+                    // Check if table has proper header structure
+                    const headerCells = usersTable.find('thead tr:first th').length;
+                    const bodyRows = usersTable.find('tbody tr').length;
+                    const firstRowCells = usersTable.find('tbody tr:first td').length;
+
+                    console.log('Users table - Header cells:', headerCells, 'Body rows:', bodyRows, 'First row cells:', firstRowCells);
+
+                    if (headerCells === 6 && (bodyRows === 0 || firstRowCells === 6 || firstRowCells === 1)) {
+                        try {
+                            usersTable.DataTable({
+                                pageLength: 10,
+                                responsive: true,
+                                order: [[0, 'asc']],
+                                columnDefs: [
+                                    { orderable: false, targets: [5] } // Disable sorting on Actions column
+                                ],
+                                language: {
+                                    emptyTable: "No users found",
+                                    zeroRecords: "No matching users found"
+                                },
+                                // Add additional safety options
+                                autoWidth: false,
+                                processing: true,
+                                deferRender: true,
+                                destroy: true // Allow re-initialization
+                            });
+                            console.log('Users DataTable initialized successfully');
+                        } catch (userTableError) {
+                            console.error('Users DataTable initialization error:', userTableError);
+                        }
+                    } else {
+                        console.warn('Users table structure mismatch - Header:', headerCells, 'Body cells:', firstRowCells);
                     }
-                } else {
-                    console.warn('Activity table structure mismatch - Header:', activityHeaderCells, 'Body cells:', activityFirstRowCells);
                 }
+
+                // Activity logs table initialization removed: Activity logs moved to dedicated page
+            } catch (error) {
+                console.error('DataTable initialization error:', error);
             }
-        } catch (error) {
-            console.error('DataTable initialization error:', error);
         }
     }
-}
 
-function initializeTabs() {
-    // Handle tab switching
-    $('.nav-link[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-        const target = $(e.target).attr('href');
-        console.log('Switched to tab:', target);
-        
-        // Load tab-specific data
-        switch(target) {
-            case '#users':
-                loadUsers();
-                break;
-            case '#roles':
-                loadRoles();
-                break;
-            case '#logs':
-                loadActivityLogs();
-                break;
-        }
-    });
-}
+    function initializeTabs() {
+        console.log('Initializing tabs...');
 
-function loadDashboardData() {
-    // Update system statistics
-    $.ajax({
-        url: '<?= URLROOT ?>/admin/getSystemStatsAjax',
-        method: 'GET',
-        success: function(response) {
-            if (response.success) {
-                updateSystemStats(response.data);
+        // Let Bootstrap handle the tab switching, just listen for the events
+        $('.nav-link[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            const target = $(e.target).attr('href');
+            console.log('Tab shown event fired:', target);
+
+            // Load tab-specific data when tab is shown
+            switch (target) {
+                case '#users':
+                    loadUsers();
+                    break;
+                case '#roles':
+                    loadRoles();
+                    break;
+                // Activity logs removed: now available on dedicated page
             }
-        },
-        error: function() {
-            console.error('Failed to load dashboard data');
-        }
-    });
-}
+        });
 
-function updateSystemStats(stats) {
-    // Update dashboard statistics
-    if (stats.total_products !== undefined) {
-        $('#totalProducts').text(stats.total_products);
+        // Also add click handler as backup but don't prevent default
+        $('.nav-link[data-toggle="tab"]').on('click', function (e) {
+            const target = $(this).attr('href');
+            console.log('Tab clicked:', target);
+
+            // Let Bootstrap handle the tab switching naturally
+            // Just trigger our custom logic after a short delay
+            setTimeout(() => {
+                switch (target) {
+                    case '#users':
+                        loadUsers();
+                        break;
+                    case '#roles':
+                        loadRoles();
+                        break;
+                    // Activity logs removed: now available on dedicated page
+                }
+            }, 100);
+        });
     }
-    if (stats.total_users !== undefined) {
-        $('#totalUsers').text(stats.total_users);
-    }
-    if (stats.low_stock_count !== undefined) {
-        $('#lowStockCount').text(stats.low_stock_count);
-    }
-    if (stats.total_orders !== undefined) {
-        $('#totalOrders').text(stats.total_orders);
-    }
-}
 
-// Tab switching function for quick actions
-function switchTab(tabName) {
-    console.log('Switching to tab:', tabName);
-    $(`#${tabName}-tab`).tab('show');
-}
-
-// User Management Functions
-function loadUsers() {
-    console.log('Loading users...');
-    // Additional user loading logic can be added here
-}
-
-function editUser(userId) {
-    console.log('Initiating user edit for ID:', userId);
-    // Implementation for editing user
-    $('#addUserModal').modal('show');
-    // Load user data and populate form
-}
-
-function deleteUser(userId) {
-    if (confirm('Are you sure you want to delete this user?')) {
-        console.log('Initiating user deletion for ID:', userId);
-        
+    function loadDashboardData() {
+        // Update system statistics
         $.ajax({
-            url: '<?= URLROOT ?>/admin/deleteUser',
-            method: 'POST',
-            data: { user_id: userId },
-            success: function(response) {
+            url: '<?= URLROOT ?>/admin/getSystemStatsAjax',
+            method: 'GET',
+            success: function (response) {
                 if (response.success) {
-                    alert('User deleted successfully!');
-                    location.reload();
-                } else {
-                    alert('Failed to delete user: ' + (response.message || 'Unknown error'));
+                    updateSystemStats(response.data);
                 }
             },
-            error: function() {
-                alert('Deletion failed! Please try again.');
+            error: function () {
+                console.error('Failed to load dashboard data');
             }
         });
     }
-}
 
-// Role Management Functions
-function loadRoles() {
-    console.log('Loading roles...');
-}
-
-function editRole(roleId) {
-    console.log('Initiating role edit for ID:', roleId);
-    // Implementation for editing role
-}
-
-function deleteRole(roleId) {
-    if (confirm('Are you sure you want to delete this role?')) {
-        console.log('Initiating role deletion for ID:', roleId);
-        
-        $.ajax({
-            url: '<?= URLROOT ?>/admin/deleteRole',
-            method: 'POST',
-            data: { role_id: roleId },
-            success: function(response) {
-                if (response.success) {
-                    alert('Role deleted successfully!');
-                    location.reload();
-                } else {
-                    alert('Failed to delete role: ' + (response.message || 'Unknown error'));
-                }
-            },
-            error: function() {
-                alert('Deletion failed! Please try again.');
-            }
-        });
-    }
-}
-
-// Permission Management Functions
-function updatePermissions(userId) {
-    console.log('Initiating permission update for user ID:', userId);
-    
-    const permissions = [];
-    $(`#user-row-${userId} input[type="checkbox"]:checked`).each(function() {
-        permissions.push($(this).val());
-    });
-    
-    $.ajax({
-        url: '<?= URLROOT ?>/admin/updatePermissions',
-        method: 'POST',
-        data: { 
-            user_id: userId,
-            permissions: permissions
-        },
-        success: function(response) {
-            if (response.success) {
-                alert('Permissions updated successfully!');
-            } else {
-                alert('Failed to update permissions: ' + (response.message || 'Unknown error'));
-            }
-        },
-        error: function() {
-            alert('Permission update failed! Please try again.');
+    function updateSystemStats(stats) {
+        // Update dashboard statistics
+        if (stats.total_products !== undefined) {
+            $('#totalProducts').text(stats.total_products);
         }
-    });
-}
-
-// Activity Log Functions
-function loadActivityLogs() {
-    console.log('Loading activity logs...');
-}
-
-function filterLogs(period) {
-    console.log('Filtering logs for period:', period);
-    
-    $.ajax({
-        url: '<?= URLROOT ?>/admin/filterLogs',
-        method: 'POST',
-        data: { period: period },
-        success: function(response) {
-            if (response.success) {
-                // Reload the logs table
-                location.reload();
-            }
+        if (stats.total_users !== undefined) {
+            $('#totalUsers').text(stats.total_users);
         }
-    });
-}
-
-function clearLogs() {
-    if (confirm('Are you sure you want to clear all activity logs? This action cannot be undone.')) {
-        console.log('Initiating log clearance...');
-        
-        $.ajax({
-            url: '<?= URLROOT ?>/admin/clearLogs',
-            method: 'POST',
-            success: function(response) {
-                if (response.success) {
-                    alert('Activity logs cleared successfully!');
-                    location.reload();
-                } else {
-                    alert('Failed to clear logs: ' + (response.message || 'Unknown error'));
-                }
-            },
-            error: function() {
-                alert('Log clearance failed! Please try again.');
-            }
-        });
+        if (stats.low_stock_count !== undefined) {
+            $('#lowStockCount').text(stats.low_stock_count);
+        }
+        if (stats.total_orders !== undefined) {
+            $('#totalOrders').text(stats.total_orders);
+        }
     }
-}
 
-// Settings Functions
-function resetToDefaults() {
-    if (confirm('Are you sure you want to reset all settings to defaults?')) {
-        console.log('Initiating settings reset...');
-        
-        $.ajax({
-            url: '<?= URLROOT ?>/admin/resetSettings',
-            method: 'POST',
-            success: function(response) {
-                if (response.success) {
-                    alert('Settings reset to defaults successfully!');
-                    location.reload();
-                } else {
-                    alert('Failed to reset settings: ' + (response.message || 'Unknown error'));
-                }
-            },
-            error: function() {
-                alert('Settings reset failed! Please try again.');
-            }
-        });
+    // Tab switching function for quick actions
+    function switchTab(tabName) {
+        console.log('Switching to tab:', tabName);
+        $(`#${tabName}-tab`).tab('show');
     }
-}
 
-function exportSettings() {
-    console.log('Initiating settings export...');
-    window.location.href = '<?= URLROOT ?>/admin/exportSettings';
-}
+    // User Management Functions
+    function loadUsers() {
+        console.log('Loading users...');
+        // Additional user loading logic can be added here
+    }
 
-function importSettings() {
-    console.log('Initiating settings import...');
-    // Create file input for import
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const formData = new FormData();
-            formData.append('settings_file', file);
-            
+    function editUser(userId) {
+        console.log('Initiating user edit for ID:', userId);
+        // Implementation for editing user
+        $('#addUserModal').modal('show');
+        // Load user data and populate form
+    }
+
+    function deleteUser(userId) {
+        if (confirm('Are you sure you want to delete this user?')) {
+            console.log('Initiating user deletion for ID:', userId);
+
             $.ajax({
-                url: '<?= URLROOT ?>/admin/importSettings',
+                url: '<?= URLROOT ?>/admin/deleteUser',
                 method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
+                data: { user_id: userId },
+                success: function (response) {
                     if (response.success) {
-                        alert('Settings imported successfully!');
+                        alert('User deleted successfully!');
                         location.reload();
                     } else {
-                        alert('Failed to import settings: ' + (response.message || 'Unknown error'));
+                        alert('Failed to delete user: ' + (response.message || 'Unknown error'));
                     }
                 },
-                error: function() {
-                    alert('Settings import failed! Please try again.');
+                error: function () {
+                    alert('Deletion failed! Please try again.');
                 }
             });
         }
-    };
-    input.click();
-}
+    }
 
-// Form submission with alerts
-$('#settingsForm').on('submit', function(e) {
-    e.preventDefault();
-    console.log('Initiating settings save...');
-    
-    $.ajax({
-        url: $(this).attr('action'),
-        method: 'POST',
-        data: $(this).serialize(),
-        success: function(response) {
-            if (response.success) {
-                alert('Settings saved successfully!');
-            } else {
-                alert('Failed to save settings: ' + (response.message || 'Unknown error'));
-            }
-        },
-        error: function() {
-            alert('Settings save failed! Please try again.');
+    // Role Management Functions
+    function loadRoles() {
+        console.log('Loading roles...');
+    }
+
+    function editRole(roleId) {
+        console.log('Initiating role edit for ID:', roleId);
+        // Implementation for editing role
+    }
+
+    function deleteRole(roleId) {
+        if (confirm('Are you sure you want to delete this role?')) {
+            console.log('Initiating role deletion for ID:', roleId);
+
+            $.ajax({
+                url: '<?= URLROOT ?>/admin/deleteRole',
+                method: 'POST',
+                data: { role_id: roleId },
+                success: function (response) {
+                    if (response.success) {
+                        alert('Role deleted successfully!');
+                        location.reload();
+                    } else {
+                        alert('Failed to delete role: ' + (response.message || 'Unknown error'));
+                    }
+                },
+                error: function () {
+                    alert('Deletion failed! Please try again.');
+                }
+            });
         }
+    }
+
+    // Permission Management Functions removed: permissions moved to dedicated page
+
+    // Activity Log Functions removed: Activity logs moved to dedicated page
+    // Activity Logs functionality is now available at <?= URLROOT ?>/admin/activity_logs
+
+    // Settings Functions
+    function resetToDefaults() {
+        if (confirm('Are you sure you want to reset all settings to defaults?')) {
+            console.log('Initiating settings reset...');
+
+            $.ajax({
+                url: '<?= URLROOT ?>/admin/resetSettings',
+                method: 'POST',
+                success: function (response) {
+                    if (response.success) {
+                        alert('Settings reset to defaults successfully!');
+                        location.reload();
+                    } else {
+                        alert('Failed to reset settings: ' + (response.message || 'Unknown error'));
+                    }
+                },
+                error: function () {
+                    alert('Settings reset failed! Please try again.');
+                }
+            });
+        }
+    }
+
+    function exportSettings() {
+        console.log('Initiating settings export...');
+        window.location.href = '<?= URLROOT ?>/admin/exportSettings';
+    }
+
+    function importSettings() {
+        console.log('Initiating settings import...');
+        // Create file input for import
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('settings_file', file);
+
+                $.ajax({
+                    url: '<?= URLROOT ?>/admin/importSettings',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        if (response.success) {
+                            alert('Settings imported successfully!');
+                            location.reload();
+                        } else {
+                            alert('Failed to import settings: ' + (response.message || 'Unknown error'));
+                        }
+                    },
+                    error: function () {
+                        alert('Settings import failed! Please try again.');
+                    }
+                });
+            }
+        };
+        input.click();
+    }
+
+    // Form submission with alerts
+    $('#settingsForm').on('submit', function (e) {
+        e.preventDefault();
+        console.log('Initiating settings save...');
+
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function (response) {
+                if (response.success) {
+                    alert('Settings saved successfully!');
+                } else {
+                    alert('Failed to save settings: ' + (response.message || 'Unknown error'));
+                }
+            },
+            error: function () {
+                alert('Settings save failed! Please try again.');
+            }
+        });
     });
-});
 </script>
 
 <?php require APPROOT . DS . 'app' . DS . 'views' . DS . 'layouts' . DS . 'footer.php'; ?>
